@@ -8,16 +8,17 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPixmap
 from PySide6.QtWidgets import QStyledItemDelegate, QStyle, QStyleOptionViewItem
 
-# status -> (background rgba, text color)
+# status -> (base color, background alpha); desaturated hues so the
+# pills read as quiet metadata instead of pulling the eye off the words
 PILL_COLORS = {
-    "new":       ("#2f6fed", 38),
-    "to learn":  ("#9a6ff0", 38),
-    "learning":  ("#d29922", 38),
-    "reviewing": ("#d29922", 38),
-    "mastered":  ("#2da44e", 38),
-    "ignored":   ("#8b98a5", 30),
+    "new":       ("#5e7db4", 26),
+    "to learn":  ("#8d7cc0", 26),
+    "learning":  ("#b2924f", 26),
+    "reviewing": ("#b2924f", 26),
+    "mastered":  ("#55966c", 26),
+    "ignored":   ("#8b98a5", 22),
 }
-DEFAULT_PILL = ("#8b98a5", 30)
+DEFAULT_PILL = ("#8b98a5", 22)
 
 
 class RowTintDelegate(QStyledItemDelegate):
@@ -83,7 +84,7 @@ class StatusPillDelegate(QStyledItemDelegate):
     def _render_pill(text, dark, base_font, dpr):
         font = QFont(base_font)
         font.setPointSizeF(max(7.0, base_font.pointSizeF() - 1))
-        font.setWeight(QFont.DemiBold)
+        font.setWeight(QFont.Normal)
         metrics = QFontMetrics(font)
         w = metrics.horizontalAdvance(text) + 20
         h = metrics.height() + 6
@@ -92,11 +93,11 @@ class StatusPillDelegate(QStyledItemDelegate):
         bg = QColor(base_hex)
         # readable pill text on both themes
         if dark:
-            bg.setAlpha(alpha + 25)
-            fg = QColor(base_hex).lighter(135)
+            bg.setAlpha(alpha + 16)
+            fg = QColor(base_hex).lighter(130)
         else:
-            bg.setAlpha(alpha + 42)
-            fg = QColor(base_hex).darker(165)
+            bg.setAlpha(alpha + 30)
+            fg = QColor(base_hex).darker(150)
 
         pm = QPixmap(int(w * dpr), int(h * dpr))
         pm.setDevicePixelRatio(dpr)
