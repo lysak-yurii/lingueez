@@ -1250,12 +1250,6 @@ class MainWindow(QMainWindow):
                 QTimer.singleShot(30, lambda: self._restore_pre_playback_width(attempts - 1))
             return
         self.resize(width, self.height())
-        if active:
-            self.read_button.setIcon(self._icon("stop", "danger", 17))
-            self.read_button.setToolTip("Stop reading")
-        else:
-            self.read_button.setIcon(self._icon("volume", "text", 17))
-            self.read_button.setToolTip("Read — Read selected words aloud")
 
     def _show_tag_menu(self):
         """Dropdown stand-in for the squashed tag combo."""
@@ -1274,6 +1268,7 @@ class MainWindow(QMainWindow):
             return
         record = records[i]
         self.player_bar.set_position(i, len(records), record.get('Word1', ''))
+        self.model.set_queued_ids(r.get('ID') for r in records[i + 1:])
         row = self.model.set_playing_id(record.get('ID'))
         if row >= 0:
             self.table.scrollTo(self.model.index(row, COL_WORD1))
@@ -1284,6 +1279,7 @@ class MainWindow(QMainWindow):
     def _on_player_finished(self):
         self._set_playback_ui(False)
         self.model.set_playing_id(None)
+        self.model.set_queued_ids(())
 
     def save_audio_action(self):
         records = self.selected_records()

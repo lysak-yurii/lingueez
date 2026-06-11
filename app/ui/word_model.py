@@ -59,6 +59,8 @@ class WordTableModel(QAbstractTableModel):
         self._ids = []
         self._playing_id = None
         self._playing_row = -1
+        self._queued_ids = frozenset()
+        self._queued_rows = frozenset()
         self._header_overrides = {}
         self.set_colors(colors)
 
@@ -74,6 +76,9 @@ class WordTableModel(QAbstractTableModel):
         playing = QColor(colors["accent"])
         playing.setAlpha(56)  # subtle tint that reads on both themes
         self._playing_brush = QBrush(playing)
+        queued = QColor(colors["accent"])
+        queued.setAlpha(18)  # barely-there tint for words awaiting playback
+        self._queued_brush = QBrush(queued)
 
     def set_dataframe(self, df):
         self.beginResetModel()
@@ -86,6 +91,7 @@ class WordTableModel(QAbstractTableModel):
         self._favorites = self._df["favorite"].fillna(0).astype(bool).tolist()
         self._ids = self._df["ID"].tolist()
         self._playing_row = self._row_for_id(self._playing_id)
+        self._queued_rows = self._rows_for_ids(self._queued_ids)
         self.endResetModel()
 
     def _row_for_id(self, word_id):
@@ -95,6 +101,22 @@ class WordTableModel(QAbstractTableModel):
             return self._ids.index(word_id)
         except ValueError:
             return -1
+
+    def _rows_for_ids(self, ids):
+        if not ids:
+            return frozenset()
+        return frozenset(row for row, wid in enumerate(self._ids) if wid in ids)
+
+    def set_queued_ids(self, ids):
+        """Faintly tint the rows still waiting in the playback queue
+        (an empty iterable clears the tint)."""
+        self._queued_ids = frozenset(ids)
+        old_rows = self._queued_rows
+        self._queued_rows = self._rows_for_ids(self._queued_ids)
+        last_col = len(COLUMNS) - 1
+        for row in old_rows ^ self._queued_rows:
+            self.dataChanged.emit(self.index(row, 0), self.index(row, last_col),
+                                  [Qt.BackgroundRole])
 
     def set_playing_id(self, word_id):
         """Highlight the row of the word being read aloud (None clears).
@@ -138,6 +160,8 @@ class WordTableModel(QAbstractTableModel):
             row = index.row()
             if row == self._playing_row:
                 return self._playing_brush
+            if row in self._queued_rows:
+                return self._queued_brush
             return self._fav_brush if self._favorites[row] else None
         return None
 
