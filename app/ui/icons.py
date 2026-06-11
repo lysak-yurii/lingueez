@@ -66,6 +66,12 @@ ICONS = {
     "menu": '<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/>'
             '<line x1="3" y1="18" x2="21" y2="18"/>',
     "play": '<polygon points="5 3 19 12 5 21 5 3" fill="{color}" stroke="none"/>',
+    "pause": '<rect x="6" y="5" width="4" height="14" rx="1" fill="{color}" stroke="none"/>'
+             '<rect x="14" y="5" width="4" height="14" rx="1" fill="{color}" stroke="none"/>',
+    "skip-back": '<polygon points="19 20 9 12 19 4 19 20" fill="{color}" stroke="none"/>'
+                 '<line x1="5" y1="19" x2="5" y2="5"/>',
+    "skip-forward": '<polygon points="5 4 15 12 5 20 5 4" fill="{color}" stroke="none"/>'
+                    '<line x1="19" y1="5" x2="19" y2="19"/>',
     "cloud": '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
     "alert": '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 '
              '1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'

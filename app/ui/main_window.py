@@ -20,14 +20,15 @@ from PySide6.QtWidgets import (
 from app.config import get_bool, get_float, get_int, load_settings
 from app.core import db as dbq
 from app.core import exporters
-from app.core.audio import lang_codes, read_words_list, stop_playback
+from app.core.audio import stop_playback
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
 from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager
 from app.core.data_management import open_words_from_excel
 from app.ui import icons, theme
-from app.ui.animations import AnimatedStackedWidget
+from app.ui.animations import AnimatedStackedWidget, fade_swap
+from app.ui.player import PlayerBar, WordPlayer
 from app.ui.texts_page import TextsPage
 from app.ui.toast import show_toast
 from app.ui.word_model import (
@@ -137,7 +138,6 @@ class MainWindow(QMainWindow):
     sync_status_changed = Signal(str, str)
     hotkey_pressed = Signal()
     reload_requested = Signal()
-    reading_done = Signal()
 
     def __init__(self, settings, start_hidden=False):
         super().__init__()
@@ -159,6 +159,8 @@ class MainWindow(QMainWindow):
         self.word_filter = WordFilter()
         self.df = None
         self.is_reading_active = False
+        self.word_player = WordPlayer(self)
+        self._playing_records = []
         self.show_source = False
         self.show_created = False
         self._quitting = False
@@ -177,7 +179,11 @@ class MainWindow(QMainWindow):
         self.sync_status_changed.connect(self._update_sync_status_ui)
         self.hotkey_pressed.connect(self.open_add_word_and_translate)
         self.reload_requested.connect(self.load_data)
-        self.reading_done.connect(self._reading_finished)
+        self.word_player.index_changed.connect(self._on_player_index)
+        self.word_player.state_changed.connect(self._on_player_state)
+        self.word_player.finished.connect(self._on_player_finished)
+        # the texts reader uses the same audio output — one player at a time
+        self.texts_page.tts_started.connect(self.word_player.stop)
 
         self.load_data()
 
@@ -225,6 +231,7 @@ class MainWindow(QMainWindow):
         if self.is_reading_active:
             self.read_button.setIcon(self._icon("stop", "danger", 17))
         self.texts_page.refresh_theme(self.colors)
+        self.player_bar.refresh_theme(self.colors)
         self.window_controls.set_colors(self.colors)
         old_menu = self.app_menu
         self.app_menu = self._build_app_menu()
@@ -392,6 +399,16 @@ class MainWindow(QMainWindow):
         self.tag_combo.currentTextChanged.connect(self.on_filters_changed)
         f.addWidget(self.tag_combo)
 
+        # icon-only stand-in for the tag combo while the player is shown
+        self.tag_icon_btn = QPushButton(objectName="chipButton")
+        self._set_icon(self.tag_icon_btn, "tag", "text_dim", 16)
+        self.tag_icon_btn.setIconSize(QSize(16, 16))
+        self.tag_icon_btn.setToolTip("Filter by tag")
+        self.tag_icon_btn.setCursor(Qt.PointingHandCursor)
+        self.tag_icon_btn.clicked.connect(self._show_tag_menu)
+        self.tag_icon_btn.setVisible(False)
+        f.addWidget(self.tag_icon_btn)
+
         self.favorites_btn = QPushButton(" Favorites", objectName="chipButton")
         self.favorites_btn.setIcon(self._icon("star", "text_dim", 16))  # re-tinted via _on_favorites_toggled
         self.favorites_btn.setCheckable(True)
@@ -442,7 +459,17 @@ class MainWindow(QMainWindow):
         delete_btn.clicked.connect(self.delete_rows)
         ab.addWidget(delete_btn)
 
+        # ---------- playback bar (appears left of the actions while reading) ----------
+        self.player_bar = PlayerBar(self.colors)
+        self.player_bar.setVisible(False)
+        self.player_bar.prev_clicked.connect(self.word_player.prev)
+        self.player_bar.toggle_clicked.connect(self.word_player.toggle_pause)
+        self.player_bar.next_clicked.connect(self.word_player.next)
+        self.player_bar.stop_clicked.connect(self.word_player.stop)
+
         self.action_bar.setVisible(False)
+        f.addWidget(self.player_bar)
+        f.addSpacing(8)
         f.addWidget(self.action_bar)
         self._lock_filter_row_height()
 
@@ -475,7 +502,9 @@ class MainWindow(QMainWindow):
         self.table.doubleClicked.connect(lambda _: self.view_definition())
 
         self.table.setMouseTracking(True)
-        from app.ui.delegates import StatusPillDelegate
+        from app.ui.delegates import RowTintDelegate, StatusPillDelegate
+        self._row_delegate = RowTintDelegate(self.table)
+        self.table.setItemDelegate(self._row_delegate)
         self._status_delegate = StatusPillDelegate(self.table)
         self.table.setItemDelegateForColumn(COL_STATUS, self._status_delegate)
         self.table.selectionModel().selectionChanged.connect(self._on_selection_changed)
@@ -607,13 +636,18 @@ class MainWindow(QMainWindow):
         chips = (self.tag_combo, self.favorites_btn)
         row_h = max(w.sizeHint().height() for w in chips)
         self.action_bar.setMaximumHeight(row_h)
+        self.player_bar.setMaximumHeight(row_h)
         margins = self.filter_row.layout().contentsMargins()
         self.filter_row.setFixedHeight(row_h + margins.top() + margins.bottom())
 
     def _on_selection_changed(self, *_):
         count = len(self.table.selectionModel().selectedRows())
         self.selection_label.setText(f"{count} selected")
-        self.action_bar.setVisible(count > 0)
+        # with no selection the bar is only up for playback — "0 selected"
+        # would be noise and widens the row at minimum window width
+        self.selection_label.setVisible(count > 0)
+        # the action bar stays up while reading aloud (it holds the stop button)
+        self.action_bar.setVisible(count > 0 or self.is_reading_active)
 
     def _on_favorites_toggled(self, checked):
         self.favorites_btn.setIcon(
@@ -759,6 +793,7 @@ class MainWindow(QMainWindow):
     def quit_app(self):
         self._quitting = True
         try:
+            self.word_player.stop()
             stop_playback()
         except Exception:
             pass
@@ -922,6 +957,12 @@ class MainWindow(QMainWindow):
             combo.setProperty("filterActive", bool(active))
             combo.style().unpolish(combo)
             combo.style().polish(combo)
+
+        # keep the squashed tag icon in sync with the tag filter state
+        self._set_icon(self.tag_icon_btn, "tag",
+                       "accent" if wf.selected_tag else "text_dim", 16)
+        self.tag_icon_btn.setToolTip(
+            f"Filter by tag — {wf.selected_tag}" if wf.selected_tag else "Filter by tag")
 
 
     def toggle_source_column(self, checked):
@@ -1134,8 +1175,7 @@ class MainWindow(QMainWindow):
 
     def read_words_action(self):
         if self.is_reading_active:
-            stop_playback()
-            self._reading_finished()
+            self.word_player.stop()
             return
 
         records = self._require_selection("read aloud")
@@ -1149,16 +1189,101 @@ class MainWindow(QMainWindow):
         words = [(r.get('Word1', ''), r.get('Word2', '')) for r in records]
         languages = [(r.get('Language1', ''), r.get('Language2', '')) for r in records]
 
-        self.is_reading_active = True
-        self.read_button.setIcon(self._icon("stop", "danger", 17))
-        self.read_button.setToolTip("Stop reading")
+        self._playing_records = records
+        # the queue is captured; clear the selection first so its highlight
+        # doesn't drown out the moving played-row highlight — and so the
+        # selection label never coexists with the player in one layout pass
+        self.table.clearSelection()
+        self._set_playback_ui(True)
+        self.player_bar.set_paused(False)
+        self.player_bar.set_position(0, len(records), records[0].get('Word1', ''))
+        self.word_player.play(words, languages)
 
-        run_in_thread(read_words_list, words, languages, self.reading_done.emit)
+    def _set_playback_ui(self, active):
+        """Show/hide the player bar; the words-only filter chips squash to
+        icons while it is visible. The whole row swaps under a crossfade."""
+        if self.is_reading_active == active:
+            return
+        self.is_reading_active = active
+        fade_swap(self.filter_row, 200)
+        # hide before show: a transient state holding both the wide chips and
+        # the player would spike the row's minimum width and, at the smallest
+        # window size, force the window to grow permanently
+        has_selection = len(self.table.selectionModel().selectedRows()) > 0
+        if active:
+            self._pre_playback_width = self.width()
+            self._playback_grown_width = 0
+            self.tag_combo.setVisible(False)
+            self.favorites_btn.setText("")
+            self.tag_icon_btn.setVisible(True)
+            self.player_bar.setVisible(True)
+            self.action_bar.setVisible(True)
+            # after the layout settles, note whether it force-grew the window
+            QTimer.singleShot(0, lambda: setattr(
+                self, "_playback_grown_width",
+                self.width() if self.width() > self._pre_playback_width else 0))
+        else:
+            self.player_bar.setVisible(False)
+            self.tag_icon_btn.setVisible(False)
+            self.favorites_btn.setText(" Favorites")
+            self.tag_combo.setVisible(True)
+            self.action_bar.setVisible(has_selection)
+            QTimer.singleShot(0, self._restore_pre_playback_width)
+        if active:
+            self.read_button.setIcon(self._icon("stop", "danger", 17))
+            self.read_button.setToolTip("Stop reading")
+        else:
+            self.read_button.setIcon(self._icon("volume", "text", 17))
+            self.read_button.setToolTip("Read — Read selected words aloud")
 
-    def _reading_finished(self):
-        self.is_reading_active = False
-        self.read_button.setIcon(self._icon("volume", "text", 17))
-        self.read_button.setToolTip("Read — Read selected words aloud")
+    def _restore_pre_playback_width(self, attempts=10):
+        """If showing the player force-grew the window (minimum-size
+        enforcement at small widths), shrink back once it is gone. A manual
+        resize during playback (width no longer the forced one) is kept."""
+        width = getattr(self, "_pre_playback_width", 0)
+        grown = getattr(self, "_playback_grown_width", 0)
+        if not (width and grown and self.width() == grown and not self.isMaximized()):
+            return
+        if self.minimumSizeHint().width() > width:
+            # the layout hasn't dropped its minimum yet — try again shortly
+            if attempts > 0:
+                QTimer.singleShot(30, lambda: self._restore_pre_playback_width(attempts - 1))
+            return
+        self.resize(width, self.height())
+        if active:
+            self.read_button.setIcon(self._icon("stop", "danger", 17))
+            self.read_button.setToolTip("Stop reading")
+        else:
+            self.read_button.setIcon(self._icon("volume", "text", 17))
+            self.read_button.setToolTip("Read — Read selected words aloud")
+
+    def _show_tag_menu(self):
+        """Dropdown stand-in for the squashed tag combo."""
+        menu = QMenu(self)
+        current = self.tag_combo.currentText()
+        for i in range(self.tag_combo.count()):
+            label = self.tag_combo.itemText(i)
+            action = menu.addAction(label, lambda t=label: self.tag_combo.setCurrentText(t))
+            action.setCheckable(True)
+            action.setChecked(label == current)
+        menu.exec(self.tag_icon_btn.mapToGlobal(QPoint(0, self.tag_icon_btn.height())))
+
+    def _on_player_index(self, i):
+        records = self._playing_records
+        if not records or i >= len(records):
+            return
+        record = records[i]
+        self.player_bar.set_position(i, len(records), record.get('Word1', ''))
+        row = self.model.set_playing_id(record.get('ID'))
+        if row >= 0:
+            self.table.scrollTo(self.model.index(row, COL_WORD1))
+
+    def _on_player_state(self, paused):
+        self.player_bar.set_paused(paused)
+
+    def _on_player_finished(self):
+        self._set_playback_ui(False)
+        self.model.set_playing_id(None)
 
     def save_audio_action(self):
         records = self.selected_records()

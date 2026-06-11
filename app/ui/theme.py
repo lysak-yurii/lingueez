@@ -433,6 +433,23 @@ QGroupBox::title {{
 }}
 #ActionBar QPushButton:hover {{ background: {c['surface_alt']}; }}
 #ActionBar QLabel {{ color: {c['text_dim']}; }}
+#PlayerBar {{
+    background: {c['surface']};
+    border: 1px solid {c['border']};
+    border-radius: 10px;
+}}
+#PlayerBar QPushButton {{
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 8px;
+}}
+#PlayerBar QPushButton:hover {{ background: {c['surface_alt']}; }}
+#PlayerBar QLabel#PlayerWord {{
+    font-weight: 600;
+    color: {c['text']};
+    padding-left: 4px;
+}}
 #Footer {{
     background: {c['bg_alt']};
     border-top: 1px solid {c['border']};
