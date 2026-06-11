@@ -239,7 +239,48 @@ class SupabaseClient:
         except Exception as e:
             logging.error(f"Error finding word by content in Supabase: {e}")
             return None
-    
+
+    def find_soft_deleted_word(self, word1: str, word2: str) -> Optional[Dict[str, Any]]:
+        """Find a soft-deleted word matching the (word1, word2) pair.
+
+        Matches on word1+word2 only because that is what the
+        words_word1_word2_key unique constraint covers — any row with this
+        pair, deleted or not, blocks an insert.
+
+        Returns:
+            Word dict if found, None otherwise.
+        """
+        if not self.client:
+            return None
+        try:
+            response = (self.client.table('words').select('*')
+                        .eq('word1', word1).eq('word2', word2)
+                        .not_.is_('deleted_at', 'null').execute())
+            if response.data and len(response.data) > 0:
+                return self._map_to_sqlite_format(response.data[0])
+            return None
+        except Exception as e:
+            logging.error(f"Error finding soft-deleted word in Supabase: {e}")
+            return None
+
+    def restore_word_with_data(self, word_id: int, word_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Restore a soft-deleted word (deleted_at = NULL) and overwrite it with new data."""
+        if not self.client:
+            return None
+        try:
+            mapped_data = self._map_to_supabase_format(word_data)
+            mapped_data.pop('id', None)
+            mapped_data['deleted_at'] = None
+            from datetime import datetime, timezone
+            mapped_data['edited_at'] = datetime.now(timezone.utc).isoformat()
+            response = self.client.table('words').update(mapped_data).eq('id', word_id).execute()
+            if response.data:
+                return self._map_to_sqlite_format(response.data[0])
+            return None
+        except Exception as e:
+            logging.error(f"Error restoring soft-deleted word {word_id} in Supabase: {e}")
+            return None
+
     def upsert_word(self, word_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Insert or update a word in Supabase based on content matching.
         
@@ -276,7 +317,18 @@ class SupabaseClient:
                 return self.update_word(cloud_id, word_data)
             else:
                 logging.warning(f"Found existing word but couldn't get ID, falling back to insert")
-        
+
+        # No live match — but a soft-deleted row with the same word pair still
+        # blocks an insert (the unique constraint covers binned rows too).
+        # Restore that row with the new data instead of failing with a 409.
+        deleted_word = self.find_soft_deleted_word(word1, word2)
+        if deleted_word:
+            cloud_id = deleted_word.get('ID') or deleted_word.get('id')
+            if cloud_id:
+                logging.info(f"Word ({word1}, {word2}) exists soft-deleted in cloud "
+                             f"(ID {cloud_id}) — restoring it with the new data")
+                return self.restore_word_with_data(cloud_id, word_data)
+
         # Word doesn't exist, insert it (auto-generate ID)
         logging.debug(f"No existing word found with content ({language1}, {word1}, {language2}, {word2}), inserting new")
         return self.insert_word(word_data, preserve_id=False)

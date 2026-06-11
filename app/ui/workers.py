@@ -4,6 +4,39 @@ import traceback
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Slot
 
 
+class _WorkerReaper(QObject):
+    """Holds finished-but-undelivered workers and releases them safely.
+
+    QThreadPool's autoDelete destroys the QRunnable in the *pool* thread the
+    moment run() returns — taking the Python wrapper and its WorkerSignals
+    QObject with it while queued result/progress emissions may still be in
+    flight to the GUI thread. Destroying a QObject from the wrong thread mid
+    delivery segfaults. So workers are kept referenced here and dropped via a
+    queued signal: the release runs on the GUI thread *after* every signal the
+    worker posted earlier (per-thread event FIFO), making destruction safe.
+    """
+
+    _release = Signal(object)
+
+    def __init__(self):
+        super().__init__()
+        self._alive = set()
+        self._release.connect(self._on_release)
+
+    def hold(self, worker):
+        self._alive.add(worker)
+
+    def release_later(self, worker):
+        # safe from the pool thread: queues onto the GUI thread
+        self._release.emit(worker)
+
+    def _on_release(self, worker):
+        self._alive.discard(worker)
+
+
+_reaper = _WorkerReaper()
+
+
 class WorkerSignals(QObject):
     finished = Signal()
     error = Signal(str)
@@ -68,5 +101,9 @@ def run_in_thread(fn, *args, on_result=None, on_error=None, on_finished=None,
         worker.signals.finished.connect(on_finished)
     if on_progress:
         worker.signals.progress.connect(on_progress)
+    # lifetime is managed by the reaper, not the pool — see _WorkerReaper
+    worker.setAutoDelete(False)
+    _reaper.hold(worker)
+    worker.signals.finished.connect(lambda: _reaper.release_later(worker))
     QThreadPool.globalInstance().start(worker)
     return worker
