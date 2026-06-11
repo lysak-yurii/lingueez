@@ -27,6 +27,8 @@ from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager
 from app.core.data_management import open_words_from_excel
 from app.ui import icons, theme
+from app.ui.animations import AnimatedStackedWidget
+from app.ui.texts_page import TextsPage
 from app.ui.toast import show_toast
 from app.ui.word_model import (
     COL_ID, COL_CREATED, COL_LANG1, COL_LANG2, COL_SOURCE, COL_STATUS,
@@ -38,6 +40,7 @@ from app.version import APP_NAME, APP_VERSION, BUILD_NUMBER
 GEOMETRY_FILE = "window_geometry.json"
 PREDEFINED_STATUSES = ["New", "To Learn", "Learning", "Mastered", "Ignored"]
 DEFAULT_HOTKEY = "Ctrl+Shift+V"
+PAGE_WORDS, PAGE_TEXTS = 0, 1
 
 
 def _hotkey_to_pynput(seq):
@@ -160,6 +163,9 @@ class MainWindow(QMainWindow):
         self.show_created = False
         self._quitting = False
         self._open_dialogs = {}
+        self._page_search = {PAGE_WORDS: "", PAGE_TEXTS: ""}
+        self._footer_counts = {PAGE_WORDS: "No data", PAGE_TEXTS: "No texts yet"}
+        self._words_subtitle = "Vocabulary"
 
         self._build_ui()
         self._build_tray()
@@ -201,8 +207,14 @@ class MainWindow(QMainWindow):
         return icons.icon(name, self.colors[color_key], size)
 
     def _set_icon(self, target, name, color_key="text", size=20):
-        """Set a themed icon and remember it so theme switches re-tint it."""
+        """Set a themed icon and remember it so theme switches re-tint it.
+        Setting an icon on an already-registered target replaces its entry
+        (nav buttons are re-tinted on every page switch)."""
         target.setIcon(self._icon(name, color_key, size))
+        for i, entry in enumerate(self._themed_icons):
+            if entry[0] is target:
+                self._themed_icons[i] = (target, name, color_key, size)
+                return
         self._themed_icons.append((target, name, color_key, size))
 
     def _refresh_icons(self):
@@ -212,6 +224,7 @@ class MainWindow(QMainWindow):
         self._on_favorites_toggled(self.favorites_btn.isChecked())
         if self.is_reading_active:
             self.read_button.setIcon(self._icon("stop", "danger", 17))
+        self.texts_page.refresh_theme(self.colors)
         self.window_controls.set_colors(self.colors)
         old_menu = self.app_menu
         self.app_menu = self._build_app_menu()
@@ -271,22 +284,25 @@ class MainWindow(QMainWindow):
         sb.addWidget(self.menu_btn)
         sb.addSpacing(12)
 
-        def nav_button(icon_name, tooltip, slot, checked=False):
+        def nav_button(icon_name, tooltip, slot, checkable=False, checked=False):
             btn = QPushButton()
             self._set_icon(btn, icon_name, "text" if checked else "text_dim")
             btn.setIconSize(QSize(21, 21))
             btn.setToolTip(tooltip)
             btn.setCursor(Qt.PointingHandCursor)
-            if checked:
+            if checkable or checked:
                 btn.setCheckable(True)
-                btn.setChecked(True)
+                btn.setChecked(checked)
             btn.clicked.connect(slot)
             sb.addWidget(btn)
             return btn
 
-        self.nav_words = nav_button("book-open", "Words", lambda: None, checked=True)
-        self.nav_words.clicked.connect(lambda: self.nav_words.setChecked(True))
-        nav_button("file-text", "Texts", self.open_texts)
+        self.nav_words = nav_button("book-open", "Words",
+                                    lambda: self.switch_page(PAGE_WORDS),
+                                    checkable=True, checked=True)
+        self.nav_texts = nav_button("file-text", "Texts",
+                                    lambda: self.switch_page(PAGE_TEXTS),
+                                    checkable=True)
         nav_button("trash", "Bin (deleted items)", self.open_bin)
         nav_button("archive", "Backups", self.open_backups)
         nav_button("list", "Log", self.open_log_window)
@@ -429,7 +445,14 @@ class MainWindow(QMainWindow):
         self.action_bar.setVisible(False)
         f.addWidget(self.action_bar)
         self._lock_filter_row_height()
-        root.addWidget(filters)
+
+        # ---------- pages (words / texts) ----------
+        self.stack = AnimatedStackedWidget()
+        words_page = QWidget()
+        wp = QVBoxLayout(words_page)
+        wp.setContentsMargins(0, 0, 0, 0)
+        wp.setSpacing(0)
+        wp.addWidget(filters)
 
         # ---------- table ----------
         table_wrap = QWidget()
@@ -512,7 +535,14 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, self._fit_word_columns)
 
         tw.addWidget(self.table)
-        root.addWidget(table_wrap, 1)
+        wp.addWidget(table_wrap, 1)
+
+        self.texts_page = TextsPage(self.db_adapter, self.colors)
+        self.texts_page.counts_changed.connect(self._on_texts_counts)
+
+        self.stack.addWidget(words_page)
+        self.stack.addWidget(self.texts_page)
+        root.addWidget(self.stack, 1)
 
         # ---------- footer ----------
         footer = QWidget(objectName="Footer")
@@ -595,6 +625,8 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence.SelectAll, self.table, self.table.selectAll)
         QShortcut(QKeySequence.Copy, self.table, self.copy_selected)
         QShortcut(QKeySequence.Delete, self.table, self.delete_rows)
+        QShortcut(QKeySequence("Ctrl+1"), self, lambda: self.switch_page(PAGE_WORDS))
+        QShortcut(QKeySequence("Ctrl+2"), self, lambda: self.switch_page(PAGE_TEXTS))
 
     def _hotkey_setting(self):
         return (self.settings.get("hotkey", DEFAULT_HOTKEY) or "").strip()
@@ -745,6 +777,58 @@ class MainWindow(QMainWindow):
         self.tray.hide()
         QApplication.quit()
 
+    # -------------------------------------------------------------- pages
+
+    def switch_page(self, index, animate=True):
+        """Swap the central view between Words and Texts. The top bar stays
+        shared but contextual: search applies to the active page, while
+        words-only controls (Add Word, search scope) hide on Texts."""
+        self.nav_words.setChecked(index == PAGE_WORDS)
+        self.nav_texts.setChecked(index == PAGE_TEXTS)
+        self._set_icon(self.nav_words, "book-open",
+                       "text" if index == PAGE_WORDS else "text_dim")
+        self._set_icon(self.nav_texts, "file-text",
+                       "text" if index == PAGE_TEXTS else "text_dim")
+
+        current = self.stack.currentIndex()
+        if index == current:
+            return
+
+        # each page keeps its own search text
+        self._page_search[current] = self.search_box.text()
+        self.search_box.blockSignals(True)
+        self.search_box.setText(self._page_search.get(index, ""))
+        self.search_box.setPlaceholderText(
+            "Search words, translations or tags…" if index == PAGE_WORDS
+            else "Search texts by title, content or words…")
+        self.search_box.blockSignals(False)
+
+        on_words = index == PAGE_WORDS
+        self.add_button.setVisible(on_words)
+        self.search_scope_btn.setVisible(on_words)
+        self.source_label.setText(self._words_subtitle if on_words else "Texts")
+
+        if not on_words:
+            self.texts_page.set_search(self.search_box.text())
+            self.texts_page.load_texts()
+
+        if animate:
+            self.stack.set_current_index_animated(index)
+        else:
+            self.stack.setCurrentIndex(index)
+        self.words_label.setText(self._footer_counts[index])
+
+    def _on_texts_counts(self, shown, total):
+        if total == 0:
+            text = "No texts yet"
+        elif shown == total:
+            text = f"Texts: {total}"
+        else:
+            text = f"Texts: {shown}/{total}"
+        self._footer_counts[PAGE_TEXTS] = text
+        if self.stack.currentIndex() == PAGE_TEXTS:
+            self.words_label.setText(text)
+
     # --------------------------------------------------------------- data
 
     def load_data(self):
@@ -753,7 +837,9 @@ class MainWindow(QMainWindow):
             self.df = words_to_dataframe(words)
             self.update_filter_combos()
             self.refresh_display()
-            self.source_label.setText("Vocabulary")
+            self._words_subtitle = "Vocabulary"
+            if self.stack.currentIndex() == PAGE_WORDS:
+                self.source_label.setText(self._words_subtitle)
             logging.info("Database loaded successfully.")
         except Exception as exc:
             logging.error(f"Database loading failed: {exc}")
@@ -782,8 +868,11 @@ class MainWindow(QMainWindow):
                 combo.setCurrentText(current)
             combo.blockSignals(False)
 
-    def on_search_changed(self, _text):
-        self.refresh_display()
+    def on_search_changed(self, text):
+        if self.stack.currentIndex() == PAGE_TEXTS:
+            self.texts_page.set_search(text)
+        else:
+            self.refresh_display()
 
     def on_filters_changed(self, *_):
         self.refresh_display()
@@ -824,7 +913,9 @@ class MainWindow(QMainWindow):
         words_text = f"Words: {len(filtered)}/{total}"
         if wf.row_limit is not None:
             words_text += f" (showing first {wf.row_limit})"
-        self.words_label.setText(words_text)
+        self._footer_counts[PAGE_WORDS] = words_text
+        if self.stack.currentIndex() == PAGE_WORDS:
+            self.words_label.setText(words_text)
 
         for combo, active in [(self.lang1_combo, wf.lang1), (self.lang2_combo, wf.lang2),
                               (self.status_combo, wf.status), (self.tag_combo, wf.selected_tag)]:
@@ -1098,8 +1189,13 @@ class MainWindow(QMainWindow):
 
         from app.ui.dialogs.generate_text import GenerateTextDialog
         dialog = GenerateTextDialog(self, words, language)
-        dialog.text_saved.connect(lambda: show_toast(self, "Texts", "Generated text saved.", "success"))
+        dialog.text_saved.connect(self._on_text_generated)
         dialog.show()
+
+    def _on_text_generated(self):
+        show_toast(self, "Texts", "Generated text saved.", "success")
+        if self.stack.currentIndex() == PAGE_TEXTS:
+            self.texts_page.load_texts()
 
     # ------------------------------------------------------------ export
 
@@ -1199,7 +1295,9 @@ class MainWindow(QMainWindow):
             self.df = open_words_from_excel(path)
             self.update_filter_combos()
             self.refresh_display()
-            self.source_label.setText(os.path.basename(path))
+            self._words_subtitle = os.path.basename(path)
+            self.switch_page(PAGE_WORDS)
+            self.source_label.setText(self._words_subtitle)
         except Exception as exc:
             logging.error(f"Error importing file: {exc}")
             QMessageBox.critical(self, "Error", f"Failed to open table:\n{exc}")
@@ -1300,17 +1398,6 @@ class MainWindow(QMainWindow):
                       on_result=lambda changed: changed and self.reload_requested.emit())
 
     # ------------------------------------------------------------ windows
-
-    def open_texts(self):
-        from app.ui.dialogs.texts_window import TextsWindow
-        existing = self._open_dialogs.get("texts")
-        if existing is not None and existing.isVisible():
-            existing.raise_()
-            existing.activateWindow()
-            return
-        win = TextsWindow(self, self.db_adapter)
-        self._open_dialogs["texts"] = win
-        win.show()
 
     def open_bin(self):
         from app.ui.dialogs.bin_window import BinWindow

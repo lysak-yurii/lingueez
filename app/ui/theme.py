@@ -441,6 +441,42 @@ QPushButton#navButton {{
     text-align: left;
 }}
 
+/* ---------- texts page ---------- */
+#TextsList {{
+    background: {c['bg_alt']};
+    border: 1px solid {c['border']};
+    border-radius: 10px;
+    padding: 4px 2px;
+    outline: 0;
+}}
+#TextsList::item {{ background: transparent; border: none; }}
+#ReaderCard {{
+    background: {c['bg_alt']};
+    border: 1px solid {c['border']};
+    border-radius: 12px;
+}}
+QLineEdit#ReaderTitle {{
+    font-size: {base_font_size + 3}pt;
+    font-weight: 700;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 4px 8px;
+}}
+QLineEdit#ReaderTitle:hover {{ background: {c['surface']}; }}
+QLineEdit#ReaderTitle:focus {{ background: {c['surface']}; border: 1px solid {c['accent']}; }}
+QTextEdit#ReaderBody {{
+    background: transparent;
+    border: none;
+    font-size: {base_font_size + 1}pt;
+    padding: 0px;
+}}
+#EmptyTitle {{
+    font-size: {base_font_size + 3}pt;
+    font-weight: 600;
+    color: {c['text']};
+}}
+
 /* ---------- window controls (client-side decorations) ---------- */
 QPushButton#winBtn, QPushButton#winBtnClose {{
     background: transparent;
