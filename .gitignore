@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+
+# Secrets & local config
+.env
+settings.cfg
+
+# Runtime files
+app.log
+crash.log
+app.lock
+window_geometry.json
+.last_sync
+.last_cleanup
+
+# Generated assets (written at startup)
+assets/generated/
+
+# User data
+dictionary.db
+backups/
+
+# Build artifacts
+dist/
+build/
+ffmpeg/
+
+# PyInstaller
+*.spec
