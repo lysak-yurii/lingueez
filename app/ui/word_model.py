@@ -56,6 +56,9 @@ class WordTableModel(QAbstractTableModel):
         self._df = pd.DataFrame(columns=EMPTY_DF_COLUMNS)
         self._rows = []
         self._favorites = []
+        self._ids = []
+        self._playing_id = None
+        self._playing_row = -1
         self._header_overrides = {}
         self.set_colors(colors)
 
@@ -68,6 +71,9 @@ class WordTableModel(QAbstractTableModel):
         self._colors = colors
         self._fav_brush = QBrush(QColor(colors["favorite"]))
         self._dim_brush = QBrush(QColor(colors["text_dim"]))
+        playing = QColor(colors["accent"])
+        playing.setAlpha(56)  # subtle tint that reads on both themes
+        self._playing_brush = QBrush(playing)
 
     def set_dataframe(self, df):
         self.beginResetModel()
@@ -78,7 +84,30 @@ class WordTableModel(QAbstractTableModel):
             for t in self._df.itertuples(index=False)
         ]
         self._favorites = self._df["favorite"].fillna(0).astype(bool).tolist()
+        self._ids = self._df["ID"].tolist()
+        self._playing_row = self._row_for_id(self._playing_id)
         self.endResetModel()
+
+    def _row_for_id(self, word_id):
+        if word_id is None:
+            return -1
+        try:
+            return self._ids.index(word_id)
+        except ValueError:
+            return -1
+
+    def set_playing_id(self, word_id):
+        """Highlight the row of the word being read aloud (None clears).
+        Returns the highlighted row index, or -1 if not visible."""
+        old_row = self._playing_row
+        self._playing_id = word_id
+        self._playing_row = self._row_for_id(word_id)
+        last_col = len(COLUMNS) - 1
+        for row in {old_row, self._playing_row}:
+            if 0 <= row < len(self._rows):
+                self.dataChanged.emit(self.index(row, 0), self.index(row, last_col),
+                                      [Qt.BackgroundRole])
+        return self._playing_row
 
     def dataframe(self):
         return self._df
@@ -106,7 +135,10 @@ class WordTableModel(QAbstractTableModel):
         if role == _ROLE_FOREGROUND:
             return self._dim_brush if index.column() in _DIM_COLS else None
         if role == _ROLE_BACKGROUND:
-            return self._fav_brush if self._favorites[index.row()] else None
+            row = index.row()
+            if row == self._playing_row:
+                return self._playing_brush
+            return self._fav_brush if self._favorites[row] else None
         return None
 
     def row_record(self, row_index):

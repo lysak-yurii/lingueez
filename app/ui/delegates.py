@@ -20,6 +20,22 @@ PILL_COLORS = {
 DEFAULT_PILL = ("#8b98a5", 30)
 
 
+class RowTintDelegate(QStyledItemDelegate):
+    """Default table delegate that honors the model's BackgroundRole.
+
+    The app stylesheet defines QTableView::item rules, which makes the
+    stylesheet style skip model background brushes entirely — favorite
+    and now-playing row tints would never show. Filling the rect before
+    the styled paint restores them."""
+
+    def paint(self, painter, option, index):
+        if not (option.state & QStyle.State_Selected):
+            bg = index.data(Qt.BackgroundRole)
+            if bg is not None:
+                painter.fillRect(option.rect, bg)
+        super().paint(painter, option, index)
+
+
 class StatusPillDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -20,6 +20,7 @@ from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.dialogs.definition import markup_to_html
 from app.ui.toast import show_toast
+from app.ui.widgets import ElidedLabel
 from app.ui.workers import run_in_thread
 
 META_ROLE = Qt.UserRole + 1
@@ -90,32 +91,12 @@ class TextCardDelegate(QStyledItemDelegate):
         painter.restore()
 
 
-class ElidedLabel(QLabel):
-    """Single-line label that elides its text and exposes it as a tooltip."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._full = ""
-
-    def set_full_text(self, text):
-        self._full = text or ""
-        self.setToolTip(self._full)
-        self._refit()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._refit()
-
-    def _refit(self):
-        fm = self.fontMetrics()
-        self.setText(fm.elidedText(self._full, Qt.ElideRight, max(0, self.width() - 2)))
-
-
 class TextsPage(QWidget):
     """Embedded replacement for the old Texts popup dialog."""
 
     counts_changed = Signal(int, int)  # (shown, total)
     reading_done = Signal()
+    tts_started = Signal()  # lets the main window stop its word player
 
     def __init__(self, db_adapter, colors, parent=None):
         super().__init__(parent)
@@ -496,6 +477,7 @@ class TextsPage(QWidget):
         if not content or language not in lang_codes:
             return
 
+        self.tts_started.emit()
         self.is_reading = True
         self.tts_btn.setIcon(icons.icon("stop", self._colors["danger"], 18))
         self.tts_btn.setToolTip("Stop reading")
