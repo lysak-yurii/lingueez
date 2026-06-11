@@ -1,0 +1,144 @@
+"""Settings persistence.
+
+Reads/writes the same flat ``key=value`` settings.cfg format as the
+original app so a settings file can be moved between both versions.
+"""
+import logging
+import os
+import threading
+
+SETTINGS_FILE = "settings.cfg"
+
+DEFAULTS = {
+    # Appearance
+    "appearance_mode": "System",        # System | Light | Dark
+    "widget_scaling": "1.0",
+    "table_density": "Normal",          # Compact | Normal | Comfortable | Spacious
+    # Audio
+    "pause_duration": "0.5",
+    "number_of_repeats": "1",
+    "max_concurrent_workers": "2",
+    "requests_per_sec": "5",
+    # TTS
+    "tts_provider": "gTTS",
+    "google_cloud_tts_credentials_path": "",
+    "google_cloud_tts_voice_type": "standard",
+    "google_cloud_tts_voice_name": "",
+    # PDF export
+    "left_margin": "10.0",
+    "right_margin": "10.0",
+    "top_margin": "10.0",
+    "bottom_margin": "10.0",
+    "page_size": "Letter",
+    "font_name": "Helvetica",
+    "font_size": "10.0",
+    "leading": "12.0",
+    "alignment": "CENTER",
+    "col_width_1": "0.5",
+    "col_width_2": "1.0",
+    "col_width_3": "1.0",
+    "col_width_4": "2.4",
+    "col_width_5": "1.0",
+    "col_width_6": "2.5",
+    "header_bg_color": "#808080",
+    "bg_color": "#f8f4dc",
+    "text_color": "#000000",
+    "grid_color": "#000000",
+    "bg_image": "No background image",
+    "exclude_columns": "ID,Source,created_at,Definition",
+    # Excel export
+    "exclude_columns_excel": "ID,Source",
+    "excel_format": "Excel",
+    "csv_delimiter": ",",
+    "sheet_name": "Sheet1",
+    "start_row": "0",
+    "start_column": "0",
+    "alternate_row_color": "#e0e0e0",
+    "auto_column_width": "True",
+    "freeze_panes": "False",
+    # TXT export
+    "txt_delimiter": "\\t",
+    "txt_include_headers": "True",
+    "txt_header_lines": "#separator:tab\\n#html:true\\n",
+    "exclude_columns_txt": "ID,Source",
+    # DeepL
+    "api_key": "",
+    "api_url": "https://api.deepl.com/v2/translate",
+    # ChatGPT
+    "chatgpt_model": "gpt-4o-mini",
+    "chatgpt_max_tokens": "400",
+    "chatgpt_temperature": "0.3",
+    "chatgpt_role": "assistant",
+    "chatgpt_content": (
+        "Define the word: {word} in {language1} and in {language2}. "
+        "Also provide example sentences (in different contexts) with that word, "
+        "and synonyms solely in {language1}. Markups: '***' for 'Definition', "
+        "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'."
+    ),
+    "chatgpt_texts_model": "gpt-4o-mini",
+    "chatgpt_texts_max_tokens": "300",
+    "chatgpt_texts_temperature": "0.7",
+    "chatgpt_texts_role": "assistant",
+    "chatgpt_texts_content": (
+        "Generate a title and a comprehensive text using the following words: {words} "
+        "in the following language: {language}.Separate the title and text with a "
+        "delimiter like \"\\n\\n\". And do not use any markups('**' etc.)"
+    ),
+    # Excel import
+    "excel_import_placeholders": "(  ),'',N/A,---,None,null",
+    "excel_import_skip_placeholders": "True",
+    "excel_import_skip_empty": "True",
+    "excel_import_normalize": "True",
+    # Sync
+    "enable_sync": "False",
+    "cleanup_grace_period_days": "30",
+}
+
+_lock = threading.Lock()
+
+
+def load_settings(path=SETTINGS_FILE):
+    """Return settings dict (defaults overlaid with the file contents)."""
+    settings = dict(DEFAULTS)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                settings[key.strip()] = value
+    except FileNotFoundError:
+        logging.warning("Settings file not found, using defaults.")
+    return settings
+
+
+def save_settings(settings, path=SETTINGS_FILE):
+    """Persist all known keys (and any extra ones) back to settings.cfg."""
+    with _lock:
+        ordered = dict(DEFAULTS)
+        ordered.update(settings)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write("# Dictionary App Configuration File\n")
+            for key, value in ordered.items():
+                fh.write(f"{key}={value}\n")
+        os.replace(tmp, path)
+
+
+def get_bool(settings, key, default=False):
+    return str(settings.get(key, default)).strip().lower() in ("true", "1", "yes")
+
+
+def get_float(settings, key, default=0.0):
+    try:
+        return float(settings.get(key, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def get_int(settings, key, default=0):
+    try:
+        return int(float(settings.get(key, default)))
+    except (TypeError, ValueError):
+        return default
