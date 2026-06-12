@@ -400,6 +400,13 @@ QGroupBox::title {{
     border: 1px solid {c['border']};
     background: {c['surface_alt']};
 }}
+#WordPopup {{
+    background: transparent;  /* the pill paints its own rounded body */
+}}
+#WordPopupText {{
+    font-weight: 600;
+    background: transparent;
+}}
 
 /* ---------- app shell ---------- */
 #Sidebar {{

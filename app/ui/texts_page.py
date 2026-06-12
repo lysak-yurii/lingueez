@@ -1,12 +1,14 @@
 """Texts page: master-detail browser/reader embedded in the main window.
 
 Left: filterable, sortable list of saved texts rendered as cards.
-Right: reader card with inline title editing, TTS, save and delete.
+Right: reader card with inline title editing, a controllable read-aloud
+player (pause / sentence skips / click-to-seek / word highlighting),
+save and delete.
 """
 import logging
 
-from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
+from PySide6.QtCore import QEvent, QPointF, QRect, QSize, Qt, Signal
+from PySide6.QtGui import QAction, QColor, QFont, QFontMetrics, QPainter, QTextCursor
 from PySide6.QtWidgets import (
     QAbstractItemView, QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSplitter,
@@ -14,13 +16,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.core.audio import lang_codes, read_words_list, stop_playback
+from app.core.audio import lang_codes, speak_word
 from app.core.backup_management import backup_database
 from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.dialogs.definition import markup_to_html
+from app.ui.reader import ReaderPlayer, ReaderToolbar, _sentence_spans
 from app.ui.toast import show_toast
 from app.ui.widgets import ElidedLabel
+from app.ui.word_popup import WordPopup
 from app.ui.workers import run_in_thread
 
 META_ROLE = Qt.UserRole + 1
@@ -95,8 +99,9 @@ class TextsPage(QWidget):
     """Embedded replacement for the old Texts popup dialog."""
 
     counts_changed = Signal(int, int)  # (shown, total)
-    reading_done = Signal()
     tts_started = Signal()  # lets the main window stop its word player
+    add_word_requested = Signal(str, str)  # (word, language)
+    vocab_changed = Signal()  # popup saved a word — main window reloads
 
     def __init__(self, db_adapter, colors, parent=None):
         super().__init__(parent)
@@ -111,9 +116,28 @@ class TextsPage(QWidget):
         self._dirty = False
         self._loaded_once = False
         self._themed = []      # (button, icon name, color key, size)
+        self._sentence_range = None  # highlight ranges (absolute char offsets)
+        self._word_range = None
+        self._hover_range = None
+        self._press_pos = None       # click-to-seek gesture tracking
 
-        self.reading_done.connect(self._tts_finished)
         self._build_ui()
+
+        self.reader = ReaderPlayer(self)
+        self.reader.state_changed.connect(self.reader_bar.set_state)
+        self.reader.progress_changed.connect(self.reader_bar.set_progress)
+        self.reader.sentence_changed.connect(self._on_sentence_changed)
+        self.reader.word_changed.connect(self._on_word_changed)
+        self.reader.finished.connect(self._reading_finished)
+        self.reader.error.connect(self._on_reader_error)
+        self.reader_bar.prev_clicked.connect(self.reader.prev_sentence)
+        self.reader_bar.toggle_clicked.connect(self.reader.toggle_pause)
+        self.reader_bar.next_clicked.connect(self.reader.next_sentence)
+        self.reader_bar.stop_clicked.connect(self.stop_reading)
+        self.reader_bar.rate_changed.connect(self.reader.set_rate)
+
+        self.word_popup = WordPopup(self._colors, self.db_adapter, parent=self)
+        self.word_popup.word_saved.connect(self.vocab_changed.emit)
 
     # ------------------------------------------------------------------ UI
 
@@ -195,8 +219,11 @@ class TextsPage(QWidget):
         self.title_edit.setPlaceholderText("Title")
         self.title_edit.textEdited.connect(self._mark_dirty)
         top.addWidget(self.title_edit, 1)
-        self.tts_btn = self._icon_button("volume", "text", "Read aloud", self.toggle_tts)
+        self.tts_btn = self._icon_button("volume", "text", "Read aloud", self.toggle_reading)
         top.addWidget(self.tts_btn)
+        self.edit_btn = self._icon_button("edit", "text", "Edit text", self._on_edit_toggled)
+        self.edit_btn.setCheckable(True)
+        top.addWidget(self.edit_btn)
         delete_btn = self._icon_button("trash", "danger", "Delete text", self.delete_current)
         top.addWidget(delete_btn)
         cv.addLayout(top)
@@ -217,8 +244,18 @@ class TextsPage(QWidget):
         self.words_line.setObjectName("dimLabel")
         cv.addWidget(self.words_line)
 
+        self.reader_bar = ReaderToolbar(self._colors)
+        self.reader_bar.setVisible(False)
+        cv.addWidget(self.reader_bar)
+
         self.body = QTextEdit(objectName="ReaderBody")
+        self.body.setReadOnly(True)  # reading-first; editing via the pencil toggle
         self.body.textChanged.connect(self._mark_dirty)
+        self.body.viewport().installEventFilter(self)
+        self.body.viewport().setMouseTracking(True)
+        self.body.viewport().setCursor(Qt.ArrowCursor)
+        self.body.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.body.customContextMenuRequested.connect(self._body_context_menu)
         cv.addWidget(self.body, 1)
 
         bottom = QHBoxLayout()
@@ -233,7 +270,7 @@ class TextsPage(QWidget):
         bottom.addWidget(self.next_btn)
         bottom.addStretch(1)
         self.save_btn = QPushButton("Save Changes", objectName="primaryButton")
-        self.save_btn.setEnabled(False)
+        self.save_btn.setVisible(False)  # appears only with unsaved changes
         self.save_btn.clicked.connect(self.save_current)
         bottom.addWidget(self.save_btn)
         cv.addLayout(bottom)
@@ -256,7 +293,12 @@ class TextsPage(QWidget):
             btn.setIcon(icons.icon(name, colors[color_key], size))
         if self.is_reading:
             self.tts_btn.setIcon(icons.icon("stop", colors["danger"], 18))
+        if self.edit_btn.isChecked():
+            self.edit_btn.setIcon(icons.icon("edit", colors["accent_text"], 18))
         self.empty_icon.setPixmap(icons.pixmap("file-text", colors["text_dim"], 44))
+        self.reader_bar.refresh_theme(colors)
+        self.word_popup.refresh_theme(colors)
+        self._apply_highlight()
 
     # ---------------------------------------------------------------- data
 
@@ -363,6 +405,9 @@ class TextsPage(QWidget):
         self._show_text(text, row)
 
     def _show_text(self, text, row):
+        if text is not self.current:
+            self.stop_reading()
+            self._set_edit_mode(False)
         if self.reader_stack.currentIndex() == 1 and self.current is not None \
                 and text is not self.current:
             fade_swap(self.reader_card)
@@ -392,13 +437,30 @@ class TextsPage(QWidget):
 
     # --------------------------------------------------------------- edits
 
+    def _on_edit_toggled(self, checked):
+        if checked:
+            self.stop_reading()
+        self._set_edit_mode(checked)
+
+    def _set_edit_mode(self, editing):
+        self.edit_btn.setChecked(editing)
+        self.edit_btn.setToolTip("Done editing" if editing else "Edit text")
+        self.edit_btn.setIcon(icons.icon(
+            "edit", self._colors["accent_text" if editing else "text"], 18))
+        self.body.setReadOnly(not editing)
+        self.body.viewport().setCursor(
+            Qt.IBeamCursor if editing else Qt.ArrowCursor)
+        self._set_hover(None)
+        if editing:
+            self.body.setFocus()
+
     def _mark_dirty(self, *_):
         if not self._loading and self.current is not None:
             self._set_dirty(True)
 
     def _set_dirty(self, dirty):
         self._dirty = dirty
-        self.save_btn.setEnabled(dirty and self.current is not None)
+        self.save_btn.setVisible(dirty and self.current is not None)
 
     def _editor_data(self):
         return {
@@ -441,6 +503,7 @@ class TextsPage(QWidget):
     def delete_current(self):
         if self.current is None:
             return
+        self.stop_reading()
         title = str(self.current.get('Title') or "(untitled)")
         if QMessageBox.question(self, "Delete Text", f"Delete '{title}'?",
                                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
@@ -463,40 +526,223 @@ class TextsPage(QWidget):
         show_toast(self.window(), "Texts", f"'{title}' moved to bin.", "success")
         self.load_texts(preserve_id=neighbor)
 
-    # ----------------------------------------------------------------- tts
+    # ------------------------------------------------------------- reading
 
-    def toggle_tts(self):
+    def toggle_reading(self):
         if self.is_reading:
-            stop_playback()
-            self._tts_finished()
-            return
+            self.stop_reading()
+        else:
+            self.start_reading()
+
+    def start_reading(self, start_char=0):
+        """Begin a read-aloud session, optionally from a character offset."""
         if self.current is None:
             return
-        content = self.body.toPlainText().strip()
         language = self.language_combo.currentText()
-        if not content or language not in lang_codes:
+        if language not in lang_codes:
+            show_toast(self.window(), "Reader",
+                       f"Unsupported language: {language}", "warning")
             return
-
-        self.tts_started.emit()
+        self._set_edit_mode(False)
+        self.tts_started.emit()  # the main window stops its word player
+        # toPlainText() unstripped: reader offsets must match the document
+        if not self.reader.start(self.body.toPlainText(), language,
+                                 start_char=start_char):
+            return
         self.is_reading = True
+        self.reader_bar.reset()
+        self.reader_bar.setVisible(True)
         self.tts_btn.setIcon(icons.icon("stop", self._colors["danger"], 18))
         self.tts_btn.setToolTip("Stop reading")
 
-        # Read the text in chunks (sentences grouped to ~400 chars)
-        chunks, buf = [], ""
-        for sentence in content.replace("\n", " ").split(". "):
-            buf += sentence + ". "
-            if len(buf) > 400:
-                chunks.append(buf)
-                buf = ""
-        if buf.strip():
-            chunks.append(buf)
-        pairs = [(chunk, "") for chunk in chunks]
-        langs = [(language, language)] * len(pairs)
+    def stop_reading(self):
+        if self.is_reading:
+            self.reader.stop()  # emits finished -> _reading_finished
 
-        run_in_thread(read_words_list, pairs, langs, self.reading_done.emit)
-
-    def _tts_finished(self):
+    def _reading_finished(self):
+        if not self.is_reading:
+            return
         self.is_reading = False
+        self.reader_bar.setVisible(False)
+        self._sentence_range = None
+        self._word_range = None
+        self._apply_highlight()
         self.tts_btn.setIcon(icons.icon("volume", self._colors["text"], 18))
         self.tts_btn.setToolTip("Read aloud")
+
+    def _on_reader_error(self, message):
+        show_toast(self.window(), "Reader", message, "warning")
+
+    # -------------------------------------------------------- highlighting
+
+    def _on_sentence_changed(self, start, end):
+        self._sentence_range = (start, end)
+        self._word_range = None
+        self._apply_highlight()
+
+    def _on_word_changed(self, start, end):
+        if start < 0:
+            self._sentence_range = None
+            self._word_range = None
+            self._apply_highlight()
+            return
+        self._word_range = (start, end)
+        self._apply_highlight()
+        self._scroll_to_word()
+
+    def _selection(self, start, end, background):
+        selection = QTextEdit.ExtraSelection()
+        cursor = QTextCursor(self.body.document())
+        cursor.setPosition(start)
+        cursor.setPosition(end, QTextCursor.KeepAnchor)
+        selection.cursor = cursor
+        selection.format.setBackground(QColor(background))
+        return selection
+
+    def _tint(self, alpha):
+        color = QColor(self._colors["accent"])
+        color.setAlpha(alpha)
+        return color
+
+    def _apply_highlight(self):
+        # Translucent accent tints all the way down: the text keeps its
+        # normal color and the layers stay calm but distinguishable.
+        selections = []
+        if self._sentence_range:
+            selections.append(self._selection(*self._sentence_range, self._tint(22)))
+        if self._hover_range and self._hover_range != self._word_range:
+            selections.append(self._selection(*self._hover_range, self._tint(55)))
+        if self._word_range:
+            selections.append(self._selection(*self._word_range, self._tint(95)))
+        self.body.setExtraSelections(selections)
+
+    def _scroll_to_word(self):
+        """Keep the highlighted word visible without moving the caret."""
+        if not self._word_range:
+            return
+        cursor = QTextCursor(self.body.document())
+        cursor.setPosition(self._word_range[0])
+        rect = self.body.cursorRect(cursor)
+        viewport_height = self.body.viewport().height()
+        if rect.top() < 0 or rect.bottom() > viewport_height:
+            bar = self.body.verticalScrollBar()
+            bar.setValue(bar.value() + rect.center().y() - viewport_height // 2)
+
+    # --------------------------------------------------- word interactions
+
+    def eventFilter(self, obj, event):
+        # Read-mode mouse behavior: a plain click on a word seeks playback
+        # while reading, or pronounces the word when idle; drag-selection
+        # (for copying) still works because a release after a drag or with
+        # an active selection is left alone. The hovered word gets a subtle
+        # highlight.
+        if obj is self.body.viewport():
+            etype = event.type()
+            if etype == QEvent.MouseMove:
+                if self.body.isReadOnly():
+                    self._set_hover(self._word_at_point(event.position().toPoint()))
+            elif etype == QEvent.Leave:
+                self._set_hover(None)
+            elif self.body.isReadOnly() and etype == QEvent.MouseButtonPress \
+                    and event.button() == Qt.LeftButton:
+                self._press_pos = event.position().toPoint()
+            elif self.body.isReadOnly() and etype == QEvent.MouseButtonRelease \
+                    and event.button() == Qt.LeftButton:
+                press, self._press_pos = self._press_pos, None
+                pos = event.position().toPoint()
+                if press is not None and (pos - press).manhattanLength() < 8 \
+                        and not self.body.textCursor().hasSelection():
+                    if self.is_reading:
+                        self.reader.seek_to_char(
+                            self.body.cursorForPosition(pos).position())
+                        return True
+                    word_range = self._word_at_point(pos)
+                    if word_range:
+                        start, end = word_range
+                        word = self.body.toPlainText()[start:end]
+                        self._pronounce(word, self.language_combo.currentText())
+                        self._show_word_popup(word, start, end)
+                        return True
+        return super().eventFilter(obj, event)
+
+    def _word_at_point(self, pos):
+        """(start, end) of the word under the mouse, or None.
+
+        ExactHit: only react when the pointer is really over text, not in
+        the empty area where cursorForPosition snaps to the nearest word.
+        """
+        layout = self.body.document().documentLayout()
+        doc_point = QPointF(pos.x() + self.body.horizontalScrollBar().value(),
+                            pos.y() + self.body.verticalScrollBar().value())
+        if layout.hitTest(doc_point, Qt.ExactHit) < 0:
+            return None
+        cursor = self.body.cursorForPosition(pos)
+        cursor.select(QTextCursor.WordUnderCursor)
+        word = cursor.selectedText()
+        if word and any(ch.isalpha() for ch in word):
+            return (cursor.selectionStart(), cursor.selectionEnd())
+        return None
+
+    def _show_word_popup(self, word, start, end):
+        """Anchor the translation popover above the clicked word."""
+        text = self.body.toPlainText()
+        sentence = next((text[a:b].strip() for a, b in _sentence_spans(text)
+                         if a <= start < b), "")
+        cursor = QTextCursor(self.body.document())
+        cursor.setPosition(start)
+        rect = self.body.cursorRect(cursor)
+        cursor.setPosition(end)
+        rect = rect.united(self.body.cursorRect(cursor))
+        anchor = QRect(self.body.viewport().mapToGlobal(rect.topLeft()),
+                       rect.size())
+        self.word_popup.show_for(word, self.language_combo.currentText(),
+                                 sentence, anchor)
+
+    def _set_hover(self, word_range):
+        if word_range != self._hover_range:
+            self._hover_range = word_range
+            self._apply_highlight()
+        if not self.body.isReadOnly():
+            shape = Qt.IBeamCursor
+        elif word_range:
+            shape = Qt.PointingHandCursor  # click seeks (reading) / pronounces
+        else:
+            shape = Qt.ArrowCursor
+        self.body.viewport().setCursor(shape)
+
+    def _body_context_menu(self, pos):
+        menu = self.body.createStandardContextMenu(pos)
+        cursor = self.body.cursorForPosition(pos)
+        cursor.select(QTextCursor.WordUnderCursor)
+        word = cursor.selectedText().strip()
+        language = self.language_combo.currentText()
+        if word and any(ch.isalpha() for ch in word):
+            display = word if len(word) <= 24 else word[:21] + "…"
+            start_char = cursor.selectionStart()
+            pronounce = QAction(f"Pronounce “{display}”", menu)
+            pronounce.triggered.connect(lambda: self._pronounce(word, language))
+            add = QAction(f"Add “{display}” to vocabulary", menu)
+            add.triggered.connect(
+                lambda: self.add_word_requested.emit(word, language))
+            read_here = QAction("Read from here", menu)
+            read_here.triggered.connect(lambda: self._read_from(start_char))
+            separator = QAction(menu)
+            separator.setSeparator(True)
+            first = menu.actions()[0] if menu.actions() else None
+            menu.insertActions(first, [pronounce, add, read_here, separator])
+        menu.exec(self.body.viewport().mapToGlobal(pos))
+        menu.deleteLater()
+
+    def _pronounce(self, word, language):
+        if language not in lang_codes:
+            language = "English"
+        self.reader.pause()  # don't talk over the reading voice
+        run_in_thread(speak_word, word, language,
+                      on_error=lambda msg: show_toast(
+                          self.window(), "Reader", msg, "warning"))
+
+    def _read_from(self, start_char):
+        if self.is_reading:
+            self.reader.seek_to_char(start_char)
+        else:
+            self.start_reading(start_char=start_char)

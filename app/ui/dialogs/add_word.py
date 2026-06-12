@@ -21,7 +21,7 @@ from app.ui.workers import run_in_thread
 class AddWordDialog(FramelessDialog):
     word_saved = Signal()
 
-    def __init__(self, parent, prefill=None, auto_translate=False):
+    def __init__(self, parent, prefill=None, auto_translate=False, language1=None):
         super().__init__(parent, title="Add Word")
         self.setMinimumWidth(540)
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -116,7 +116,10 @@ class AddWordDialog(FramelessDialog):
 
         if prefill:
             self.word1_edit.setText(prefill)
-            self.lang1_combo.setCurrentText("Detect language")
+            if language1 and self.lang1_combo.findText(language1) >= 0:
+                self.lang1_combo.setCurrentText(language1)
+            else:
+                self.lang1_combo.setCurrentText("Detect language")
             if len(prefill.split()) >= 100:
                 self._info("The text was truncated to the first 100 words.")
         if auto_translate and prefill:

@@ -19,6 +19,8 @@ DEFAULTS = {
     "number_of_repeats": "1",
     "max_concurrent_workers": "2",
     "requests_per_sec": "5",
+    # Reader
+    "reader_translate_target": "English",  # word-popup translation target
     # TTS
     "tts_provider": "gTTS",
     "google_cloud_tts_credentials_path": "",

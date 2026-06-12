@@ -1,8 +1,8 @@
 """Word playback: a controllable player engine + the compact player bar.
 
-WordPlayer replaces the fire-and-forget read_words_list() flow for the
-words table: synthesis is prefetched in the background while playback
-starts on the first ready word, and the session responds to pause/resume,
+WordPlayer is the playback engine for the words table: synthesis is
+prefetched in the background while playback starts on the first ready
+word, and the session responds to pause/resume,
 previous/next and stop commands at word granularity. Synthesized files
 are kept for the whole session so jumping backwards never re-synthesizes.
 """
