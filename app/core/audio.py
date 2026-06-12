@@ -99,11 +99,29 @@ def get_tts_settings():
     voice_type = settings.get("google_cloud_tts_voice_type", "standard").lower()
     voice_name = settings.get("google_cloud_tts_voice_name", "")
 
-    if provider == "google_cloud_tts" and not GOOGLE_CLOUD_TTS_AVAILABLE:
-        logging.warning("Google Cloud TTS selected but not available. Falling back to gTTS.")
+    if provider == "google_cloud_tts" and google_cloud_tts_problem(settings):
+        # Known-broken config: don't attempt Google Cloud per word — the
+        # default-credentials probe costs ~12s for every synthesis call.
+        logging.warning("Google Cloud TTS selected but not usable. Falling back to gTTS.")
         provider = "gtts"
 
     return provider, credentials_path, voice_type, voice_name
+
+
+def google_cloud_tts_problem(settings=None):
+    """Why Google Cloud TTS would fall back to gTTS, or None if it looks OK."""
+    settings = settings or load_settings()
+    provider = settings.get("tts_provider", "gTTS").lower()
+    if not ("google" in provider and "cloud" in provider):
+        return None
+    if not GOOGLE_CLOUD_TTS_AVAILABLE:
+        return "the google-cloud-texttospeech package is not installed"
+    path = settings.get("google_cloud_tts_credentials_path", "").strip()
+    if not path:
+        return "no credentials file is configured"
+    if not os.path.exists(path):
+        return f"the credentials file does not exist:\n{path}"
+    return None
 
 
 def synthesize_speech(text, language_code, cancellation_event=None):

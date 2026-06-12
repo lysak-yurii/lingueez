@@ -165,6 +165,7 @@ class MainWindow(QMainWindow):
         self.show_created = False
         self._quitting = False
         self._open_dialogs = {}
+        self._tts_fallback_warned = False
         self._page_search = {PAGE_WORDS: "", PAGE_TEXTS: ""}
         self._footer_counts = {PAGE_WORDS: "No data", PAGE_TEXTS: "No texts yet"}
         self._words_subtitle = "Vocabulary"
@@ -1184,6 +1185,17 @@ class MainWindow(QMainWindow):
         records = self._require_selection("read aloud")
         if not records:
             return
+
+        if not self._tts_fallback_warned:
+            from app.core.audio import google_cloud_tts_problem
+            problem = google_cloud_tts_problem()
+            if problem:
+                self._tts_fallback_warned = True
+                show_toast(self, "Google Cloud TTS unavailable",
+                           f"Using gTTS instead — {problem}\n"
+                           f"Fix it in Settings → Audio.",
+                           "warning", 8000)
+
         if len(records) > 200:
             records = records[:200]
             show_toast(self, "Selection limit",
