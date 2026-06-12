@@ -57,6 +57,7 @@ class SettingsDialog(QDialog):
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._appearance_tab(), "Appearance")
+        self.tabs.addTab(self._audio_tab(), "Audio")
         self.tabs.addTab(self._export_tab(), "Export")
         self.tabs.addTab(self._import_tab(), "Import")
         self.tabs.addTab(self._apis_tab(), "APIs")
@@ -229,15 +230,28 @@ class SettingsDialog(QDialog):
         form.addRow("Excluded columns", self._line("exclude_columns"))
         tabs.addTab(_scrollable(pdf), "PDF")
 
-        # Audio
-        audio = QWidget()
-        form = QFormLayout(audio)
+        # Audio export (MP3)
+        audio_export = QWidget()
+        form = QFormLayout(audio_export)
         form.setContentsMargins(18, 18, 18, 18)
         form.addRow("Pause between words (s)", self._dspin("pause_duration", 0, 10, 0.5))
         form.addRow("Repeats per pair", self._spin("number_of_repeats", 1, 10, 1))
         form.addRow("Concurrent workers", self._spin("max_concurrent_workers", 1, 16, 2))
         form.addRow("Requests per second", self._spin("requests_per_sec", 1, 50, 5))
-        form.addRow(QLabel(""))
+        note = QLabel("Used only when exporting words to an MP3 file. "
+                      "The voice itself is configured in the Audio tab.")
+        note.setObjectName("dimLabel")
+        note.setWordWrap(True)
+        form.addRow(note)
+        tabs.addTab(_scrollable(audio_export), "Audio (MP3)")
+
+        return tabs
+
+    def _audio_tab(self):
+        """Text-to-speech settings (used by Read Aloud and MP3 export alike)."""
+        audio = QWidget()
+        form = QFormLayout(audio)
+        form.setContentsMargins(18, 18, 18, 18)
         form.addRow("TTS provider", self._combo("tts_provider", ["gTTS", "google_cloud_tts"]))
         cred_row = QHBoxLayout()
         cred_row.addWidget(self._line("google_cloud_tts_credentials_path"))
@@ -249,9 +263,15 @@ class SettingsDialog(QDialog):
         form.addRow("Google Cloud credentials", cred_w)
         form.addRow("Voice type", self._combo("google_cloud_tts_voice_type", ["standard", "wavenet"]))
         form.addRow("Voice name (optional)", self._line("google_cloud_tts_voice_name"))
-        tabs.addTab(_scrollable(audio), "Audio / TTS")
-
-        return tabs
+        note = QLabel("The voice used everywhere words are spoken: in-app Read Aloud "
+                      "and MP3 export. gTTS is free and needs no setup. Google Cloud TTS "
+                      "needs a service-account JSON key (Cloud Console → IAM & Admin → "
+                      "Service Accounts → Keys) and billing enabled on the project — "
+                      "usage within the free monthly quota is not charged.")
+        note.setObjectName("dimLabel")
+        note.setWordWrap(True)
+        form.addRow(note)
+        return _scrollable(audio)
 
     def _import_tab(self):
         widget = QWidget()
@@ -440,5 +460,12 @@ class SettingsDialog(QDialog):
             set_autostart(self.autostart_check.isChecked())
         except Exception as exc:
             QMessageBox.warning(self, "Autostart", f"Could not update autostart entry:\n{exc}")
+
+        from app.core.audio import google_cloud_tts_problem
+        problem = google_cloud_tts_problem()
+        if problem:
+            QMessageBox.warning(self, "Google Cloud TTS",
+                                f"Google Cloud TTS is selected but {problem}\n\n"
+                                f"Audio will fall back to gTTS until this is fixed.")
 
         self.accept()
