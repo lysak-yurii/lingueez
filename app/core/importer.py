@@ -30,6 +30,15 @@ def _noop_log(message, level='info'):
     logger.log(_PY_LEVELS.get(level, logging.INFO), message)
 
 
+def create_import_template(path):
+    """Write an .xlsx import template: the required headers plus example rows."""
+    examples = [
+        {"Language1": "English", "Language2": "German", "Word1": "house", "Word2": "Haus"},
+        {"Language1": "English", "Language2": "Ukrainian", "Word1": "dictionary", "Word2": "словник"},
+    ]
+    pd.DataFrame(examples, columns=REQUIRED_HEADERS).to_excel(path, index=False)
+
+
 def read_excel_with_headers(file_path, log=_noop_log):
     """Read an Excel file, with or without a header row. Returns df or None."""
     all_headers = REQUIRED_HEADERS + OPTIONAL_HEADERS

@@ -1,7 +1,7 @@
 """Settings dialog. Persists to settings.cfg (and API keys to .env)."""
 import os
+import shutil
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
@@ -11,7 +11,9 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
+from app.core import exporters
 from app.system.autostart import get_autostart_enabled, set_autostart
+from app.ui.widgets import ColorButton, ColumnPicker
 
 
 def _read_env():
@@ -117,6 +119,18 @@ class SettingsDialog(QDialog):
         setattr(self, f"w_{key}", box)
         return box
 
+    def _color(self, key, clearable=False):
+        btn = ColorButton(str(self.settings.get(key, "")), clearable)
+        setattr(self, f"w_{key}", btn)
+        return btn
+
+    def _columns(self, key, width_spins=None):
+        cols = [(c, exporters.EXPORT_COLUMN_LABELS[c]) for c in exporters.EXPORT_COLUMNS]
+        cols += [(c, exporters.EXTRA_LABELS[c]) for c in exporters.EXTRA_COLUMNS]
+        picker = ColumnPicker(cols, str(self.settings.get(key, "")), width_spins)
+        setattr(self, f"w_{key}", picker)
+        return picker
+
     def _combo(self, key, values, default=None):
         combo = QComboBox()
         combo.addItems(values)
@@ -171,63 +185,113 @@ class SettingsDialog(QDialog):
 
         # Excel / CSV
         excel = QWidget()
-        form = QFormLayout(excel)
-        form.setContentsMargins(18, 18, 18, 18)
+        layout = QVBoxLayout(excel)
+        layout.setContentsMargins(18, 18, 18, 18)
+        fmt_group = QGroupBox("Format")
+        form = QFormLayout(fmt_group)
         form.addRow("Data format", self._combo("excel_format", ["Excel", "CSV"]))
-        form.addRow("CSV delimiter", self._line("csv_delimiter", 80))
+        form.addRow("Columns to export", self._columns("exclude_columns_excel"))
+        layout.addWidget(fmt_group)
+        xls_group = QGroupBox("Excel options")
+        form = QFormLayout(xls_group)
         form.addRow("Sheet name", self._line("sheet_name", 160))
         form.addRow("Start row", self._spin("start_row", 0, 100))
         form.addRow("Start column", self._spin("start_column", 0, 100))
-        form.addRow("Excluded columns", self._line("exclude_columns_excel"))
-        form.addRow("Alternate row color", self._line("alternate_row_color", 120))
+        form.addRow("Shade alternate rows", self._color("alternate_row_color", clearable=True))
         form.addRow("Auto column width", self._check("auto_column_width", True))
         form.addRow("Freeze header row", self._check("freeze_panes", False))
+        layout.addWidget(xls_group)
+        csv_group = QGroupBox("CSV options")
+        form = QFormLayout(csv_group)
+        form.addRow("Delimiter", self._line("csv_delimiter", 80))
+        layout.addWidget(csv_group)
+        layout.addStretch(1)
         tabs.addTab(_scrollable(excel), "Excel / CSV")
 
         # TXT
         txt = QWidget()
         form = QFormLayout(txt)
         form.setContentsMargins(18, 18, 18, 18)
+        form.addRow("Columns to export", self._columns("exclude_columns_txt"))
         form.addRow("Delimiter (\\t = tab)", self._line("txt_delimiter", 80))
         form.addRow("Include header lines", self._check("txt_include_headers", True))
         form.addRow("Header lines", self._line("txt_header_lines"))
-        form.addRow("Excluded columns", self._line("exclude_columns_txt"))
+        note = QLabel("Header lines are written at the top of the file — import tools like "
+                      "Anki read them (e.g. #separator:tab, #html:true). "
+                      "Column names themselves are not written.")
+        note.setObjectName("dimLabel")
+        note.setWordWrap(True)
+        form.addRow(note)
         tabs.addTab(_scrollable(txt), "TXT")
 
         # PDF
         pdf = QWidget()
-        form = QFormLayout(pdf)
-        form.setContentsMargins(18, 18, 18, 18)
+        layout = QVBoxLayout(pdf)
+        layout.setContentsMargins(18, 18, 18, 18)
+
+        page_group = QGroupBox("Page && text")
+        form = QFormLayout(page_group)
         form.addRow("Page size", self._combo("page_size", ["Letter", "A4"]))
-        form.addRow("Font name", self._line("font_name", 200))
+        font_row = QHBoxLayout()
+        self.w_font_name = QComboBox()
+        self.w_font_name.addItems(exporters.BUILTIN_FONTS + exporters.list_font_names())
+        current_font = str(self.settings.get("font_name", "Helvetica"))
+        if self.w_font_name.findText(current_font) < 0:
+            self.w_font_name.addItem(current_font)
+        self.w_font_name.setCurrentText(current_font)
+        font_row.addWidget(self.w_font_name, 1)
+        add_font = QPushButton("Add font…")
+        add_font.setToolTip("Copy a .ttf file into the app's fonts folder and use it")
+        add_font.clicked.connect(self._add_font)
+        font_row.addWidget(add_font)
+        font_w = QWidget()
+        font_w.setLayout(font_row)
+        form.addRow("Font", font_w)
         form.addRow("Font size", self._dspin("font_size", 4, 40, 10))
-        form.addRow("Leading", self._dspin("leading", 4, 60, 12))
-        form.addRow("Alignment", self._combo("alignment", ["LEFT", "CENTER", "RIGHT"]))
+        form.addRow("Line spacing (pt)", self._dspin("leading", 4, 60, 12))
+        form.addRow("Text alignment", self._combo("alignment", ["LEFT", "CENTER", "RIGHT"]))
         margins = QHBoxLayout()
         for key in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
             margins.addWidget(self._dspin(key, 0, 100, 10))
         margins_w = QWidget()
         margins_w.setLayout(margins)
-        form.addRow("Margins (L/R/T/B)", margins_w)
-        widths = QHBoxLayout()
-        for i in range(1, 7):
-            widths.addWidget(self._dspin(f"col_width_{i}", 0.1, 10, 1.0))
-        widths_w = QWidget()
-        widths_w.setLayout(widths)
-        form.addRow("Column widths (in)", widths_w)
-        form.addRow("Header background", self._line("header_bg_color", 120))
-        form.addRow("Row background", self._line("bg_color", 120))
-        form.addRow("Header text color", self._line("text_color", 120))
-        form.addRow("Grid color", self._line("grid_color", 120))
+        form.addRow("Margins L/R/T/B (pt)", margins_w)
+        layout.addWidget(page_group)
+
+        col_group = QGroupBox("Columns")
+        form = QFormLayout(col_group)
+        width_spins = {c: self._dspin(f"pdf_col_width_{c}", 0.1, 10,
+                                      exporters.PDF_WIDTH_DEFAULTS[c])
+                       for c in exporters.EXPORT_COLUMNS + exporters.EXTRA_COLUMNS}
+        picker = self._columns("exclude_columns", width_spins=width_spins)
+        auto = self._check("pdf_auto_widths", True)
+        auto.toggled.connect(lambda on: picker.set_widths_enabled(not on))
+        picker.set_widths_enabled(not auto.isChecked())
+        form.addRow("Automatic widths (fit page)", auto)
+        form.addRow("Columns / width", picker)
+        layout.addWidget(col_group)
+
+        style_group = QGroupBox("Style")
+        form = QFormLayout(style_group)
+        form.addRow("Header background", self._color("header_bg_color"))
+        form.addRow("Header text", self._color("text_color"))
+        form.addRow("Row background", self._color("bg_color"))
+        form.addRow("Grid lines", self._color("grid_color"))
+        if self.settings.get("bg_image") == "No background image":
+            self.settings["bg_image"] = ""
         bg_row = QHBoxLayout()
         bg_row.addWidget(self._line("bg_image"))
         browse = QPushButton("Browse…")
         browse.clicked.connect(self._pick_bg_image)
         bg_row.addWidget(browse)
+        clear_bg = QPushButton("Clear")
+        clear_bg.clicked.connect(lambda: self.w_bg_image.clear())
+        bg_row.addWidget(clear_bg)
         bg_w = QWidget()
         bg_w.setLayout(bg_row)
         form.addRow("Background image", bg_w)
-        form.addRow("Excluded columns", self._line("exclude_columns"))
+        layout.addWidget(style_group)
+        layout.addStretch(1)
         tabs.addTab(_scrollable(pdf), "PDF")
 
         # Audio export (MP3)
@@ -275,12 +339,40 @@ class SettingsDialog(QDialog):
 
     def _import_tab(self):
         widget = QWidget()
-        form = QFormLayout(widget)
-        form.setContentsMargins(18, 18, 18, 18)
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(18, 18, 18, 18)
+
+        options_group = QGroupBox("Excel import")
+        form = QFormLayout(options_group)
         form.addRow("Placeholder values", self._line("excel_import_placeholders"))
         form.addRow("Skip placeholder rows", self._check("excel_import_skip_placeholders", True))
         form.addRow("Skip empty rows", self._check("excel_import_skip_empty", True))
         form.addRow("Normalize language pairs", self._check("excel_import_normalize", True))
+        layout.addWidget(options_group)
+
+        help_group = QGroupBox("How to import")
+        help_layout = QVBoxLayout(help_group)
+        note = QLabel(
+            "<ol style='margin:0'>"
+            "<li>Prepare an Excel file with the columns <b>Language1, Language2, Word1, "
+            "Word2</b> — named like that in a header row (extra columns are ignored), or "
+            "without headers, with the first four columns in exactly that order.</li>"
+            "<li>Open the app menu → <i>Import Excel to Database…</i> and choose the file.</li>"
+            "<li>Review the proposed rows and click <i>Import</i>.</li>"
+            "</ol>")
+        note.setObjectName("dimLabel")
+        note.setWordWrap(True)
+        help_layout.addWidget(note)
+        template_btn = QPushButton("Save import template…")
+        template_btn.setToolTip("Save a ready-made .xlsx with the right headers and example rows")
+        template_btn.clicked.connect(self._save_import_template)
+        btn_row = QHBoxLayout()
+        btn_row.addWidget(template_btn)
+        btn_row.addStretch(1)
+        help_layout.addLayout(btn_row)
+        layout.addWidget(help_group)
+
+        layout.addStretch(1)
         return _scrollable(widget)
 
     def _apis_tab(self):
@@ -389,6 +481,37 @@ class SettingsDialog(QDialog):
 
     # ----------------------------------------------------------- actions
 
+    def _add_font(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Add Font", "",
+                                              "TrueType fonts (*.ttf)")
+        if not path:
+            return
+        try:
+            os.makedirs("fonts", exist_ok=True)
+            shutil.copy(path, os.path.join("fonts", os.path.basename(path)))
+        except Exception as exc:
+            QMessageBox.warning(self, "Add Font", f"Could not copy the font file:\n{exc}")
+            return
+        name = os.path.splitext(os.path.basename(path))[0]
+        if self.w_font_name.findText(name) < 0:
+            self.w_font_name.addItem(name)
+        self.w_font_name.setCurrentText(name)
+
+    def _save_import_template(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Save Import Template",
+                                              "import-template.xlsx", "Excel files (*.xlsx)")
+        if not path:
+            return
+        try:
+            from app.core.importer import create_import_template
+            create_import_template(path)
+            QMessageBox.information(self, "Import Template",
+                                    f"Template saved to:\n{path}\n\n"
+                                    "Fill it with your words (replace the example rows) "
+                                    "and import it via the app menu → Import Excel to Database.")
+        except Exception as exc:
+            QMessageBox.critical(self, "Import Template", f"Could not save the template:\n{exc}")
+
     def _pick_bg_image(self):
         path, _ = QFileDialog.getOpenFileName(self, "Background Image", "",
                                               "Images (*.png *.jpg *.jpeg)")
@@ -423,7 +546,11 @@ class SettingsDialog(QDialog):
             widget = getattr(self, f"w_{key}", None)
             if widget is None:
                 continue
-            if isinstance(widget, QLineEdit):
+            if isinstance(widget, ColumnPicker):
+                updated[key] = widget.exclude_csv()
+            elif isinstance(widget, ColorButton):
+                updated[key] = widget.color()
+            elif isinstance(widget, QLineEdit):
                 updated[key] = widget.text()
             elif isinstance(widget, QTextEdit):
                 updated[key] = widget.toPlainText().replace("\n", "\\n")

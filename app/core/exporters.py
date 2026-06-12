@@ -27,34 +27,76 @@ EXPORT_HEADERS = {
     "Word1": "Word", "Language2": "Translation", "Word2": "Word",
     "Source": "Source", "created_at": "Created at",
 }
+# Friendly labels for the settings dialog column pickers
+EXPORT_COLUMN_LABELS = {
+    "ID": "ID (database id)", "RowNumber": "№ (row number)", "Status": "Status",
+    "Language1": "Language 1", "Word1": "Word 1",
+    "Language2": "Language 2 (translation)", "Word2": "Word 2 (translation)",
+    "Source": "Source", "created_at": "Created at",
+}
+# Definition columns are fetched from the database on demand (all formats)
+EXTRA_COLUMNS = ["Definition", "Definition2"]
+EXTRA_LABELS = {"Definition": "Definition 1", "Definition2": "Definition 2"}
+PDF_WIDTH_DEFAULTS = {"ID": 0.5, "RowNumber": 0.5, "Status": 0.8, "Language1": 1.0,
+                      "Word1": 1.6, "Language2": 1.0, "Word2": 1.6, "Source": 1.0,
+                      "created_at": 1.2, "Definition": 2.5, "Definition2": 2.5}
+BUILTIN_FONTS = ["Helvetica", "Times-Roman", "Courier"]
+
+
+def list_font_names(font_folder='fonts'):
+    """Names (filename sans extension) of every .ttf in fonts/."""
+    if not os.path.isdir(font_folder):
+        return []
+    return sorted(os.path.splitext(f)[0] for f in os.listdir(font_folder)
+                  if f.endswith('.ttf'))
 
 
 def register_fonts(font_folder='fonts'):
     """Register every .ttf in fonts/ with reportlab; returns their names."""
     names = []
-    if not os.path.isdir(font_folder):
-        return names
-    for font_file in os.listdir(font_folder):
-        if not font_file.endswith('.ttf'):
-            continue
-        font_name = os.path.splitext(font_file)[0]
+    for font_name in list_font_names(font_folder):
         try:
-            pdfmetrics.registerFont(TTFont(font_name, os.path.join(font_folder, font_file)))
+            pdfmetrics.registerFont(TTFont(font_name, os.path.join(font_folder, font_name + '.ttf')))
             names.append(font_name)
         except Exception as exc:
             logging.error(f"Failed to register font {font_name}: {exc}")
     return names
 
 
-def _rows_to_table(rows, exclude_columns):
+def _fetch_definitions(rows, db_path):
+    """Definitions per word id: {ID: (Definition, Definition2)}."""
+    ids = []
+    for row in rows:
+        try:
+            ids.append(int(row.get("ID")))
+        except (TypeError, ValueError):
+            continue
+    if not ids:
+        return {}
+    with sqlite3.connect(db_path) as connection:
+        marks = ",".join("?" * len(ids))
+        cursor = connection.execute(
+            f"SELECT id, Definition, Definition2 FROM words WHERE id IN ({marks})", ids)
+        return {r[0]: (r[1] or "", r[2] or "") for r in cursor.fetchall()}
+
+
+def _rows_to_table(rows, exclude_columns, db_path=None):
     exclude = {c.strip() for c in exclude_columns}
     included = [c for c in EXPORT_COLUMNS if c not in exclude]
     headers = [EXPORT_HEADERS[c] for c in included]
     data = [[("" if row.get(c) is None else row.get(c)) for c in included] for row in rows]
-    return headers, data, included
+    extras = [c for c in EXTRA_COLUMNS if c not in exclude] if db_path else []
+    if extras:
+        definitions = _fetch_definitions(rows, db_path)
+        for row, table_row in zip(rows, data):
+            d1, d2 = definitions.get(row.get("ID"), ("", ""))
+            values = {"Definition": d1, "Definition2": d2}
+            table_row.extend(values[c] for c in extras)
+        headers += [EXTRA_LABELS[c] for c in extras]
+    return headers, data, included + extras
 
 
-def export_to_excel_file(rows, file_path, settings):
+def export_to_excel_file(rows, file_path, settings, db_path='dictionary.db'):
     sheet_name = settings.get("sheet_name", "Sheet1")
     start_row = get_int(settings, "start_row", 0)
     start_column = get_int(settings, "start_column", 0)
@@ -63,7 +105,10 @@ def export_to_excel_file(rows, file_path, settings):
     auto_column_width = get_bool(settings, "auto_column_width", True)
     freeze_panes = get_bool(settings, "freeze_panes", False)
 
-    headers, data, _ = _rows_to_table(rows, exclude_columns)
+    headers, data, included = _rows_to_table(rows, exclude_columns, db_path)
+    if not included:
+        raise ValueError("No columns selected for export — enable at least one column "
+                         "in Settings → Export → Excel / CSV.")
     df = pd.DataFrame(data, columns=headers)
 
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
@@ -88,21 +133,27 @@ def export_to_excel_file(rows, file_path, settings):
             worksheet.freeze_panes = worksheet['A2']
 
 
-def export_to_csv_file(rows, file_path, settings):
+def export_to_csv_file(rows, file_path, settings, db_path='dictionary.db'):
     delimiter = settings.get("csv_delimiter", ",")
     exclude_columns = settings.get("exclude_columns_excel", "ID,Source").split(',')
-    headers, data, _ = _rows_to_table(rows, exclude_columns)
+    headers, data, included = _rows_to_table(rows, exclude_columns, db_path)
+    if not included:
+        raise ValueError("No columns selected for export — enable at least one column "
+                         "in Settings → Export → Excel / CSV.")
     pd.DataFrame(data, columns=headers).to_csv(file_path, sep=delimiter, index=False)
 
 
-def export_to_txt_file(rows, file_path, settings):
+def export_to_txt_file(rows, file_path, settings, db_path='dictionary.db'):
     delimiter_setting = settings.get("txt_delimiter", "\\t")
     delimiter = "\t" if delimiter_setting in ("\\t",) or delimiter_setting.lower() == "tab" else delimiter_setting
     exclude_columns = [c.strip() for c in settings.get("exclude_columns_txt", "ID,Source").split(',')]
     include_headers = get_bool(settings, "txt_include_headers", True)
     header_lines = settings.get("txt_header_lines", "#separator:tab\\n#html:true\\n").replace('\\n', '\n')
 
-    _, data, _ = _rows_to_table(rows, exclude_columns)
+    _, data, included = _rows_to_table(rows, exclude_columns, db_path)
+    if not included:
+        raise ValueError("No columns selected for export — enable at least one column "
+                         "in Settings → Export → TXT.")
 
     with open(file_path, 'w', encoding='utf-8') as txt_file:
         if include_headers:
@@ -114,7 +165,11 @@ def export_to_txt_file(rows, file_path, settings):
 
 
 def export_to_pdf_file(rows, file_path, settings, db_path='dictionary.db'):
-    """Render rows into a styled PDF table, optionally with definitions."""
+    """Render rows into a styled PDF table, optionally with definitions.
+
+    Returns a list of warning strings (empty on a clean export).
+    """
+    warnings = []
     left_margin = get_float(settings, "left_margin", 10)
     right_margin = get_float(settings, "right_margin", 10)
     top_margin = get_float(settings, "top_margin", 10)
@@ -132,46 +187,34 @@ def export_to_pdf_file(rows, file_path, settings, db_path='dictionary.db'):
     exclude_columns = [c.strip() for c in
                        settings.get("exclude_columns", "ID,Source,created_at,Definition,Definition2").split(',')]
 
-    col_widths = [get_float(settings, f"col_width_{i}", w) * inch
-                  for i, w in [(1, 0.5), (2, 1), (3, 1), (4, 2.4), (5, 1), (6, 2.5)]]
-
     alignment_code = {"LEFT": 0, "CENTER": 1, "RIGHT": 2}.get(alignment, 1)
     pagesize = {"Letter": letter, "A4": A4}.get(page_size, letter)
 
-    headers, data_rows, included = _rows_to_table(rows, exclude_columns)
+    headers, data_rows, included = _rows_to_table(rows, exclude_columns, db_path)
 
-    include_def1 = "Definition" not in exclude_columns
-    include_def2 = "Definition2" not in exclude_columns
-    if include_def1:
-        headers.append("Definition")
-    if include_def2:
-        headers.append("Definition2")
+    if not included:
+        raise ValueError("No columns selected for PDF export — enable at least one column "
+                         "in Settings → Export → PDF.")
+
+    weights = [get_float(settings, f"pdf_col_width_{c}", PDF_WIDTH_DEFAULTS[c]) for c in included]
+    if get_bool(settings, "pdf_auto_widths", True):
+        usable = pagesize[0] - left_margin - right_margin
+        col_widths = [usable * w / sum(weights) for w in weights]
+    else:
+        col_widths = [w * inch for w in weights]
+
+    available_fonts = set(BUILTIN_FONTS) | set(pdfmetrics.getRegisteredFontNames())
+    if font_name not in available_fonts:
+        warnings.append(f"Font '{font_name}' is not available; used Helvetica instead.")
+        font_name = "Helvetica"
 
     styles = getSampleStyleSheet()
     custom_style = ParagraphStyle(name='CustomFontStyle', fontName=font_name,
                                   fontSize=font_size, leading=leading, alignment=alignment_code)
     styles.add(custom_style)
 
-    definitions = {}
-    if include_def1 or include_def2:
-        connection = sqlite3.connect(db_path)
-        cursor = connection.cursor()
-        for row in rows:
-            cursor.execute("SELECT Definition, Definition2 FROM words WHERE id = ?", (row["ID"],))
-            result = cursor.fetchone()
-            definitions[row["ID"]] = result if result else ("", "")
-        connection.close()
-
-    data = [headers]
-    for source_row, table_row in zip(rows, data_rows):
-        cells = [Paragraph(str(v), custom_style) for v in table_row]
-        if include_def1 or include_def2:
-            d1, d2 = definitions.get(source_row["ID"], ("", ""))
-            if include_def1:
-                cells.append(Paragraph(str(d1 or ""), custom_style))
-            if include_def2:
-                cells.append(Paragraph(str(d2 or ""), custom_style))
-        data.append(cells)
+    data = [headers] + [[Paragraph(str(v), custom_style) for v in table_row]
+                        for table_row in data_rows]
 
     pdf = SimpleDocTemplate(file_path, pagesize=pagesize, rightMargin=right_margin,
                             leftMargin=left_margin, topMargin=top_margin, bottomMargin=bottom_margin)
@@ -189,7 +232,7 @@ def export_to_pdf_file(rows, file_path, settings, db_path='dictionary.db'):
         except Exception as exc:
             logging.error(f"Error loading background image: {exc}")
 
-    table = Table(data, colWidths=col_widths[:len(headers)], repeatRows=1)
+    table = Table(data, colWidths=col_widths, repeatRows=1)
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), header_bg_color),
         ('TEXTCOLOR', (0, 0), (-1, 0), text_color),
@@ -204,3 +247,4 @@ def export_to_pdf_file(rows, file_path, settings, db_path='dictionary.db'):
     ]))
     elements.append(table)
     pdf.build(elements)
+    return warnings
