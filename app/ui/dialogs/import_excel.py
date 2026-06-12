@@ -88,6 +88,13 @@ class ImportReviewDialog(QDialog):
         header.addWidget(self.summary_label)
         layout.addLayout(header)
 
+        hint = QLabel("Expected columns: Language1, Language2, Word1, Word2 — named in a "
+                      "header row, or headerless with the first four columns in that order. "
+                      "A ready-made template is available in the app menu → Save Import Template.")
+        hint.setStyleSheet(f"color: {self.colors['text_dim']};")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
         toolbar = QHBoxLayout()
         toolbar.setSpacing(6)
         self.filter_buttons = {}

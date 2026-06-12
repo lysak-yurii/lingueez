@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
         menu = QMenu(self)
         menu.addAction(self._icon("upload"), "Open Excel Table…", self.open_table_action)
         menu.addAction(self._icon("upload"), "Import Excel to Database…", self.import_excel)
+        menu.addAction(self._icon("download"), "Save Import Template…", self.save_import_template)
         menu.addAction(self._icon("sync"), "Reload Data", self.load_data)
         menu.addSeparator()
         export_menu = menu.addMenu(self._icon("download"), "Export")
@@ -1366,8 +1367,11 @@ class MainWindow(QMainWindow):
             return
         try:
             exporters.register_fonts()
-            exporters.export_to_pdf_file(rows, path, settings)
-            show_toast(self, "Export", f"PDF saved to {path}", "success")
+            warnings = exporters.export_to_pdf_file(rows, path, settings)
+            if warnings:
+                show_toast(self, "Export", f"PDF saved to {path}. " + " ".join(warnings), "warning")
+            else:
+                show_toast(self, "Export", f"PDF saved to {path}", "success")
         except Exception as exc:
             logging.error(f"PDF export failed: {exc}")
             QMessageBox.critical(self, "Export Error", f"Failed to export PDF:\n{exc}")
@@ -1442,6 +1446,19 @@ class MainWindow(QMainWindow):
         from app.ui.dialogs.import_excel import ImportExcelFlow
         flow = ImportExcelFlow(self, self.db_adapter)
         flow.run()
+
+    def save_import_template(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Save Import Template",
+                                              "import-template.xlsx", "Excel files (*.xlsx)")
+        if not path:
+            return
+        try:
+            from app.core.importer import create_import_template
+            create_import_template(path)
+            show_toast(self, "Import", f"Template saved to {path}", "success")
+        except Exception as exc:
+            logging.error(f"Template save failed: {exc}")
+            QMessageBox.critical(self, "Error", f"Failed to save template:\n{exc}")
 
     # ------------------------------------------------------------- sync
 
