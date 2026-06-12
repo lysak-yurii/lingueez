@@ -1,4 +1,4 @@
-"""Generate a study text from selected words via ChatGPT."""
+"""Generate a study text from selected words via the configured AI provider."""
 import logging
 
 from PySide6.QtCore import Qt, Signal
@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QTextEdit, QVBoxLayout,
 )
 
-from app.core import gpt
+from app.core import ai
 from app.ui.workers import run_in_thread
 
 
@@ -20,6 +20,7 @@ class GenerateTextDialog(QDialog):
         self.language = language
         self.generated_title = None
         self.generated_text = None
+        self.ai_label = ai.provider_label()
 
         self.setWindowTitle("Generate Text")
         self.setMinimumSize(640, 520)
@@ -29,7 +30,8 @@ class GenerateTextDialog(QDialog):
         layout.setContentsMargins(18, 18, 18, 14)
         layout.setSpacing(10)
 
-        info = QLabel(f"Generating a {language} text from {len(words)} word(s):")
+        info = QLabel(f"Generating a {language} text from {len(words)} word(s) "
+                      f"with {self.ai_label}:")
         layout.addWidget(info)
         words_label = QLabel(", ".join(words))
         words_label.setObjectName("dimLabel")
@@ -58,9 +60,10 @@ class GenerateTextDialog(QDialog):
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
 
-        if not gpt.has_api_key():
+        if not ai.has_api_key():
             self.text_edit.setPlaceholderText(
-                "OpenAI API key is not set. Configure it in Settings → APIs → OpenAI.")
+                f"{self.ai_label} API key is not set. "
+                f"Configure it in Settings → APIs → AI.")
             self.generate_btn.setEnabled(False)
         else:
             self.generate()
@@ -71,7 +74,7 @@ class GenerateTextDialog(QDialog):
         self.text_edit.setPlainText("Generating…")
 
         def work():
-            return gpt.generate_combined_text_from_gpt(", ".join(self.words), self.language)
+            return ai.generate_combined_text(", ".join(self.words), self.language)
 
         def done(result):
             title, text = result
@@ -82,7 +85,7 @@ class GenerateTextDialog(QDialog):
 
         def fail(message):
             self.text_edit.setPlainText("")
-            QMessageBox.critical(self, "ChatGPT", message)
+            QMessageBox.critical(self, self.ai_label, message)
 
         run_in_thread(work, on_result=done, on_error=fail,
                       on_finished=lambda: self.generate_btn.setEnabled(True))
@@ -92,7 +95,7 @@ class GenerateTextDialog(QDialog):
         text = self.text_edit.toPlainText().strip()
         if not text:
             return
-        ok, message = gpt.save_generated_text_to_db(
+        ok, message = ai.save_generated_text_to_db(
             None, title, text, ", ".join(self.words), self.language)
         if ok:
             self.text_saved.emit()

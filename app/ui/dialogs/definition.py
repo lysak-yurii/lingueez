@@ -1,8 +1,9 @@
-"""Definition viewer/editor with GPT generation.
+"""Definition viewer/editor with AI generation.
 
 Renders the stored '***' / '**' / '*' markup as rich text, supports
 editing the raw definition, switching between Definition (Word1) and
-Definition2 (Word2), and generating missing definitions via ChatGPT.
+Definition2 (Word2), and generating missing definitions via the
+configured AI provider (ChatGPT or Gemini).
 """
 import html
 import logging
@@ -14,7 +15,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from app.core import gpt
+from app.core import ai
 from app.ui.workers import run_in_thread
 
 
@@ -40,6 +41,7 @@ class DefinitionDialog(QDialog):
         self.word_id = int(record["ID"])
         self.current_field = 'Word1'   # which word's definition is shown
         self.editing = False
+        self.ai_label = ai.provider_label()
 
         self.setWindowTitle(f"Definition — {record.get('Word1', '')}")
         self.setMinimumSize(620, 480)
@@ -66,7 +68,7 @@ class DefinitionDialog(QDialog):
         self.switch_btn.clicked.connect(self.switch_definition)
         buttons.addWidget(self.switch_btn)
 
-        self.generate_btn = QPushButton("Generate with ChatGPT")
+        self.generate_btn = QPushButton(f"Generate with {self.ai_label}")
         self.generate_btn.clicked.connect(self.generate_definition)
         buttons.addWidget(self.generate_btn)
 
@@ -114,11 +116,11 @@ class DefinitionDialog(QDialog):
         self.sub_label.setText(f"{lang} · {'Definition' if self.current_field == 'Word1' else 'Definition 2'}")
         if definition:
             self.text.setHtml(markup_to_html(str(definition)))
-            self.generate_btn.setText("Regenerate with ChatGPT")
+            self.generate_btn.setText(f"Regenerate with {self.ai_label}")
         else:
-            self.text.setHtml("<i>No definition stored yet. "
-                              "Use “Generate with ChatGPT” or “Edit” to add one.</i>")
-            self.generate_btn.setText("Generate with ChatGPT")
+            self.text.setHtml(f"<i>No definition stored yet. "
+                              f"Use “Generate with {self.ai_label}” or “Edit” to add one.</i>")
+            self.generate_btn.setText(f"Generate with {self.ai_label}")
         other = "word's" if self.current_field == 'Word2' else "translation's"
         self.switch_btn.setText(f"Show {other} definition")
 
@@ -170,9 +172,10 @@ class DefinitionDialog(QDialog):
         if not str(word).strip():
             QMessageBox.warning(self, "No word", "There is no word to define.")
             return
-        if not gpt.has_api_key():
+        if not ai.has_api_key():
             QMessageBox.warning(self, "API key missing",
-                                "Set your OpenAI API key in Settings → APIs → OpenAI first.")
+                                f"Set your {self.ai_label} API key in "
+                                f"Settings → APIs → AI first.")
             return
         lang1 = self.word.get('Language1') or "English"
         lang2 = self.word.get('Language2') or "English"
@@ -185,7 +188,7 @@ class DefinitionDialog(QDialog):
         field = self.current_field
 
         def work():
-            return gpt.update_definition_in_db(str(word), lang1, lang2, field, self.word_id)
+            return ai.update_definition_in_db(str(word), lang1, lang2, field, self.word_id)
 
         def done(result):
             ok, message = result
@@ -194,9 +197,9 @@ class DefinitionDialog(QDialog):
                 self.reload_word()
             else:
                 self.refresh_view()
-                QMessageBox.warning(self, "ChatGPT", message)
+                QMessageBox.warning(self, self.ai_label, message)
 
         run_in_thread(work, on_result=done,
                       on_error=lambda e: (self.refresh_view(),
-                                          QMessageBox.critical(self, "ChatGPT", e)),
+                                          QMessageBox.critical(self, self.ai_label, e)),
                       on_finished=lambda: self.generate_btn.setEnabled(True))

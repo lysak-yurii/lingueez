@@ -1117,10 +1117,13 @@ class MainWindow(QMainWindow):
         record = records[0]
         key = int(record["ID"])
         existing = self._open_dialogs.get(("def", key))
-        if existing is not None and existing.isVisible():
-            existing.raise_()
-            existing.activateWindow()
-            return
+        try:
+            if existing is not None and existing.isVisible():
+                existing.raise_()
+                existing.activateWindow()
+                return
+        except RuntimeError:
+            pass  # WA_DeleteOnClose: the C++ widget is already gone
         dialog = DefinitionDialog(self, record, self.db_adapter)
         dialog.definition_changed.connect(self.load_data)
         self._open_dialogs[("def", key)] = dialog
