@@ -185,6 +185,8 @@ class MainWindow(QMainWindow):
         self.word_player.finished.connect(self._on_player_finished)
         # the texts reader uses the same audio output — one player at a time
         self.texts_page.tts_started.connect(self.word_player.stop)
+        self.texts_page.add_word_requested.connect(self._on_text_word_add)
+        self.texts_page.vocab_changed.connect(self._after_db_change)
 
         self.load_data()
 
@@ -796,6 +798,7 @@ class MainWindow(QMainWindow):
         self._quitting = True
         try:
             self.word_player.stop()
+            self.texts_page.stop_reading()
             stop_playback()
         except Exception:
             pass
@@ -998,20 +1001,25 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------ actions
 
-    def open_add_word(self, prefill=None, auto_translate=False):
+    def open_add_word(self, prefill=None, auto_translate=False, language1=None):
         from app.ui.dialogs.add_word import AddWordDialog
         # When the main window is hidden/minimized (hotkey flow), open the
         # dialog without a parent so it doesn't drag the main window onto
         # the screen behind it.
         main_on_screen = self.isVisible() and not self.isMinimized()
         parent = self if main_on_screen else None
-        dialog = AddWordDialog(parent, prefill=prefill, auto_translate=auto_translate)
+        dialog = AddWordDialog(parent, prefill=prefill, auto_translate=auto_translate,
+                               language1=language1)
         dialog.word_saved.connect(self._after_db_change)
         if parent is None:
             self._open_dialogs["add_word"] = dialog  # keep it alive
         dialog.show()
         dialog.raise_()
         dialog.activateWindow()
+
+    def _on_text_word_add(self, word, language):
+        """A word clicked in the texts reader: capture it with translation."""
+        self.open_add_word(prefill=word, auto_translate=True, language1=language)
 
     def open_add_word_and_translate(self):
         clipboard = QGuiApplication.clipboard().text()
@@ -1206,6 +1214,7 @@ class MainWindow(QMainWindow):
         languages = [(r.get('Language1', ''), r.get('Language2', '')) for r in records]
 
         self._playing_records = records
+        self.texts_page.stop_reading()  # one player at a time
         # the queue is captured; clear the selection first so its highlight
         # doesn't drown out the moving played-row highlight — and so the
         # selection label never coexists with the player in one layout pass

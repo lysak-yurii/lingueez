@@ -236,6 +236,36 @@ def get_definition(word, language1, language2):
     return provider.complete(prompt, **params)
 
 
+def lemma_translate(word, sentence, source_language, target_language):
+    """Lemma form of *word* (as used in *sentence*) + its best translation.
+
+    Returns (lemma, translation); raises AIError. Uses the definition-task
+    model settings of the active provider with a fixed prompt.
+    """
+    settings = load_settings()
+    provider = get_provider(settings)
+    params = _task_params(settings, provider)
+    params.pop("template")
+    context = f' in the sentence: "{sentence.strip()}"' if sentence.strip() else ""
+    prompt = (
+        f'The {source_language} word "{word}" is used{context}. '
+        f"Give its dictionary (lemma) form in {source_language} — e.g. the "
+        f"infinitive for verbs, nominative singular for nouns (with the "
+        f"article if customary for dictionary entries in {source_language}) — "
+        f"and its best {target_language} translation for this exact context. "
+        f"Answer with ONE line in exactly this format and nothing else:\n"
+        f"lemma|translation"
+    )
+    content = provider.complete(prompt, **params)
+    # last non-empty line guards against models that prepend chatter
+    line = [ln for ln in content.splitlines() if ln.strip()][-1].strip()
+    lemma, sep, translation = line.partition("|")
+    if not sep or not lemma.strip() or not translation.strip():
+        # tolerate a malformed answer: keep the clicked word as the entry
+        return word, line.strip().strip("|")
+    return lemma.strip(), translation.strip()
+
+
 def generate_combined_text(words, language):
     """Generate (title, text) from a word list; raises AIError."""
     settings = load_settings()
