@@ -125,6 +125,32 @@ class SettingsDialog(QDialog):
         setattr(self, f"w_{key}", combo)
         return combo
 
+    def _ai_provider_page(self, prefix, key_label, key_edit, note_html, extra_rows=()):
+        """One provider's settings page: API key + Definitions/Texts groups."""
+        page = QWidget()
+        form = QFormLayout(page)
+        form.setContentsMargins(18, 18, 18, 18)
+        form.addRow(key_label, key_edit)
+        note = QLabel(note_html)
+        note.setOpenExternalLinks(True)
+        note.setObjectName("dimLabel")
+        note.setWordWrap(True)
+        form.addRow(note)
+        for label, widget in extra_rows:
+            form.addRow(label, widget)
+        for title, task in (("Definitions", prefix), ("Generated Texts", f"{prefix}_texts")):
+            group = QGroupBox(title)
+            g_form = QFormLayout(group)
+            g_form.addRow("Model", self._line(f"{task}_model", 220))
+            g_form.addRow("Max tokens", self._spin(f"{task}_max_tokens", 16, 8000, 400))
+            g_form.addRow("Temperature", self._dspin(f"{task}_temperature", 0, 2, 0.5))
+            content = QTextEdit(str(self.settings.get(f"{task}_content", "")))
+            content.setMaximumHeight(90)
+            setattr(self, f"w_{task}_content", content)
+            g_form.addRow("Prompt template", content)
+            form.addRow(group)
+        return _scrollable(page)
+
     # -------------------------------------------------------------- tabs
 
     def _appearance_tab(self):
@@ -255,33 +281,42 @@ class SettingsDialog(QDialog):
         form.addRow(note)
         tabs.addTab(_scrollable(deepl), "DeepL")
 
-        # OpenAI
-        openai_w = QWidget()
-        form = QFormLayout(openai_w)
-        form.setContentsMargins(18, 18, 18, 18)
+        # AI (OpenAI / Gemini)
+        ai_w = QWidget()
+        ai_layout = QVBoxLayout(ai_w)
+        ai_layout.setContentsMargins(18, 18, 18, 0)
+        selector = QFormLayout()
+        self.ai_provider_combo = QComboBox()
+        self.ai_provider_combo.addItem("OpenAI (ChatGPT)", "openai")
+        self.ai_provider_combo.addItem("Google Gemini", "gemini")
+        current = str(self.settings.get("ai_provider", "openai")).strip().lower()
+        self.ai_provider_combo.setCurrentIndex(max(self.ai_provider_combo.findData(current), 0))
+        selector.addRow("Active provider", self.ai_provider_combo)
+        ai_layout.addLayout(selector)
+
         self.openai_key_edit = self._secret(QLineEdit(self.env.get("OPENAI_API_KEY", "")))
-        form.addRow("OpenAI API key (.env)", self.openai_key_edit)
+        self.gemini_key_edit = self._secret(QLineEdit(self.env.get("GOOGLE_API_KEY", "")))
 
-        defs = QGroupBox("Definitions")
-        d_form = QFormLayout(defs)
-        d_form.addRow("Model", self._line("chatgpt_model", 220))
-        d_form.addRow("Max tokens", self._spin("chatgpt_max_tokens", 16, 8000, 400))
-        d_form.addRow("Temperature", self._dspin("chatgpt_temperature", 0, 2, 0.3))
-        self.w_chatgpt_content = QTextEdit(str(self.settings.get("chatgpt_content", "")))
-        self.w_chatgpt_content.setMaximumHeight(90)
-        d_form.addRow("Prompt template", self.w_chatgpt_content)
-        form.addRow(defs)
-
-        texts = QGroupBox("Generated Texts")
-        t_form = QFormLayout(texts)
-        t_form.addRow("Model", self._line("chatgpt_texts_model", 220))
-        t_form.addRow("Max tokens", self._spin("chatgpt_texts_max_tokens", 16, 8000, 300))
-        t_form.addRow("Temperature", self._dspin("chatgpt_texts_temperature", 0, 2, 0.7))
-        self.w_chatgpt_texts_content = QTextEdit(str(self.settings.get("chatgpt_texts_content", "")))
-        self.w_chatgpt_texts_content.setMaximumHeight(90)
-        t_form.addRow("Prompt template", self.w_chatgpt_texts_content)
-        form.addRow(texts)
-        tabs.addTab(_scrollable(openai_w), "OpenAI")
+        ai_tabs = QTabWidget()
+        ai_tabs.setDocumentMode(True)
+        ai_tabs.addTab(
+            self._ai_provider_page(
+                "chatgpt", "OpenAI API key (.env)", self.openai_key_edit,
+                'Billed per use — get a key at <a href="https://platform.openai.com/api-keys">'
+                'platform.openai.com/api-keys</a>. Models: gpt-4o-mini, gpt-4o, gpt-4.1-mini…'),
+            "OpenAI")
+        ai_tabs.addTab(
+            self._ai_provider_page(
+                "gemini", "Google API key (.env)", self.gemini_key_edit,
+                'Free tier available — get a key at <a href="https://aistudio.google.com/app/apikey">'
+                'aistudio.google.com/app/apikey</a>. Models: gemini-2.5-flash, gemini-2.5-flash-lite…',
+                extra_rows=[("Thinking budget (0 = off, -1 = auto)",
+                             self._spin("gemini_thinking_budget", -1, 24576, 0))]),
+            "Gemini")
+        ai_tabs.setCurrentIndex(self.ai_provider_combo.currentIndex())
+        self.ai_provider_combo.currentIndexChanged.connect(ai_tabs.setCurrentIndex)
+        ai_layout.addWidget(ai_tabs, 1)
+        tabs.addTab(ai_w, "AI")
 
         # Sync
         sync = QWidget()
@@ -382,20 +417,24 @@ class SettingsDialog(QDialog):
         seq = self.hotkey_edit.keySequence().toString(QKeySequence.PortableText)
         updated["hotkey"] = seq.split(", ")[0]  # first chord only
 
+        updated["ai_provider"] = self.ai_provider_combo.currentData()
+
         save_settings(updated)
 
         env_updates = {}
         if self.openai_key_edit.text().strip() != self.env.get("OPENAI_API_KEY", ""):
             env_updates["OPENAI_API_KEY"] = self.openai_key_edit.text().strip()
+        if self.gemini_key_edit.text().strip() != self.env.get("GOOGLE_API_KEY", ""):
+            env_updates["GOOGLE_API_KEY"] = self.gemini_key_edit.text().strip()
         if self.supabase_url_edit.text().strip() != self.env.get("SUPABASE_URL", ""):
             env_updates["SUPABASE_URL"] = self.supabase_url_edit.text().strip()
         if self.supabase_key_edit.text().strip() != self.env.get("SUPABASE_KEY", ""):
             env_updates["SUPABASE_KEY"] = self.supabase_key_edit.text().strip()
         if env_updates:
             _write_env(env_updates)
-            if "OPENAI_API_KEY" in env_updates:
-                from app.core import gpt
-                gpt.set_api_key(env_updates["OPENAI_API_KEY"])
+            if "OPENAI_API_KEY" in env_updates or "GOOGLE_API_KEY" in env_updates:
+                from app.core import ai
+                ai.reset_clients()
 
         try:
             set_autostart(self.autostart_check.isChecked())

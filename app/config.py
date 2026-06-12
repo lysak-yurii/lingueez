@@ -64,6 +64,8 @@ DEFAULTS = {
     # DeepL
     "api_key": "",
     "api_url": "https://api.deepl.com/v2/translate",
+    # AI provider
+    "ai_provider": "openai",          # openai | gemini
     # ChatGPT
     "chatgpt_model": "gpt-4o-mini",
     "chatgpt_max_tokens": "400",
@@ -82,6 +84,25 @@ DEFAULTS = {
     "chatgpt_texts_content": (
         "Generate a title and a comprehensive text using the following words: {words} "
         "in the following language: {language}.Separate the title and text with a "
+        "delimiter like \"\\n\\n\". And do not use any markups('**' etc.)"
+    ),
+    # Gemini
+    "gemini_model": "gemini-2.5-flash",
+    "gemini_thinking_budget": "0",    # 0 = off, -1 = dynamic (model decides)
+    "gemini_max_tokens": "400",
+    "gemini_temperature": "0.3",
+    "gemini_content": (
+        "Define the word: {word} in {language1} and in {language2}. "
+        "Also provide example sentences (in different contexts) with that word, "
+        "and synonyms solely in {language1}. Markups: '***' for 'Definition', "
+        "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'."
+    ),
+    "gemini_texts_model": "gemini-2.5-flash",
+    "gemini_texts_max_tokens": "400",
+    "gemini_texts_temperature": "0.7",
+    "gemini_texts_content": (
+        "Generate a title and a comprehensive text using the following words: {words} "
+        "in the following language: {language}. Separate the title and text with a "
         "delimiter like \"\\n\\n\". And do not use any markups('**' etc.)"
     ),
     # Excel import
