@@ -40,6 +40,7 @@ class DefinitionDialog(FramelessDialog):
         self.db_adapter = db_adapter
         self.word_id = int(record["ID"])
         self.current_field = 'Word1'   # which word's definition is shown
+        self._pick_initial_field = True  # on first load, open the side that has a definition
         self.editing = False
         self.ai_label = ai.provider_label()
 
@@ -99,6 +100,12 @@ class DefinitionDialog(FramelessDialog):
     def reload_word(self):
         word = self.db_adapter.get_word(self.word_id) or self.record
         self.word = word
+        if self._pick_initial_field:
+            self._pick_initial_field = False
+            has_def1 = bool(str(word.get('Definition') or "").strip())
+            has_def2 = bool(str(word.get('Definition2') or "").strip())
+            if not has_def1 and has_def2:
+                self.current_field = 'Word2'
         self.refresh_view()
 
     def _definition_column(self):
