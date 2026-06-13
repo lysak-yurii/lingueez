@@ -816,7 +816,8 @@ class TextsPage(QWidget):
         self._set_edit_mode(False)
         self.tts_started.emit()  # the main window stops its word player
         # toPlainText() unstripped: reader offsets must match the document
-        if not self.reader.start(self.body.toPlainText(), language,
+        self._reading_plain = self.body.toPlainText()
+        if not self.reader.start(self._reading_plain, language,
                                  start_char=start_char):
             return
         self.is_reading = True
@@ -824,6 +825,11 @@ class TextsPage(QWidget):
         self.reader_bar.setVisible(True)
         self.tts_btn.setIcon(icons.icon("stop", self._colors["danger"], 18))
         self.tts_btn.setToolTip("Stop reading")
+
+    def plain_text(self):
+        """The document text captured at the start of the current reading
+        session (reader char offsets index into this)."""
+        return getattr(self, "_reading_plain", "") or self.body.toPlainText()
 
     def stop_reading(self):
         if self.is_reading:

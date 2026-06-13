@@ -219,6 +219,13 @@ class MainWindow(QMainWindow):
         self.word_player.finished.connect(self._on_player_finished)
         # the texts reader uses the same audio output — one player at a time
         self.texts_page.tts_started.connect(self.word_player.stop)
+        # mirror the texts reader into the mini player (running-line mode)
+        self._mini_text_start = 0
+        self.texts_page.reader.sentence_changed.connect(self._on_reader_sentence)
+        self.texts_page.reader.word_changed.connect(self._on_reader_word)
+        self.texts_page.reader.state_changed.connect(
+            lambda state: self.mini_player.set_paused(state == "paused"))
+        self.texts_page.reader.finished.connect(self._sync_mini_player)
         self.texts_page.add_word_requested.connect(self._on_text_word_add)
         self.texts_page.vocab_changed.connect(self._after_db_change)
 
@@ -546,9 +553,9 @@ class MainWindow(QMainWindow):
 
         # ---------- floating mini player (shown while hidden/minimized) ----------
         self.mini_player = MiniPlayer(self.colors)
-        self.mini_player.prev_clicked.connect(self.word_player.prev)
-        self.mini_player.toggle_clicked.connect(self.word_player.toggle_pause)
-        self.mini_player.next_clicked.connect(self.word_player.next)
+        self.mini_player.prev_clicked.connect(self._mini_prev)
+        self.mini_player.toggle_clicked.connect(self._mini_toggle)
+        self.mini_player.next_clicked.connect(self._mini_next)
         self.mini_player.restore_requested.connect(self.show_window)
         self.mini_player.moved.connect(
             lambda: save_geometry(self.mini_player, "mini_player"))
@@ -875,8 +882,10 @@ class MainWindow(QMainWindow):
             self._sync_mini_player()
 
     def _sync_mini_player(self):
-        """Float the mini player only while reading AND the window is away."""
-        show = self.is_reading_active and (not self.isVisible() or self.isMinimized())
+        """Float the mini player only while a player is active (words table or
+        texts reader) AND the window is away (hidden to tray or minimized)."""
+        active = self.is_reading_active or self.texts_page.is_reading
+        show = active and (not self.isVisible() or self.isMinimized())
         if show:
             if not self._mini_positioned:
                 self._mini_positioned = True
@@ -1442,6 +1451,36 @@ class MainWindow(QMainWindow):
 
     def _on_player_part(self, slot):
         self.mini_player.set_active_part(slot)
+
+    # mini-player transport routes to whichever player is currently active
+    def _mini_prev(self):
+        if self.texts_page.is_reading:
+            self.texts_page.reader.prev_sentence()
+        elif self.word_player.active:
+            self.word_player.prev()
+
+    def _mini_toggle(self):
+        if self.texts_page.is_reading:
+            self.texts_page.reader.toggle_pause()
+        elif self.word_player.active:
+            self.word_player.toggle_pause()
+
+    def _mini_next(self):
+        if self.texts_page.is_reading:
+            self.texts_page.reader.next_sentence()
+        elif self.word_player.active:
+            self.word_player.next()
+
+    def _on_reader_sentence(self, start, end):
+        self._mini_text_start = start
+        self.mini_player.set_line(self.texts_page.plain_text()[start:end])
+        self._sync_mini_player()
+
+    def _on_reader_word(self, start, end):
+        if start < 0:
+            return
+        self.mini_player.set_text_word(
+            start - self._mini_text_start, end - self._mini_text_start)
 
     def _on_player_state(self, paused):
         self.player_bar.set_paused(paused)

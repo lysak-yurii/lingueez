@@ -1,18 +1,21 @@
-"""Compact floating player shown while words play and the app is hidden.
+"""Compact floating player shown while words/texts play and the app is hidden.
 
-A thin, frameless, always-on-top bar: the current word + translation on the
-left with a highlight that slides left→right as each side is spoken. The
-transport controls (prev / pause / next) stay collapsed behind a chevron so the
-words get the full width, and slide out when the pointer is over the right side.
-The bar can be dragged (body), resized horizontally (left/right edges), and a
-plain click restores the main window.
+A thin, frameless, always-on-top bar with two modes:
+- words: the current word + translation, with a highlight that slides left→right
+  as each side is spoken (driven by the words-table player);
+- text: the current sentence as a single scrolling "running line", with the
+  spoken word highlighted and auto-centered (driven by the texts reader).
+The transport controls (prev / pause / next) stay collapsed behind a chevron so
+the content gets the full width, and slide out when the pointer is over the right
+side. The bar can be dragged (body), resized horizontally (left/right edges), and
+a plain click restores the main window.
 """
 from PySide6.QtCore import (
-    QEasingCurve, QPropertyAnimation, QRectF, QSize, Qt, Signal,
+    QEasingCurve, QPoint, QPropertyAnimation, QRect, QRectF, QSize, Qt, Signal,
 )
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
-    QApplication, QHBoxLayout, QLabel, QPushButton, QWidget,
+    QApplication, QHBoxLayout, QLabel, QPushButton, QStackedLayout, QWidget,
 )
 
 from app.ui import icons
@@ -64,7 +67,12 @@ class MiniPlayer(QWidget):
         lay.setContentsMargins(12, 0, self.RESIZE_MARGIN, 0)
         lay.setSpacing(4)
 
-        # ---- left: the word pair, with a highlight pill behind the labels ----
+        # ---- left: a stack of the word-pair view and the running-line view ----
+        self._left = QWidget()
+        self._left_stack = QStackedLayout(self._left)
+        self._left_stack.setContentsMargins(0, 0, 0, 0)
+
+        # word-pair view: two labels with a highlight pill behind them
         self._words = QWidget(objectName="MiniWords")
         wl = QHBoxLayout(self._words)
         wl.setContentsMargins(8, 0, 0, 0)  # room for the pill's left inset
@@ -80,7 +88,21 @@ class MiniPlayer(QWidget):
         wl.addWidget(self.sep_label)
         wl.addWidget(self.trans_label)
         wl.addStretch(1)
-        lay.addWidget(self._words, 1)
+        self._left_stack.addWidget(self._words)
+
+        # running-line view: a clipped viewport with a horizontally-scrolled label
+        self._line = QWidget(objectName="MiniLine")
+        self._line.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._line_pill = QWidget(self._line)
+        self._line_pill.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._line_label = QLabel(self._line, objectName="MiniWord")
+        self._line_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._line_text = ""
+        self._line_word = None  # (local_start, local_end) of the current word
+        self._line_offset = 0   # logical horizontal scroll of the line (<= 0)
+        self._left_stack.addWidget(self._line)
+
+        lay.addWidget(self._left, 1)
 
         # ---- right: transport controls, collapsed behind a chevron handle ----
         self._controls = QWidget(objectName="MiniControls")
@@ -105,8 +127,15 @@ class MiniPlayer(QWidget):
         self._hilite_anim = QPropertyAnimation(self._pill, b"geometry", self)
         self._hilite_anim.setEasingCurve(QEasingCurve.OutCubic)
         self._hilite_anim.setDuration(self.HILITE_ANIM_MS)
+        self._line_pill_anim = QPropertyAnimation(self._line_pill, b"geometry", self)
+        self._line_pill_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._line_pill_anim.setDuration(self.HILITE_ANIM_MS)
+        self._line_scroll_anim = QPropertyAnimation(self._line_label, b"pos", self)
+        self._line_scroll_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._line_scroll_anim.setDuration(self.HILITE_ANIM_MS)
         self._apply_pill_style()
         self._apply_label_styles()
+        self._apply_line_style()
 
     # ------------------------------------------------------------- controls
 
@@ -123,8 +152,15 @@ class MiniPlayer(QWidget):
 
     # -------------------------------------------------------------- public
 
+    def set_mode(self, mode):
+        """Switch the left area between 'words' and 'text' (running line)."""
+        view = self._line if mode == "text" else self._words
+        if self._left_stack.currentWidget() is not view:
+            self._left_stack.setCurrentWidget(view)
+
     def set_pair(self, word, translation):
         """Show a new word/translation pair, dissolving the previous one."""
+        self.set_mode("words")
         fade_swap(self._words, 180)  # snapshot old pair, fade out over the new
         self._w1 = str(word or "")
         self._w2 = str(translation or "")
@@ -134,6 +170,28 @@ class MiniPlayer(QWidget):
         self._part = 0
         self._relayout_words()
         self._move_pill(animate=False)
+
+    def set_line(self, text):
+        """Show a new sentence as the running line, dissolving the previous one."""
+        self.set_mode("text")
+        fade_swap(self._line, 180)
+        self._line_text = str(text or "").replace("\n", " ").strip()
+        self._line_word = None
+        self._line_offset = 0
+        self._line_label.setText(self._line_text)
+        self._line_label.adjustSize()
+        self._line_label.move(0, self._line_label_y())
+        self._line_pill.hide()
+
+    def set_text_word(self, local_start, local_end):
+        """Highlight the spoken word at the given offsets in the current line and
+        scroll so it stays centered."""
+        text = self._line_text
+        n = len(text)
+        local_start = max(0, min(local_start, n))
+        local_end = max(local_start, min(local_end, n))
+        self._line_word = (local_start, local_end)
+        self._apply_line_word(animate=True)
 
     def set_active_part(self, slot):
         """Highlight the word (0) or translation (1). The active phrase gets
@@ -162,6 +220,7 @@ class MiniPlayer(QWidget):
         self.set_paused(self._paused)
         self._apply_pill_style()
         self._apply_label_styles()
+        self._apply_line_style()
         self.update()
 
     # ---------------------------------------------------------- word layout
@@ -216,6 +275,62 @@ class MiniPlayer(QWidget):
 
     def _active_label(self):
         return self.trans_label if self._part == 1 else self.word_label
+
+    # ----------------------------------------------------------- running line
+
+    def _apply_line_style(self):
+        self._line_label.setStyleSheet(
+            f"color:{self._colors['text']};background:transparent;font-weight:600;")
+        self._line_pill.setStyleSheet(
+            f"background:{self._colors['accent_soft']};border-radius:8px;")
+
+    def _line_label_y(self):
+        return (self._line.height() - self._line_label.height()) // 2
+
+    def _apply_line_word(self, animate):
+        if self._line_word is None or not self._line_text:
+            return
+        local_start, local_end = self._line_word
+        fm = self._line_label.fontMetrics()
+        x0 = fm.horizontalAdvance(self._line_text[:local_start])
+        x1 = fm.horizontalAdvance(self._line_text[:local_end])
+        y = self._line_label_y()
+        strip_w = self._line_label.width()
+        view_w = self._line.width()
+        min_off = min(0, view_w - strip_w)
+
+        # Calm scroll: hold the line still and let the highlight travel across
+        # it; only advance the view when the word reaches the right margin (or
+        # falls left of the view after a backward jump). Then bring it to the
+        # left margin so a fresh viewport of text reads statically.
+        left_margin = 28
+        right_edge = max(left_margin + 1, view_w - 40)
+        offset = self._line_offset
+        word_left = offset + x0
+        word_right = offset + x1
+        if word_right > right_edge or word_left < left_margin:
+            offset = left_margin - x0
+        offset = int(round(max(min_off, min(0, offset))))
+        self._line_offset = offset
+
+        # pill lives in the viewport; its x already includes the scroll offset
+        target_pos = QPoint(offset, y)
+        target_pill = QRect(offset + x0 - 4, (self.HEIGHT - 22) // 2,
+                            (x1 - x0) + 8, 22)
+        self._line_pill.lower()
+        self._line_pill.show()
+        self._line_scroll_anim.stop()
+        self._line_pill_anim.stop()
+        if animate and self.isVisible():
+            self._line_scroll_anim.setStartValue(self._line_label.pos())
+            self._line_scroll_anim.setEndValue(target_pos)
+            self._line_scroll_anim.start()
+            self._line_pill_anim.setStartValue(self._line_pill.geometry())
+            self._line_pill_anim.setEndValue(target_pill)
+            self._line_pill_anim.start()
+        else:
+            self._line_label.move(target_pos)
+            self._line_pill.setGeometry(target_pill)
 
     def _move_pill(self, animate):
         self._apply_label_styles()
@@ -277,11 +392,13 @@ class MiniPlayer(QWidget):
             self._controls.setMaximumWidth(0)
         self._relayout_words()  # geometry is valid now
         self._move_pill(animate=False)
+        self._apply_line_word(animate=False)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._relayout_words()
         self._move_pill(animate=False)
+        self._apply_line_word(animate=False)  # re-center the running line
 
     def hideEvent(self, event):
         super().hideEvent(event)
