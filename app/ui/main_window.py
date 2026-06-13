@@ -197,6 +197,7 @@ class MainWindow(QMainWindow):
         self._page_search = {PAGE_WORDS: "", PAGE_TEXTS: ""}
         self._footer_counts = {PAGE_WORDS: "No data", PAGE_TEXTS: "No texts yet"}
         self._words_subtitle = "Vocabulary"
+        self._file_view = False  # viewing an opened Excel file (read-only preview)
 
         self._build_ui()
         self._build_tray()
@@ -300,7 +301,6 @@ class MainWindow(QMainWindow):
         menu.addAction(self._icon("upload"), "Open Excel Table…", self.open_table_action)
         menu.addAction(self._icon("upload"), "Import Excel to Database…", self.import_excel)
         menu.addAction(self._icon("download"), "Save Import Template…", self.save_import_template)
-        menu.addAction(self._icon("sync"), "Reload Data", self.load_data)
         menu.addSeparator()
         export_menu = menu.addMenu(self._icon("download"), "Export")
         export_menu.addAction("PDF…", self.export_pdf)
@@ -393,9 +393,23 @@ class MainWindow(QMainWindow):
         title_box = QVBoxLayout()
         title_box.setSpacing(0)
         title = QLabel(APP_NAME, objectName="AppTitle")
-        self.source_label = QLabel("Vocabulary", objectName="SubTitle")
         title_box.addWidget(title)
-        title_box.addWidget(self.source_label)
+
+        subtitle_row = QHBoxLayout()
+        subtitle_row.setSpacing(6)
+        self.source_label = QLabel("Vocabulary", objectName="SubTitle")
+        subtitle_row.addWidget(self.source_label)
+        self.close_file_btn = QPushButton(objectName="iconButton")
+        self._set_icon(self.close_file_btn, "x", "text_dim", 14)
+        self.close_file_btn.setIconSize(QSize(13, 13))
+        self.close_file_btn.setFixedSize(20, 20)
+        self.close_file_btn.setCursor(Qt.PointingHandCursor)
+        self.close_file_btn.setToolTip("Close file and return to your vocabulary")
+        self.close_file_btn.clicked.connect(self.load_data)
+        self.close_file_btn.hide()
+        subtitle_row.addWidget(self.close_file_btn)
+        subtitle_row.addStretch(1)
+        title_box.addLayout(subtitle_row)
         h.addLayout(title_box)
 
         h.addStretch(1)
@@ -817,7 +831,6 @@ class MainWindow(QMainWindow):
         self.tray.setToolTip(APP_NAME)
         menu = QMenu()
         menu.addAction("Show", self.show_window)
-        menu.addAction("Hide", self.hide)
         menu.addSeparator()
         self.tray_add_action = menu.addAction("Add Word", self.open_add_word_and_translate)
         self._update_tray_hotkey_label()
@@ -904,6 +917,7 @@ class MainWindow(QMainWindow):
         self.add_button.setVisible(on_words)
         self.search_scope_btn.setVisible(on_words)
         self.source_label.setText(self._words_subtitle if on_words else "Texts")
+        self._update_file_view()
 
         if not on_words:
             self.texts_page.set_search(self.search_box.text())
@@ -941,12 +955,20 @@ class MainWindow(QMainWindow):
             self.update_filter_combos()
             self.refresh_display()
             self._words_subtitle = "Vocabulary"
+            self._file_view = False
+            self._update_file_view()
             if self.stack.currentIndex() == PAGE_WORDS:
                 self.source_label.setText(self._words_subtitle)
             logging.info("Database loaded successfully.")
         except Exception as exc:
             logging.error(f"Database loading failed: {exc}")
             QMessageBox.critical(self, "Database Error", f"Failed to load the database: {exc}")
+
+    def _update_file_view(self):
+        """Show the 'close file' affordance only while previewing an opened
+        Excel file on the Words page."""
+        self.close_file_btn.setVisible(
+            self._file_view and self.stack.currentIndex() == PAGE_WORDS)
 
     def update_filter_combos(self):
         if self.df is None:
@@ -1510,8 +1532,10 @@ class MainWindow(QMainWindow):
             self.update_filter_combos()
             self.refresh_display()
             self._words_subtitle = os.path.basename(path)
+            self._file_view = True
             self.switch_page(PAGE_WORDS)
             self.source_label.setText(self._words_subtitle)
+            self._update_file_view()
         except Exception as exc:
             logging.error(f"Error importing file: {exc}")
             QMessageBox.critical(self, "Error", f"Failed to open table:\n{exc}")
