@@ -201,11 +201,16 @@ class WordFilter:
         return df
 
     def _swap_words_and_languages(self, df):
-        if self.lang1 or self.lang2:
-            selected = self.lang1 or self.lang2
-            swap_mask = (df['Language1'] != selected) & (df['Language2'] == selected)
-            df.loc[swap_mask, ['Word1', 'Word2']] = df.loc[swap_mask, ['Word2', 'Word1']].values
-            df.loc[swap_mask, ['Language1', 'Language2']] = df.loc[swap_mask, ['Language2', 'Language1']].values
+        # lang1 anchors the left column, lang2 the right column. Build a swap
+        # mask that orients the matching language to the side it was picked on.
+        if self.lang1:
+            swap_mask = (df['Language1'] != self.lang1) & (df['Language2'] == self.lang1)
+        elif self.lang2:
+            swap_mask = (df['Language2'] != self.lang2) & (df['Language1'] == self.lang2)
+        else:
+            return df
+        df.loc[swap_mask, ['Word1', 'Word2']] = df.loc[swap_mask, ['Word2', 'Word1']].values
+        df.loc[swap_mask, ['Language1', 'Language2']] = df.loc[swap_mask, ['Language2', 'Language1']].values
         return df
 
     def _filter_by_languages(self, df):
