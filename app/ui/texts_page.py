@@ -695,6 +695,7 @@ class TextsPage(QWidget):
 
         self._loading = True
         self.title_edit.setText(str(text.get('Title') or ""))
+        self.title_edit.setCursorPosition(0)  # show the start, not the end, when elided
         self.language_combo.setCurrentText(str(text.get('Language') or "English"))
         level = str(text.get('Level') or "").strip()
         self.level_combo.setCurrentText(level if level in CEFR_LEVELS else "")
