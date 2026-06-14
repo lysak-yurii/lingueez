@@ -508,6 +508,22 @@ QPushButton#navButton {{
     outline: 0;
 }}
 #TextsList::item {{ background: transparent; border: none; }}
+
+/* ---------- backups / restore points ---------- */
+#BackupsList {{
+    background: {c['bg_alt']};
+    border: 1px solid {c['border']};
+    border-radius: 10px;
+    padding: 4px 2px;
+    outline: 0;
+}}
+#BackupsList::item {{
+    border-radius: 8px;
+    margin: 1px 2px;
+}}
+#BackupsList::item:hover {{ background: {c['surface_alt']}; }}
+#BackupsList::item:selected {{ background: {c['selection']}; }}
+QLabel#backupTitle {{ font-weight: 600; }}
 #ReaderCard {{
     background: {c['bg_alt']};
     border: 1px solid {c['border']};
