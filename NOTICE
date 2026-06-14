@@ -1,0 +1,33 @@
+Lingueez
+Copyright (C) 2024-2026 Yurii Lysak
+
+This program is licensed under the GNU Affero General Public License, version 3
+or (at your option) any later version. The full license text is in LICENSE.txt.
+
+------------------------------------------------------------------------------
+Additional terms under section 7 of the AGPL-3.0
+------------------------------------------------------------------------------
+
+As permitted by section 7(b) of the GNU Affero General Public License, the
+following additional requirement applies to this program and to all modified
+versions and derivative works:
+
+  You must preserve the author attribution "Lingueez — created by Yurii
+  Lysak" in the Appropriate Legal Notices displayed by the program (for
+  example, an "About" dialog or equivalent user-facing notice), and you may
+  not remove or alter this attribution.
+
+This is a permitted additional term, not a restriction on the freedoms granted
+by the AGPL. You remain free to use, study, modify, and redistribute this
+program under the AGPL; you simply may not strip the above author credit from
+the program's user-facing notices.
+
+If you convey a copy of this program, you must keep this NOTICE file intact and
+distribute it together with the source.
+
+------------------------------------------------------------------------------
+Third-party components
+------------------------------------------------------------------------------
+
+This program incorporates third-party open-source components, each under its
+own license. See THIRD-PARTY-LICENSES.md for the list.
