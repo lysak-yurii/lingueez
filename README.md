@@ -6,6 +6,8 @@ Add words and they translate automatically; listen to them on repeat and watch e
 one climb from *New* to *Mastered* as you do; read whole texts with side-by-side
 translations and synced audio; and keep everything in sync across devices.
 
+![Lingueez vocabulary view](screenshots/dashboard.png)
+
 ## Features
 
 - **Words** — add, edit, and organize entries with statuses, favorites, tags, and
@@ -19,9 +21,10 @@ translations and synced audio; and keep everything in sync across devices.
 - **Audio** — read-aloud with adjustable pauses and repeats, MP3
   export, and a floating mini-player when the window is minimized.
 - **Texts reader** — import from files, the web, Wikipedia, or RSS; read with a
-  side-by-side translation and word highlighting synced to playback.
+  side-by-side translation and word highlighting synced to playback
+  ([screenshot](screenshots/texts.png)).
 - **Statistics** — a dashboard with status distribution, streaks, definition
-  coverage, and progress over time.
+  coverage, and progress over time ([screenshot](screenshots/statistics.png)).
 - **Import & export** — Excel import with duplicate detection; export to PDF, Excel,
   CSV, and **Anki**-friendly TXT.
 - **Sync & backups** — two-way cloud sync, a bin to restore deleted items, and
