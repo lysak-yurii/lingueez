@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch the Dictionary app with its virtual environment.
+# Launch the Lingueez app with its virtual environment.
 # The venv lives in ~/.venvs/dictionary-upgraded because this drive (exFAT)
 # does not support the symlinks a venv needs.
 set -e

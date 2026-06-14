@@ -1,4 +1,4 @@
-# Dictionary
+# Lingueez
 
 A desktop app for building, studying, and remembering vocabulary across languages.
 
@@ -35,6 +35,21 @@ API keys and preferences are all managed inside the app under **Settings**.
 A global hotkey (**Ctrl+Shift+V** by default, configurable in **Settings**) adds a
 word straight from the clipboard and translates it.
 
+## Contributing
+
+Contributions are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) — all
+contributors agree to the [`CLA`](CLA.md) before their changes can be merged.
+
 ## License
 
-Proprietary. © Yurii Lysak. See [`LICENSE.txt`](LICENSE.txt).
+© Yurii Lysak. Licensed under the **GNU Affero General Public License v3.0**
+([`LICENSE.txt`](LICENSE.txt)) — you may use, study, share, and modify it, and any
+distributed version (including over a network) must remain open under the same
+license.
+
+Under AGPL-3.0 section 7, one additional term applies: forks and derivative works
+must keep the author attribution (*"Lingueez — created by Yurii Lysak"*) visible in
+the program's user-facing notices. See the [`NOTICE`](NOTICE) file for details.
+
+Bundled third-party components keep their own licenses; see
+[`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md).

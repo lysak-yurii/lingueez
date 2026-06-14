@@ -1,3 +1,24 @@
+# Lingueez — a desktop app for studying vocabulary across languages.
+# Copyright (C) 2024-2026 Yurii Lysak
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# Additional terms under AGPL-3.0 section 7 apply to this program; see the
+# NOTICE file distributed with this source for details.
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """Main application window."""
 import json
 import logging
@@ -1889,14 +1910,15 @@ class MainWindow(QMainWindow):
         dialog.setMinimumWidth(420)
         repo = "https://github.com/lysak-yurii/dictionary-desktop-app"
         body = QLabel(
-            f"<h3>{APP_NAME}</h3>"
+            f"<h3>{APP_NAME} — created by Yurii Lysak</h3>"
             f"<p>Version {APP_VERSION} &nbsp;·&nbsp; Build {BUILD_NUMBER}</p>"
             "<p>Your personal vocabulary companion with cloud sync, "
             "AI definitions, translations, text-to-speech and export options.</p>"
-            f"<p>Author: Yurii Lysak &nbsp;·&nbsp; "
-            f"<a href='{repo}'>GitHub</a></p>"
+            "<p>Licensed under the GNU Affero General Public License v3.0. "
+            "This attribution must be preserved (AGPL §7).</p>"
             f"<p>Found a bug or have an idea? "
-            f"<a href='{repo}/issues'>Report an issue</a>.</p>")
+            f"<a href='{repo}/issues'>Report an issue</a>.</p>"
+            f"<p><a href='{repo}'>GitHub</a></p>")
         body.setWordWrap(True)
         body.setTextInteractionFlags(Qt.TextBrowserInteraction)
         body.setOpenExternalLinks(True)
