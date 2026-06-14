@@ -19,22 +19,25 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-"""Backup management: list, preview, restore and delete daily DB backups."""
+"""Restore points: list, restore and remove the app's automatic daily backups."""
 import logging
 import os
 import shutil
 import sqlite3
 from datetime import datetime
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView, QHBoxLayout, QLabel, QMessageBox, QPushButton,
-    QTableWidget, QTableWidgetItem,
+    QAbstractItemView, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
+    QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
 from app.ui.dialogs.base import FramelessDialog
 
 BACKUP_DIR = 'backups'
 DB_PATH = 'dictionary.db'
+DAILY_PREFIX = 'dictionary_backup_'
+SNAPSHOT_PREFIX = 'dictionary_pre_restore_'
 
 
 def _backup_counts(path):
@@ -56,39 +59,90 @@ def _backup_counts(path):
     return counts
 
 
+def _friendly_date(date):
+    """A backup date -> a plain-language label ('Today', 'Monday · June 9, 2026')."""
+    today = datetime.now().date()
+    days = (today - date.date()).days
+    full = f"{date.strftime('%B')} {date.day}, {date.year}"
+    if days <= 0:
+        return "Today"
+    if days == 1:
+        return "Yesterday"
+    if days < 7:
+        return f"{date.strftime('%A')} · {full}"
+    return full
+
+
+def _date_phrase(date):
+    """A backup date -> a phrase that reads naturally inside a sentence."""
+    today = datetime.now().date()
+    days = (today - date.date()).days
+    full = f"{date.strftime('%B')} {date.day}, {date.year}"
+    if days <= 0:
+        return "today"
+    if days == 1:
+        return "yesterday"
+    if days < 7:
+        return f"{date.strftime('%A')}, {full}"
+    return full
+
+
+def _short_when(moment):
+    """A snapshot timestamp -> 'today 18:20' / 'yesterday 09:05' / 'Jun 9 18:20'."""
+    today = datetime.now().date()
+    days = (today - moment.date()).days
+    time = moment.strftime('%H:%M')
+    if days <= 0:
+        return f"today {time}"
+    if days == 1:
+        return f"yesterday {time}"
+    return f"{moment.strftime('%b')} {moment.day} {time}"
+
+
+def _content_summary(words, texts, tags):
+    """Counts -> 'X words · Y texts · Z tags' with grammar and grouping."""
+    def part(count, noun):
+        label = noun if count == 1 else noun + "s"
+        return f"{count:,} {label}"
+
+    return " · ".join((part(words, "word"), part(texts, "text"), part(tags, "tag")))
+
+
 class BackupsDialog(FramelessDialog):
     def __init__(self, parent, on_restored=None):
-        super().__init__(parent, title="Backups")
+        super().__init__(parent, title="Restore an earlier version")
         self.on_restored = on_restored
-        self.setMinimumSize(640, 440)
+        self.setMinimumSize(560, 460)
 
         layout = self.content_layout
-        layout.setContentsMargins(16, 16, 16, 12)
 
-        hint = QLabel("A backup is created automatically after every change. "
-                      "One backup per day is kept for the current month, "
-                      "one per month for older months.")
+        hint = QLabel("Your database is backed up automatically after every "
+                      "change. Pick an earlier version below to restore it.")
         hint.setObjectName("dimLabel")
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["File", "Date", "Words", "Texts", "Tags"])
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setColumnWidth(0, 250)
-        layout.addWidget(self.table, 1)
+        self.listing = QListWidget(objectName="BackupsList")
+        self.listing.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.listing.itemSelectionChanged.connect(self._update_buttons)
+        self.listing.itemDoubleClicked.connect(lambda _i: self.restore_selected())
+        layout.addWidget(self.listing, 1)
+
+        self.empty_label = QLabel("No saved versions yet. A backup is made "
+                                  "automatically after every change.")
+        self.empty_label.setObjectName("dimLabel")
+        self.empty_label.setAlignment(Qt.AlignCenter)
+        self.empty_label.setWordWrap(True)
+        self.empty_label.hide()
+        layout.addWidget(self.empty_label, 1)
 
         buttons = QHBoxLayout()
-        restore_btn = QPushButton("Restore Selected", objectName="primaryButton")
-        restore_btn.clicked.connect(self.restore_selected)
-        buttons.addWidget(restore_btn)
-        delete_btn = QPushButton("Delete Selected", objectName="dangerButton")
-        delete_btn.clicked.connect(self.delete_selected)
-        buttons.addWidget(delete_btn)
+        self.restore_btn = QPushButton("Restore this version", objectName="primaryButton")
+        self.restore_btn.clicked.connect(self.restore_selected)
+        buttons.addWidget(self.restore_btn)
+        self.delete_btn = QPushButton("Delete", objectName="dangerButton")
+        self.delete_btn.clicked.connect(self.delete_selected)
+        buttons.addWidget(self.delete_btn)
         buttons.addStretch(1)
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.accept)
@@ -97,61 +151,141 @@ class BackupsDialog(FramelessDialog):
 
         self.load_backups()
 
-    def load_backups(self):
-        self.table.setRowCount(0)
+    def _collect_entries(self):
+        """Restore points sorted newest-first: daily backups + the latest undo point."""
+        entries = []
         if not os.path.isdir(BACKUP_DIR):
-            return
-        files = sorted(
-            (f for f in os.listdir(BACKUP_DIR)
-             if f.startswith('dictionary_backup_') and f.endswith('.db')),
-            reverse=True)
-        for filename in files:
-            path = os.path.join(BACKUP_DIR, filename)
-            date_str = filename[18:-3]
-            words, texts, tags = _backup_counts(path)
-            row = self.table.rowCount()
-            self.table.insertRow(row)
-            for col, value in enumerate([filename, date_str, words, texts, tags]):
-                self.table.setItem(row, col, QTableWidgetItem(str(value)))
+            return entries
 
-    def _selected_file(self):
-        rows = self.table.selectionModel().selectedRows()
-        if not rows:
-            QMessageBox.information(self, "Backups", "Select a backup first.")
-            return None
-        return self.table.item(rows[0].row(), 0).text()
+        daily, snapshots = [], []
+        for filename in os.listdir(BACKUP_DIR):
+            if not filename.endswith('.db'):
+                continue
+            try:
+                if filename.startswith(DAILY_PREFIX):
+                    when = datetime.strptime(filename[len(DAILY_PREFIX):-3], '%Y-%m-%d')
+                    daily.append((when, filename))
+                elif filename.startswith(SNAPSHOT_PREFIX):
+                    when = datetime.strptime(filename[len(SNAPSHOT_PREFIX):-3], '%Y%m%d_%H%M%S')
+                    snapshots.append((when, filename))
+            except ValueError:
+                logging.error(f"Unrecognised backup name: {filename}")
+
+        daily.sort(reverse=True)
+        for index, (when, filename) in enumerate(daily):
+            title = _friendly_date(when) + (" · Most recent" if index == 0 else "")
+            entries.append({
+                "when": when, "filename": filename, "title": title,
+                "summary": self._summary_for(filename),
+                "phrase": f"the version from {_date_phrase(when)}",
+            })
+
+        # Only the most recent undo point is offered; older ones are pruned on restore.
+        if snapshots:
+            when, filename = max(snapshots)
+            entries.append({
+                "when": when, "filename": filename, "title": "Before your last restore",
+                "summary": f"Saved {_short_when(when)} · {self._summary_for(filename)}",
+                "phrase": "the version from just before your last restore",
+            })
+
+        entries.sort(key=lambda e: e["when"], reverse=True)
+        return entries
+
+    @staticmethod
+    def _summary_for(filename):
+        words, texts, tags = _backup_counts(os.path.join(BACKUP_DIR, filename))
+        return _content_summary(words, texts, tags)
+
+    def load_backups(self):
+        self.listing.clear()
+        for entry in self._collect_entries():
+            item = QListWidgetItem(self.listing)
+            item.setData(Qt.UserRole, entry["filename"])
+            item.setData(Qt.UserRole + 1, entry["phrase"])
+            row = self._make_row(entry["title"], entry["summary"])
+            item.setSizeHint(row.sizeHint())
+            self.listing.setItemWidget(item, row)
+
+        has_items = self.listing.count() > 0
+        self.listing.setVisible(has_items)
+        self.empty_label.setVisible(not has_items)
+        self._update_buttons()
+
+    def _make_row(self, title, summary):
+        row = QWidget()
+        box = QVBoxLayout(row)
+        box.setContentsMargins(10, 8, 10, 8)
+        box.setSpacing(2)
+        primary = QLabel(title)
+        primary.setObjectName("backupTitle")
+        secondary = QLabel(summary)
+        secondary.setObjectName("dimLabel")
+        box.addWidget(primary)
+        box.addWidget(secondary)
+        return row
+
+    def _selected(self):
+        """Return (filename, sentence_phrase) for the selection, or (None, None)."""
+        items = self.listing.selectedItems()
+        if not items:
+            return None, None
+        item = items[0]
+        return item.data(Qt.UserRole), item.data(Qt.UserRole + 1)
+
+    def _update_buttons(self):
+        enabled = bool(self.listing.selectedItems())
+        self.restore_btn.setEnabled(enabled)
+        self.delete_btn.setEnabled(enabled)
 
     def restore_selected(self):
-        filename = self._selected_file()
+        filename, phrase = self._selected()
         if not filename:
             return
         if QMessageBox.question(
-                self, "Restore Backup",
-                f"Replace the current database with '{filename}'?\n\n"
-                "A safety copy of the current database will be made first.",
+                self, "Restore Version",
+                f"Restore {phrase}?\n\n"
+                "Your current data is saved first, so you can undo this.",
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         try:
-            safety = f"dictionary_pre_restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+            safety = f"{SNAPSHOT_PREFIX}{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
             shutil.copy2(DB_PATH, os.path.join(BACKUP_DIR, safety))
             shutil.copy2(os.path.join(BACKUP_DIR, filename), DB_PATH)
-            QMessageBox.information(self, "Restore", "Backup restored successfully.")
+            self._prune_snapshots(keep=safety)
+            QMessageBox.information(
+                self, "Restore",
+                f"Your database has been restored to {phrase}.\n\n"
+                "Changed your mind? Restore “Before your last restore” to undo.")
             if self.on_restored:
                 self.on_restored()
             self.accept()
         except Exception as exc:
             logging.error(f"Restore failed: {exc}")
-            QMessageBox.critical(self, "Restore Error", f"Failed to restore backup:\n{exc}")
+            QMessageBox.critical(self, "Restore Error",
+                                 f"Sorry, that version could not be restored:\n{exc}")
+
+    def _prune_snapshots(self, keep):
+        """Keep only one undo point so old pre-restore snapshots don't pile up."""
+        for filename in os.listdir(BACKUP_DIR):
+            if filename.startswith(SNAPSHOT_PREFIX) and filename != keep:
+                try:
+                    os.remove(os.path.join(BACKUP_DIR, filename))
+                except OSError as exc:
+                    logging.error(f"Could not remove old snapshot {filename}: {exc}")
 
     def delete_selected(self):
-        filename = self._selected_file()
+        filename, phrase = self._selected()
         if not filename:
             return
-        if QMessageBox.question(self, "Delete Backup", f"Delete '{filename}'?",
-                                QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
+        if QMessageBox.question(
+                self, "Remove Version",
+                f"Remove {phrase}?",
+                QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         try:
             os.remove(os.path.join(BACKUP_DIR, filename))
             self.load_backups()
         except Exception as exc:
-            QMessageBox.critical(self, "Delete Error", f"Failed to delete backup:\n{exc}")
+            QMessageBox.critical(self, "Remove Error",
+                                 f"Sorry, that version could not be removed:\n{exc}")
