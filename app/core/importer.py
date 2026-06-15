@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 from app.core.data_management import check_duplicate_entry, normalize_language_pairs
+from app.i18n import canonical_language
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +148,8 @@ def analyze_excel_import(file_path, settings, log=_noop_log, db_path='dictionary
             lang1, lang2 = raw.get('Language1'), raw.get('Language2')
             entry = {'row': file_row, 'Language1': lang1, 'Word1': word1,
                      'Language2': lang2, 'Word2': word2,
-                     'ID': None, 'existing': None}
+                     'ID': None, 'existing': None,
+                     'lang1_ok': True, 'lang2_ok': True, 'lang_ok': True}
 
             def skip(reason, detail, db_id=None):
                 entry.update(action=ACTION_SKIP, reason=reason, detail=detail, ID=db_id)
@@ -168,11 +170,36 @@ def analyze_excel_import(file_path, settings, log=_noop_log, db_path='dictionary
             word2 = str(word2).strip() if not pd.isna(word2) else None
             lang1 = str(lang1).strip() if isinstance(lang1, str) else lang1
             lang2 = str(lang2).strip() if isinstance(lang2, str) else lang2
+
+            # Map languages written in English or any bundled locale (e.g.
+            # Ukrainian) to the canonical English name used for storage, dedup
+            # matching and TTS. Unrecognized non-blank values are flagged but
+            # kept exactly as written.
+            canon1, canon2 = canonical_language(lang1), canonical_language(lang2)
+            entry['lang1_ok'] = bool(canon1) or not str(lang1 or '').strip()
+            entry['lang2_ok'] = bool(canon2) or not str(lang2 or '').strip()
+            entry['lang_ok'] = entry['lang1_ok'] and entry['lang2_ok']
+            # Captured before any reversed-duplicate swap below so the message
+            # always names the right values.
+            entry['unknown_langs'] = [lng for lng, ok in
+                                      ((lang1, entry['lang1_ok']),
+                                       (lang2, entry['lang2_ok'])) if not ok]
+            lang1 = canon1 or lang1
+            lang2 = canon2 or lang2
             entry.update(Word1=word1, Word2=word2, Language1=lang1, Language2=lang2)
 
             if word1 is None and word2 is None:
                 skip('invalid', "No usable words in the row.")
                 continue
+
+            def note_unknown_lang(detail):
+                """Append the unrecognized-language warning to *detail* and log it."""
+                if entry['lang_ok']:
+                    return detail
+                names = ', '.join(str(u) for u in entry['unknown_langs'])
+                log(f"Row {file_row}: unrecognized language '{names}' — "
+                    "imported as written.", level='warning')
+                return f"{detail} ⚠ Unrecognized language — imported as written."
 
             key = (_norm(lang1), _norm(word1), _norm(lang2), _norm(word2))
             reversed_key = (key[2], key[3], key[0], key[1])
@@ -196,22 +223,26 @@ def analyze_excel_import(file_path, settings, log=_noop_log, db_path='dictionary
                 existing = {'Language1': found[0], 'Language2': found[1]}
                 entry.update(
                     action=ACTION_UPDATE, reason='language_conflict',
-                    detail=f"Entry ID {db_id} exists with languages "
-                           f"'{found[0]} – {found[1]}'; will become '{lang1} – {lang2}'.",
+                    detail=note_unknown_lang(
+                        f"Entry ID {db_id} exists with languages "
+                        f"'{found[0]} – {found[1]}'; will become '{lang1} – {lang2}'."),
                     ID=db_id, existing=existing,
                     Word1=word1, Word2=word2, Language1=lang1, Language2=lang2)
                 rows.append(entry)
                 log(f"Row {file_row}: \"{word1} – {word2}\" exists with different "
                     "languages — proposed for update.", level='new')
             else:
-                entry.update(action=ACTION_ADD, reason='new', detail="New entry.")
+                entry.update(action=ACTION_ADD, reason='new',
+                             detail=note_unknown_lang("New entry."))
                 rows.append(entry)
                 log(f"Row {file_row}: \"{word1} – {word2}\" not found — proposed "
                     "for addition.", level='new')
 
-    counts = {'add': 0, 'update': 0, 'skip': 0, 'total': len(rows)}
+    counts = {'add': 0, 'update': 0, 'skip': 0, 'unknown_lang': 0, 'total': len(rows)}
     for row in rows:
         counts[row['action']] += 1
+        if not row.get('lang_ok', True):
+            counts['unknown_lang'] += 1
     log(f"Analysis complete: {counts['add']} to add, {counts['update']} to update, "
         f"{counts['skip']} skipped out of {counts['total']} rows.", level='success')
     return {'rows': rows, 'counts': counts}

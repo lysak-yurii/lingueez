@@ -129,6 +129,55 @@ def lang_value(label: str) -> str:
     return _lang_reverse.get(label, label)
 
 
+# Locale-independent resolver: maps a language name written in English OR any
+# bundled locale (e.g. Ukrainian) to the canonical English name. Unlike
+# _lang_reverse (active locale only), this is built from *all* locales so import
+# can recognize "українська" even when the UI is English.
+_canonical_idx = None  # casefolded name (any locale) -> canonical English
+
+
+def _available_locales():
+    """Locale codes that ship a translation module (scans the locales package)."""
+    import os
+    codes = []
+    pkg_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "locales")
+    try:
+        for fname in os.listdir(pkg_dir):
+            if fname.endswith(".py") and not fname.startswith("__"):
+                codes.append(fname[:-3])
+    except OSError:
+        pass
+    return codes
+
+
+def _build_canonical_index():
+    import importlib
+    names = _language_tokens() - {"Detect language", "All languages"}
+    idx = {name.casefold(): name for name in names}
+    for code in _available_locales():
+        try:
+            mod = importlib.import_module(f"locales.{code}")
+            translations = getattr(mod, "TRANSLATIONS", {})
+        except Exception:
+            continue
+        for name in names:
+            label = translations.get(name)
+            if label:
+                idx[str(label).strip().casefold()] = name
+    return idx
+
+
+def canonical_language(name):
+    """Map a language written in English or any supported locale to the canonical
+    English name used for storage. Returns None if unrecognized. Case-insensitive."""
+    global _canonical_idx
+    if _canonical_idx is None:
+        _canonical_idx = _build_canonical_index()
+    if name is None:
+        return None
+    return _canonical_idx.get(str(name).strip().casefold())
+
+
 def fill_lang_combo(combo, names, head=()) -> None:
     """Populate a combo with language items: display = localized label,
     item data = canonical English name (read back with :func:`get_lang`)."""
