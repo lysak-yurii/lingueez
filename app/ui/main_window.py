@@ -235,6 +235,11 @@ class MainWindow(QMainWindow):
         # size hints are only reliable once widgets are polished
         QTimer.singleShot(0, self._lock_filter_row_height)
 
+        # Follow the desktop light/dark preference live (and recover from a
+        # login-time launch where the color-scheme portal wasn't ready yet).
+        QApplication.instance().styleHints().colorSchemeChanged.connect(
+            self._on_system_color_scheme_changed)
+
         self.sync_status_changed.connect(self._update_sync_status_ui)
         self._sync_running = False
         self.sync_popover = None  # built lazily on first cloud-icon click
@@ -750,6 +755,15 @@ class MainWindow(QMainWindow):
             ch = combo.sizeHint().height()
             combo.setGeometry(x + 2, (header.height() - ch) // 2, w - 4, ch)
             combo.show()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # When launched with --minimized the window is shown for the first time
+        # from the tray. At construction the table viewport had no real width,
+        # so the word columns were sized to a stale/narrow viewport, leaving
+        # empty space on the right. Refit once the real geometry is in place.
+        if hasattr(self, '_col_fit_timer'):
+            QTimer.singleShot(0, self._fit_word_columns)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -1919,28 +1933,39 @@ class MainWindow(QMainWindow):
         dialog = BackupsDialog(self, on_restored=self.load_data)
         dialog.exec()
 
+    def _apply_appearance(self):
+        """Re-resolve and re-apply the theme from current settings."""
+        app = QApplication.instance()
+        self.colors = theme.apply_theme(
+            app,
+            self.settings.get("appearance_mode", "System"),
+            get_float(self.settings, "widget_scaling", 1.0))
+        self.model.set_colors(self.colors)
+        self._refresh_icons()
+        self._lock_filter_row_height()
+        self._apply_table_density()
+        self.refresh_display()
+
+    def _on_system_color_scheme_changed(self, _scheme):
+        """The desktop's light/dark preference changed. When following the
+        system ("System" mode) re-apply the theme. This also covers the case
+        where the app launches during login before the color-scheme portal is
+        ready: the portal reports the real scheme shortly after and we recolor.
+        """
+        mode = (self.settings.get("appearance_mode", "System") or "System").strip().lower()
+        if mode != "system":
+            return
+        crossfade_during(self, self._apply_appearance)
+
     def open_settings(self):
         from app.ui.dialogs.settings_dialog import SettingsDialog
         dialog = SettingsDialog(self)
         if dialog.exec():
             self.settings = load_settings()
-
-            def _apply():
-                app = QApplication.instance()
-                self.colors = theme.apply_theme(
-                    app,
-                    self.settings.get("appearance_mode", "System"),
-                    get_float(self.settings, "widget_scaling", 1.0))
-                self.model.set_colors(self.colors)
-                self._refresh_icons()
-                self._lock_filter_row_height()
-                self._apply_table_density()
-                self.refresh_display()
-
             # Mask the (unavoidable) full-app restyle behind a frozen snapshot,
             # then crossfade to the new theme so it reads as a smooth dissolve
             # rather than a ~2s freeze.
-            crossfade_during(self, _apply)
+            crossfade_during(self, self._apply_appearance)
             self._apply_global_hotkey()
             show_toast(self, tr("Settings"), tr("Settings saved."), "success")
 
