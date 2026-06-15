@@ -29,13 +29,14 @@ from PySide6.QtWidgets import (
 
 from app.config import get_float, get_int, load_settings
 from app.core.audio import save_audio_file
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
 
 class AudioSaverDialog(FramelessDialog):
     def __init__(self, parent, words, languages, initial_name):
-        super().__init__(parent, title="Save to Audio")
+        super().__init__(parent, title=tr("Save to Audio"))
         self.words = words
         self.languages = languages
         self.initial_name = initial_name
@@ -50,7 +51,7 @@ class AudioSaverDialog(FramelessDialog):
         layout.setSpacing(12)
 
         self.info_label = QLabel(
-            f"Generate one MP3 file from {len(words)} word/translation pair(s).")
+            tr("Generate one MP3 file from {count} word/translation pair(s).").format(count=len(words)))
         self.info_label.setWordWrap(True)
         layout.addWidget(self.info_label)
 
@@ -65,17 +66,17 @@ class AudioSaverDialog(FramelessDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch(1)
-        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn = QPushButton(tr("Cancel"))
         self.cancel_btn.clicked.connect(self.cancel)
         buttons.addWidget(self.cancel_btn)
-        self.start_btn = QPushButton("Choose File && Start", objectName="primaryButton")
+        self.start_btn = QPushButton(tr("Choose File && Start"), objectName="primaryButton")
         self.start_btn.clicked.connect(self.start)
         buttons.addWidget(self.start_btn)
         layout.addLayout(buttons)
 
     def start(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save Audio As",
-                                              self.initial_name, "MP3 files (*.mp3)")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save Audio As"),
+                                              self.initial_name, tr("MP3 files (*.mp3)"))
         if not path:
             return
         settings = load_settings()
@@ -84,16 +85,16 @@ class AudioSaverDialog(FramelessDialog):
 
         self.start_btn.setEnabled(False)
         self._running = True
-        self.status_label.setText("Generating audio…")
+        self.status_label.setText(tr("Generating audio…"))
         self.progress.setRange(0, len(self.words))
 
         def progress_callback(current, word):
             if current == 'compiling_audio':
-                self.status_label.setText("Compiling final audio file…")
+                self.status_label.setText(tr("Compiling final audio file…"))
                 self.progress.setRange(0, 0)  # indeterminate
             else:
                 self.progress.setValue(int(current))
-                self.status_label.setText(f"Processed: {word}")
+                self.status_label.setText(tr("Processed: {word}").format(word=word))
 
         def work(progress_callback=None):
             save_audio_file(
@@ -110,17 +111,19 @@ class AudioSaverDialog(FramelessDialog):
         def done(result):
             self._running = False
             if self.cancel_event.is_set():
-                self.status_label.setText("Cancelled.")
+                self.status_label.setText(tr("Cancelled."))
                 self.reject()
             else:
                 self.progress.setRange(0, 1)
                 self.progress.setValue(1)
-                QMessageBox.information(self, "Audio saved", f"Audio file saved to:\n{result}")
+                QMessageBox.information(self, tr("Audio saved"),
+                                        tr("Audio file saved to:\n{path}").format(path=result))
                 self.accept()
 
         def fail(message):
             self._running = False
-            QMessageBox.critical(self, "Audio Error", f"Failed to save audio:\n{message}")
+            QMessageBox.critical(self, tr("Audio Error"),
+                                 tr("Failed to save audio:\n{error}").format(error=message))
             self.reject()
 
         run_in_thread(work, wants_progress=True,
@@ -130,6 +133,6 @@ class AudioSaverDialog(FramelessDialog):
     def cancel(self):
         if self._running:
             self.cancel_event.set()
-            self.status_label.setText("Cancelling…")
+            self.status_label.setText(tr("Cancelling…"))
         else:
             self.reject()

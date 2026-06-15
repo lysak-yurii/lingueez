@@ -27,6 +27,8 @@ from PySide6.QtWidgets import (
     QToolButton, QWidget,
 )
 
+from app.i18n import tr
+
 
 class ElidedLabel(QLabel):
     """Single-line label that elides its text and exposes it as a tooltip.
@@ -87,7 +89,7 @@ class ColorButton(QWidget):
         if clearable:
             clear = QToolButton()
             clear.setText("✕")
-            clear.setToolTip("No color")
+            clear.setToolTip(tr("No color"))
             clear.clicked.connect(self._clear)
             row.addWidget(clear)
         row.addStretch(1)
@@ -101,12 +103,12 @@ class ColorButton(QWidget):
             self._button.setStyleSheet(
                 f"background-color: {name}; color: {text_color}; border: 1px solid #888;")
         else:
-            self._button.setText("None")
+            self._button.setText(tr("None"))
             self._button.setStyleSheet("")
 
     def _pick(self):
         current = self._color if self._color.isValid() else QColor("#ffffff")
-        picked = QColorDialog.getColor(current, self, "Choose Color")
+        picked = QColorDialog.getColor(current, self, tr("Choose Color"))
         if picked.isValid():
             self._color = picked
             self._refresh()
@@ -145,7 +147,7 @@ class ColumnPicker(QWidget):
                 check.toggled.connect(lambda _on, c=internal: self._sync_spin(c))
                 grid.addWidget(check, i, 0)
                 grid.addWidget(spin, i, 1)
-                grid.addWidget(QLabel("in"), i, 2)
+                grid.addWidget(QLabel(tr("in")), i, 2)
             else:
                 grid.addWidget(check, i % ((len(self._columns) + 1) // 2),
                                i // ((len(self._columns) + 1) // 2))

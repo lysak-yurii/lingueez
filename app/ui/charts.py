@@ -55,6 +55,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.ui import theme
+from app.i18n import tr
 
 
 # --------------------------------------------------------------------------- #
@@ -306,7 +307,7 @@ class DonutChart(_Animated, QWidget):
             p.drawEllipse(ring_rect.adjusted(inset, inset, -inset, -inset))
             p.setPen(text_dim)
             p.setFont(_label_font(10))
-            p.drawText(ring_rect, Qt.AlignCenter, "No data yet")
+            p.drawText(ring_rect, Qt.AlignCenter, tr("No data yet"))
             return
 
         thickness = side * 0.18
@@ -340,7 +341,7 @@ class DonutChart(_Animated, QWidget):
         p.setFont(_label_font(9))
         center_bot = QRectF(ring_rect.left(), ring_rect.center().y() + side * 0.02,
                             ring_rect.width(), side * 0.18)
-        p.drawText(center_bot, Qt.AlignCenter, "words")
+        p.drawText(center_bot, Qt.AlignCenter, tr("words"))
 
         # legend
         lx = ring_rect.right() + 26
@@ -395,7 +396,7 @@ class BarListChart(_Animated, QWidget):
         if not self._items:
             p.setPen(_c("text_dim"))
             p.setFont(_label_font(10))
-            p.drawText(rect, Qt.AlignCenter, "No data yet")
+            p.drawText(rect, Qt.AlignCenter, tr("No data yet"))
             return
 
         peak = max(c for _, c in self._items) or 1
@@ -468,7 +469,7 @@ class AreaChart(_Animated, QWidget):
         if len(self._points) < 2:
             p.setPen(text_dim)
             p.setFont(_label_font(10))
-            p.drawText(self.rect(), Qt.AlignCenter, "Not enough activity yet")
+            p.drawText(self.rect(), Qt.AlignCenter, tr("Not enough activity yet"))
             return
 
         counts = [c for _, c in self._points]
@@ -612,7 +613,7 @@ class ActivityHeatmap(_Animated, QWidget):
         if not cols:
             p.setPen(_c("text_dim"))
             p.setFont(_label_font(10))
-            p.drawText(self.rect(), Qt.AlignCenter, "No activity yet")
+            p.drawText(self.rect(), Qt.AlignCenter, tr("No activity yet"))
             return
 
         step = self.CELL + self.GAP

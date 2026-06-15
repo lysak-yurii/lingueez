@@ -41,6 +41,7 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from app.core import audio
+from app.i18n import tr
 from app.ui import icons
 from app.ui.widgets import ElidedLabel
 
@@ -177,11 +178,12 @@ class ReaderPlayer(QObject):
         self.stop()
         lang_code = audio.lang_codes.get(language)
         if not lang_code:
-            self.error.emit(f"Unsupported language: {language}")
+            self.error.emit(
+                tr("Unsupported language: {language}").format(language=language))
             return False
         chunks = tokenize(text)
         if not chunks:
-            self.error.emit("Nothing to read.")
+            self.error.emit(tr("Nothing to read."))
             return False
         audio.stop_playback()  # halt any pygame playback (words / pronounce)
 
@@ -454,13 +456,14 @@ class ReaderToolbar(QWidget):
         lay.setContentsMargins(0, 2, 0, 2)
         lay.setSpacing(2)
 
-        self.prev_btn = self._button("skip-back", "Previous sentence", self.prev_clicked)
+        self.prev_btn = self._button("skip-back", tr("Previous sentence"), self.prev_clicked)
         lay.addWidget(self.prev_btn)
-        self.play_btn = self._button("pause", "Pause", self.toggle_clicked)
+        self.play_btn = self._button("pause", tr("Pause"), self.toggle_clicked)
         lay.addWidget(self.play_btn)
-        self.next_btn = self._button("skip-forward", "Next sentence", self.next_clicked)
+        self.next_btn = self._button("skip-forward", tr("Next sentence"), self.next_clicked)
         lay.addWidget(self.next_btn)
-        self.stop_btn = self._button("x", "Stop reading", self.stop_clicked, color_key="danger", size=15)
+        self.stop_btn = self._button("x", tr("Stop reading"), self.stop_clicked,
+                                     color_key="danger", size=15)
         lay.addWidget(self.stop_btn)
 
         lay.addSpacing(8)
@@ -468,7 +471,7 @@ class ReaderToolbar(QWidget):
         for label, _rate in self.RATES:
             self.rate_combo.addItem(label)
         self.rate_combo.setCurrentIndex(1)
-        self.rate_combo.setToolTip("Reading speed")
+        self.rate_combo.setToolTip(tr("Reading speed"))
         self.rate_combo.setCursor(Qt.PointingHandCursor)
         self.rate_combo.currentIndexChanged.connect(
             lambda i: self.rate_changed.emit(self.RATES[i][1]))
@@ -493,11 +496,11 @@ class ReaderToolbar(QWidget):
         playing = state == "playing"
         self.play_btn.setIcon(icons.icon(
             "pause" if playing else "play", self._colors["text"], 16))
-        self.play_btn.setToolTip("Pause" if playing else "Resume")
+        self.play_btn.setToolTip(tr("Pause") if playing else tr("Resume"))
         self._update_status()
 
     def set_progress(self, index, total):
-        self._progress = f"Sentence {index + 1} / {total}"
+        self._progress = tr("Sentence {n} / {total}").format(n=index + 1, total=total)
         self._update_status()
 
     def reset(self):
@@ -505,7 +508,7 @@ class ReaderToolbar(QWidget):
         self.set_state("playing")
 
     def _update_status(self):
-        suffix = "  ·  buffering…" if self._state == "buffering" else ""
+        suffix = "  ·  " + tr("buffering…") if self._state == "buffering" else ""
         self.status_label.set_full_text(self._progress + suffix)
 
     def refresh_theme(self, colors):

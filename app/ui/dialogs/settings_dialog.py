@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
 from app.core import exporters, translator
+from app.i18n import tr
 from app.system.autostart import get_autostart_enabled, set_autostart
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.widgets import ColorButton, ColumnPicker
@@ -71,7 +72,7 @@ def _scrollable(widget):
 
 class SettingsDialog(FramelessDialog):
     def __init__(self, parent):
-        super().__init__(parent, title="Settings")
+        super().__init__(parent, title=tr("Settings"))
         self.setMinimumSize(720, 560)
         self.settings = load_settings()
         self.env = _read_env()
@@ -84,19 +85,24 @@ class SettingsDialog(FramelessDialog):
         layout.setContentsMargins(16, 16, 16, 12)
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._appearance_tab(), "Appearance")
-        self.tabs.addTab(self._audio_tab(), "Audio")
-        self.tabs.addTab(self._learning_tab(), "Learning")
-        self.tabs.addTab(self._export_tab(), "Export")
-        self.tabs.addTab(self._import_tab(), "Import")
-        self.tabs.addTab(self._apis_tab(), "APIs")
-        self.tabs.addTab(self._system_tab(), "System")
+        self.tabs.addTab(self._appearance_tab(), tr("Appearance"))
+        self.tabs.addTab(self._audio_tab(), tr("Audio"))
+        self.tabs.addTab(self._learning_tab(), tr("Learning"))
+        self.tabs.addTab(self._export_tab(), tr("Export"))
+        self.tabs.addTab(self._import_tab(), tr("Import"))
+        self.tabs.addTab(self._apis_tab(), tr("APIs"))
+        self.tabs.addTab(self._system_tab(), tr("System"))
         layout.addWidget(self.tabs, 1)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        buttons.accepted.connect(self.save)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        cancel_btn = QPushButton(tr("Cancel"))
+        cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(cancel_btn)
+        save_btn = QPushButton(tr("Save"), objectName="primaryButton")
+        save_btn.clicked.connect(self.save)
+        btn_row.addWidget(save_btn)
+        layout.addLayout(btn_row)
 
     # ----------------------------------------------------------- helpers
 
@@ -115,7 +121,7 @@ class SettingsDialog(FramelessDialog):
         edit.setEchoMode(QLineEdit.Password)
         action = edit.addAction(icons.icon("eye", dim, 16),
                                 QLineEdit.TrailingPosition)
-        action.setToolTip("Show / hide")
+        action.setToolTip(tr("Show / hide"))
 
         def toggle():
             hidden = edit.echoMode() == QLineEdit.Password
@@ -158,12 +164,16 @@ class SettingsDialog(FramelessDialog):
         setattr(self, f"w_{key}", picker)
         return picker
 
-    def _combo(self, key, values, default=None):
+    def _combo(self, key, values, default=None, display=None):
+        # Each item keeps its canonical value as userData so the stored setting
+        # stays language-independent; *display* (e.g. tr) only changes the label.
         combo = QComboBox()
-        combo.addItems(values)
+        for v in values:
+            combo.addItem(display(v) if display else v, v)
         current = str(self.settings.get(key, default or values[0]))
-        if combo.findText(current) >= 0:
-            combo.setCurrentText(current)
+        idx = combo.findData(current)
+        if idx >= 0:
+            combo.setCurrentIndex(idx)
         setattr(self, f"w_{key}", combo)
         return combo
 
@@ -180,20 +190,20 @@ class SettingsDialog(FramelessDialog):
         form.addRow(note)
         for label, widget in extra_rows:
             form.addRow(label, widget)
-        for title, task in (("Definitions", prefix),
-                            ("Generated Texts (from words)", f"{prefix}_texts"),
-                            ("Generated Texts (by topic)", f"{prefix}_texts_topic"),
-                            ("Text Adaptation (to level)", f"{prefix}_texts_adapt")):
+        for title, task in ((tr("Definitions"), prefix),
+                            (tr("Generated Texts (from words)"), f"{prefix}_texts"),
+                            (tr("Generated Texts (by topic)"), f"{prefix}_texts_topic"),
+                            (tr("Text Adaptation (to level)"), f"{prefix}_texts_adapt")):
             group = QGroupBox(title)
             g_form = QFormLayout(group)
-            g_form.addRow("Model", self._line(f"{task}_model", 220))
-            g_form.addRow("Max tokens", self._spin(f"{task}_max_tokens", 16, 8000, 400))
-            g_form.addRow("Temperature", self._dspin(f"{task}_temperature", 0, 2, 0.5))
+            g_form.addRow(tr("Model"), self._line(f"{task}_model", 220))
+            g_form.addRow(tr("Max tokens"), self._spin(f"{task}_max_tokens", 16, 8000, 400))
+            g_form.addRow(tr("Temperature"), self._dspin(f"{task}_temperature", 0, 2, 0.5))
             if self.show_advanced:
                 content = QTextEdit(str(self.settings.get(f"{task}_content", "")))
                 content.setMaximumHeight(90)
                 setattr(self, f"w_{task}_content", content)
-                g_form.addRow("Prompt template", content)
+                g_form.addRow(tr("Prompt template"), content)
             form.addRow(group)
         return _scrollable(page)
 
@@ -204,10 +214,23 @@ class SettingsDialog(FramelessDialog):
         widget = QWidget()
         form = QFormLayout(widget)
         form.setContentsMargins(18, 18, 18, 18)
-        form.addRow("Appearance mode", self._combo("appearance_mode", ["System", "Light", "Dark"]))
-        form.addRow("Widget scaling", self._dspin("widget_scaling", 0.5, 3.0, 1.0))
+        form.addRow(tr("Appearance mode"), self._combo("appearance_mode", ["System", "Light", "Dark"]))
+        form.addRow(tr("Widget scaling"), self._dspin("widget_scaling", 0.5, 3.0, 1.0))
         self.settings.setdefault("table_density", TABLE_DENSITY_DEFAULT)
-        form.addRow("Table size", self._combo("table_density", list(TABLE_DENSITY.keys()), TABLE_DENSITY_DEFAULT))
+        form.addRow(tr("Table size"), self._combo("table_density", list(TABLE_DENSITY.keys()), TABLE_DENSITY_DEFAULT, display=tr))
+
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("English", "en")
+        self.language_combo.addItem("Українська", "uk")
+        current_lang = str(self.settings.get("language", "en"))
+        idx = self.language_combo.findData(current_lang)
+        if idx >= 0:
+            self.language_combo.setCurrentIndex(idx)
+        form.addRow(tr("Interface language"), self.language_combo)
+        lang_note = QLabel(tr("Restart the app to apply the language change."))
+        lang_note.setObjectName("dimLabel")
+        form.addRow(lang_note)
+
         return _scrollable(widget)
 
     def _export_tab(self):
@@ -218,23 +241,23 @@ class SettingsDialog(FramelessDialog):
         excel = QWidget()
         layout = QVBoxLayout(excel)
         layout.setContentsMargins(18, 18, 18, 18)
-        fmt_group = QGroupBox("Format")
+        fmt_group = QGroupBox(tr("Format"))
         form = QFormLayout(fmt_group)
-        form.addRow("Data format", self._combo("excel_format", ["Excel", "CSV"]))
-        form.addRow("Columns to export", self._columns("exclude_columns_excel"))
+        form.addRow(tr("Data format"), self._combo("excel_format", ["Excel", "CSV"]))
+        form.addRow(tr("Columns to export"), self._columns("exclude_columns_excel"))
         layout.addWidget(fmt_group)
-        xls_group = QGroupBox("Excel options")
+        xls_group = QGroupBox(tr("Excel options"))
         form = QFormLayout(xls_group)
-        form.addRow("Sheet name", self._line("sheet_name", 160))
-        form.addRow("Start row", self._spin("start_row", 0, 100))
-        form.addRow("Start column", self._spin("start_column", 0, 100))
-        form.addRow("Shade alternate rows", self._color("alternate_row_color", clearable=True))
-        form.addRow("Auto column width", self._check("auto_column_width", True))
-        form.addRow("Freeze header row", self._check("freeze_panes", False))
+        form.addRow(tr("Sheet name"), self._line("sheet_name", 160))
+        form.addRow(tr("Start row"), self._spin("start_row", 0, 100))
+        form.addRow(tr("Start column"), self._spin("start_column", 0, 100))
+        form.addRow(tr("Shade alternate rows"), self._color("alternate_row_color", clearable=True))
+        form.addRow(tr("Auto column width"), self._check("auto_column_width", True))
+        form.addRow(tr("Freeze header row"), self._check("freeze_panes", False))
         layout.addWidget(xls_group)
-        csv_group = QGroupBox("CSV options")
+        csv_group = QGroupBox(tr("CSV options"))
         form = QFormLayout(csv_group)
-        form.addRow("Delimiter", self._line("csv_delimiter", 80))
+        form.addRow(tr("Delimiter"), self._line("csv_delimiter", 80))
         layout.addWidget(csv_group)
         layout.addStretch(1)
         tabs.addTab(_scrollable(excel), "Excel / CSV")
@@ -243,13 +266,13 @@ class SettingsDialog(FramelessDialog):
         txt = QWidget()
         form = QFormLayout(txt)
         form.setContentsMargins(18, 18, 18, 18)
-        form.addRow("Columns to export", self._columns("exclude_columns_txt"))
-        form.addRow("Delimiter (\\t = tab)", self._line("txt_delimiter", 80))
-        form.addRow("Include header lines", self._check("txt_include_headers", True))
-        form.addRow("Header lines", self._line("txt_header_lines"))
-        note = QLabel("Header lines are written at the top of the file — import tools like "
-                      "Anki read them (e.g. #separator:tab, #html:true). "
-                      "Column names themselves are not written.")
+        form.addRow(tr("Columns to export"), self._columns("exclude_columns_txt"))
+        form.addRow(tr("Delimiter (\\t = tab)"), self._line("txt_delimiter", 80))
+        form.addRow(tr("Include header lines"), self._check("txt_include_headers", True))
+        form.addRow(tr("Header lines"), self._line("txt_header_lines"))
+        note = QLabel(tr("Header lines are written at the top of the file — import tools like "
+                         "Anki read them (e.g. #separator:tab, #html:true). "
+                         "Column names themselves are not written."))
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         form.addRow(note)
@@ -260,9 +283,9 @@ class SettingsDialog(FramelessDialog):
         layout = QVBoxLayout(pdf)
         layout.setContentsMargins(18, 18, 18, 18)
 
-        page_group = QGroupBox("Page && text")
+        page_group = QGroupBox(tr("Page && text"))
         form = QFormLayout(page_group)
-        form.addRow("Page size", self._combo("page_size", ["Letter", "A4"]))
+        form.addRow(tr("Page size"), self._combo("page_size", ["Letter", "A4"]))
         font_row = QHBoxLayout()
         self.w_font_name = QComboBox()
         self.w_font_name.addItems(exporters.BUILTIN_FONTS + exporters.list_font_names())
@@ -271,25 +294,25 @@ class SettingsDialog(FramelessDialog):
             self.w_font_name.addItem(current_font)
         self.w_font_name.setCurrentText(current_font)
         font_row.addWidget(self.w_font_name, 1)
-        add_font = QPushButton("Add font…")
-        add_font.setToolTip("Copy a .ttf file into the app's fonts folder and use it")
+        add_font = QPushButton(tr("Add font…"))
+        add_font.setToolTip(tr("Copy a .ttf file into the app's fonts folder and use it"))
         add_font.clicked.connect(self._add_font)
         font_row.addWidget(add_font)
         font_w = QWidget()
         font_w.setLayout(font_row)
-        form.addRow("Font", font_w)
-        form.addRow("Font size", self._dspin("font_size", 4, 40, 10))
-        form.addRow("Line spacing (pt)", self._dspin("leading", 4, 60, 12))
-        form.addRow("Text alignment", self._combo("alignment", ["LEFT", "CENTER", "RIGHT"]))
+        form.addRow(tr("Font"), font_w)
+        form.addRow(tr("Font size"), self._dspin("font_size", 4, 40, 10))
+        form.addRow(tr("Line spacing (pt)"), self._dspin("leading", 4, 60, 12))
+        form.addRow(tr("Text alignment"), self._combo("alignment", ["LEFT", "CENTER", "RIGHT"]))
         margins = QHBoxLayout()
         for key in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
             margins.addWidget(self._dspin(key, 0, 100, 10))
         margins_w = QWidget()
         margins_w.setLayout(margins)
-        form.addRow("Margins L/R/T/B (pt)", margins_w)
+        form.addRow(tr("Margins L/R/T/B (pt)"), margins_w)
         layout.addWidget(page_group)
 
-        col_group = QGroupBox("Columns")
+        col_group = QGroupBox(tr("Columns"))
         form = QFormLayout(col_group)
         width_spins = {c: self._dspin(f"pdf_col_width_{c}", 0.1, 10,
                                       exporters.PDF_WIDTH_DEFAULTS[c])
@@ -298,29 +321,29 @@ class SettingsDialog(FramelessDialog):
         auto = self._check("pdf_auto_widths", True)
         auto.toggled.connect(lambda on: picker.set_widths_enabled(not on))
         picker.set_widths_enabled(not auto.isChecked())
-        form.addRow("Automatic widths (fit page)", auto)
-        form.addRow("Columns / width", picker)
+        form.addRow(tr("Automatic widths (fit page)"), auto)
+        form.addRow(tr("Columns / width"), picker)
         layout.addWidget(col_group)
 
-        style_group = QGroupBox("Style")
+        style_group = QGroupBox(tr("Style"))
         form = QFormLayout(style_group)
-        form.addRow("Header background", self._color("header_bg_color"))
-        form.addRow("Header text", self._color("text_color"))
-        form.addRow("Row background", self._color("bg_color"))
-        form.addRow("Grid lines", self._color("grid_color"))
+        form.addRow(tr("Header background"), self._color("header_bg_color"))
+        form.addRow(tr("Header text"), self._color("text_color"))
+        form.addRow(tr("Row background"), self._color("bg_color"))
+        form.addRow(tr("Grid lines"), self._color("grid_color"))
         if self.settings.get("bg_image") == "No background image":
             self.settings["bg_image"] = ""
         bg_row = QHBoxLayout()
         bg_row.addWidget(self._line("bg_image"))
-        browse = QPushButton("Browse…")
+        browse = QPushButton(tr("Browse…"))
         browse.clicked.connect(self._pick_bg_image)
         bg_row.addWidget(browse)
-        clear_bg = QPushButton("Clear")
+        clear_bg = QPushButton(tr("Clear"))
         clear_bg.clicked.connect(lambda: self.w_bg_image.clear())
         bg_row.addWidget(clear_bg)
         bg_w = QWidget()
         bg_w.setLayout(bg_row)
-        form.addRow("Background image", bg_w)
+        form.addRow(tr("Background image"), bg_w)
         layout.addWidget(style_group)
         layout.addStretch(1)
         tabs.addTab(_scrollable(pdf), "PDF")
@@ -329,16 +352,16 @@ class SettingsDialog(FramelessDialog):
         audio_export = QWidget()
         form = QFormLayout(audio_export)
         form.setContentsMargins(18, 18, 18, 18)
-        form.addRow("Pause between words (s)", self._dspin("pause_duration", 0, 10, 0.5))
-        form.addRow("Repeats per pair", self._spin("number_of_repeats", 1, 10, 1))
-        form.addRow("Concurrent workers", self._spin("max_concurrent_workers", 1, 16, 2))
-        form.addRow("Requests per second", self._spin("requests_per_sec", 1, 50, 5))
-        note = QLabel("Used only when exporting words to an MP3 file. "
-                      "The voice itself is configured in the Audio tab.")
+        form.addRow(tr("Pause between words (s)"), self._dspin("pause_duration", 0, 10, 0.5))
+        form.addRow(tr("Repeats per pair"), self._spin("number_of_repeats", 1, 10, 1))
+        form.addRow(tr("Concurrent workers"), self._spin("max_concurrent_workers", 1, 16, 2))
+        form.addRow(tr("Requests per second"), self._spin("requests_per_sec", 1, 50, 5))
+        note = QLabel(tr("Used only when exporting words to an MP3 file. "
+                         "The voice itself is configured in the Audio tab."))
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         form.addRow(note)
-        tabs.addTab(_scrollable(audio_export), "Audio (MP3)")
+        tabs.addTab(_scrollable(audio_export), tr("Audio (MP3)"))
 
         return tabs
 
@@ -347,29 +370,29 @@ class SettingsDialog(FramelessDialog):
         audio = QWidget()
         form = QFormLayout(audio)
         form.setContentsMargins(18, 18, 18, 18)
-        form.addRow("TTS provider", self._combo("tts_provider", ["gTTS", "google_cloud_tts"]))
+        form.addRow(tr("TTS provider"), self._combo("tts_provider", ["gTTS", "google_cloud_tts"]))
         cred_row = QHBoxLayout()
         cred_row.addWidget(self._line("google_cloud_tts_credentials_path"))
-        cred_browse = QPushButton("Browse…")
+        cred_browse = QPushButton(tr("Browse…"))
         cred_browse.clicked.connect(self._pick_credentials)
         cred_row.addWidget(cred_browse)
         cred_w = QWidget()
         cred_w.setLayout(cred_row)
-        form.addRow("Google Cloud credentials", cred_w)
-        form.addRow("Voice type", self._combo("google_cloud_tts_voice_type", ["standard", "wavenet"]))
-        form.addRow("Voice name (optional)", self._line("google_cloud_tts_voice_name"))
+        form.addRow(tr("Google Cloud credentials"), cred_w)
+        form.addRow(tr("Voice type"), self._combo("google_cloud_tts_voice_type", ["standard", "wavenet"]))
+        form.addRow(tr("Voice name (optional)"), self._line("google_cloud_tts_voice_name"))
 
-        playback_group = QGroupBox("Read Aloud playback")
+        playback_group = QGroupBox(tr("Read Aloud playback"))
         pform = QFormLayout(playback_group)
-        pform.addRow("Pause between words (s)", self._dspin("playback_pause", 0, 10, 0.5))
-        pform.addRow("Repeats per word", self._spin("playback_repeats", 1, 10, 1))
+        pform.addRow(tr("Pause between words (s)"), self._dspin("playback_pause", 0, 10, 0.5))
+        pform.addRow(tr("Repeats per word"), self._spin("playback_repeats", 1, 10, 1))
         form.addRow(playback_group)
 
-        note = QLabel("The voice used everywhere words are spoken: in-app Read Aloud "
-                      "and MP3 export. gTTS is free and needs no setup. Google Cloud TTS "
-                      "needs a service-account JSON key (Cloud Console → IAM & Admin → "
-                      "Service Accounts → Keys) and billing enabled on the project — "
-                      "usage within the free monthly quota is not charged.")
+        note = QLabel(tr("The voice used everywhere words are spoken: in-app Read Aloud "
+                         "and MP3 export. gTTS is free and needs no setup. Google Cloud TTS "
+                         "needs a service-account JSON key (Cloud Console → IAM & Admin → "
+                         "Service Accounts → Keys) and billing enabled on the project — "
+                         "usage within the free monthly quota is not charged."))
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         form.addRow(note)
@@ -382,14 +405,14 @@ class SettingsDialog(FramelessDialog):
         form.setContentsMargins(18, 18, 18, 18)
 
         promote = self._check("playback_promote", True)
-        form.addRow("Promote status while listening", promote)
+        form.addRow(tr("Promote status while listening"), promote)
 
         rev = self._spin("playback_reviewing_listens", 1, 9998, 3)
         learn = self._spin("playback_learning_listens", 2, 9999, 15)
         mast = self._spin("playback_mastered_listens", 3, 10000, 100)
-        form.addRow("Listens to reach Reviewing", rev)
-        form.addRow("Listens to reach Learning", learn)
-        form.addRow("Listens to reach Mastered", mast)
+        form.addRow(tr("Listens to reach {status}").format(status=tr("Reviewing")), rev)
+        form.addRow(tr("Listens to reach {status}").format(status=tr("Learning")), learn)
+        form.addRow(tr("Listens to reach {status}").format(status=tr("Mastered")), mast)
 
         def reorder(*_):
             # keep the ladder strictly increasing: Reviewing < Learning < Mastered
@@ -407,12 +430,12 @@ class SettingsDialog(FramelessDialog):
         promote.toggled.connect(toggle_enabled)
         toggle_enabled(promote.isChecked())
 
-        note = QLabel("Fully listening to a word in Read Aloud promotes it along the "
-                      "familiarity ladder New → Reviewing → Learning → Mastered. Each "
-                      "number is the total completed listens needed to reach that level — "
-                      "passive audio exposure is weak, so high values are normal. Words "
-                      "you set to Mastered or Ignored yourself are never changed, and a "
-                      "word is never demoted.")
+        note = QLabel(tr("Fully listening to a word in Read Aloud promotes it along the "
+                         "familiarity ladder New → Reviewing → Learning → Mastered. Each "
+                         "number is the total completed listens needed to reach that level — "
+                         "passive audio exposure is weak, so high values are normal. Words "
+                         "you set to Mastered or Ignored yourself are never changed, and a "
+                         "word is never demoted."))
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         form.addRow(note)
@@ -423,29 +446,29 @@ class SettingsDialog(FramelessDialog):
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(18, 18, 18, 18)
 
-        options_group = QGroupBox("Excel import")
+        options_group = QGroupBox(tr("Excel import"))
         form = QFormLayout(options_group)
-        form.addRow("Placeholder values", self._line("excel_import_placeholders"))
-        form.addRow("Skip placeholder rows", self._check("excel_import_skip_placeholders", True))
-        form.addRow("Skip empty rows", self._check("excel_import_skip_empty", True))
-        form.addRow("Normalize language pairs", self._check("excel_import_normalize", True))
+        form.addRow(tr("Placeholder values"), self._line("excel_import_placeholders"))
+        form.addRow(tr("Skip placeholder rows"), self._check("excel_import_skip_placeholders", True))
+        form.addRow(tr("Skip empty rows"), self._check("excel_import_skip_empty", True))
+        form.addRow(tr("Normalize language pairs"), self._check("excel_import_normalize", True))
         layout.addWidget(options_group)
 
-        help_group = QGroupBox("How to import")
+        help_group = QGroupBox(tr("How to import"))
         help_layout = QVBoxLayout(help_group)
-        note = QLabel(
+        note = QLabel(tr(
             "<ol style='margin:0'>"
             "<li>Prepare an Excel file with the columns <b>Language1, Language2, Word1, "
             "Word2</b> — named like that in a header row (extra columns are ignored), or "
             "without headers, with the first four columns in exactly that order.</li>"
             "<li>Open the app menu → <i>Import Excel to Database…</i> and choose the file.</li>"
             "<li>Review the proposed rows and click <i>Import</i>.</li>"
-            "</ol>")
+            "</ol>"))
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         help_layout.addWidget(note)
-        template_btn = QPushButton("Save import template…")
-        template_btn.setToolTip("Save a ready-made .xlsx with the right headers and example rows")
+        template_btn = QPushButton(tr("Save import template…"))
+        template_btn.setToolTip(tr("Save a ready-made .xlsx with the right headers and example rows"))
         template_btn.clicked.connect(self._save_import_template)
         btn_row = QHBoxLayout()
         btn_row.addWidget(template_btn)
@@ -467,15 +490,15 @@ class SettingsDialog(FramelessDialog):
 
         selector = QFormLayout()
         self.translation_provider_combo = QComboBox()
-        self.translation_provider_combo.addItem("Google Translate (free)", "google")
+        self.translation_provider_combo.addItem(tr("Google Translate (free)"), "google")
         self.translation_provider_combo.addItem("DeepL", "deepl")
         current_provider = str(self.settings.get("translation_provider", "google")).strip().lower()
         self.translation_provider_combo.setCurrentIndex(
             max(self.translation_provider_combo.findData(current_provider), 0))
-        selector.addRow("Active provider", self.translation_provider_combo)
+        selector.addRow(tr("Active provider"), self.translation_provider_combo)
         tr_layout.addLayout(selector)
 
-        self.google_note = QLabel("Google Translate is free and needs no API key.")
+        self.google_note = QLabel(tr("Google Translate is free and needs no API key."))
         self.google_note.setObjectName("dimLabel")
         self.google_note.setWordWrap(True)
         tr_layout.addWidget(self.google_note)
@@ -483,10 +506,10 @@ class SettingsDialog(FramelessDialog):
         # DeepL-specific fields, only shown when DeepL is the active provider.
         self.deepl_group = QGroupBox("DeepL")
         form = QFormLayout(self.deepl_group)
-        form.addRow("API key", self._secret(self._line("api_key")))
-        form.addRow("API URL", self._line("api_url"))
-        note = QLabel('Get a key at <a href="https://www.deepl.com/pro-api">deepl.com/pro-api</a>. '
-                      'Use https://api-free.deepl.com/v2/translate for free-tier keys.')
+        form.addRow(tr("API key"), self._secret(self._line("api_key")))
+        form.addRow(tr("API URL"), self._line("api_url"))
+        note = QLabel(tr('Get a key at <a href="https://www.deepl.com/pro-api">deepl.com/pro-api</a>. '
+                         'Use https://api-free.deepl.com/v2/translate for free-tier keys.'))
         note.setOpenExternalLinks(True)
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
@@ -495,7 +518,7 @@ class SettingsDialog(FramelessDialog):
         usage_row = QHBoxLayout(usage)
         usage_row.setContentsMargins(0, 0, 0, 0)
         usage_row.setSpacing(10)
-        self.deepl_usage_btn = QPushButton("Check usage")
+        self.deepl_usage_btn = QPushButton(tr("Check usage"))
         self.deepl_usage_btn.clicked.connect(self._check_deepl_usage)
         self.deepl_usage_bar = QProgressBar()
         self.deepl_usage_bar.setRange(0, 1000)
@@ -505,14 +528,14 @@ class SettingsDialog(FramelessDialog):
         usage_row.addWidget(self.deepl_usage_btn)
         usage_row.addWidget(self.deepl_usage_bar, 1)
         usage_row.addWidget(self.deepl_usage_label, 1)
-        form.addRow("Usage", usage)
+        form.addRow(tr("Usage"), usage)
         tr_layout.addWidget(self.deepl_group)
         tr_layout.addStretch(1)
 
         self.translation_provider_combo.currentIndexChanged.connect(
             self._update_translation_provider)
         self._update_translation_provider()
-        tabs.addTab(_scrollable(translation), "Translation")
+        tabs.addTab(_scrollable(translation), tr("Translation"))
 
         # AI (OpenAI / Gemini)
         ai_w = QWidget()
@@ -520,11 +543,11 @@ class SettingsDialog(FramelessDialog):
         ai_layout.setContentsMargins(18, 18, 18, 0)
         selector = QFormLayout()
         self.ai_provider_combo = QComboBox()
-        self.ai_provider_combo.addItem("OpenAI (ChatGPT)", "openai")
-        self.ai_provider_combo.addItem("Google Gemini", "gemini")
+        self.ai_provider_combo.addItem(tr("OpenAI (ChatGPT)"), "openai")
+        self.ai_provider_combo.addItem(tr("Google Gemini"), "gemini")
         current = str(self.settings.get("ai_provider", "openai")).strip().lower()
         self.ai_provider_combo.setCurrentIndex(max(self.ai_provider_combo.findData(current), 0))
-        selector.addRow("Active provider", self.ai_provider_combo)
+        selector.addRow(tr("Active provider"), self.ai_provider_combo)
         ai_layout.addLayout(selector)
 
         self.openai_key_edit = self._secret(QLineEdit(self.env.get("OPENAI_API_KEY", "")))
@@ -534,42 +557,42 @@ class SettingsDialog(FramelessDialog):
         ai_tabs.setDocumentMode(True)
         ai_tabs.addTab(
             self._ai_provider_page(
-                "chatgpt", "OpenAI API key (.env)", self.openai_key_edit,
-                'Billed per use — get a key at <a href="https://platform.openai.com/api-keys">'
-                'platform.openai.com/api-keys</a>. Models: gpt-4o-mini, gpt-4o, gpt-4.1-mini… '
-                'API usage — see <a href="https://platform.openai.com/usage">dashboard</a>.'),
+                "chatgpt", tr("OpenAI API key (.env)"), self.openai_key_edit,
+                tr('Billed per use — get a key at <a href="https://platform.openai.com/api-keys">'
+                   'platform.openai.com/api-keys</a>. Models: gpt-4o-mini, gpt-4o, gpt-4.1-mini… '
+                   'API usage — see <a href="https://platform.openai.com/usage">dashboard</a>.')),
             "OpenAI")
         ai_tabs.addTab(
             self._ai_provider_page(
-                "gemini", "Google API key (.env)", self.gemini_key_edit,
-                'Free tier available — get a key at <a href="https://aistudio.google.com/app/apikey">'
-                'aistudio.google.com/app/apikey</a>. Models: gemini-2.5-flash, gemini-2.5-flash-lite… '
-                'API usage — see <a href="https://aistudio.google.com/usage">AI Studio</a>.',
-                extra_rows=[("Thinking budget (0 = off, -1 = auto)",
+                "gemini", tr("Google API key (.env)"), self.gemini_key_edit,
+                tr('Free tier available — get a key at <a href="https://aistudio.google.com/app/apikey">'
+                   'aistudio.google.com/app/apikey</a>. Models: gemini-2.5-flash, gemini-2.5-flash-lite… '
+                   'API usage — see <a href="https://aistudio.google.com/usage">AI Studio</a>.'),
+                extra_rows=[(tr("Thinking budget (0 = off, -1 = auto)"),
                              self._spin("gemini_thinking_budget", -1, 24576, 0))]),
             "Gemini")
         ai_tabs.setCurrentIndex(self.ai_provider_combo.currentIndex())
         self.ai_provider_combo.currentIndexChanged.connect(ai_tabs.setCurrentIndex)
         ai_layout.addWidget(ai_tabs, 1)
-        tabs.addTab(ai_w, "AI")
+        tabs.addTab(ai_w, tr("AI"))
 
         # Sync
         sync = QWidget()
         form = QFormLayout(sync)
         form.setContentsMargins(18, 18, 18, 18)
-        form.addRow("Enable cloud sync", self._check("enable_sync", False))
+        form.addRow(tr("Enable cloud sync"), self._check("enable_sync", False))
         self.supabase_url_edit = QLineEdit(self.env.get("SUPABASE_URL", ""))
-        form.addRow("Supabase URL (.env)", self.supabase_url_edit)
+        form.addRow(tr("Supabase URL (.env)"), self.supabase_url_edit)
         self.supabase_key_edit = self._secret(QLineEdit(self.env.get("SUPABASE_KEY", "")))
-        form.addRow("Supabase key (.env)", self.supabase_key_edit)
-        form.addRow("Bin cleanup grace (days)", self._spin("cleanup_grace_period_days", 1, 365, 30))
-        test_btn = QPushButton("Test Connection")
+        form.addRow(tr("Supabase key (.env)"), self.supabase_key_edit)
+        form.addRow(tr("Bin cleanup grace (days)"), self._spin("cleanup_grace_period_days", 1, 365, 30))
+        test_btn = QPushButton(tr("Test Connection"))
         test_btn.clicked.connect(self._test_supabase)
         form.addRow(test_btn)
-        note = QLabel("Restart the app after enabling sync for the first time.")
+        note = QLabel(tr("Restart the app after enabling sync for the first time."))
         note.setObjectName("dimLabel")
         form.addRow(note)
-        tabs.addTab(_scrollable(sync), "Sync")
+        tabs.addTab(_scrollable(sync), tr("Sync"))
 
         return tabs
 
@@ -577,11 +600,11 @@ class SettingsDialog(FramelessDialog):
         widget = QWidget()
         form = QFormLayout(widget)
         form.setContentsMargins(18, 18, 18, 18)
-        self.autostart_check = QCheckBox("Start automatically on login (minimized to tray)")
+        self.autostart_check = QCheckBox(tr("Start automatically on login (minimized to tray)"))
         self.autostart_check.setChecked(get_autostart_enabled())
         form.addRow(self.autostart_check)
-        autostart_note = QLabel("Autostart launches the app with the --minimized flag, so it "
-                                "begins hidden in the tray.")
+        autostart_note = QLabel(tr("Autostart launches the app with the --minimized flag, so it "
+                                   "begins hidden in the tray."))
         autostart_note.setObjectName("dimLabel")
         autostart_note.setWordWrap(True)
         form.addRow(autostart_note)
@@ -593,10 +616,10 @@ class SettingsDialog(FramelessDialog):
             self.hotkey_edit.setClearButtonEnabled(True)
         except AttributeError:  # Qt < 6.4/6.5
             pass
-        form.addRow("Add Word hotkey (global)", self.hotkey_edit)
-        hotkey_note = QLabel("Click the field and press the desired key combination — it opens "
-                             "'Add Word' with the clipboard content from anywhere. "
-                             "Leave empty to disable.")
+        form.addRow(tr("Add Word hotkey (global)"), self.hotkey_edit)
+        hotkey_note = QLabel(tr("Click the field and press the desired key combination — it opens "
+                                "'Add Word' with the clipboard content from anywhere. "
+                                "Leave empty to disable."))
         hotkey_note.setObjectName("dimLabel")
         hotkey_note.setWordWrap(True)
         form.addRow(hotkey_note)
@@ -605,15 +628,15 @@ class SettingsDialog(FramelessDialog):
     # ----------------------------------------------------------- actions
 
     def _add_font(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Add Font", "",
-                                              "TrueType fonts (*.ttf)")
+        path, _ = QFileDialog.getOpenFileName(self, tr("Add font…"), "",
+                                              tr("TrueType fonts (*.ttf)"))
         if not path:
             return
         try:
             os.makedirs("fonts", exist_ok=True)
             shutil.copy(path, os.path.join("fonts", os.path.basename(path)))
         except Exception as exc:
-            QMessageBox.warning(self, "Add Font", f"Could not copy the font file:\n{exc}")
+            QMessageBox.warning(self, tr("Add font…"), tr("Could not copy the font file:\n{error}").format(error=exc))
             return
         name = os.path.splitext(os.path.basename(path))[0]
         if self.w_font_name.findText(name) < 0:
@@ -621,29 +644,29 @@ class SettingsDialog(FramelessDialog):
         self.w_font_name.setCurrentText(name)
 
     def _save_import_template(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save Import Template",
-                                              "import-template.xlsx", "Excel files (*.xlsx)")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save import template…"),
+                                              "import-template.xlsx", tr("Excel files (*.xlsx)"))
         if not path:
             return
         try:
             from app.core.importer import create_import_template
             create_import_template(path)
-            QMessageBox.information(self, "Import Template",
-                                    f"Template saved to:\n{path}\n\n"
-                                    "Fill it with your words (replace the example rows) "
-                                    "and import it via the app menu → Import Excel to Database.")
+            QMessageBox.information(self, tr("Save import template…"),
+                                    tr("Template saved to:\n{path}\n\n"
+                                       "Fill it with your words (replace the example rows) "
+                                       "and import it via the app menu → Import Excel to Database.").format(path=path))
         except Exception as exc:
-            QMessageBox.critical(self, "Import Template", f"Could not save the template:\n{exc}")
+            QMessageBox.critical(self, tr("Save import template…"), tr("Could not save the template:\n{error}").format(error=exc))
 
     def _pick_bg_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Background Image", "",
-                                              "Images (*.png *.jpg *.jpeg)")
+        path, _ = QFileDialog.getOpenFileName(self, tr("Background image"), "",
+                                              tr("Images (*.png *.jpg *.jpeg)"))
         if path:
             self.w_bg_image.setText(path)
 
     def _pick_credentials(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Google Cloud Credentials", "",
-                                              "JSON files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, tr("Google Cloud credentials"), "",
+                                              tr("JSON files (*.json)"))
         if path:
             self.w_google_cloud_tts_credentials_path.setText(path)
 
@@ -656,12 +679,12 @@ class SettingsDialog(FramelessDialog):
             from app.core.supabase_client import SupabaseClient
             client = SupabaseClient()
             if client.is_connected():
-                QMessageBox.information(self, "Supabase", "Connection successful! ✅")
+                QMessageBox.information(self, "Supabase", tr("Connection successful! ✅"))
             else:
                 QMessageBox.warning(self, "Supabase",
-                                    "Could not connect. Check the URL/key and your internet connection.")
+                                    tr("Could not connect. Check the URL/key and your internet connection."))
         except Exception as exc:
-            QMessageBox.critical(self, "Supabase", f"Connection test failed:\n{exc}")
+            QMessageBox.critical(self, "Supabase", tr("Connection test failed:\n{error}").format(error=exc))
 
     def _update_translation_provider(self):
         """Show the DeepL fields only when DeepL is the selected provider."""
@@ -676,7 +699,7 @@ class SettingsDialog(FramelessDialog):
         self.deepl_usage_btn.setEnabled(False)
         self.deepl_usage_bar.setVisible(False)
         self.deepl_usage_label.setStyleSheet("")
-        self.deepl_usage_label.setText("Checking…")
+        self.deepl_usage_label.setText(tr("Checking…"))
 
         def done(result):
             count, limit = result
@@ -687,9 +710,9 @@ class SettingsDialog(FramelessDialog):
                 self.deepl_usage_bar.setFormat(f"{percent:.1f}%")
                 self.deepl_usage_bar.setVisible(True)
                 self.deepl_usage_label.setText(
-                    f"{count:,} / {limit:,} characters this period")
+                    tr("{count} / {limit} characters this period").format(count=f"{count:,}", limit=f"{limit:,}"))
             else:
-                self.deepl_usage_label.setText(f"{count:,} characters used")
+                self.deepl_usage_label.setText(tr("{count} characters used").format(count=f"{count:,}"))
 
         def fail(message):
             from app.ui import theme
@@ -720,13 +743,15 @@ class SettingsDialog(FramelessDialog):
             elif isinstance(widget, QCheckBox):
                 updated[key] = "True" if widget.isChecked() else "False"
             elif isinstance(widget, QComboBox):
-                updated[key] = widget.currentText()
+                data = widget.currentData()
+                updated[key] = data if data is not None else widget.currentText()
 
         seq = self.hotkey_edit.keySequence().toString(QKeySequence.PortableText)
         updated["hotkey"] = seq.split(", ")[0]  # first chord only
 
         updated["ai_provider"] = self.ai_provider_combo.currentData()
         updated["translation_provider"] = self.translation_provider_combo.currentData()
+        updated["language"] = self.language_combo.currentData()
 
         save_settings(updated)
 
@@ -748,13 +773,13 @@ class SettingsDialog(FramelessDialog):
         try:
             set_autostart(self.autostart_check.isChecked())
         except Exception as exc:
-            QMessageBox.warning(self, "Autostart", f"Could not update autostart entry:\n{exc}")
+            QMessageBox.warning(self, tr("Autostart"), tr("Could not update autostart entry:\n{error}").format(error=exc))
 
         from app.core.audio import google_cloud_tts_problem
         problem = google_cloud_tts_problem()
         if problem:
-            QMessageBox.warning(self, "Google Cloud TTS",
-                                f"Google Cloud TTS is selected but {problem}\n\n"
-                                f"Audio will fall back to gTTS until this is fixed.")
+            QMessageBox.warning(self, tr("Google Cloud TTS"),
+                                tr("Google Cloud TTS is selected but {problem}\n\n"
+                                   "Audio will fall back to gTTS until this is fixed.").format(problem=problem))
 
         self.accept()

@@ -44,6 +44,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_float, get_int, load_settings, save_settings
 from app.core.audio import lang_codes, speak_word
+from app.i18n import tr
 from app.core.backup_management import backup_database
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
 from app.ui import icons
@@ -60,12 +61,12 @@ from app.ui.workers import run_in_thread
 META_ROLE = Qt.UserRole + 1
 SNIPPET_ROLE = Qt.UserRole + 2
 
-SORT_NEWEST = "Newest first"
-SORT_OLDEST = "Oldest first"
-SORT_TITLE = "Title A–Z"
-ALL_LANGUAGES = "All languages"
-ALL_LEVELS = "All levels"
-ALL_TOPICS = "All topics"
+SORT_NEWEST = tr("Newest first")
+SORT_OLDEST = tr("Oldest first")
+SORT_TITLE = tr("Title A–Z")
+ALL_LANGUAGES = tr("All languages")
+ALL_LEVELS = tr("All levels")
+ALL_TOPICS = tr("All topics")
 CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 
 MAX_W = 16777215  # Qt's QWIDGETSIZE_MAX — resets a maximumWidth constraint
@@ -271,13 +272,13 @@ class TextsPage(QWidget):
         toolbar = QHBoxLayout()
         toolbar.setSpacing(4)
         toolbar.addWidget(self._icon_button(
-            "plus", "text", "New text (write or paste)",
+            "plus", "text", tr("New text (write or paste)"),
             lambda: self._open_add_dialog(0)))
         toolbar.addWidget(self._icon_button(
-            "globe", "text", "Get text from the Internet (AI / Wikipedia / URL / RSS)",
+            "globe", "text", tr("Get text from the Internet (AI / Wikipedia / URL / RSS)"),
             lambda: self._open_add_dialog(1)))
         toolbar.addWidget(self._icon_button(
-            "download", "text", "Import .txt file(s)", self._import_txt_files))
+            "download", "text", tr("Import .txt file(s)"), self._import_txt_files))
         toolbar.addStretch(1)
         ll.addLayout(toolbar)
 
@@ -327,7 +328,7 @@ class TextsPage(QWidget):
         self.empty_icon = QLabel(alignment=Qt.AlignCenter)
         self.empty_icon.setPixmap(icons.pixmap("file-text", self._colors["text_dim"], 44))
         ev.addWidget(self.empty_icon)
-        self.empty_title = QLabel("No texts yet", objectName="EmptyTitle",
+        self.empty_title = QLabel(tr("No texts yet"), objectName="EmptyTitle",
                                   alignment=Qt.AlignCenter)
         ev.addWidget(self.empty_title)
         self.empty_sub = QLabel("", objectName="dimLabel", alignment=Qt.AlignCenter)
@@ -344,29 +345,29 @@ class TextsPage(QWidget):
         top = QHBoxLayout()
         top.setSpacing(4)
         self.title_edit = QLineEdit(objectName="ReaderTitle")
-        self.title_edit.setPlaceholderText("Title")
+        self.title_edit.setPlaceholderText(tr("Title"))
         self.title_edit.textEdited.connect(self._mark_dirty)
         top.addWidget(self.title_edit, 1)
-        self.tts_btn = self._icon_button("volume", "text", "Read aloud", self.toggle_reading)
+        self.tts_btn = self._icon_button("volume", "text", tr("Read aloud"), self.toggle_reading)
         top.addWidget(self.tts_btn)
         self.translate_btn = self._icon_button(
-            "translate", "text", "Translate text", self.toggle_translation)
+            "translate", "text", tr("Translate text"), self.toggle_translation)
         top.addWidget(self.translate_btn)
         self.trans_lang_btn = self._icon_button(
-            "chevron-down", "text", "Translation language",
+            "chevron-down", "text", tr("Translation language"),
             self._pick_translation_language, size=12)
         top.addWidget(self.trans_lang_btn)
         self.focus_btn = self._icon_button(
-            "book-open", "text", "Focus mode", self.toggle_focus)
+            "book-open", "text", tr("Focus mode"), self.toggle_focus)
         top.addWidget(self.focus_btn)
         self.paper_btn = self._icon_button(
-            "book", "text", "Paper mode", self.toggle_paper)
+            "book", "text", tr("Paper mode"), self.toggle_paper)
         self.paper_btn.setCheckable(True)
         top.addWidget(self.paper_btn)
-        self.edit_btn = self._icon_button("edit", "text", "Edit text", self._on_edit_toggled)
+        self.edit_btn = self._icon_button("edit", "text", tr("Edit text"), self._on_edit_toggled)
         self.edit_btn.setCheckable(True)
         top.addWidget(self.edit_btn)
-        delete_btn = self._icon_button("trash", "danger", "Delete text", self.delete_current)
+        delete_btn = self._icon_button("trash", "danger", tr("Delete text"), self.delete_current)
         top.addWidget(delete_btn)
         cv.addLayout(top)
 
@@ -379,11 +380,11 @@ class TextsPage(QWidget):
         meta.addWidget(self.language_combo)
         self.level_combo = QComboBox()
         self.level_combo.addItems([""] + CEFR_LEVELS)
-        self.level_combo.setToolTip("Level")
+        self.level_combo.setToolTip(tr("Level"))
         self.level_combo.currentTextChanged.connect(self._mark_dirty)
         meta.addWidget(self.level_combo)
         self.topic_edit = QLineEdit()
-        self.topic_edit.setPlaceholderText("Topic")
+        self.topic_edit.setPlaceholderText(tr("Topic"))
         self.topic_edit.setMaximumWidth(160)
         self.topic_edit.textEdited.connect(self._mark_dirty)
         meta.addWidget(self.topic_edit)
@@ -431,16 +432,16 @@ class TextsPage(QWidget):
 
         bottom = QHBoxLayout()
         bottom.setSpacing(4)
-        self.prev_btn = self._icon_button("chevron-left", "text", "Previous text",
+        self.prev_btn = self._icon_button("chevron-left", "text", tr("Previous text"),
                                           lambda: self._select_relative(-1))
         bottom.addWidget(self.prev_btn)
         self.page_label = QLabel("", objectName="dimLabel")
         bottom.addWidget(self.page_label)
-        self.next_btn = self._icon_button("chevron-right", "text", "Next text",
+        self.next_btn = self._icon_button("chevron-right", "text", tr("Next text"),
                                           lambda: self._select_relative(1))
         bottom.addWidget(self.next_btn)
         bottom.addStretch(1)
-        self.save_btn = QPushButton("Save Changes", objectName="primaryButton")
+        self.save_btn = QPushButton(tr("Save Changes"), objectName="primaryButton")
         self.save_btn.setVisible(False)  # appears only with unsaved changes
         self.save_btn.clicked.connect(self.save_current)
         bottom.addWidget(self.save_btn)
@@ -560,7 +561,7 @@ class TextsPage(QWidget):
         self.listing.clear()
         target_row = 0
         for row, text in enumerate(self.filtered):
-            title = str(text.get('Title') or '').strip() or "(untitled)"
+            title = str(text.get('Title') or '').strip() or tr("(untitled)")
             lang = str(text.get('Language') or '').strip()
             text_level = str(text.get('Level') or '').strip()
             text_topic = str(text.get('Category') or '').strip()
@@ -581,14 +582,14 @@ class TextsPage(QWidget):
             self._set_dirty(False)
             self._reset_modes()
             if self.texts:
-                self.empty_title.setText("No matching texts")
-                self.empty_sub.setText("Try a different search or language filter.")
+                self.empty_title.setText(tr("No matching texts"))
+                self.empty_sub.setText(tr("Try a different search or language filter."))
             else:
-                self.empty_title.setText("No texts yet")
+                self.empty_title.setText(tr("No texts yet"))
                 self.empty_sub.setText(
-                    "Click “+” to write or paste a text, the globe to fetch one\n"
-                    "from the Internet, or select words in the Words view and\n"
-                    'use the "Text" action to generate a study text.')
+                    tr('Click "+" to write or paste a text, the globe to fetch one\n'
+                       'from the Internet, or select words in the Words view and\n'
+                       'use the "Text" action to generate a study text.'))
             self.reader_stack.setCurrentIndex(0)
             return
 
@@ -609,8 +610,8 @@ class TextsPage(QWidget):
 
     def _import_txt_files(self):
         paths, _ = QFileDialog.getOpenFileNames(
-            self, "Import text files", "",
-            "Text files (*.txt);;All files (*)")
+            self, tr("Import text files"), "",
+            tr("Text files (*.txt);;All files (*)"))
         if not paths:
             return
         default = self.lang_filter.currentText()
@@ -618,7 +619,7 @@ class TextsPage(QWidget):
             default = load_settings().get("addtext_language") or "English"
         languages = sorted(lang_codes.keys())
         language, ok = ask_item(
-            self, "Import text files", "Language of the imported text(s):",
+            self, tr("Import text files"), tr("Language of the imported text(s):"),
             languages, languages.index(default) if default in languages else 0,
             True)
         if not ok or not language.strip():
@@ -652,17 +653,18 @@ class TextsPage(QWidget):
             last_id, count, errors = result
             if count:
                 backup_database()
-                show_toast(self.window(), "Texts",
-                           f"Imported {count} text(s).", "success")
+                show_toast(self.window(), tr("Texts"),
+                           tr("Imported {count} text(s).").format(count=count), "success")
                 self.load_texts(preserve_id=last_id)
             if errors:
-                QMessageBox.warning(self, "Import",
-                                    "Some files could not be imported:\n"
+                QMessageBox.warning(self, tr("Import"),
+                                    tr("Some files could not be imported:") + "\n"
                                     + "\n".join(errors))
 
         run_in_thread(work, on_result=done,
                       on_error=lambda msg: QMessageBox.critical(
-                          self, "Import", f"Import failed:\n{msg}"))
+                          self, tr("Import"),
+                          tr("Import failed:\n{error}").format(error=msg)))
 
     @staticmethod
     def _read_text_file(path):
@@ -701,9 +703,11 @@ class TextsPage(QWidget):
         self.level_combo.setCurrentText(level if level in CEFR_LEVELS else "")
         self.topic_edit.setText(str(text.get('Category') or "").strip())
         created = str(text.get('created_at') or "")[:16].replace("T", " ")
-        self.created_label.setText(f"Created {created}" if created else "")
+        self.created_label.setText(
+            tr("Created {date}").format(date=created) if created else "")
         words = str(text.get('Words') or "").strip()
-        self.words_line.set_full_text(f"From words: {words}" if words else "")
+        self.words_line.set_full_text(
+            tr("From words: {words}").format(words=words) if words else "")
         self.words_line.setVisible(bool(words))
         self.body.setHtml(markup_to_html(str(text.get('Text') or "")))
         self._src_spans = None  # body changed — sync spans are stale
@@ -732,7 +736,7 @@ class TextsPage(QWidget):
 
     def _set_edit_mode(self, editing):
         self.edit_btn.setChecked(editing)
-        self.edit_btn.setToolTip("Done editing" if editing else "Edit text")
+        self.edit_btn.setToolTip(tr("Done editing") if editing else tr("Edit text"))
         self.edit_btn.setIcon(icons.icon(
             "edit", self._colors["accent_text" if editing else "text"], 18))
         self.body.setReadOnly(not editing)
@@ -769,7 +773,8 @@ class TextsPage(QWidget):
             return True
         except Exception as exc:
             logging.error(f"Failed to save text: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to save text:\n{exc}")
+            QMessageBox.critical(self, tr("Error"),
+                                 tr("Failed to save text:\n{error}").format(error=exc))
             return False
 
     def _maybe_save_pending(self):
@@ -777,9 +782,10 @@ class TextsPage(QWidget):
         data = self._editor_data()
         previous = self.current
         self._set_dirty(False)
-        title = str(previous.get('Title') or '(untitled)')
+        title = str(previous.get('Title') or tr('(untitled)'))
         if QMessageBox.question(
-                self, "Unsaved changes", f"Save changes to '{title}'?",
+                self, tr("Unsaved changes"),
+                tr("Save changes to '{title}'?").format(title=title),
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         self._write_text(previous, data)
@@ -789,15 +795,16 @@ class TextsPage(QWidget):
             return
         if self._write_text(self.current, self._editor_data()):
             self._set_dirty(False)
-            show_toast(self.window(), "Texts", "Changes saved.", "success")
+            show_toast(self.window(), tr("Texts"), tr("Changes saved."), "success")
             self.load_texts(preserve_id=self.current.get('ID'))
 
     def delete_current(self):
         if self.current is None:
             return
         self.stop_reading()
-        title = str(self.current.get('Title') or "(untitled)")
-        if QMessageBox.question(self, "Delete Text", f"Delete '{title}'?",
+        title = str(self.current.get('Title') or tr("(untitled)"))
+        if QMessageBox.question(self, tr("Delete Text"),
+                                tr("Delete '{title}'?").format(title=title),
                                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         row = self.listing.currentRow()
@@ -811,11 +818,13 @@ class TextsPage(QWidget):
             backup_database()
         except Exception as exc:
             logging.error(f"Failed to delete text: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to delete text:\n{exc}")
+            QMessageBox.critical(self, tr("Error"),
+                                 tr("Failed to delete text:\n{error}").format(error=exc))
             return
         self.current = None
         self._set_dirty(False)
-        show_toast(self.window(), "Texts", f"'{title}' moved to bin.", "success")
+        show_toast(self.window(), tr("Texts"),
+                   tr("'{title}' moved to bin.").format(title=title), "success")
         self.load_texts(preserve_id=neighbor)
 
     # ------------------------------------------------------------- reading
@@ -832,8 +841,9 @@ class TextsPage(QWidget):
             return
         language = self.language_combo.currentText()
         if language not in lang_codes:
-            show_toast(self.window(), "Reader",
-                       f"Unsupported language: {language}", "warning")
+            show_toast(self.window(), tr("Reader"),
+                       tr("Unsupported language: {language}").format(language=language),
+                       "warning")
             return
         self._set_edit_mode(False)
         self.tts_started.emit()  # the main window stops its word player
@@ -846,7 +856,7 @@ class TextsPage(QWidget):
         self.reader_bar.reset()
         self.reader_bar.setVisible(True)
         self.tts_btn.setIcon(icons.icon("stop", self._colors["danger"], 18))
-        self.tts_btn.setToolTip("Stop reading")
+        self.tts_btn.setToolTip(tr("Stop reading"))
 
     def plain_text(self):
         """The document text captured at the start of the current reading
@@ -868,10 +878,10 @@ class TextsPage(QWidget):
         self._word_range = None
         self._apply_highlight()
         self.tts_btn.setIcon(icons.icon("volume", self._colors["text"], 18))
-        self.tts_btn.setToolTip("Read aloud")
+        self.tts_btn.setToolTip(tr("Read aloud"))
 
     def _on_reader_error(self, message):
-        show_toast(self.window(), "Reader", message, "warning")
+        show_toast(self.window(), tr("Reader"), message, "warning")
 
     # --------------------------------------------------------- translation
 
@@ -886,7 +896,7 @@ class TextsPage(QWidget):
             self.translation_visible = True
             self.translate_btn.setIcon(
                 icons.icon("translate", self._colors["accent_text"], 18))
-            self.translate_btn.setToolTip("Hide translation")
+            self.translate_btn.setToolTip(tr("Hide translation"))
             self._translate_current()
             self._sync_panels()
 
@@ -900,7 +910,7 @@ class TextsPage(QWidget):
         self.translation_visible = False
         self._trans_request += 1  # orphan any in-flight worker result
         self.translate_btn.setIcon(icons.icon("translate", self._colors["text"], 18))
-        self.translate_btn.setToolTip("Translate text")
+        self.translate_btn.setToolTip(tr("Translate text"))
 
     def toggle_focus(self):
         """Collapse the list for a distraction-free, full-width single text."""
@@ -914,7 +924,7 @@ class TextsPage(QWidget):
         color = "accent_text" if self.focus_mode else "text"
         self.focus_btn.setIcon(icons.icon("book-open", self._colors[color], 18))
         self.focus_btn.setToolTip(
-            "Exit focus mode" if self.focus_mode else "Focus mode")
+            tr("Exit focus mode") if self.focus_mode else tr("Focus mode"))
 
     # ---- reader font zoom + paper (inverted) mode -----------------------
 
@@ -964,9 +974,9 @@ class TextsPage(QWidget):
         color = "accent_text" if on else "text"
         self.paper_btn.setIcon(icons.icon("book", self._colors[color], 18))
         self.paper_btn.setToolTip({
-            "off": "Paper mode: off",
-            "white": "Paper: white (click for sepia)",
-            "sepia": "Paper: sepia (click to turn off)",
+            "off": tr("Paper mode: off"),
+            "white": tr("Paper: white (click for sepia)"),
+            "sepia": tr("Paper: sepia (click to turn off)"),
         }[self.reader_paper])
 
     def _paper_colors(self):
@@ -1145,7 +1155,7 @@ class TextsPage(QWidget):
         if cached and cached[0] == text:
             self._set_translation_text(cached[1])
             return
-        self._set_translation_text("Translating…", dim=True)
+        self._set_translation_text(tr("Translating…"), dim=True)
 
         def work():
             translation, _detected = translate(text, target, source)
@@ -1162,7 +1172,7 @@ class TextsPage(QWidget):
                 return
             logging.warning(f"Text translation failed: {message}")
             self._set_translation_text(message, danger=True)
-            show_toast(self.window(), "Translation", message, "warning")
+            show_toast(self.window(), tr("Translation"), message, "warning")
 
         run_in_thread(work, on_result=done, on_error=fail)
 
@@ -1415,12 +1425,14 @@ class TextsPage(QWidget):
         if word and any(ch.isalpha() for ch in word):
             display = word if len(word) <= 24 else word[:21] + "…"
             start_char = cursor.selectionStart()
-            pronounce = QAction(f"Pronounce “{display}”", menu)
+            pronounce = QAction(
+                tr('Pronounce "{word}"').format(word=display), menu)
             pronounce.triggered.connect(lambda: self._pronounce(word, language))
-            add = QAction(f"Add “{display}” to vocabulary", menu)
+            add = QAction(
+                tr('Add "{word}" to vocabulary').format(word=display), menu)
             add.triggered.connect(
                 lambda: self.add_word_requested.emit(word, language))
-            read_here = QAction("Read from here", menu)
+            read_here = QAction(tr("Read from here"), menu)
             read_here.triggered.connect(lambda: self._read_from(start_char))
             separator = QAction(menu)
             separator.setSeparator(True)
@@ -1435,7 +1447,7 @@ class TextsPage(QWidget):
         self.reader.pause()  # don't talk over the reading voice
         run_in_thread(speak_word, word, language,
                       on_error=lambda msg: show_toast(
-                          self.window(), "Reader", msg, "warning"))
+                          self.window(), tr("Reader"), msg, "warning"))
 
     def _read_from(self, start_char):
         if self.is_reading:

@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
 from app.core import db as dbq
+from app.i18n import tr
 from app.core import progression
 from app.core import exporters
 from app.core import translator
@@ -222,9 +223,9 @@ class MainWindow(QMainWindow):
         self._open_dialogs = {}
         self._tts_fallback_warned = False
         self._page_search = {PAGE_WORDS: "", PAGE_TEXTS: "", PAGE_STATS: ""}
-        self._footer_counts = {PAGE_WORDS: "No data", PAGE_TEXTS: "No texts yet",
-                               PAGE_STATS: "Statistics"}
-        self._words_subtitle = "Vocabulary"
+        self._footer_counts = {PAGE_WORDS: tr("No data"), PAGE_TEXTS: tr("No texts yet"),
+                               PAGE_STATS: tr("Statistics")}
+        self._words_subtitle = tr("Vocabulary")
         self._file_view = False  # viewing an opened Excel file (read-only preview)
 
         self._build_ui()
@@ -241,7 +242,7 @@ class MainWindow(QMainWindow):
         self.reload_requested.connect(self.load_data)
         # Surface DeepL->Google fallbacks (raised on worker threads) as a toast.
         self.translation_fallback.connect(
-            lambda msg: show_toast(self, "Translation", msg, "info"))
+            lambda msg: show_toast(self, tr("Translation"), msg, "info"))
         translator.set_fallback_listener(self.translation_fallback.emit)
         self.word_player.index_changed.connect(self._on_player_index)
         self.word_player.part_changed.connect(self._on_player_part)
@@ -269,7 +270,7 @@ class MainWindow(QMainWindow):
         if self.sync_enabled and self.sync_manager.is_sync_enabled():
             run_in_thread(self._run_startup_sync)
         elif self.sync_enabled:
-            self._update_sync_status_ui("error", "Sync enabled but not connected. Check settings.")
+            self._update_sync_status_ui("error", tr("Sync enabled but not connected. Check settings."))
 
     # ------------------------------------------------------------------ UI
 
@@ -345,33 +346,33 @@ class MainWindow(QMainWindow):
     def _build_app_menu(self):
         """Hamburger menu with file operations and view options."""
         menu = QMenu(self)
-        menu.addAction(self._icon("upload"), "Open Excel Table…", self.open_table_action)
-        menu.addAction(self._icon("upload"), "Import Excel to Database…", self.import_excel)
-        menu.addAction(self._icon("download"), "Save Import Template…", self.save_import_template)
+        menu.addAction(self._icon("upload"), tr("Open Excel Table…"), self.open_table_action)
+        menu.addAction(self._icon("upload"), tr("Import Excel to Database…"), self.import_excel)
+        menu.addAction(self._icon("download"), tr("Save Import Template…"), self.save_import_template)
         menu.addSeparator()
-        export_menu = menu.addMenu(self._icon("download"), "Export")
-        export_menu.addAction("PDF…", self.export_pdf)
-        export_menu.addAction("Excel / CSV…", self.export_excel)
-        export_menu.addAction("TXT…", self.export_txt)
-        export_menu.addAction("Audio (MP3)…", self.save_audio_action)
-        menu.addAction(self._icon("archive"), "Backups…", self.open_backups)
+        export_menu = menu.addMenu(self._icon("download"), tr("Export"))
+        export_menu.addAction(tr("PDF…"), self.export_pdf)
+        export_menu.addAction(tr("Excel / CSV…"), self.export_excel)
+        export_menu.addAction(tr("TXT…"), self.export_txt)
+        export_menu.addAction(tr("Audio (MP3)…"), self.save_audio_action)
+        menu.addAction(self._icon("archive"), tr("Backups…"), self.open_backups)
         menu.addSeparator()
         # carry the checked states over when the menu is rebuilt (theme change)
         show_source = getattr(self, "action_show_source", None)
         show_created = getattr(self, "action_show_created", None)
-        self.action_show_source = QAction("Show Source column", self, checkable=True)
+        self.action_show_source = QAction(tr("Show Source column"), self, checkable=True)
         self.action_show_source.setChecked(show_source.isChecked() if show_source else False)
         self.action_show_source.toggled.connect(self.toggle_source_column)
         menu.addAction(self.action_show_source)
-        self.action_show_created = QAction("Show Created At column", self, checkable=True)
+        self.action_show_created = QAction(tr("Show Created At column"), self, checkable=True)
         self.action_show_created.setChecked(show_created.isChecked() if show_created else False)
         self.action_show_created.toggled.connect(self.toggle_created_column)
         menu.addAction(self.action_show_created)
-        menu.addAction(self._icon("rows"), "Max words…", self.prompt_row_limit)
+        menu.addAction(self._icon("rows"), tr("Max words…"), self.prompt_row_limit)
         menu.addSeparator()
-        menu.addAction(self._icon("list"), "View Log", self.open_log_window)
-        menu.addAction("About", self.show_about)
-        menu.addAction(self._icon("x"), "Quit", self.quit_app)
+        menu.addAction(self._icon("list"), tr("View Log"), self.open_log_window)
+        menu.addAction(tr("About"), self.show_about)
+        menu.addAction(self._icon("x"), tr("Quit"), self.quit_app)
         return menu
 
     def _build_ui(self):
@@ -390,7 +391,7 @@ class MainWindow(QMainWindow):
         self.menu_btn = QPushButton()
         self._set_icon(self.menu_btn, "menu", "text_dim")
         self.menu_btn.setIconSize(QSize(20, 20))
-        self.menu_btn.setToolTip("Menu")
+        self.menu_btn.setToolTip(tr("Menu"))
         self.menu_btn.setCursor(Qt.PointingHandCursor)
         self.app_menu = self._build_app_menu()
         self.menu_btn.clicked.connect(lambda: self.app_menu.exec(
@@ -411,18 +412,18 @@ class MainWindow(QMainWindow):
             sb.addWidget(btn)
             return btn
 
-        self.nav_words = nav_button("book-open", "Words",
+        self.nav_words = nav_button("book-open", tr("Words"),
                                     lambda: self.switch_page(PAGE_WORDS),
                                     checkable=True, checked=True)
-        self.nav_texts = nav_button("file-text", "Texts",
+        self.nav_texts = nav_button("file-text", tr("Texts"),
                                     lambda: self.switch_page(PAGE_TEXTS),
                                     checkable=True)
-        self.nav_stats = nav_button("bar-chart", "Statistics",
+        self.nav_stats = nav_button("bar-chart", tr("Statistics"),
                                     lambda: self.switch_page(PAGE_STATS),
                                     checkable=True)
-        nav_button("trash", "Bin (deleted items)", self.open_bin)
+        nav_button("trash", tr("Bin (deleted items)"), self.open_bin)
         sb.addStretch(1)
-        nav_button("sliders", "Settings", self.open_settings)
+        nav_button("sliders", tr("Settings"), self.open_settings)
 
         outer.addWidget(sidebar)
 
@@ -447,14 +448,14 @@ class MainWindow(QMainWindow):
 
         subtitle_row = QHBoxLayout()
         subtitle_row.setSpacing(6)
-        self.source_label = QLabel("Vocabulary", objectName="SubTitle")
+        self.source_label = QLabel(tr("Vocabulary"), objectName="SubTitle")
         subtitle_row.addWidget(self.source_label)
         self.close_file_btn = QPushButton(objectName="iconButton")
         self._set_icon(self.close_file_btn, "x", "text_dim", 14)
         self.close_file_btn.setIconSize(QSize(13, 13))
         self.close_file_btn.setFixedSize(20, 20)
         self.close_file_btn.setCursor(Qt.PointingHandCursor)
-        self.close_file_btn.setToolTip("Close file and return to your vocabulary")
+        self.close_file_btn.setToolTip(tr("Close file and return to your vocabulary"))
         self.close_file_btn.clicked.connect(self.load_data)
         self.close_file_btn.hide()
         subtitle_row.addWidget(self.close_file_btn)
@@ -465,7 +466,7 @@ class MainWindow(QMainWindow):
         h.addStretch(1)
 
         self.search_box = QLineEdit(objectName="SearchBox")
-        self.search_box.setPlaceholderText("Search words, translations or tags…")
+        self.search_box.setPlaceholderText(tr("Search words, translations or tags…"))
         self.search_box.setClearButtonEnabled(True)
         self.search_box.setMinimumWidth(320)
         self.search_box.setMaximumWidth(560)
@@ -478,7 +479,7 @@ class MainWindow(QMainWindow):
         self.search_scope_btn = QPushButton(objectName="iconButton")
         self._set_icon(self.search_scope_btn, "filter", "text_dim")
         self.search_scope_btn.setIconSize(QSize(18, 18))
-        self.search_scope_btn.setToolTip("Search scope")
+        self.search_scope_btn.setToolTip(tr("Search scope"))
         self.search_scope_btn.setCursor(Qt.PointingHandCursor)
         self.search_scope_btn.clicked.connect(self.show_search_scope_menu)
         h.addWidget(self.search_scope_btn, 0, Qt.AlignVCenter)
@@ -486,7 +487,7 @@ class MainWindow(QMainWindow):
         self.add_button = QPushButton(objectName="iconButton")
         self._set_icon(self.add_button, "plus", "text_dim")
         self.add_button.setIconSize(QSize(19, 19))
-        self.add_button.setToolTip("Add word")
+        self.add_button.setToolTip(tr("Add word"))
         self.add_button.setCursor(Qt.PointingHandCursor)
         self.add_button.clicked.connect(self.open_add_word)
         h.addWidget(self.add_button, 0, Qt.AlignVCenter)
@@ -499,7 +500,7 @@ class MainWindow(QMainWindow):
             self.sync_button = QPushButton(objectName="iconButton")
             self._set_icon(self.sync_button, "cloud", "text_dim")
             self.sync_button.setIconSize(QSize(19, 19))
-            self.sync_button.setToolTip("Cloud sync: idle")
+            self.sync_button.setToolTip(tr("Cloud sync: idle"))
             self.sync_button.setCursor(Qt.PointingHandCursor)
             self.sync_button.clicked.connect(self.show_sync_info)
             h.addWidget(self.sync_button, 0, Qt.AlignVCenter)
@@ -530,13 +531,13 @@ class MainWindow(QMainWindow):
         self.tag_icon_btn = QPushButton(objectName="chipButton")
         self._set_icon(self.tag_icon_btn, "tag", "text_dim", 16)
         self.tag_icon_btn.setIconSize(QSize(16, 16))
-        self.tag_icon_btn.setToolTip("Filter by tag")
+        self.tag_icon_btn.setToolTip(tr("Filter by tag"))
         self.tag_icon_btn.setCursor(Qt.PointingHandCursor)
         self.tag_icon_btn.clicked.connect(self._show_tag_menu)
         self.tag_icon_btn.setVisible(False)
         f.addWidget(self.tag_icon_btn)
 
-        self.favorites_btn = QPushButton(" Favorites", objectName="chipButton")
+        self.favorites_btn = QPushButton(tr(" Favorites"), objectName="chipButton")
         self.favorites_btn.setIcon(self._icon("star", "text_dim", 16))  # re-tinted via _on_favorites_toggled
         self.favorites_btn.setCheckable(True)
         self.favorites_btn.setCursor(Qt.PointingHandCursor)
@@ -568,20 +569,20 @@ class MainWindow(QMainWindow):
             ab.addWidget(btn)
             return btn
 
-        action_button("book", "Definition", "View definition (double-click)", self.view_definition)
-        self.read_button = action_button("volume", "Read", "Read selected words aloud",
+        action_button("book", tr("Definition"), tr("View definition (double-click)"), self.view_definition)
+        self.read_button = action_button("volume", tr("Read"), tr("Read selected words aloud"),
                                          self.read_words_action)
-        action_button("star", "Favorite", "Toggle favorite", self.toggle_favorite)
-        action_button("tag", "Tags", "Add / remove tags", self.open_tags)
-        action_button("edit", "Edit", "Edit word", self.edit_row)
-        action_button("copy", "Copy", "Copy words", self.show_copy_menu)
-        action_button("sparkles", "Text", "Generate text from selection",
+        action_button("star", tr("Favorite"), tr("Toggle favorite"), self.toggle_favorite)
+        action_button("tag", tr("Tags"), tr("Add / remove tags"), self.open_tags)
+        action_button("edit", tr("Edit"), tr("Edit word"), self.edit_row)
+        action_button("copy", tr("Copy"), tr("Copy words"), self.show_copy_menu)
+        action_button("sparkles", tr("Text"), tr("Generate text from selection"),
                       self.generate_text_action)
         ab.addSpacing(6)
         delete_btn = QPushButton()
         self._set_icon(delete_btn, "trash", "danger", 17)
         delete_btn.setIconSize(QSize(17, 17))
-        delete_btn.setToolTip("Delete selected (Del)")
+        delete_btn.setToolTip(tr("Delete selected (Del)"))
         delete_btn.setCursor(Qt.PointingHandCursor)
         delete_btn.clicked.connect(self.delete_rows)
         ab.addWidget(delete_btn)
@@ -673,8 +674,8 @@ class MainWindow(QMainWindow):
 
         # ---------- filter combos embedded in the header sections ----------
         self._header_filters = {}
-        for col, placeholder in ((COL_STATUS, "Status"), (COL_LANG1, "Language"),
-                                 (COL_LANG2, "Translation")):
+        for col, placeholder in ((COL_STATUS, tr("Status")), (COL_LANG1, tr("Language")),
+                                 (COL_LANG2, tr("Translation"))):
             combo = _HeaderFilterCombo(table_header)
             combo.setObjectName("headerFilter")
             combo.setCursor(Qt.PointingHandCursor)
@@ -720,7 +721,7 @@ class MainWindow(QMainWindow):
         footer = QWidget(objectName="Footer")
         fo = QHBoxLayout(footer)
         fo.setContentsMargins(16, 6, 16, 6)
-        self.words_label = QLabel("No data")
+        self.words_label = QLabel(tr("No data"))
         self.words_label.setObjectName("dimLabel")
         fo.addWidget(self.words_label)
         fo.addStretch(1)
@@ -785,7 +786,7 @@ class MainWindow(QMainWindow):
 
     def _on_selection_changed(self, *_):
         count = len(self.table.selectionModel().selectedRows())
-        self.selection_label.setText(f"{count} selected")
+        self.selection_label.setText(tr("{count} selected").format(count=count))
         # with no selection the bar is only up for playback — "0 selected"
         # would be noise and widens the row at minimum window width
         self.selection_label.setVisible(count > 0)
@@ -852,7 +853,7 @@ class MainWindow(QMainWindow):
         action = getattr(self, "tray_add_action", None)
         if action is not None:
             hotkey = self._hotkey_setting()
-            action.setText(f"Add Word ({hotkey})" if hotkey else "Add Word")
+            action.setText(f"{tr('Add Word')} ({hotkey})" if hotkey else tr("Add Word"))
 
     def _stop_hotkey_agent(self):
         proc = self._hotkey_proc
@@ -899,12 +900,12 @@ class MainWindow(QMainWindow):
         self.tray = QSystemTrayIcon(QIcon("icon.png"), self)
         self.tray.setToolTip(APP_NAME)
         menu = QMenu()
-        menu.addAction("Show", self.show_window)
+        menu.addAction(tr("Show"), self.show_window)
         menu.addSeparator()
-        self.tray_add_action = menu.addAction("Add Word", self.open_add_word_and_translate)
+        self.tray_add_action = menu.addAction(tr("Add Word"), self.open_add_word_and_translate)
         self._update_tray_hotkey_label()
         menu.addSeparator()
-        menu.addAction("Quit", self.quit_app)
+        menu.addAction(tr("Quit"), self.quit_app)
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(self._on_tray_activated)
         self.tray.show()
@@ -1018,8 +1019,8 @@ class MainWindow(QMainWindow):
         self.search_box.blockSignals(True)
         self.search_box.setText(self._page_search.get(index, ""))
         self.search_box.setPlaceholderText(
-            "Search words, translations or tags…" if index == PAGE_WORDS
-            else "Search texts by title, content or words…" if index == PAGE_TEXTS
+            tr("Search words, translations or tags…") if index == PAGE_WORDS
+            else tr("Search texts by title, content or words…") if index == PAGE_TEXTS
             else "")
         self.search_box.blockSignals(False)
 
@@ -1029,7 +1030,7 @@ class MainWindow(QMainWindow):
         self.search_scope_btn.setVisible(on_words)
         self.search_box.setVisible(not on_stats)
         subtitle = (self._words_subtitle if on_words
-                    else "Statistics" if on_stats else "Texts")
+                    else tr("Statistics") if on_stats else tr("Texts"))
         self.source_label.setText(subtitle)
         self._update_file_view()
 
@@ -1070,11 +1071,11 @@ class MainWindow(QMainWindow):
 
     def _on_texts_counts(self, shown, total):
         if total == 0:
-            text = "No texts yet"
+            text = tr("No texts yet")
         elif shown == total:
-            text = f"Texts: {total}"
+            text = tr("Texts: {total}").format(total=total)
         else:
-            text = f"Texts: {shown}/{total}"
+            text = tr("Texts: {shown}/{total}").format(shown=shown, total=total)
         self._footer_counts[PAGE_TEXTS] = text
         if self.stack.currentIndex() == PAGE_TEXTS:
             self.words_label.setText(text)
@@ -1087,7 +1088,7 @@ class MainWindow(QMainWindow):
             self.df = words_to_dataframe(words)
             self.update_filter_combos()
             self.refresh_display()
-            self._words_subtitle = "Vocabulary"
+            self._words_subtitle = tr("Vocabulary")
             self._file_view = False
             self._update_file_view()
             if self.stack.currentIndex() == PAGE_WORDS:
@@ -1097,7 +1098,7 @@ class MainWindow(QMainWindow):
             logging.info("Database loaded successfully.")
         except Exception as exc:
             logging.error(f"Database loading failed: {exc}")
-            QMessageBox.critical(self, "Database Error", f"Failed to load the database: {exc}")
+            QMessageBox.critical(self, tr("Database Error"), f"{tr('Failed to load the database:')} {exc}")
 
     def _update_file_view(self):
         """Show the 'close file' affordance only while previewing an opened
@@ -1114,10 +1115,9 @@ class MainWindow(QMainWindow):
                           | set(PREDEFINED_STATUSES))
 
         for combo, default, values in [
-            (self.lang1_combo, "Language", languages),
-            (self.lang2_combo, "Translation", languages),
-            (self.status_combo, "Status", statuses),
-            (self.tag_combo, "All tags", dbq.get_all_tags()),
+            (self.lang1_combo, tr("Language"), languages),
+            (self.lang2_combo, tr("Translation"), languages),
+            (self.tag_combo, tr("All tags"), dbq.get_all_tags()),
         ]:
             current = combo.currentText()
             combo.blockSignals(True)
@@ -1127,6 +1127,20 @@ class MainWindow(QMainWindow):
             if current and combo.findText(current) >= 0:
                 combo.setCurrentText(current)
             combo.blockSignals(False)
+
+        # Status combo: the stored/queried value stays English (kept as item
+        # userData); only the displayed label is localized.
+        current_status = self.status_combo.currentData()
+        self.status_combo.blockSignals(True)
+        self.status_combo.clear()
+        self.status_combo.addItem(tr("Status"))  # placeholder, userData = None
+        for s in statuses:
+            self.status_combo.addItem(tr(s), s)
+        if current_status:
+            i = self.status_combo.findData(current_status)
+            if i >= 0:
+                self.status_combo.setCurrentIndex(i)
+        self.status_combo.blockSignals(False)
 
     def on_search_changed(self, text):
         if self.stack.currentIndex() == PAGE_TEXTS:
@@ -1139,9 +1153,9 @@ class MainWindow(QMainWindow):
 
     def show_search_scope_menu(self):
         menu = QMenu(self)
-        for label, attr in [("Search in Word", "search_word1"),
-                            ("Search in Translation", "search_word2"),
-                            ("Search in Tags", "search_tags")]:
+        for label, attr in [(tr("Search in Word"), "search_word1"),
+                            (tr("Search in Translation"), "search_word2"),
+                            (tr("Search in Tags"), "search_tags")]:
             cb = QCheckBox(label)
             cb.setChecked(getattr(self.word_filter, attr))
             cb.toggled.connect(lambda checked, a=attr: (
@@ -1159,10 +1173,10 @@ class MainWindow(QMainWindow):
         if self.df is None:
             return
         wf = self.word_filter
-        wf.lang1 = self.lang1_combo.currentText() if self.lang1_combo.currentText() not in ("Language", "") else None
-        wf.lang2 = self.lang2_combo.currentText() if self.lang2_combo.currentText() not in ("Translation", "") else None
-        wf.status = self.status_combo.currentText() if self.status_combo.currentText() not in ("Status", "") else None
-        wf.selected_tag = self.tag_combo.currentText() if self.tag_combo.currentText() not in ("All tags", "") else None
+        wf.lang1 = self.lang1_combo.currentText() if self.lang1_combo.currentIndex() != 0 else None
+        wf.lang2 = self.lang2_combo.currentText() if self.lang2_combo.currentIndex() != 0 else None
+        wf.status = self.status_combo.currentData() if self.status_combo.currentIndex() != 0 else None
+        wf.selected_tag = self.tag_combo.currentText() if self.tag_combo.currentIndex() != 0 else None
         wf.favorites_only = self.favorites_btn.isChecked()
         wf.search_query = self.search_box.text()
 
@@ -1170,9 +1184,9 @@ class MainWindow(QMainWindow):
         self.model.set_dataframe(filtered)
 
         total = len(self.df)
-        words_text = f"Words: {len(filtered)}/{total}"
+        words_text = tr("Words: {shown}/{total}").format(shown=len(filtered), total=total)
         if wf.row_limit is not None:
-            words_text += f" (showing first {wf.row_limit})"
+            words_text += " " + tr("(showing first {n})").format(n=wf.row_limit)
         self._footer_counts[PAGE_WORDS] = words_text
         if self.stack.currentIndex() == PAGE_WORDS:
             self.words_label.setText(words_text)
@@ -1187,7 +1201,8 @@ class MainWindow(QMainWindow):
         self._set_icon(self.tag_icon_btn, "tag",
                        "accent" if wf.selected_tag else "text_dim", 16)
         self.tag_icon_btn.setToolTip(
-            f"Filter by tag — {wf.selected_tag}" if wf.selected_tag else "Filter by tag")
+            tr("Filter by tag — {tag}").format(tag=wf.selected_tag) if wf.selected_tag
+            else tr("Filter by tag"))
 
 
     def toggle_source_column(self, checked):
@@ -1201,8 +1216,8 @@ class MainWindow(QMainWindow):
     def prompt_row_limit(self):
         from app.ui.dialogs.base import ask_int
         current = self.word_filter.row_limit or 0
-        value, ok = ask_int(self, "Max Words",
-                            "Show only the first N words (0 = show all):",
+        value, ok = ask_int(self, tr("Max Words"),
+                            tr("Show only the first N words (0 = show all):"),
                             current, 0, 1000000)
         if ok:
             self.word_filter.row_limit = value if value > 0 else None
@@ -1217,7 +1232,7 @@ class MainWindow(QMainWindow):
     def _require_selection(self, action="continue"):
         records = self.selected_records()
         if not records:
-            show_toast(self, "No selection", f"Select at least one word to {action}.", "warning")
+            show_toast(self, tr("No selection"), tr("Please select at least one word."), "warning")
         return records
 
     # ------------------------------------------------------------ actions
@@ -1258,7 +1273,7 @@ class MainWindow(QMainWindow):
         from app.ui.dialogs.edit_word import EditWordDialog
         record = records[0]
         languages = [self.lang1_combo.itemText(i) for i in range(1, self.lang1_combo.count())]
-        statuses = [self.status_combo.itemText(i) for i in range(1, self.status_combo.count())]
+        statuses = [self.status_combo.itemData(i) for i in range(1, self.status_combo.count())]
         dialog = EditWordDialog(self, record, languages, statuses)
         if dialog.exec():
             updated = dialog.result_data()
@@ -1267,10 +1282,10 @@ class MainWindow(QMainWindow):
                 self.db_adapter.update_word(record["ID"], updated)
                 backup_database()
                 self.load_data()
-                show_toast(self, "Saved", f"'{updated.get('Word1', '')}' updated.", "success")
+                show_toast(self, tr("Saved"), tr("'{word}' updated.").format(word=updated.get('Word1', '')), "success")
             except Exception as exc:
                 logging.error(f"Error updating row: {exc}")
-                QMessageBox.critical(self, "Error", f"Failed to update: {exc}")
+                QMessageBox.critical(self, tr("Error"), tr("Failed to update: {error}").format(error=exc))
 
     def delete_rows(self):
         records = self._require_selection("delete")
@@ -1280,8 +1295,8 @@ class MainWindow(QMainWindow):
         if len(records) > 8:
             names += ", …"
         if QMessageBox.question(
-                self, "Delete",
-                f"Delete {len(records)} word(s)?\n\n{names}",
+                self, tr("Delete"),
+                tr("Delete {count} word(s)?").format(count=len(records)) + f"\n\n{names}",
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         errors = 0
@@ -1294,9 +1309,9 @@ class MainWindow(QMainWindow):
         backup_database()
         self.load_data()
         if errors:
-            show_toast(self, "Delete", f"Deleted with {errors} error(s).", "warning")
+            show_toast(self, tr("Delete"), tr("Deleted with {n} error(s).").format(n=errors), "warning")
         else:
-            show_toast(self, "Deleted", f"{len(records)} word(s) deleted.", "success")
+            show_toast(self, tr("Deleted"), tr("{count} word(s) deleted.").format(count=len(records)), "success")
 
     def toggle_favorite(self):
         records = self._require_selection("favorite")
@@ -1308,8 +1323,12 @@ class MainWindow(QMainWindow):
             for record in records:
                 self.db_adapter.update_word(int(record["ID"]), {'favorite': target})
             self.load_data()
-            verb = "added to" if target else "removed from"
-            show_toast(self, "Favorites", f"{len(records)} word(s) {verb} favorites.", "success")
+            if target:
+                show_toast(self, tr("Favorites"),
+                           tr("{count} word(s) added to favorites.").format(count=len(records)), "success")
+            else:
+                show_toast(self, tr("Favorites"),
+                           tr("{count} word(s) removed from favorites.").format(count=len(records)), "success")
         except Exception as exc:
             logging.error(f"Error toggling favorite: {exc}")
 
@@ -1329,9 +1348,12 @@ class MainWindow(QMainWindow):
             return
         from app.ui.dialogs.base import ask_item
         statuses = PREDEFINED_STATUSES
-        status, ok = ask_item(self, "Change Status", "New status:", statuses, 0, False)
+        labels = [tr(s) for s in statuses]
+        chosen, ok = ask_item(self, tr("Change Status"), tr("New status:"), labels, 0, False)
         if not ok:
             return
+        # map the localized label back to the canonical English status
+        status = next((s for s in statuses if tr(s) == chosen), chosen)
         for record in records:
             try:
                 self.db_adapter.update_word(int(record["ID"]), {'Status': status})
@@ -1339,7 +1361,9 @@ class MainWindow(QMainWindow):
                 logging.error(f"Error updating status: {exc}")
         backup_database()
         self.load_data()
-        show_toast(self, "Status", f"Status set to '{status}' for {len(records)} word(s).", "success")
+        show_toast(self, tr("Status"),
+                   tr("Status set to '{status}' for {count} word(s).").format(
+                       status=tr(status), count=len(records)), "success")
 
     def view_definition(self):
         records = self._require_selection("view its definition")
@@ -1369,21 +1393,21 @@ class MainWindow(QMainWindow):
             return
         text = "\n".join(f"{r.get('Word1', '')}\t{r.get('Word2', '')}" for r in records)
         QGuiApplication.clipboard().setText(text)
-        show_toast(self, "Copied", f"{len(records)} row(s) copied to clipboard.", "success", 2000)
+        show_toast(self, tr("Copied"), tr("{count} row(s) copied to clipboard.").format(count=len(records)), "success", 2000)
 
     def show_copy_menu(self):
         records = self._require_selection("copy")
         if not records:
             return
         menu = QMenu(self)
-        menu.addAction("Copy Word(s)", lambda: self._copy_field(records, 'Word1'))
-        menu.addAction("Copy Translation(s)", lambda: self._copy_field(records, 'Word2'))
-        menu.addAction("Copy Both", self.copy_selected)
+        menu.addAction(tr("Copy Word(s)"), lambda: self._copy_field(records, 'Word1'))
+        menu.addAction(tr("Copy Translation(s)"), lambda: self._copy_field(records, 'Word2'))
+        menu.addAction(tr("Copy Both"), self.copy_selected)
         menu.exec(self.cursor().pos())
 
     def _copy_field(self, records, field):
         QGuiApplication.clipboard().setText("\n".join(str(r.get(field, "")) for r in records))
-        show_toast(self, "Copied", f"{len(records)} item(s) copied to clipboard.", "success", 2000)
+        show_toast(self, tr("Copied"), tr("{count} item(s) copied to clipboard.").format(count=len(records)), "success", 2000)
 
     # ----------------------------------------------------------- context
 
@@ -1392,18 +1416,18 @@ class MainWindow(QMainWindow):
         if not index.isValid():
             return
         menu = QMenu(self)
-        menu.addAction("View Definition", self.view_definition)
-        menu.addAction("Edit", self.edit_row)
-        menu.addAction("Delete", self.delete_rows)
+        menu.addAction(tr("View Definition"), self.view_definition)
+        menu.addAction(tr("Edit"), self.edit_row)
+        menu.addAction(tr("Delete"), self.delete_rows)
         menu.addSeparator()
-        menu.addAction("Copy Word", lambda: self._copy_field(self.selected_records(), 'Word1'))
-        menu.addAction("Copy Translation", lambda: self._copy_field(self.selected_records(), 'Word2'))
+        menu.addAction(tr("Copy Word"), lambda: self._copy_field(self.selected_records(), 'Word1'))
+        menu.addAction(tr("Copy Translation"), lambda: self._copy_field(self.selected_records(), 'Word2'))
         menu.addSeparator()
-        menu.addAction("Toggle Favorite", self.toggle_favorite)
-        menu.addAction("Change Status…", self.change_status)
-        menu.addAction("Add / Remove Tags…", self.open_tags)
+        menu.addAction(tr("Toggle Favorite"), self.toggle_favorite)
+        menu.addAction(tr("Change Status…"), self.change_status)
+        menu.addAction(tr("Add / Remove Tags…"), self.open_tags)
         menu.addSeparator()
-        menu.addAction("Read Aloud", self.read_words_action)
+        menu.addAction(tr("Read Aloud"), self.read_words_action)
         menu.exec(self.table.viewport().mapToGlobal(pos))
 
     # ------------------------------------------------------------- audio
@@ -1422,15 +1446,14 @@ class MainWindow(QMainWindow):
             problem = google_cloud_tts_problem()
             if problem:
                 self._tts_fallback_warned = True
-                show_toast(self, "Google Cloud TTS unavailable",
-                           f"Using gTTS instead — {problem}\n"
-                           f"Fix it in Settings → Audio.",
+                show_toast(self, tr("Google Cloud TTS unavailable"),
+                           tr("Using gTTS instead — {problem}\nFix it in Settings → Audio.").format(problem=problem),
                            "warning", 8000)
 
         if len(records) > 200:
             records = records[:200]
-            show_toast(self, "Selection limit",
-                       "Only the first 200 selected words will be read.", "info")
+            show_toast(self, tr("Selection limit"),
+                       tr("Only the first 200 selected words will be read."), "info")
 
         words = [(r.get('Word1', ''), r.get('Word2', '')) for r in records]
         languages = [(r.get('Language1', ''), r.get('Language2', '')) for r in records]
@@ -1510,16 +1533,16 @@ class MainWindow(QMainWindow):
         else:
             self.player_bar.setVisible(False)
             self.tag_icon_btn.setVisible(False)
-            self.favorites_btn.setText(" Favorites")
+            self.favorites_btn.setText(tr(" Favorites"))
             self.tag_combo.setVisible(True)
             self.action_bar.setVisible(has_selection)
             QTimer.singleShot(0, self._restore_pre_playback_width)
         if active:
             self.read_button.setIcon(self._icon("stop", "danger", 17))
-            self.read_button.setToolTip("Stop reading")
+            self.read_button.setToolTip(tr("Stop reading"))
         else:
             self.read_button.setIcon(self._icon("volume", "text", 17))
-            self.read_button.setToolTip("Read — Read selected words aloud")
+            self.read_button.setToolTip(tr("Read — Read selected words aloud"))
 
     def _restore_pre_playback_width(self, attempts=10):
         """If showing the player force-grew the window (minimum-size
@@ -1620,8 +1643,8 @@ class MainWindow(QMainWindow):
                     if self.df is not None:
                         self.df.loc[self.df['ID'] == wid, 'Status'] = target
                     self.model.update_status(wid, target)
-                    show_toast(self, "Promoted",
-                               f"‘{rec.get('Word1', '')}’ → {target}", "success", 2500)
+                    show_toast(self, tr("Promoted"),
+                               f"'{rec.get('Word1', '')}' → {target}", "success", 2500)
         except Exception as exc:
             logging.error(f"Playback status update failed: {exc}")
 
@@ -1636,7 +1659,7 @@ class MainWindow(QMainWindow):
     def save_audio_action(self):
         records = self.selected_records()
         if not records:
-            show_toast(self, "No selection", "Select words to save as audio.", "warning")
+            show_toast(self, tr("No selection"), tr("Select words to save as audio."), "warning")
             return
         from app.ui.dialogs.audio_saver import AudioSaverDialog
         words = [(r.get('Word1', ''), r.get('Word2', '')) for r in records]
@@ -1644,7 +1667,7 @@ class MainWindow(QMainWindow):
         initial_name = suggest_filename(
             "audio", word_count=len(words),
             lang1=self.lang1_combo.currentText(), lang2=self.lang2_combo.currentText(),
-            status=self.status_combo.currentText(), extension=".mp3")
+            status=self.status_combo.currentData(), extension=".mp3")
         dialog = AudioSaverDialog(self, words, languages, initial_name)
         dialog.exec()
 
@@ -1656,7 +1679,7 @@ class MainWindow(QMainWindow):
             return
         if len(records) > 50:
             records = records[:50]
-            show_toast(self, "Selection limit", "Only the first 50 words will be used.", "info")
+            show_toast(self, tr("Selection limit"), tr("Only the first 50 words will be used."), "info")
         words = [str(r.get('Word1', '')) for r in records]
         language = records[0].get('Language1', 'English')
 
@@ -1666,7 +1689,7 @@ class MainWindow(QMainWindow):
         dialog.show()
 
     def _on_text_generated(self):
-        show_toast(self, "Texts", "Generated text saved.", "success")
+        show_toast(self, tr("Texts"), tr("Generated text saved."), "success")
         if self.stack.currentIndex() == PAGE_TEXTS:
             self.texts_page.load_texts()
 
@@ -1691,43 +1714,43 @@ class MainWindow(QMainWindow):
     def export_pdf(self):
         rows = self._export_rows()
         if not rows:
-            show_toast(self, "Export", "Nothing to export.", "warning")
+            show_toast(self, tr("Export"), tr("Nothing to export."), "warning")
             return
         settings = load_settings()
         suggested = suggest_filename("pdf_export", word_count=len(rows),
                                      lang1=self.lang1_combo.currentText(),
                                      lang2=self.lang2_combo.currentText(),
-                                     status=self.status_combo.currentText(), extension=".pdf")
-        path, _ = QFileDialog.getSaveFileName(self, "Save PDF As", suggested, "PDF files (*.pdf)")
+                                     status=self.status_combo.currentData(), extension=".pdf")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save PDF As"), suggested, tr("PDF files (*.pdf)"))
         if not path:
             return
         try:
             exporters.register_fonts()
             warnings = exporters.export_to_pdf_file(rows, path, settings)
             if warnings:
-                show_toast(self, "Export", f"PDF saved to {path}. " + " ".join(warnings), "warning")
+                show_toast(self, tr("Export"), f"PDF saved to {path}. " + " ".join(warnings), "warning")
             else:
-                show_toast(self, "Export", f"PDF saved to {path}", "success")
+                show_toast(self, tr("Export"), tr("PDF saved to {path}").format(path=path), "success")
         except Exception as exc:
             logging.error(f"PDF export failed: {exc}")
-            QMessageBox.critical(self, "Export Error", f"Failed to export PDF:\n{exc}")
+            QMessageBox.critical(self, tr("Export Error"), tr("Failed to export PDF:\n{error}").format(error=exc))
 
     def export_excel(self):
         rows = self._export_rows()
         if not rows:
-            show_toast(self, "Export", "Nothing to export.", "warning")
+            show_toast(self, tr("Export"), tr("Nothing to export."), "warning")
             return
         settings = load_settings()
         export_format = settings.get("excel_format", "Excel").strip()
         if export_format not in ("Excel", "CSV"):
             export_format = "Excel"
         ext = ".xlsx" if export_format == "Excel" else ".csv"
-        flt = "Excel files (*.xlsx)" if export_format == "Excel" else "CSV files (*.csv)"
+        flt = tr("Excel files (*.xlsx)") if export_format == "Excel" else tr("CSV files (*.csv)")
         suggested = suggest_filename("export", word_count=len(rows),
                                      lang1=self.lang1_combo.currentText(),
                                      lang2=self.lang2_combo.currentText(),
-                                     status=self.status_combo.currentText(), extension=ext)
-        path, _ = QFileDialog.getSaveFileName(self, "Save As", suggested, flt)
+                                     status=self.status_combo.currentData(), extension=ext)
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save As"), suggested, flt)
         if not path:
             return
         try:
@@ -1735,36 +1758,36 @@ class MainWindow(QMainWindow):
                 exporters.export_to_excel_file(rows, path, settings)
             else:
                 exporters.export_to_csv_file(rows, path, settings)
-            show_toast(self, "Export", f"{export_format} file saved to {path}", "success")
+            show_toast(self, tr("Export"), tr("{format} file saved to {path}").format(format=export_format, path=path), "success")
         except Exception as exc:
             logging.error(f"Export failed: {exc}")
-            QMessageBox.critical(self, "Export Error", f"Failed to export:\n{exc}")
+            QMessageBox.critical(self, tr("Export Error"), tr("Failed to export:\n{error}").format(error=exc))
 
     def export_txt(self):
         rows = self._export_rows()
         if not rows:
-            show_toast(self, "Export", "Nothing to export.", "warning")
+            show_toast(self, tr("Export"), tr("Nothing to export."), "warning")
             return
         settings = load_settings()
         suggested = suggest_filename("export", word_count=len(rows),
                                      lang1=self.lang1_combo.currentText(),
                                      lang2=self.lang2_combo.currentText(),
-                                     status=self.status_combo.currentText(), extension=".txt")
-        path, _ = QFileDialog.getSaveFileName(self, "Save As", suggested, "Text files (*.txt)")
+                                     status=self.status_combo.currentData(), extension=".txt")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save As"), suggested, tr("Text files (*.txt)"))
         if not path:
             return
         try:
             exporters.export_to_txt_file(rows, path, settings)
-            show_toast(self, "Export", f"TXT file saved to {path}", "success")
+            show_toast(self, tr("Export"), tr("TXT file saved to {path}").format(path=path), "success")
         except Exception as exc:
             logging.error(f"TXT export failed: {exc}")
-            QMessageBox.critical(self, "Export Error", f"Failed to export TXT:\n{exc}")
+            QMessageBox.critical(self, tr("Export Error"), tr("Failed to export TXT:\n{error}").format(error=exc))
 
     # ------------------------------------------------------------ import
 
     def open_table_action(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Open Excel Table", "",
-                                              "Excel files (*.xlsx *.xls)")
+        path, _ = QFileDialog.getOpenFileName(self, tr("Open Excel Table"), "",
+                                              tr("Excel files (*.xlsx *.xls)"))
         if not path:
             return
         try:
@@ -1778,7 +1801,7 @@ class MainWindow(QMainWindow):
             self._update_file_view()
         except Exception as exc:
             logging.error(f"Error importing file: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to open table:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to open table:\n{error}").format(error=exc))
 
     def import_excel(self):
         from app.ui.dialogs.import_excel import ImportExcelFlow
@@ -1786,28 +1809,28 @@ class MainWindow(QMainWindow):
         flow.run()
 
     def save_import_template(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save Import Template",
-                                              "import-template.xlsx", "Excel files (*.xlsx)")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Save Import Template"),
+                                              "import-template.xlsx", tr("Excel files (*.xlsx)"))
         if not path:
             return
         try:
             from app.core.importer import create_import_template
             create_import_template(path)
-            show_toast(self, "Import", f"Template saved to {path}", "success")
+            show_toast(self, tr("Import"), tr("Template saved to {path}").format(path=path), "success")
         except Exception as exc:
             logging.error(f"Template save failed: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to save template:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to save template:\n{error}").format(error=exc))
 
     # ------------------------------------------------------------- sync
 
     def _run_startup_sync(self):
         try:
             if not self.sync_manager.is_sync_enabled():
-                self.sync_status_changed.emit("error", "Not connected. Check internet or credentials")
+                self.sync_status_changed.emit("error", tr("Not connected. Check internet or credentials"))
                 return
-            self.sync_status_changed.emit("syncing", "Syncing with cloud…")
+            self.sync_status_changed.emit("syncing", tr("Syncing with cloud…"))
             self.sync_manager.sync_on_startup()
-            self.sync_status_changed.emit("success", "Sync completed successfully")
+            self.sync_status_changed.emit("success", tr("Sync completed successfully"))
             self.reload_requested.emit()
         except RuntimeError:
             pass  # app shut down mid-sync; nothing to report
@@ -1821,7 +1844,7 @@ class MainWindow(QMainWindow):
             return
         name, color_key = SYNC_ICONS.get(status, SYNC_ICONS["idle"])
         self.sync_button.setIcon(self._icon(name, color_key, 19))
-        self.sync_button.setToolTip(f"Cloud sync: {message or status}")
+        self.sync_button.setToolTip(f"{tr('Cloud sync')}: {message or tr(status)}")
         self.status_message.setText(message)
         if status in ("success", "error"):
             QTimer.singleShot(5000, lambda: (
@@ -1919,7 +1942,7 @@ class MainWindow(QMainWindow):
             # rather than a ~2s freeze.
             crossfade_during(self, _apply)
             self._apply_global_hotkey()
-            show_toast(self, "Settings", "Settings saved.", "success")
+            show_toast(self, tr("Settings"), tr("Settings saved."), "success")
 
     def open_log_window(self):
         from app.ui.dialogs.log_window import LogWindow
@@ -1936,18 +1959,16 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         from app.ui.dialogs.base import FramelessDialog
-        dialog = FramelessDialog(self, title=f"About {APP_NAME}")
+        dialog = FramelessDialog(self, title=f"{tr('About')} {APP_NAME}")
         dialog.setMinimumWidth(420)
         repo = "https://github.com/lysak-yurii/dictionary-desktop-app"
         body = QLabel(
-            f"<h3>{APP_NAME} — created by Yurii Lysak</h3>"
-            f"<p>Version {APP_VERSION} &nbsp;·&nbsp; Build {BUILD_NUMBER}</p>"
-            "<p>Your personal vocabulary companion with cloud sync, "
-            "AI definitions, translations, text-to-speech and export options.</p>"
-            "<p>Licensed under the GNU Affero General Public License v3.0. "
-            "This attribution must be preserved (AGPL §7).</p>"
-            f"<p>Found a bug or have an idea? "
-            f"<a href='{repo}/issues'>Report an issue</a>.</p>"
+            f"<h3>{APP_NAME} — {tr('created by')} Yurii Lysak</h3>"
+            f"<p>{tr('Version')} {APP_VERSION} &nbsp;·&nbsp; {tr('Build')} {BUILD_NUMBER}</p>"
+            f"<p>{tr('Your personal vocabulary companion with cloud sync, AI definitions, translations, text-to-speech and export options.')}</p>"
+            f"<p>{tr('Licensed under the GNU Affero General Public License v3.0. This attribution must be preserved (AGPL §7).')}</p>"
+            f"<p>{tr('Found a bug or have an idea?')} "
+            f"<a href='{repo}/issues'>{tr('Report an issue')}</a>.</p>"
             f"<p><a href='{repo}'>GitHub</a></p>")
         body.setWordWrap(True)
         body.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -1955,7 +1976,7 @@ class MainWindow(QMainWindow):
         dialog.content_layout.addWidget(body)
         row = QHBoxLayout()
         row.addStretch(1)
-        ok = QPushButton("OK", objectName="primaryButton")
+        ok = QPushButton(tr("OK"), objectName="primaryButton")
         ok.setCursor(Qt.PointingHandCursor)
         ok.setDefault(True)
         ok.clicked.connect(dialog.accept)

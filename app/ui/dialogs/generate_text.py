@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import ai
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
@@ -36,7 +37,7 @@ class GenerateTextDialog(FramelessDialog):
     text_saved = Signal()
 
     def __init__(self, parent, words, language):
-        super().__init__(parent, title="Generate Text")
+        super().__init__(parent, title=tr("Generate Text"))
         self.words = words
         self.language = language
         self.generated_title = None
@@ -50,8 +51,8 @@ class GenerateTextDialog(FramelessDialog):
         layout.setContentsMargins(18, 18, 18, 14)
         layout.setSpacing(10)
 
-        info = QLabel(f"Generating a {language} text from {len(words)} word(s) "
-                      f"with {self.ai_label}:")
+        info = QLabel(tr("Generating a {language} text from {count} word(s) with {ai}:").format(
+            language=language, count=len(words), ai=self.ai_label))
         layout.addWidget(info)
         words_label = QLabel(", ".join(words))
         words_label.setObjectName("dimLabel")
@@ -59,31 +60,30 @@ class GenerateTextDialog(FramelessDialog):
         layout.addWidget(words_label)
 
         self.title_edit = QLineEdit()
-        self.title_edit.setPlaceholderText("Title…")
+        self.title_edit.setPlaceholderText(tr("Title…"))
         layout.addWidget(self.title_edit)
 
         self.text_edit = QTextEdit()
-        self.text_edit.setPlaceholderText("Generated text appears here…")
+        self.text_edit.setPlaceholderText(tr("Generated text appears here…"))
         layout.addWidget(self.text_edit, 1)
 
         buttons = QHBoxLayout()
-        self.generate_btn = QPushButton("Generate", objectName="primaryButton")
+        self.generate_btn = QPushButton(tr("Generate"), objectName="primaryButton")
         self.generate_btn.clicked.connect(self.generate)
         buttons.addWidget(self.generate_btn)
         buttons.addStretch(1)
-        self.save_btn = QPushButton("Save to Texts")
+        self.save_btn = QPushButton(tr("Save to Texts"))
         self.save_btn.clicked.connect(self.save)
         self.save_btn.setEnabled(False)
         buttons.addWidget(self.save_btn)
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.close)
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
 
         if not ai.has_api_key():
             self.text_edit.setPlaceholderText(
-                f"{self.ai_label} API key is not set. "
-                f"Configure it in Settings → APIs → AI.")
+                tr("{ai} API key is not set. Configure it in Settings → APIs → AI.").format(ai=self.ai_label))
             self.generate_btn.setEnabled(False)
         else:
             self.generate()
@@ -91,7 +91,7 @@ class GenerateTextDialog(FramelessDialog):
     def generate(self):
         self.generate_btn.setEnabled(False)
         self.save_btn.setEnabled(False)
-        self.text_edit.setPlainText("Generating…")
+        self.text_edit.setPlainText(tr("Generating…"))
 
         def work():
             return ai.generate_combined_text(", ".join(self.words), self.language)
@@ -122,4 +122,4 @@ class GenerateTextDialog(FramelessDialog):
             self.accept()
         else:
             logging.error(message)
-            QMessageBox.critical(self, "Save failed", message)
+            QMessageBox.critical(self, tr("Save failed"), message)

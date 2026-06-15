@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QPushButton, QSpinBox, QVBoxLayout, QWidget,
 )
 
+from app.i18n import tr
 from app.ui import icons, theme
 from app.ui.titlebar import DragArea, FramelessResizer
 
@@ -90,11 +91,11 @@ class _InputDialog(FramelessDialog):
 
         row = QHBoxLayout()
         row.addStretch(1)
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton(tr("Cancel"))
         cancel.setCursor(Qt.PointingHandCursor)
         cancel.clicked.connect(self.reject)
         row.addWidget(cancel)
-        ok = QPushButton("OK", objectName="primaryButton")
+        ok = QPushButton(tr("OK"), objectName="primaryButton")
         ok.setCursor(Qt.PointingHandCursor)
         ok.setDefault(True)
         ok.clicked.connect(self.accept)

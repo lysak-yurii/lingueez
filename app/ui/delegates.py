@@ -29,6 +29,8 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPixmap
 from PySide6.QtWidgets import QStyledItemDelegate, QStyle, QStyleOptionViewItem
 
+from app.i18n import tr
+
 # status -> (base color, background alpha); desaturated hues so the
 # pills read as quiet metadata instead of pulling the eye off the words
 PILL_COLORS = {
@@ -64,9 +66,10 @@ class StatusPillDelegate(QStyledItemDelegate):
         self._cache = {}  # (text, dark, font key, dpr) -> QPixmap
 
     def paint(self, painter, option, index):
-        text = str(index.data() or "")
+        text = str(index.data() or "")  # canonical (English) status — drives the color
         if not text:
             return super().paint(painter, option, index)
+        label = tr(text)  # localized text actually shown in the pill
 
         # cell background: selection > favorite tint > alternating row.
         # Painted directly (not via initStyleOption/drawControl) — the
@@ -86,7 +89,7 @@ class StatusPillDelegate(QStyledItemDelegate):
         key = (text, dark, option.font.key(), dpr)
         pm = self._cache.get(key)
         if pm is None:
-            pm = self._render_pill(text, dark, option.font, dpr)
+            pm = self._render_pill(text, label, dark, option.font, dpr)
             self._cache[key] = pm
 
         w = pm.width() / dpr
@@ -102,12 +105,12 @@ class StatusPillDelegate(QStyledItemDelegate):
                 QPointF(rect.x() + 6, rect.y() + (rect.height() - h) / 2), pm)
 
     @staticmethod
-    def _render_pill(text, dark, base_font, dpr):
+    def _render_pill(text, label, dark, base_font, dpr):
         font = QFont(base_font)
         font.setPointSizeF(max(7.0, base_font.pointSizeF() - 1))
         font.setWeight(QFont.Normal)
         metrics = QFontMetrics(font)
-        w = metrics.horizontalAdvance(text) + 20
+        w = metrics.horizontalAdvance(label) + 20
         h = metrics.height() + 6
 
         base_hex, alpha = PILL_COLORS.get(text.strip().lower(), DEFAULT_PILL)
@@ -130,6 +133,6 @@ class StatusPillDelegate(QStyledItemDelegate):
         p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
         p.setPen(fg)
         p.setFont(font)
-        p.drawText(QRectF(0, 0, w, h), Qt.AlignCenter, text)
+        p.drawText(QRectF(0, 0, w, h), Qt.AlignCenter, label)
         p.end()
         return pm

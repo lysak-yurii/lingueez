@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
 )
 
+from app.i18n import ntr, tr
 from app.ui import icons
 from app.ui.workers import run_in_thread
 
@@ -41,7 +42,7 @@ from app.ui.workers import run_in_thread
 def humanize_time(iso_str):
     """ISO timestamp -> short human phrase in local time ('12 min ago')."""
     if not iso_str:
-        return "never"
+        return tr("never")
     try:
         moment = datetime.fromisoformat(str(iso_str).replace("Z", "+00:00"))
     except ValueError:
@@ -52,13 +53,13 @@ def humanize_time(iso_str):
     now = datetime.now().astimezone()
     seconds = (now - moment).total_seconds()
     if seconds < 60:
-        return "just now"
+        return tr("just now")
     if seconds < 3600:
-        return f"{int(seconds // 60)} min ago"
+        return tr("{n} min ago").format(n=int(seconds // 60))
     if moment.date() == now.date():
-        return f"today {moment.strftime('%H:%M')}"
+        return tr("today {time}").format(time=moment.strftime('%H:%M'))
     if (now.date() - moment.date()).days == 1:
-        return f"yesterday {moment.strftime('%H:%M')}"
+        return tr("yesterday {time}").format(time=moment.strftime('%H:%M'))
     return moment.strftime("%d %b %Y, %H:%M")
 
 
@@ -85,7 +86,7 @@ class SyncPopover(QFrame):
         self.icon_label.setPixmap(
             icons.icon("cloud", colors["text"], 16).pixmap(16, 16))
         head.addWidget(self.icon_label)
-        title = QLabel("Cloud Sync")
+        title = QLabel(tr("Cloud Sync"))
         title.setStyleSheet("font-weight: 600;")
         head.addWidget(title)
         head.addStretch(1)
@@ -96,8 +97,8 @@ class SyncPopover(QFrame):
         grid.setVerticalSpacing(6)
         self._values = {}
         for row, (key, caption) in enumerate(
-                (("status", "Status"), ("last", "Last sync"),
-                 ("pending", "Pending"))):
+                (("status", tr("Status")), ("last", tr("Last sync")),
+                 ("pending", tr("Pending")))):
             label = QLabel(caption, objectName="dimLabel")
             value = QLabel("…")
             value.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -115,7 +116,7 @@ class SyncPopover(QFrame):
 
         footer = QHBoxLayout()
         footer.addStretch(1)
-        self.sync_btn = QPushButton("Sync Now", objectName="primaryButton")
+        self.sync_btn = QPushButton(tr("Sync Now"), objectName="primaryButton")
         self.sync_btn.setCursor(Qt.PointingHandCursor)
         self.sync_btn.clicked.connect(self._on_sync_clicked)
         footer.addWidget(self.sync_btn)
@@ -131,7 +132,7 @@ class SyncPopover(QFrame):
         self._set_value("pending", "…", dim=True)
         self.note_label.setVisible(False)
         self.sync_btn.setEnabled(not syncing)
-        self.sync_btn.setText("Syncing…" if syncing else "Sync Now")
+        self.sync_btn.setText(tr("Syncing…") if syncing else tr("Sync Now"))
 
         self.adjustSize()
         corner = button.mapToGlobal(QPoint(button.width(), button.height()))
@@ -191,7 +192,7 @@ class SyncPopover(QFrame):
         connected = bool(info.get("enabled"))
         self._set_value(
             "status",
-            "Connected" if connected else "Not connected",
+            tr("Connected") if connected else tr("Not connected"),
             color=self._colors["success" if connected else "danger"])
 
         last = info.get("last_sync_time")
@@ -203,16 +204,18 @@ class SyncPopover(QFrame):
         if operations or deletions:
             parts = []
             if operations:
-                parts.append(f"{operations} change{'s' if operations != 1 else ''}")
+                noun = ntr(operations, tr("change"), tr("changes"), tr("changes"))
+                parts.append(f"{operations} {noun}")
             if deletions:
-                parts.append(f"{deletions} deletion{'s' if deletions != 1 else ''}")
+                noun = ntr(deletions, tr("deletion"), tr("deletions"), tr("deletions"))
+                parts.append(f"{deletions} {noun}")
             self._set_value("pending", " · ".join(parts),
                             color=self._colors["warning"])
         else:
-            self._set_value("pending", "everything synced", dim=True)
+            self._set_value("pending", tr("everything synced"), dim=True)
 
         if not info.get("first_sync_completed"):
-            self.note_label.setText("Initial sync has not completed yet.")
+            self.note_label.setText(tr("Initial sync has not completed yet."))
             self.note_label.setVisible(True)
         self.adjustSize()
 

@@ -34,6 +34,7 @@ from app.core.audio import speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
+from app.i18n import tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
@@ -43,7 +44,7 @@ class AddWordDialog(FramelessDialog):
     word_saved = Signal()
 
     def __init__(self, parent, prefill=None, auto_translate=False, language1=None):
-        super().__init__(parent, title="Add Word")
+        super().__init__(parent, title=tr("Add Word"))
         self.setMinimumWidth(540)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -62,18 +63,18 @@ class AddWordDialog(FramelessDialog):
         grid.setVerticalSpacing(8)
 
         self.lang1_combo = QComboBox()
-        self.lang1_combo.addItems(["Detect language"] + languages)
+        self.lang1_combo.addItems([tr("Detect language")] + languages)
         self.lang1_combo.setCurrentText("English")
         self.lang1_combo.setFixedWidth(150)
         self.lang1_combo.setCursor(Qt.PointingHandCursor)
         grid.addWidget(self.lang1_combo, 0, 0)
 
         self.word1_edit = QLineEdit()
-        self.word1_edit.setPlaceholderText("Type a word or phrase…")
+        self.word1_edit.setPlaceholderText(tr("Type a word or phrase…"))
         self.word1_edit.setClearButtonEnabled(True)
         speak1 = self.word1_edit.addAction(
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
-        speak1.setToolTip("Pronounce")
+        speak1.setToolTip(tr("Pronounce"))
         speak1.triggered.connect(lambda: self._speak(self.word1_edit.text(),
                                                      self.lang1_combo.currentText()))
         grid.addWidget(self.word1_edit, 0, 1)
@@ -81,7 +82,7 @@ class AddWordDialog(FramelessDialog):
         self.swap_btn = QPushButton(objectName="iconButton")
         self.swap_btn.setIcon(icons.icon("swap", colors["text_dim"], 17))
         self.swap_btn.setIconSize(QSize(17, 17))
-        self.swap_btn.setToolTip("Swap word and translation")
+        self.swap_btn.setToolTip(tr("Swap word and translation"))
         self.swap_btn.setCursor(Qt.PointingHandCursor)
         self.swap_btn.clicked.connect(self.swap_entries)
         grid.addWidget(self.swap_btn, 0, 2, 2, 1, Qt.AlignVCenter)
@@ -94,11 +95,11 @@ class AddWordDialog(FramelessDialog):
         grid.addWidget(self.lang2_combo, 1, 0)
 
         self.word2_edit = QLineEdit()
-        self.word2_edit.setPlaceholderText("Translation…")
+        self.word2_edit.setPlaceholderText(tr("Translation…"))
         self.word2_edit.setClearButtonEnabled(True)
         speak2 = self.word2_edit.addAction(
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
-        speak2.setToolTip("Pronounce")
+        speak2.setToolTip(tr("Pronounce"))
         speak2.triggered.connect(lambda: self._speak(self.word2_edit.text(),
                                                      self.lang2_combo.currentText()))
         grid.addWidget(self.word2_edit, 1, 1)
@@ -113,18 +114,18 @@ class AddWordDialog(FramelessDialog):
         layout.addWidget(self.info_label)
 
         buttons = QHBoxLayout()
-        self.translate_btn = QPushButton("  Translate")
+        self.translate_btn = QPushButton(f"  {tr('Translate')}")
         self.translate_btn.setIcon(icons.icon("globe", colors["text"], 15))
-        self.translate_btn.setToolTip("Translate with DeepL (Enter)")
+        self.translate_btn.setToolTip(tr("Translate with DeepL (Enter)"))
         self.translate_btn.setCursor(Qt.PointingHandCursor)
         self.translate_btn.clicked.connect(self.do_translate)
         buttons.addWidget(self.translate_btn)
         buttons.addStretch(1)
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton(tr("Cancel"))
         cancel.setCursor(Qt.PointingHandCursor)
         cancel.clicked.connect(self.reject)
         buttons.addWidget(cancel)
-        save = QPushButton("Save Word", objectName="primaryButton")
+        save = QPushButton(tr("Save Word"), objectName="primaryButton")
         save.setCursor(Qt.PointingHandCursor)
         save.clicked.connect(self.save_word)
         save.setDefault(True)
@@ -140,9 +141,9 @@ class AddWordDialog(FramelessDialog):
             if language1 and self.lang1_combo.findText(language1) >= 0:
                 self.lang1_combo.setCurrentText(language1)
             else:
-                self.lang1_combo.setCurrentText("Detect language")
+                self.lang1_combo.setCurrentText(tr("Detect language"))
             if len(prefill.split()) >= 100:
-                self._info("The text was truncated to the first 100 words.")
+                self._info(tr("The text was truncated to the first 100 words."))
         if auto_translate and prefill:
             self.do_translate()
 
@@ -155,7 +156,7 @@ class AddWordDialog(FramelessDialog):
     def _speak(self, word, language):
         if not word.strip():
             return
-        if language == "Detect language":
+        if language == tr("Detect language"):
             language = "English"
         run_in_thread(speak_word, word, language, on_error=self._info)
 
@@ -165,24 +166,24 @@ class AddWordDialog(FramelessDialog):
         l2 = self.lang2_combo.currentText()
         self.word1_edit.setText(w2)
         self.word2_edit.setText(w1)
-        if l1 != "Detect language":
+        if l1 != tr("Detect language"):
             self.lang1_combo.setCurrentText(l2)
             self.lang2_combo.setCurrentText(l1)
 
     def do_translate(self):
         word = self.word1_edit.text().strip()
         if not word:
-            self._info("Enter a word to translate.")
+            self._info(tr("Enter a word to translate."))
             return
         source = self.lang1_combo.currentText()
         target = self.lang2_combo.currentText()
         self.translate_btn.setEnabled(False)
-        self._info("Translating…")
+        self._info(tr("Translating…"))
 
         def work():
             translation, detected = translate(word, target, source)
             # Same-language guard: switch target like the original app
-            effective_source = detected or (None if source == "Detect language" else source)
+            effective_source = detected or (None if source == tr("Detect language") else source)
             if effective_source == target:
                 new_target = 'German' if effective_source == 'English' else 'English'
                 translation, _ = translate(word, new_target, effective_source)
@@ -192,11 +193,11 @@ class AddWordDialog(FramelessDialog):
         def done(result):
             translation, detected_source, target_used = result
             self.word2_edit.setText(translation)
-            if detected_source and self.lang1_combo.currentText() == "Detect language":
+            if detected_source and self.lang1_combo.currentText() == tr("Detect language"):
                 self.lang1_combo.setCurrentText(detected_source)
             if target_used != self.lang2_combo.currentText():
                 self.lang2_combo.setCurrentText(target_used)
-                self._info(f"Source equals target — translated to {target_used} instead.")
+                self._info(tr("Source equals target — translated to {lang} instead.").format(lang=target_used))
             else:
                 self._info("")
 
@@ -210,10 +211,10 @@ class AddWordDialog(FramelessDialog):
         lang2 = self.lang2_combo.currentText()
 
         if not word1 or not word2:
-            self._info("Both word and translation are required.")
+            self._info(tr("Both word and translation are required."))
             return
-        if lang1 == "Detect language":
-            self._info("Please select the source language before saving.")
+        if lang1 == tr("Detect language"):
+            self._info(tr("Please select the source language before saving."))
             return
 
         try:
@@ -223,11 +224,11 @@ class AddWordDialog(FramelessDialog):
                 'Status': 'New', 'Source': 'manual',
             })
             if not result:
-                self._info(f"'{word1} – {word2}' already exists in your dictionary.")
+                self._info(tr("'{word}' already exists in your dictionary.").format(word=f"{word1} – {word2}"))
                 return
             backup_database()
             self.word_saved.emit()
             self.accept()
         except Exception as exc:
             logging.error(f"Error saving new word: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to save word:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to save word:\n{error}").format(error=exc))

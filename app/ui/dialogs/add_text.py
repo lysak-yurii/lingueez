@@ -39,6 +39,7 @@ from app.config import load_settings, save_settings
 from app.core import ai, text_sources
 from app.core.audio import lang_codes
 from app.core.backup_management import backup_database
+from app.i18n import tr
 from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.dialogs.base import FramelessDialog, ask_text
@@ -46,30 +47,30 @@ from app.ui.toast import show_toast
 from app.ui.workers import run_in_thread
 
 CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"]
-TOPIC_CHIPS = ["Travel", "Food", "Daily routine", "A short story",
-               "News", "Dialogue at a café"]
-LENGTHS = [("Short (~100 words)", 100),
-           ("Medium (~250 words)", 250),
-           ("Long (~500 words)", 500)]
+TOPIC_CHIPS = [tr("Travel"), tr("Food"), tr("Daily routine"), tr("A short story"),
+               tr("News"), tr("Dialogue at a café")]
 
 TAB_WRITE, TAB_AI, TAB_WIKI, TAB_URL, TAB_RSS = range(5)
 
-TAB_HINTS = {
-    TAB_WRITE: ("Type or paste a text into the editor below, give it a "
-                "title, set the language — then save."),
-    TAB_AI: ("Generates a text with AI using the Language, Level and Topic "
-             "fields below. Pick a topic chip or type your own."),
-    TAB_WIKI: ("Searches Wikipedia in the selected language. Click a result "
-               "to load the article; use “Adapt to my level” to simplify it."),
-    TAB_URL: ("Extracts the readable article text from any web page. Pages "
-              "behind logins or built purely with JavaScript may not work."),
-    TAB_RSS: ("News feeds for the selected language. Load a feed, then "
-              "double-click an entry to fetch its full text. Add your own "
-              "feeds with “Add feed…”."),
-}
 
-PREVIEW_PLACEHOLDER = ("Type or paste your text here, "
-                       "or fetch one with the tabs above…")
+def _lengths():
+    return [(tr("Short (~100 words)"), 100),
+            (tr("Medium (~250 words)"), 250),
+            (tr("Long (~500 words)"), 500)]
+
+
+def _tab_hints():
+    return {
+        TAB_WRITE: tr("Type or paste a text into the editor below, give it a title, set the language — then save."),
+        TAB_AI: tr("Generates a text with AI using the Language, Level and Topic fields below. Pick a topic chip or type your own."),
+        TAB_WIKI: tr('Searches Wikipedia in the selected language. Click a result to load the article; use "Adapt to my level" to simplify it.'),
+        TAB_URL: tr("Extracts the readable article text from any web page. Pages behind logins or built purely with JavaScript may not work."),
+        TAB_RSS: tr('News feeds for the selected language. Load a feed, then double-click an entry to fetch its full text. Add your own feeds with "Add feed…".'),
+    }
+
+
+def _preview_placeholder():
+    return tr("Type or paste your text here, or fetch one with the tabs above…")
 LIST_MIN_HEIGHT = 180
 
 
@@ -79,18 +80,18 @@ class AddTextDialog(FramelessDialog):
     text_saved = Signal(int)  # ID of the newly inserted text
 
     def __init__(self, parent, db_adapter, initial_tab=TAB_WRITE):
-        super().__init__(parent, "Add Text")
+        super().__init__(parent, tr("Add Text"))
         self.db_adapter = db_adapter
         self.setMinimumSize(680, 560)
 
         settings = load_settings()
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._build_write_tab(), "Write")
-        self.tabs.addTab(self._build_ai_tab(), "AI Generate")
-        self.tabs.addTab(self._build_wiki_tab(), "Wikipedia")
-        self.tabs.addTab(self._build_url_tab(), "From URL")
-        self.tabs.addTab(self._build_rss_tab(), "RSS")
+        self.tabs.addTab(self._build_write_tab(), tr("Write"))
+        self.tabs.addTab(self._build_ai_tab(), tr("AI Generate"))
+        self.tabs.addTab(self._build_wiki_tab(), tr("Wikipedia"))
+        self.tabs.addTab(self._build_url_tab(), tr("From URL"))
+        self.tabs.addTab(self._build_rss_tab(), tr("RSS"))
         self.tabs.currentChanged.connect(self._tab_changed)
 
         self.help_btn = QPushButton(objectName="iconButton")
@@ -112,25 +113,25 @@ class AddTextDialog(FramelessDialog):
         self.language_combo.setCurrentText(
             settings.get("addtext_language") or "English")
         self.language_combo.currentTextChanged.connect(self._language_changed)
-        meta.addWidget(QLabel("Language:"))
+        meta.addWidget(QLabel(tr("Language:")))
         meta.addWidget(self.language_combo, 1)
         self.level_combo = QComboBox()
         self.level_combo.addItems([""] + CEFR_LEVELS)
         self.level_combo.setCurrentText(settings.get("addtext_level") or "")
-        meta.addWidget(QLabel("Level:"))
+        meta.addWidget(QLabel(tr("Level:")))
         meta.addWidget(self.level_combo)
         self.topic_edit = QLineEdit()
-        self.topic_edit.setPlaceholderText("Topic…")
-        meta.addWidget(QLabel("Topic:"))
+        self.topic_edit.setPlaceholderText(tr("Topic…"))
+        meta.addWidget(QLabel(tr("Topic:")))
         meta.addWidget(self.topic_edit, 1)
         self.content_layout.addLayout(meta)
 
         self.title_edit = QLineEdit()
-        self.title_edit.setPlaceholderText("Title…")
+        self.title_edit.setPlaceholderText(tr("Title…"))
         self.content_layout.addWidget(self.title_edit)
 
         self.preview = QTextEdit()
-        self.preview.setPlaceholderText(PREVIEW_PLACEHOLDER)
+        self.preview.setPlaceholderText(_preview_placeholder())
         self.preview.textChanged.connect(self._preview_changed)
         self.content_layout.addWidget(self.preview, 1)
 
@@ -146,21 +147,21 @@ class AddTextDialog(FramelessDialog):
         self.content_layout.addWidget(self.status_label)
 
         buttons = QHBoxLayout()
-        self.adapt_btn = QPushButton("Adapt to my level")
+        self.adapt_btn = QPushButton(tr("Adapt to my level"))
         self.adapt_btn.setIcon(icons.icon("sparkles",
                                           self.colors["text"], 16))
         self.adapt_btn.setToolTip(
-            "Rewrite the text below for the selected CEFR level "
-            f"with {ai.provider_label()}")
+            tr("Rewrite the text below for the selected CEFR level with {ai}").format(
+                ai=ai.provider_label()))
         self.adapt_btn.clicked.connect(self._adapt)
         self.adapt_btn.setEnabled(False)
         buttons.addWidget(self.adapt_btn)
         buttons.addStretch(1)
-        self.save_btn = QPushButton("Save to Texts", objectName="primaryButton")
+        self.save_btn = QPushButton(tr("Save to Texts"), objectName="primaryButton")
         self.save_btn.clicked.connect(self._save)
         self.save_btn.setEnabled(False)
         buttons.addWidget(self.save_btn)
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.close)
         buttons.addWidget(close_btn)
         self.content_layout.addLayout(buttons)
@@ -189,7 +190,7 @@ class AddTextDialog(FramelessDialog):
 
         chips = QHBoxLayout()
         chips.setSpacing(6)
-        chips.addWidget(QLabel("Ideas:", objectName="dimLabel"))
+        chips.addWidget(QLabel(tr("Ideas:"), objectName="dimLabel"))
         for chip in TOPIC_CHIPS:
             btn = QPushButton(chip)
             btn.setCursor(Qt.PointingHandCursor)
@@ -201,14 +202,15 @@ class AddTextDialog(FramelessDialog):
         row = QHBoxLayout()
         row.setSpacing(8)
         self.length_combo = QComboBox()
-        for label, _words in LENGTHS:
+        for label, _words in _lengths():
             self.length_combo.addItem(label)
         self.length_combo.setCurrentIndex(1)
-        row.addWidget(QLabel("Length:"))
+        row.addWidget(QLabel(tr("Length:")))
         row.addWidget(self.length_combo)
         row.addStretch(1)
         self.generate_btn = QPushButton(
-            f"Generate with {ai.provider_label()}", objectName="primaryButton")
+            tr("Generate with {ai}").format(ai=ai.provider_label()),
+            objectName="primaryButton")
         self.generate_btn.setIcon(icons.icon("sparkles",
                                              self.colors["accent_text"], 16))
         self.generate_btn.clicked.connect(self._generate)
@@ -222,10 +224,10 @@ class AddTextDialog(FramelessDialog):
         row.setSpacing(8)
         self.wiki_query = QLineEdit()
         self.wiki_query.setPlaceholderText(
-            "Search Wikipedia (in the selected language)…")
+            tr("Search Wikipedia (in the selected language)…"))
         self.wiki_query.returnPressed.connect(self._wiki_search)
         row.addWidget(self.wiki_query, 1)
-        self.wiki_search_btn = QPushButton("Search")
+        self.wiki_search_btn = QPushButton(tr("Search"))
         self.wiki_search_btn.clicked.connect(self._wiki_search)
         row.addWidget(self.wiki_search_btn)
         layout.addLayout(row)
@@ -251,7 +253,7 @@ class AddTextDialog(FramelessDialog):
         self.url_edit.setPlaceholderText("https://example.com/article…")
         self.url_edit.returnPressed.connect(self._fetch_url)
         row.addWidget(self.url_edit, 1)
-        self.url_fetch_btn = QPushButton("Fetch")
+        self.url_fetch_btn = QPushButton(tr("Fetch"))
         self.url_fetch_btn.clicked.connect(self._fetch_url)
         row.addWidget(self.url_fetch_btn)
         layout.addLayout(row)
@@ -264,13 +266,13 @@ class AddTextDialog(FramelessDialog):
         self.feed_combo = QComboBox()
         self.feed_combo.currentIndexChanged.connect(self._update_remove_btn)
         row.addWidget(self.feed_combo, 1)
-        self.feed_refresh_btn = QPushButton("Load entries")
+        self.feed_refresh_btn = QPushButton(tr("Load entries"))
         self.feed_refresh_btn.clicked.connect(self._load_feed)
         row.addWidget(self.feed_refresh_btn)
-        add_btn = QPushButton("Add feed…")
+        add_btn = QPushButton(tr("Add feed…"))
         add_btn.clicked.connect(self._add_feed)
         row.addWidget(add_btn)
-        self.feed_remove_btn = QPushButton("Remove")
+        self.feed_remove_btn = QPushButton(tr("Remove"))
         self.feed_remove_btn.clicked.connect(self._remove_feed)
         row.addWidget(self.feed_remove_btn)
         layout.addLayout(row)
@@ -278,7 +280,7 @@ class AddTextDialog(FramelessDialog):
         self.feed_entries.setMinimumHeight(LIST_MIN_HEIGHT)
         self.feed_entries.setVisible(False)  # shown once entries are loaded
         self.feed_entries.setToolTip(
-            "Double-click an entry to load its full text.")
+            tr("Double-click an entry to load its full text."))
         self.feed_entries.itemActivated.connect(self._load_entry)
         layout.addWidget(self.feed_entries, 1)
         self.feed_toggle = QPushButton()
@@ -292,12 +294,12 @@ class AddTextDialog(FramelessDialog):
     # ------------------------------------------------------------ plumbing
 
     def _tab_changed(self, index):
-        self.help_btn.setToolTip(TAB_HINTS.get(index, ""))
+        self.help_btn.setToolTip(_tab_hints().get(index, ""))
         self._fit_tab_height(index)
 
     def _show_help(self):
         QToolTip.showText(QCursor.pos(),
-                          TAB_HINTS.get(self.tabs.currentIndex(), ""),
+                          _tab_hints().get(self.tabs.currentIndex(), ""),
                           self.help_btn)
 
     def _set_status(self, text):
@@ -338,7 +340,7 @@ class AddTextDialog(FramelessDialog):
         re-expand a collapsed result list.
         """
         button.setEnabled(False)
-        self._set_status("Working…")
+        self._set_status(tr("Working…"))
         if loading:
             self._start_loading(loading)
 
@@ -376,7 +378,7 @@ class AddTextDialog(FramelessDialog):
 
     def _stop_loading(self):
         self._loading_timer.stop()
-        self.preview.setPlaceholderText(PREVIEW_PLACEHOLDER)
+        self.preview.setPlaceholderText(_preview_placeholder())
 
     def _set_text(self, title, text):
         if title:
@@ -394,7 +396,7 @@ class AddTextDialog(FramelessDialog):
         if not count or not list_widget.isVisible():
             return
         fade_swap(self)
-        toggle.setText(f"Show the {count} result(s) again")
+        toggle.setText(tr("Show the {count} result(s) again").format(count=count))
         toggle.setVisible(True)
         list_widget.setVisible(False)
         self._fit_tab_height(self.tabs.currentIndex())
@@ -423,8 +425,8 @@ class AddTextDialog(FramelessDialog):
         if ai.has_api_key():
             return True
         self._set_status(
-            f"{ai.provider_label()} API key is not set. "
-            f"Configure it in Settings → APIs → AI.")
+            tr("{ai} API key is not set. Configure it in Settings → APIs → AI.").format(
+                ai=ai.provider_label()))
         return False
 
     def _generate(self):
@@ -433,12 +435,12 @@ class AddTextDialog(FramelessDialog):
         language = self.language_combo.currentText().strip() or "English"
         level = self.level_combo.currentText().strip() or "B1"
         topic = self.topic_edit.text().strip() or "anything interesting"
-        length = LENGTHS[self.length_combo.currentIndex()][1]
+        length = _lengths()[self.length_combo.currentIndex()][1]
         self._run_async(self.generate_btn,
                         lambda: ai.generate_topic_text(language, level,
                                                        topic, length),
                         lambda result: self._set_text(*result),
-                        loading=f"Generating with {ai.provider_label()}…")
+                        loading=tr("Generating with {ai}…").format(ai=ai.provider_label()))
 
     def _adapt(self):
         if not self._require_api_key():
@@ -490,7 +492,7 @@ class AddTextDialog(FramelessDialog):
                         lambda: text_sources.wikipedia_fetch(result["title"],
                                                              language),
                         lambda r: self._set_text(*r),
-                        loading=f"Fetching “{result['title']}”…",
+                        loading=tr('Fetching "{title}"…').format(title=result['title']),
                         on_fail=lambda: self._expand_list(self.wiki_results,
                                                           self.wiki_toggle))
 
@@ -510,7 +512,7 @@ class AddTextDialog(FramelessDialog):
         language = self.language_combo.currentText().strip()
         self.feed_combo.clear()
         for feed in text_sources.feeds_for_language(language):
-            suffix = "  (yours)" if feed.get("user") else ""
+            suffix = "  " + tr("(yours)") if feed.get("user") else ""
             self.feed_combo.addItem(feed["name"] + suffix, feed)
         self.feed_refresh_btn.setEnabled(self.feed_combo.count() > 0)
         self._update_remove_btn()
@@ -546,15 +548,15 @@ class AddTextDialog(FramelessDialog):
         self._run_async(self.feed_refresh_btn,
                         lambda: text_sources.fetch_feed_entry(entry),
                         lambda result: self._set_text(*result),
-                        loading="Fetching the full text…",
+                        loading=tr("Fetching the full text…"),
                         on_fail=lambda: self._expand_list(self.feed_entries,
                                                           self.feed_toggle))
 
     def _add_feed(self):
-        name, ok = ask_text(self, "Add feed", "Feed name:")
+        name, ok = ask_text(self, tr("Add feed"), tr("Feed name:"))
         if not ok or not name.strip():
             return
-        url, ok = ask_text(self, "Add feed", "Feed URL:")
+        url, ok = ask_text(self, tr("Add feed"), tr("Feed URL:"))
         if not ok or not url.strip():
             return
         feeds = text_sources.user_feeds()
@@ -594,12 +596,12 @@ class AddTextDialog(FramelessDialog):
                 'Category': topic,
             })
             if not result:
-                self._set_status("Failed to save the text.")
+                self._set_status(tr("Failed to save the text."))
                 return
             backup_database()
         except Exception as exc:
             logging.error(f"Failed to save text: {exc}")
-            self._set_status(f"Failed to save the text: {exc}")
+            self._set_status(tr("Failed to save the text: {error}").format(error=exc))
             return
 
         settings = load_settings()
@@ -608,7 +610,9 @@ class AddTextDialog(FramelessDialog):
         save_settings(settings)
 
         self.text_saved.emit(int(result['ID']))
-        show_toast(self, "Texts", f"'{title or '(untitled)'}' saved.", "success")
+        show_toast(self, tr("Texts"),
+                   tr("'{title}' saved.").format(title=title or tr("(untitled)")),
+                   "success")
         self.title_edit.clear()
         self.preview.clear()
         self._set_status("")  # the toast is confirmation enough

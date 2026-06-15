@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import ai
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
@@ -56,7 +57,7 @@ class DefinitionDialog(FramelessDialog):
     definition_changed = Signal()
 
     def __init__(self, parent, record, db_adapter):
-        super().__init__(parent, title=f"Definition — {record.get('Word1', '')}")
+        super().__init__(parent, title=tr("Definition — {word}").format(word=record.get('Word1', '')))
         self.record = record
         self.db_adapter = db_adapter
         self.word_id = int(record["ID"])
@@ -85,31 +86,31 @@ class DefinitionDialog(FramelessDialog):
         layout.addWidget(self.text, 1)
 
         buttons = QHBoxLayout()
-        self.switch_btn = QPushButton("Show translation's definition")
+        self.switch_btn = QPushButton(tr("Show translation's definition"))
         self.switch_btn.clicked.connect(self.switch_definition)
         buttons.addWidget(self.switch_btn)
 
-        self.generate_btn = QPushButton(f"Generate with {self.ai_label}")
+        self.generate_btn = QPushButton(tr("Generate with {ai}").format(ai=self.ai_label))
         self.generate_btn.clicked.connect(self.generate_definition)
         buttons.addWidget(self.generate_btn)
 
         buttons.addStretch(1)
 
-        self.edit_btn = QPushButton("Edit")
+        self.edit_btn = QPushButton(tr("Edit"))
         self.edit_btn.clicked.connect(self.toggle_edit)
         buttons.addWidget(self.edit_btn)
 
-        self.save_btn = QPushButton("Save", objectName="primaryButton")
+        self.save_btn = QPushButton(tr("Save"), objectName="primaryButton")
         self.save_btn.clicked.connect(self.save_definition)
         self.save_btn.hide()
         buttons.addWidget(self.save_btn)
 
-        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn = QPushButton(tr("Cancel"))
         self.cancel_btn.clicked.connect(self.cancel_edit)
         self.cancel_btn.hide()
         buttons.addWidget(self.cancel_btn)
 
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.close)
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
@@ -140,16 +141,19 @@ class DefinitionDialog(FramelessDialog):
         word_label = self._displayed_word()
         lang = self.word.get('Language1' if self.current_field == 'Word1' else 'Language2') or ""
         self.header_label.setText(str(word_label))
-        self.sub_label.setText(f"{lang} · {'Definition' if self.current_field == 'Word1' else 'Definition 2'}")
+        def_label = tr("Definition") if self.current_field == 'Word1' else tr("Definition 2")
+        self.sub_label.setText(f"{lang} · {def_label}")
         if definition:
             self.text.setHtml(markup_to_html(str(definition)))
-            self.generate_btn.setText(f"Regenerate with {self.ai_label}")
+            self.generate_btn.setText(tr("Regenerate with {ai}").format(ai=self.ai_label))
         else:
-            self.text.setHtml(f"<i>No definition stored yet. "
-                              f"Use “Generate with {self.ai_label}” or “Edit” to add one.</i>")
-            self.generate_btn.setText(f"Generate with {self.ai_label}")
-        other = "word's" if self.current_field == 'Word2' else "translation's"
-        self.switch_btn.setText(f"Show {other} definition")
+            self.text.setHtml(
+                f"<i>{tr('No definition stored yet. Use \"Generate with {ai}\" or \"Edit\" to add one.').format(ai=self.ai_label)}</i>")
+            self.generate_btn.setText(tr("Generate with {ai}").format(ai=self.ai_label))
+        if self.current_field == 'Word2':
+            self.switch_btn.setText(tr("Show word's definition"))
+        else:
+            self.switch_btn.setText(tr("Show translation's definition"))
 
     def switch_definition(self):
         if self.editing:
@@ -187,7 +191,7 @@ class DefinitionDialog(FramelessDialog):
             self.definition_changed.emit()
         except Exception as exc:
             logging.error(f"Error saving definition: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to save definition:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to save definition:\n{error}").format(error=exc))
             return
         self.cancel_edit()
         self.reload_word()
@@ -197,12 +201,11 @@ class DefinitionDialog(FramelessDialog):
     def generate_definition(self):
         word = self._displayed_word()
         if not str(word).strip():
-            QMessageBox.warning(self, "No word", "There is no word to define.")
+            QMessageBox.warning(self, tr("No word"), tr("There is no word to define."))
             return
         if not ai.has_api_key():
-            QMessageBox.warning(self, "API key missing",
-                                f"Set your {self.ai_label} API key in "
-                                f"Settings → APIs → AI first.")
+            QMessageBox.warning(self, tr("API key missing"),
+                                tr("Set your {ai} API key in Settings → APIs → AI first.").format(ai=self.ai_label))
             return
         lang1 = self.word.get('Language1') or "English"
         lang2 = self.word.get('Language2') or "English"
@@ -210,7 +213,7 @@ class DefinitionDialog(FramelessDialog):
             lang1, lang2 = lang2, lang1
 
         self.generate_btn.setEnabled(False)
-        self.text.setHtml("<i>Generating definition…</i>")
+        self.text.setHtml(f"<i>{tr('Generating definition…')}</i>")
 
         field = self.current_field
 

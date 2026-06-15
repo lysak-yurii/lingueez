@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import stats as stats_mod
+from app.i18n import tr
 from app.ui import charts
 from app.ui import theme
 
@@ -71,7 +72,7 @@ class _ProgressRow(QWidget):
         f = QFont(); f.setPointSizeF(10.5); f.setWeight(QFont.DemiBold)
         p.setFont(f)
         p.drawText(QRectF(rect.left(), rect.top(), rect.width(), 20),
-                   Qt.AlignVCenter | Qt.AlignLeft, "Definitions written")
+                   Qt.AlignVCenter | Qt.AlignLeft, tr("Definitions written"))
         p.setPen(dim)
         p.setFont(charts._label_font(10))
         p.drawText(QRectF(rect.left(), rect.top(), rect.width(), 20),
@@ -97,7 +98,7 @@ class _ProgressRow(QWidget):
 class StatsPage(QWidget):
     """Scrollable statistics dashboard added as a third page in the stack."""
 
-    GRANULARITY = {"Day": ("day", 120), "Week": ("week", 52), "Month": ("month", 0)}
+    GRANULARITY = {tr("Day"): ("day", 120), tr("Week"): ("week", 52), tr("Month"): ("month", 0)}
 
     def __init__(self, db_adapter, colors, parent=None):
         super().__init__(parent)
@@ -126,15 +127,15 @@ class StatsPage(QWidget):
         scroll.setWidget(content)
 
         # ---- Overview: KPI cards -------------------------------------
-        root.addWidget(self._section("Overview"))
+        root.addWidget(self._section(tr("Overview")))
         kpi_host = QWidget()
         flow = charts.FlowLayout(kpi_host, h_spacing=14, v_spacing=14)
-        self.kpi_total = charts.KpiCard("Total words", "accent")
-        self.kpi_mastered = charts.KpiCard("Mastered", "success")
-        self.kpi_progress = charts.KpiCard("In progress", "accent_text")
-        self.kpi_languages = charts.KpiCard("Languages", "warning")
-        self.kpi_streak = charts.KpiCard("Current streak", "danger")
-        self.kpi_week = charts.KpiCard("Added this week", "accent")
+        self.kpi_total = charts.KpiCard(tr("Total words"), "accent")
+        self.kpi_mastered = charts.KpiCard(tr("Mastered"), "success")
+        self.kpi_progress = charts.KpiCard(tr("In progress"), "accent_text")
+        self.kpi_languages = charts.KpiCard(tr("Languages"), "warning")
+        self.kpi_streak = charts.KpiCard(tr("Current streak"), "danger")
+        self.kpi_week = charts.KpiCard(tr("Added this week"), "accent")
         self._kpis = [self.kpi_total, self.kpi_mastered, self.kpi_progress,
                       self.kpi_languages, self.kpi_streak, self.kpi_week]
         for k in self._kpis:
@@ -143,8 +144,8 @@ class StatsPage(QWidget):
 
         # ---- Learning status: donut ----------------------------------
         root.addSpacing(6)
-        root.addWidget(self._section("Learning status"))
-        donut_card = charts.Card("Status distribution")
+        root.addWidget(self._section(tr("Learning status")))
+        donut_card = charts.Card(tr("Status distribution"))
         self.donut = charts.DonutChart()
         donut_card.add(self.donut, 1)
         root.addWidget(donut_card)
@@ -152,13 +153,14 @@ class StatsPage(QWidget):
 
         # ---- Activity: area + heatmap --------------------------------
         root.addSpacing(6)
-        root.addWidget(self._section("Activity"))
+        root.addWidget(self._section(tr("Activity")))
 
         area_card = charts.Card()
         header = QHBoxLayout()
         header.setContentsMargins(0, 0, 0, 0)
-        title = QLabel("Words added over time", objectName="CardTitle")
-        self.granularity = charts.SegmentedControl(["Day", "Week", "Month"], "Week")
+        title = QLabel(tr("Words added over time"), objectName="CardTitle")
+        self.granularity = charts.SegmentedControl(
+            [tr("Day"), tr("Week"), tr("Month")], tr("Week"))
         self.granularity.changed.connect(self._on_granularity)
         header.addWidget(title)
         header.addStretch(1)
@@ -169,7 +171,7 @@ class StatsPage(QWidget):
         root.addWidget(area_card)
         self._charts.append(self.area)
 
-        heat_card = charts.Card("Activity calendar")
+        heat_card = charts.Card(tr("Activity calendar"))
         self.heatmap = charts.ActivityHeatmap()
         heat_wrap = QHBoxLayout()
         heat_wrap.setContentsMargins(0, 0, 0, 0)
@@ -181,12 +183,12 @@ class StatsPage(QWidget):
 
         # ---- Review activity: KPIs + reviews over time + most reviewed ----
         root.addSpacing(6)
-        root.addWidget(self._section("Review activity"))
+        root.addWidget(self._section(tr("Review activity")))
         rev_kpi_host = QWidget()
         rev_flow = charts.FlowLayout(rev_kpi_host, h_spacing=14, v_spacing=14)
-        self.kpi_rev_week = charts.KpiCard("Reviewed this week", "success")
-        self.kpi_rev_total = charts.KpiCard("Total reviews", "accent")
-        self.kpi_rev_streak = charts.KpiCard("Review streak", "danger")
+        self.kpi_rev_week = charts.KpiCard(tr("Reviewed this week"), "success")
+        self.kpi_rev_total = charts.KpiCard(tr("Total reviews"), "accent")
+        self.kpi_rev_streak = charts.KpiCard(tr("Review streak"), "danger")
         for k in (self.kpi_rev_week, self.kpi_rev_total, self.kpi_rev_streak):
             rev_flow.addWidget(k)
             self._kpis.append(k)
@@ -195,8 +197,9 @@ class StatsPage(QWidget):
         rev_area_card = charts.Card()
         rev_header = QHBoxLayout()
         rev_header.setContentsMargins(0, 0, 0, 0)
-        rev_title = QLabel("Reviews over time", objectName="CardTitle")
-        self.rev_granularity = charts.SegmentedControl(["Day", "Week", "Month"], "Week")
+        rev_title = QLabel(tr("Reviews over time"), objectName="CardTitle")
+        self.rev_granularity = charts.SegmentedControl(
+            [tr("Day"), tr("Week"), tr("Month")], tr("Week"))
         self.rev_granularity.changed.connect(self._on_review_granularity)
         rev_header.addWidget(rev_title)
         rev_header.addStretch(1)
@@ -207,7 +210,7 @@ class StatsPage(QWidget):
         root.addWidget(rev_area_card)
         self._charts.append(self.rev_area)
 
-        rev_heat_card = charts.Card("Review calendar")
+        rev_heat_card = charts.Card(tr("Review calendar"))
         self.rev_heatmap = charts.ActivityHeatmap()
         rev_heat_wrap = QHBoxLayout()
         rev_heat_wrap.setContentsMargins(0, 0, 0, 0)
@@ -217,7 +220,7 @@ class StatsPage(QWidget):
         root.addWidget(rev_heat_card)
         self._charts.append(self.rev_heatmap)
 
-        rev_bars_card = charts.Card("Most reviewed words")
+        rev_bars_card = charts.Card(tr("Most reviewed words"))
         self.rev_bars = charts.BarListChart("accent_text")
         rev_bars_card.add(self.rev_bars, 1)
         root.addWidget(rev_bars_card)
@@ -225,13 +228,13 @@ class StatsPage(QWidget):
 
         # ---- Breakdown: language pairs + tags + definitions ----------
         root.addSpacing(6)
-        root.addWidget(self._section("Breakdown"))
+        root.addWidget(self._section(tr("Breakdown")))
         cols = QHBoxLayout()
         cols.setSpacing(14)
-        lang_card = charts.Card("Top language pairs")
+        lang_card = charts.Card(tr("Top language pairs"))
         self.lang_bars = charts.BarListChart("accent")
         lang_card.add(self.lang_bars, 1)
-        tag_card = charts.Card("Top tags")
+        tag_card = charts.Card(tr("Top tags"))
         self.tag_bars = charts.BarListChart("accent_text")
         tag_card.add(self.tag_bars, 1)
         cols.addWidget(lang_card, 1)
@@ -268,19 +271,23 @@ class StatsPage(QWidget):
         total = s.total_words
         self.kpi_total.set_value(total)
         self.kpi_mastered.set_value(
-            s.mastered, sub=f"{s.mastered_pct:.0f}% of all words" if total else "—")
-        self.kpi_progress.set_value(s.in_progress, sub="actively learning")
+            s.mastered,
+            sub=tr("{pct}% of all words").format(pct=f"{s.mastered_pct:.0f}") if total else "—")
+        self.kpi_progress.set_value(s.in_progress, sub=tr("actively learning"))
         self.kpi_languages.set_value(
             s.language_count,
-            sub=f"{len(s.top_language_pairs)} pairs" if s.top_language_pairs else "—")
+            sub=tr("{n} pairs").format(n=len(s.top_language_pairs))
+            if s.top_language_pairs else "—")
         self.kpi_streak.set_value(
             s.current_streak, suffix="d",
-            sub=f"best {s.longest_streak}d" if s.longest_streak else "—")
-        self.kpi_week.set_value(s.added_this_week, sub=f"{s.added_today} today")
+            sub=tr("best {n}d").format(n=s.longest_streak) if s.longest_streak else "—")
+        self.kpi_week.set_value(
+            s.added_this_week, sub=tr("{n} today").format(n=s.added_today))
 
         donut_items = []
         for i, (label, count) in enumerate(s.status_counts.items()):
-            donut_items.append((label, count, charts.status_color_key(label, i)))
+            # display the localized status; keep color keyed on the English value
+            donut_items.append((tr(label), count, charts.status_color_key(label, i)))
         self.donut.set_data(donut_items)
 
         self._refresh_area()
@@ -290,11 +297,12 @@ class StatsPage(QWidget):
         self.defs.set_values(s.definitions_filled, s.definitions_total)
 
         # review activity
-        self.kpi_rev_week.set_value(s.reviews_this_week, sub=f"{s.reviews_today} today")
-        self.kpi_rev_total.set_value(s.reviews_total, sub="listens logged")
+        self.kpi_rev_week.set_value(
+            s.reviews_this_week, sub=tr("{n} today").format(n=s.reviews_today))
+        self.kpi_rev_total.set_value(s.reviews_total, sub=tr("listens logged"))
         self.kpi_rev_streak.set_value(
             s.review_streak, suffix="d",
-            sub="keep it going" if s.review_streak else "—")
+            sub=tr("keep it going") if s.review_streak else "—")
         self._refresh_review_area()
         self.rev_heatmap.set_data(stats_mod.heatmap_weeks(s.reviews_daily, weeks=27))
         self.rev_bars.set_data(s.most_reviewed)

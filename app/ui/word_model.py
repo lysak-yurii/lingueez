@@ -30,9 +30,11 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QBrush, QColor
 
 from app.core import db as dbq
+from app.i18n import tr
 
 COLUMNS = ["ID", "RowNumber", "Status", "Language1", "Word1", "Language2", "Word2", "Source", "created_at"]
-HEADERS = ["ID", "№", "Status", "Language", "Word", "Translation", "Word", "Source", "Created at"]
+HEADERS = ["ID", "№", tr("Status"), tr("Language"), tr("Word"),
+           tr("Translation"), tr("Word"), tr("Source"), tr("Created at")]
 
 COL_ID = 0
 COL_ROWNUM = 1
