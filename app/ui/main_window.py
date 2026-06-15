@@ -40,7 +40,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
 from app.core import db as dbq
-from app.i18n import tr
+from app.i18n import fill_lang_combo, tr
 from app.core import progression
 from app.core import exporters
 from app.core import translator
@@ -1128,19 +1128,31 @@ class MainWindow(QMainWindow):
         statuses = sorted({s for s in set(self.df['Status']) if isinstance(s, str) and s}
                           | set(PREDEFINED_STATUSES))
 
-        for combo, default, values in [
-            (self.lang1_combo, tr("Language"), languages),
-            (self.lang2_combo, tr("Translation"), languages),
-            (self.tag_combo, tr("All tags"), dbq.get_all_tags()),
+        # Language filter combos: the queried value stays English (item
+        # userData); only the displayed label is localized.
+        for combo, default in [
+            (self.lang1_combo, tr("Language")),
+            (self.lang2_combo, tr("Translation")),
         ]:
-            current = combo.currentText()
+            current = combo.currentData()
             combo.blockSignals(True)
             combo.clear()
-            combo.addItem(default)
-            combo.addItems(values)
-            if current and combo.findText(current) >= 0:
-                combo.setCurrentText(current)
+            combo.addItem(default)  # placeholder, userData = None
+            fill_lang_combo(combo, languages)
+            if current:
+                i = combo.findData(current)
+                if i >= 0:
+                    combo.setCurrentIndex(i)
             combo.blockSignals(False)
+
+        current = self.tag_combo.currentText()
+        self.tag_combo.blockSignals(True)
+        self.tag_combo.clear()
+        self.tag_combo.addItem(tr("All tags"))
+        self.tag_combo.addItems(dbq.get_all_tags())
+        if current and self.tag_combo.findText(current) >= 0:
+            self.tag_combo.setCurrentText(current)
+        self.tag_combo.blockSignals(False)
 
         # Status combo: the stored/queried value stays English (kept as item
         # userData); only the displayed label is localized.
@@ -1187,8 +1199,8 @@ class MainWindow(QMainWindow):
         if self.df is None:
             return
         wf = self.word_filter
-        wf.lang1 = self.lang1_combo.currentText() if self.lang1_combo.currentIndex() != 0 else None
-        wf.lang2 = self.lang2_combo.currentText() if self.lang2_combo.currentIndex() != 0 else None
+        wf.lang1 = self.lang1_combo.currentData() if self.lang1_combo.currentIndex() != 0 else None
+        wf.lang2 = self.lang2_combo.currentData() if self.lang2_combo.currentIndex() != 0 else None
         wf.status = self.status_combo.currentData() if self.status_combo.currentIndex() != 0 else None
         wf.selected_tag = self.tag_combo.currentText() if self.tag_combo.currentIndex() != 0 else None
         wf.favorites_only = self.favorites_btn.isChecked()
@@ -1286,7 +1298,7 @@ class MainWindow(QMainWindow):
             return
         from app.ui.dialogs.edit_word import EditWordDialog
         record = records[0]
-        languages = [self.lang1_combo.itemText(i) for i in range(1, self.lang1_combo.count())]
+        languages = [self.lang1_combo.itemData(i) for i in range(1, self.lang1_combo.count())]
         statuses = [self.status_combo.itemData(i) for i in range(1, self.status_combo.count())]
         dialog = EditWordDialog(self, record, languages, statuses)
         if dialog.exec():
@@ -1680,7 +1692,7 @@ class MainWindow(QMainWindow):
         languages = [(r.get('Language1', ''), r.get('Language2', '')) for r in records]
         initial_name = suggest_filename(
             "audio", word_count=len(words),
-            lang1=self.lang1_combo.currentText(), lang2=self.lang2_combo.currentText(),
+            lang1=self.lang1_combo.currentData(), lang2=self.lang2_combo.currentData(),
             status=self.status_combo.currentData(), extension=".mp3")
         dialog = AudioSaverDialog(self, words, languages, initial_name)
         dialog.exec()
@@ -1732,8 +1744,8 @@ class MainWindow(QMainWindow):
             return
         settings = load_settings()
         suggested = suggest_filename("pdf_export", word_count=len(rows),
-                                     lang1=self.lang1_combo.currentText(),
-                                     lang2=self.lang2_combo.currentText(),
+                                     lang1=self.lang1_combo.currentData(),
+                                     lang2=self.lang2_combo.currentData(),
                                      status=self.status_combo.currentData(), extension=".pdf")
         path, _ = QFileDialog.getSaveFileName(self, tr("Save PDF As"), suggested, tr("PDF files (*.pdf)"))
         if not path:
@@ -1761,8 +1773,8 @@ class MainWindow(QMainWindow):
         ext = ".xlsx" if export_format == "Excel" else ".csv"
         flt = tr("Excel files (*.xlsx)") if export_format == "Excel" else tr("CSV files (*.csv)")
         suggested = suggest_filename("export", word_count=len(rows),
-                                     lang1=self.lang1_combo.currentText(),
-                                     lang2=self.lang2_combo.currentText(),
+                                     lang1=self.lang1_combo.currentData(),
+                                     lang2=self.lang2_combo.currentData(),
                                      status=self.status_combo.currentData(), extension=ext)
         path, _ = QFileDialog.getSaveFileName(self, tr("Save As"), suggested, flt)
         if not path:
@@ -1784,8 +1796,8 @@ class MainWindow(QMainWindow):
             return
         settings = load_settings()
         suggested = suggest_filename("export", word_count=len(rows),
-                                     lang1=self.lang1_combo.currentText(),
-                                     lang2=self.lang2_combo.currentText(),
+                                     lang1=self.lang1_combo.currentData(),
+                                     lang2=self.lang2_combo.currentData(),
                                      status=self.status_combo.currentData(), extension=".txt")
         path, _ = QFileDialog.getSaveFileName(self, tr("Save As"), suggested, tr("Text files (*.txt)"))
         if not path:

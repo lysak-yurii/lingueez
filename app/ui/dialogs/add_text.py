@@ -39,7 +39,7 @@ from app.config import load_settings, save_settings
 from app.core import ai, text_sources
 from app.core.audio import lang_codes
 from app.core.backup_management import backup_database
-from app.i18n import tr
+from app.i18n import fill_lang_combo, get_lang, set_lang, tr
 from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.dialogs.base import FramelessDialog, ask_text
@@ -109,9 +109,8 @@ class AddTextDialog(FramelessDialog):
         meta.setSpacing(10)
         self.language_combo = QComboBox()
         self.language_combo.setEditable(True)
-        self.language_combo.addItems(sorted(lang_codes.keys()))
-        self.language_combo.setCurrentText(
-            settings.get("addtext_language") or "English")
+        fill_lang_combo(self.language_combo, sorted(lang_codes.keys()))
+        set_lang(self.language_combo, settings.get("addtext_language") or "English")
         self.language_combo.currentTextChanged.connect(self._language_changed)
         meta.addWidget(QLabel(tr("Language:")))
         meta.addWidget(self.language_combo, 1)
@@ -432,7 +431,7 @@ class AddTextDialog(FramelessDialog):
     def _generate(self):
         if not self._require_api_key():
             return
-        language = self.language_combo.currentText().strip() or "English"
+        language = get_lang(self.language_combo).strip() or "English"
         level = self.level_combo.currentText().strip() or "B1"
         topic = self.topic_edit.text().strip() or "anything interesting"
         length = _lengths()[self.length_combo.currentIndex()][1]
@@ -448,7 +447,7 @@ class AddTextDialog(FramelessDialog):
         text = self.preview.toPlainText().strip()
         if not text:
             return
-        language = self.language_combo.currentText().strip() or "English"
+        language = get_lang(self.language_combo).strip() or "English"
         level = self.level_combo.currentText().strip() or "B1"
         self._run_async(self.adapt_btn,
                         lambda: ai.adapt_text_to_level(text, language, level),
@@ -460,7 +459,7 @@ class AddTextDialog(FramelessDialog):
         query = self.wiki_query.text().strip()
         if not query:
             return
-        language = self.language_combo.currentText().strip() or "English"
+        language = get_lang(self.language_combo).strip() or "English"
 
         def show(results):
             self.wiki_results.clear()
@@ -482,7 +481,7 @@ class AddTextDialog(FramelessDialog):
         result = item.data(Qt.UserRole)
         if not result:
             return
-        language = self.language_combo.currentText().strip() or "English"
+        language = get_lang(self.language_combo).strip() or "English"
         if not self.topic_edit.text().strip():
             self.topic_edit.setText(self.wiki_query.text().strip())
 
@@ -509,7 +508,7 @@ class AddTextDialog(FramelessDialog):
     # ------------------------------------------------------------------ RSS
 
     def _reload_feeds(self):
-        language = self.language_combo.currentText().strip()
+        language = get_lang(self.language_combo).strip()
         self.feed_combo.clear()
         for feed in text_sources.feeds_for_language(language):
             suffix = "  " + tr("(yours)") if feed.get("user") else ""
@@ -561,7 +560,7 @@ class AddTextDialog(FramelessDialog):
             return
         feeds = text_sources.user_feeds()
         feeds.append({"name": name.strip(), "url": url.strip(),
-                      "language": self.language_combo.currentText().strip()})
+                      "language": get_lang(self.language_combo).strip()})
         text_sources.save_user_feeds(feeds)
         self._reload_feeds()
         self.feed_combo.setCurrentIndex(self.feed_combo.count() - 1)
@@ -582,7 +581,7 @@ class AddTextDialog(FramelessDialog):
         if not text:
             return
         title = self.title_edit.text().strip()
-        language = self.language_combo.currentText().strip()
+        language = get_lang(self.language_combo).strip()
         level = self.level_combo.currentText().strip()
         topic = self.topic_edit.text().strip()
         try:

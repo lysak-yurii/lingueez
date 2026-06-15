@@ -27,20 +27,42 @@ All UI files import tr() and wrap string literals with it.
 
 _lang = "en"
 _translations: dict = {}
+# localized language label -> canonical (English) language name
+_lang_reverse: dict = {}
+
+
+def _language_tokens():
+    """The set of canonical (English) language names used across the app,
+    plus the special combo tokens. Imported lazily to avoid import cycles."""
+    names = {"Detect language", "All languages"}
+    try:
+        from app.core.translator import DEEPL_LANGUAGE_CODES
+        names |= set(DEEPL_LANGUAGE_CODES)
+    except Exception:
+        pass
+    try:
+        from app.core.audio import lang_codes
+        names |= set(lang_codes)
+    except Exception:
+        pass
+    return names
 
 
 def set_language(lang: str) -> None:
-    global _lang, _translations
+    global _lang, _translations, _lang_reverse
     _lang = lang
     if lang == "en":
         _translations = {}
-        return
-    try:
-        import importlib
-        mod = importlib.import_module(f"locales.{lang}")
-        _translations = mod.TRANSLATIONS
-    except Exception:
-        _translations = {}
+    else:
+        try:
+            import importlib
+            mod = importlib.import_module(f"locales.{lang}")
+            _translations = mod.TRANSLATIONS
+        except Exception:
+            _translations = {}
+    # Build the reverse map (localized label -> canonical name) so editable
+    # language combos can be read back as the English value stored in the DB.
+    _lang_reverse = {tr(name): name for name in _language_tokens()}
 
 
 def tr(text: str) -> str:
@@ -68,3 +90,47 @@ def ntr(count: int, one: str, few: str, many: str = None) -> str:
     if 2 <= mod10 <= 4:
         return few
     return many or few
+
+
+# --------------------------------------------------------------------------
+# Language names: stored/queried in English (the canonical DeepL/gTTS keys),
+# only the displayed label is localized — same pattern as word statuses.
+
+def lang_label(name: str) -> str:
+    """Canonical (English) language name -> localized display label."""
+    return tr(name)
+
+
+def lang_value(label: str) -> str:
+    """Localized display label -> canonical (English) language name."""
+    return _lang_reverse.get(label, label)
+
+
+def fill_lang_combo(combo, names, head=()) -> None:
+    """Populate a combo with language items: display = localized label,
+    item data = canonical English name (read back with :func:`get_lang`)."""
+    for token in head:
+        combo.addItem(lang_label(token), token)
+    for name in names:
+        combo.addItem(lang_label(name), name)
+
+
+def set_lang(combo, name: str) -> None:
+    """Select the item whose canonical language == *name* (English)."""
+    idx = combo.findData(name)
+    if idx >= 0:
+        combo.setCurrentIndex(idx)
+    else:
+        combo.setCurrentText(lang_label(name))
+
+
+def get_lang(combo) -> str:
+    """Return the canonical (English) language for the combo's current value,
+    whether picked from the list or typed into an editable combo."""
+    text = combo.currentText()
+    idx = combo.findText(text)
+    if idx >= 0:
+        data = combo.itemData(idx)
+        if data is not None:
+            return data
+    return lang_value(text)

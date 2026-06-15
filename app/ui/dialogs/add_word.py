@@ -34,7 +34,7 @@ from app.core.audio import speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
-from app.i18n import tr
+from app.i18n import fill_lang_combo, get_lang, lang_label, set_lang, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
@@ -63,8 +63,8 @@ class AddWordDialog(FramelessDialog):
         grid.setVerticalSpacing(8)
 
         self.lang1_combo = QComboBox()
-        self.lang1_combo.addItems([tr("Detect language")] + languages)
-        self.lang1_combo.setCurrentText("English")
+        fill_lang_combo(self.lang1_combo, languages, head=["Detect language"])
+        set_lang(self.lang1_combo, "English")
         self.lang1_combo.setFixedWidth(150)
         self.lang1_combo.setCursor(Qt.PointingHandCursor)
         grid.addWidget(self.lang1_combo, 0, 0)
@@ -76,7 +76,7 @@ class AddWordDialog(FramelessDialog):
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
         speak1.setToolTip(tr("Pronounce"))
         speak1.triggered.connect(lambda: self._speak(self.word1_edit.text(),
-                                                     self.lang1_combo.currentText()))
+                                                     get_lang(self.lang1_combo)))
         grid.addWidget(self.word1_edit, 0, 1)
 
         self.swap_btn = QPushButton(objectName="iconButton")
@@ -88,8 +88,8 @@ class AddWordDialog(FramelessDialog):
         grid.addWidget(self.swap_btn, 0, 2, 2, 1, Qt.AlignVCenter)
 
         self.lang2_combo = QComboBox()
-        self.lang2_combo.addItems(languages)
-        self.lang2_combo.setCurrentText("German")
+        fill_lang_combo(self.lang2_combo, languages)
+        set_lang(self.lang2_combo, "German")
         self.lang2_combo.setFixedWidth(150)
         self.lang2_combo.setCursor(Qt.PointingHandCursor)
         grid.addWidget(self.lang2_combo, 1, 0)
@@ -101,7 +101,7 @@ class AddWordDialog(FramelessDialog):
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
         speak2.setToolTip(tr("Pronounce"))
         speak2.triggered.connect(lambda: self._speak(self.word2_edit.text(),
-                                                     self.lang2_combo.currentText()))
+                                                     get_lang(self.lang2_combo)))
         grid.addWidget(self.word2_edit, 1, 1)
 
         grid.setColumnStretch(1, 1)
@@ -138,10 +138,10 @@ class AddWordDialog(FramelessDialog):
 
         if prefill:
             self.word1_edit.setText(prefill)
-            if language1 and self.lang1_combo.findText(language1) >= 0:
-                self.lang1_combo.setCurrentText(language1)
+            if language1 and self.lang1_combo.findData(language1) >= 0:
+                set_lang(self.lang1_combo, language1)
             else:
-                self.lang1_combo.setCurrentText(tr("Detect language"))
+                set_lang(self.lang1_combo, "Detect language")
             if len(prefill.split()) >= 100:
                 self._info(tr("The text was truncated to the first 100 words."))
         if auto_translate and prefill:
@@ -156,34 +156,34 @@ class AddWordDialog(FramelessDialog):
     def _speak(self, word, language):
         if not word.strip():
             return
-        if language == tr("Detect language"):
+        if language == "Detect language":
             language = "English"
         run_in_thread(speak_word, word, language, on_error=self._info)
 
     def swap_entries(self):
         w1, w2 = self.word1_edit.text(), self.word2_edit.text()
-        l1 = self.lang1_combo.currentText()
-        l2 = self.lang2_combo.currentText()
+        l1 = get_lang(self.lang1_combo)
+        l2 = get_lang(self.lang2_combo)
         self.word1_edit.setText(w2)
         self.word2_edit.setText(w1)
-        if l1 != tr("Detect language"):
-            self.lang1_combo.setCurrentText(l2)
-            self.lang2_combo.setCurrentText(l1)
+        if l1 != "Detect language":
+            set_lang(self.lang1_combo, l2)
+            set_lang(self.lang2_combo, l1)
 
     def do_translate(self):
         word = self.word1_edit.text().strip()
         if not word:
             self._info(tr("Enter a word to translate."))
             return
-        source = self.lang1_combo.currentText()
-        target = self.lang2_combo.currentText()
+        source = get_lang(self.lang1_combo)
+        target = get_lang(self.lang2_combo)
         self.translate_btn.setEnabled(False)
         self._info(tr("Translating…"))
 
         def work():
             translation, detected = translate(word, target, source)
             # Same-language guard: switch target like the original app
-            effective_source = detected or (None if source == tr("Detect language") else source)
+            effective_source = detected or (None if source == "Detect language" else source)
             if effective_source == target:
                 new_target = 'German' if effective_source == 'English' else 'English'
                 translation, _ = translate(word, new_target, effective_source)
@@ -193,11 +193,11 @@ class AddWordDialog(FramelessDialog):
         def done(result):
             translation, detected_source, target_used = result
             self.word2_edit.setText(translation)
-            if detected_source and self.lang1_combo.currentText() == tr("Detect language"):
-                self.lang1_combo.setCurrentText(detected_source)
-            if target_used != self.lang2_combo.currentText():
-                self.lang2_combo.setCurrentText(target_used)
-                self._info(tr("Source equals target — translated to {lang} instead.").format(lang=target_used))
+            if detected_source and get_lang(self.lang1_combo) == "Detect language":
+                set_lang(self.lang1_combo, detected_source)
+            if target_used != get_lang(self.lang2_combo):
+                set_lang(self.lang2_combo, target_used)
+                self._info(tr("Source equals target — translated to {lang} instead.").format(lang=lang_label(target_used)))
             else:
                 self._info("")
 
@@ -207,13 +207,13 @@ class AddWordDialog(FramelessDialog):
     def save_word(self):
         word1 = self.word1_edit.text().strip()
         word2 = self.word2_edit.text().strip()
-        lang1 = self.lang1_combo.currentText()
-        lang2 = self.lang2_combo.currentText()
+        lang1 = get_lang(self.lang1_combo)
+        lang2 = get_lang(self.lang2_combo)
 
         if not word1 or not word2:
             self._info(tr("Both word and translation are required."))
             return
-        if lang1 == tr("Detect language"):
+        if lang1 == "Detect language":
             self._info(tr("Please select the source language before saving."))
             return
 

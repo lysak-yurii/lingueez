@@ -38,7 +38,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QMenu, QPushButton
 
 from app.config import load_settings, save_settings
 from app.core import ai
-from app.i18n import tr
+from app.i18n import lang_label, tr
 from app.core.backup_management import backup_database
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
 from app.ui import icons
@@ -201,14 +201,15 @@ class WordPopup(QFrame):
         menu = QMenu(self)
         current = self._target()
         for name in sorted(DEEPL_LANGUAGE_CODES):
-            action = menu.addAction(name)
+            action = menu.addAction(lang_label(name))
+            action.setData(name)  # store the canonical English name
             action.setCheckable(True)
             action.setChecked(name == current)
         chosen = menu.exec(self.lang_btn.mapToGlobal(
             QPoint(0, self.lang_btn.height())))
-        if chosen and chosen.text() != current:
+        if chosen and chosen.data() != current:
             settings = load_settings()
-            settings["reader_translate_target"] = chosen.text()
+            settings["reader_translate_target"] = chosen.data()
             save_settings(settings)
             self._set_text("…", dim=True)
             self._translate()

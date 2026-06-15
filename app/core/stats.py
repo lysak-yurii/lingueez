@@ -37,6 +37,8 @@ from datetime import date, timedelta
 
 import pandas as pd
 
+from app.i18n import lang_label
+
 # Canonical status ordering for the donut. The DB may hold statuses outside
 # this list (older imports, custom values); those are appended afterwards so
 # nothing is ever silently dropped.
@@ -228,7 +230,7 @@ def compute_stats(df, tag_counts=None, definition_counts=None,
                 b = str(l2).strip() if isinstance(l2, str) else ""
                 if not a and not b:
                     continue
-                label = f"{a or '—'} → {b or '—'}"
+                label = f"{lang_label(a) or '—'} → {lang_label(b) or '—'}"
                 pair_counts[label] = pair_counts.get(label, 0) + 1
             stats.top_language_pairs = _top(pair_counts, 8)
 

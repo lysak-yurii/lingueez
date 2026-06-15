@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
 )
 
-from app.i18n import tr
+from app.i18n import fill_lang_combo, get_lang, set_lang, tr
 from app.ui.dialogs.base import FramelessDialog
 
 
@@ -41,8 +41,8 @@ class EditWordDialog(FramelessDialog):
         grid.addWidget(QLabel(tr("Language")), 0, 0)
         self.lang1_combo = QComboBox()
         self.lang1_combo.setEditable(True)
-        self.lang1_combo.addItems(languages)
-        self.lang1_combo.setCurrentText(str(record.get('Language1') or ""))
+        fill_lang_combo(self.lang1_combo, languages)
+        set_lang(self.lang1_combo, str(record.get('Language1') or ""))
         grid.addWidget(self.lang1_combo, 1, 0)
 
         grid.addWidget(QLabel(tr("Word")), 0, 1)
@@ -52,8 +52,8 @@ class EditWordDialog(FramelessDialog):
         grid.addWidget(QLabel(tr("Translation language")), 2, 0)
         self.lang2_combo = QComboBox()
         self.lang2_combo.setEditable(True)
-        self.lang2_combo.addItems(languages)
-        self.lang2_combo.setCurrentText(str(record.get('Language2') or ""))
+        fill_lang_combo(self.lang2_combo, languages)
+        set_lang(self.lang2_combo, str(record.get('Language2') or ""))
         grid.addWidget(self.lang2_combo, 3, 0)
 
         grid.addWidget(QLabel(tr("Translation")), 2, 1)
@@ -84,9 +84,9 @@ class EditWordDialog(FramelessDialog):
 
     def result_data(self):
         return {
-            'Language1': self.lang1_combo.currentText().strip(),
+            'Language1': get_lang(self.lang1_combo).strip(),
             'Word1': self.word1_edit.text().strip(),
-            'Language2': self.lang2_combo.currentText().strip(),
+            'Language2': get_lang(self.lang2_combo).strip(),
             'Word2': self.word2_edit.text().strip(),
             'Status': self.status_combo.currentData(),
         }

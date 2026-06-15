@@ -30,7 +30,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QBrush, QColor
 
 from app.core import db as dbq
-from app.i18n import tr
+from app.i18n import lang_label, tr
 
 COLUMNS = ["ID", "RowNumber", "Status", "Language1", "Word1", "Language2", "Word2", "Source", "created_at"]
 HEADERS = ["ID", "№", tr("Status"), tr("Language"), tr("Word"),
@@ -106,9 +106,11 @@ class WordTableModel(QAbstractTableModel):
     def set_dataframe(self, df):
         self.beginResetModel()
         self._df = df.reset_index(drop=True)
+        # Language names are stored in English; localize only the display value.
         self._rows = [
-            (_fmt(t.ID), None, _fmt(t.Status), _fmt(t.Language1), _fmt(t.Word1),
-             _fmt(t.Language2), _fmt(t.Word2), _fmt(t.Source), _fmt(t.created_at)[:19])
+            (_fmt(t.ID), None, _fmt(t.Status), lang_label(_fmt(t.Language1)),
+             _fmt(t.Word1), lang_label(_fmt(t.Language2)), _fmt(t.Word2),
+             _fmt(t.Source), _fmt(t.created_at)[:19])
             for t in self._df.itertuples(index=False)
         ]
         self._favorites = self._df["favorite"].fillna(0).astype(bool).tolist()
