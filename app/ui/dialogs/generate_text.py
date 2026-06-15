@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import ai
-from app.i18n import tr
+from app.i18n import lang_label, tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
@@ -52,7 +52,7 @@ class GenerateTextDialog(FramelessDialog):
         layout.setSpacing(10)
 
         info = QLabel(tr("Generating a {language} text from {count} word(s) with {ai}:").format(
-            language=language, count=len(words), ai=self.ai_label))
+            language=lang_label(language), count=len(words), ai=self.ai_label))
         layout.addWidget(info)
         words_label = QLabel(", ".join(words))
         words_label.setObjectName("dimLabel")

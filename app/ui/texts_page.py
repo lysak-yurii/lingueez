@@ -44,7 +44,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_float, get_int, load_settings, save_settings
 from app.core.audio import lang_codes, speak_word
-from app.i18n import tr
+from app.i18n import fill_lang_combo, get_lang, lang_label, lang_value, set_lang, tr
 from app.core.backup_management import backup_database
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
 from app.ui import icons
@@ -375,7 +375,7 @@ class TextsPage(QWidget):
         meta.setSpacing(10)
         self.language_combo = QComboBox()
         self.language_combo.setEditable(True)
-        self.language_combo.addItems(sorted(lang_codes.keys()))
+        fill_lang_combo(self.language_combo, sorted(lang_codes.keys()))
         self.language_combo.editTextChanged.connect(self._mark_dirty)
         meta.addWidget(self.language_combo)
         self.level_combo = QComboBox()
@@ -500,7 +500,8 @@ class TextsPage(QWidget):
             self.texts = []
         self._loaded_once = True
 
-        self._repopulate_filter(self.lang_filter, ALL_LANGUAGES, 'Language')
+        self._repopulate_filter(self.lang_filter, ALL_LANGUAGES, 'Language',
+                                localize=True)
         self._repopulate_filter(self.level_filter, ALL_LEVELS, 'Level',
                                 sort_key=lambda v: (CEFR_LEVELS.index(v)
                                                     if v in CEFR_LEVELS else len(CEFR_LEVELS), v))
@@ -508,18 +509,32 @@ class TextsPage(QWidget):
 
         self._refresh_list(preserve_id=preserve_id)
 
-    def _repopulate_filter(self, combo, all_label, field, sort_key=None):
-        """Rebuild a filter combo from distinct values, keeping the selection."""
+    def _repopulate_filter(self, combo, all_label, field, sort_key=None,
+                           localize=False):
+        """Rebuild a filter combo from distinct values, keeping the selection.
+
+        When *localize* is set (the Language filter), values are stored in
+        English as item data and only the displayed label is localized."""
         values = sorted({str(t.get(field) or '').strip()
                          for t in self.texts if str(t.get(field) or '').strip()},
                         key=sort_key)
-        selected = combo.currentText()
         combo.blockSignals(True)
-        combo.clear()
-        combo.addItem(all_label)
-        combo.addItems(values)
-        if selected and combo.findText(selected) >= 0:
-            combo.setCurrentText(selected)
+        if localize:
+            selected = combo.currentData()
+            combo.clear()
+            combo.addItem(all_label)  # placeholder, userData = None
+            fill_lang_combo(combo, values)
+            if selected:
+                i = combo.findData(selected)
+                if i >= 0:
+                    combo.setCurrentIndex(i)
+        else:
+            selected = combo.currentText()
+            combo.clear()
+            combo.addItem(all_label)
+            combo.addItems(values)
+            if selected and combo.findText(selected) >= 0:
+                combo.setCurrentText(selected)
         combo.blockSignals(False)
 
     def _refresh_list(self, *_, preserve_id=None):
@@ -527,11 +542,11 @@ class TextsPage(QWidget):
             preserve_id = self.current.get("ID")
 
         query = self.search_query.strip().lower()
-        language = self.lang_filter.currentText()
+        language = self.lang_filter.currentData()  # canonical English, None = all
         level = self.level_filter.currentText()
         topic = self.topic_filter.currentText()
         items = list(self.texts)
-        if language and language != ALL_LANGUAGES:
+        if language:
             items = [t for t in items if str(t.get('Language') or '').strip() == language]
         if level and level != ALL_LEVELS:
             items = [t for t in items if str(t.get('Level') or '').strip() == level]
@@ -550,10 +565,11 @@ class TextsPage(QWidget):
                        reverse=(sort != SORT_OLDEST))
         self.filtered = items
 
-        for combo, all_label, value in ((self.lang_filter, ALL_LANGUAGES, language),
-                                        (self.level_filter, ALL_LEVELS, level),
+        self.lang_filter.setProperty("filterActive", language is not None)
+        for combo, all_label, value in ((self.level_filter, ALL_LEVELS, level),
                                         (self.topic_filter, ALL_TOPICS, topic)):
             combo.setProperty("filterActive", value not in (all_label, ""))
+        for combo in (self.lang_filter, self.level_filter, self.topic_filter):
             combo.style().unpolish(combo)
             combo.style().polish(combo)
 
@@ -562,7 +578,7 @@ class TextsPage(QWidget):
         target_row = 0
         for row, text in enumerate(self.filtered):
             title = str(text.get('Title') or '').strip() or tr("(untitled)")
-            lang = str(text.get('Language') or '').strip()
+            lang = lang_label(str(text.get('Language') or '').strip())
             text_level = str(text.get('Level') or '').strip()
             text_topic = str(text.get('Category') or '').strip()
             date = str(text.get('created_at') or '')[:10]
@@ -614,17 +630,19 @@ class TextsPage(QWidget):
             tr("Text files (*.txt);;All files (*)"))
         if not paths:
             return
-        default = self.lang_filter.currentText()
-        if default in (ALL_LANGUAGES, ""):
+        default = self.lang_filter.currentData()  # canonical English, None = all
+        if not default:
             default = load_settings().get("addtext_language") or "English"
         languages = sorted(lang_codes.keys())
-        language, ok = ask_item(
+        labels = [lang_label(name) for name in languages]
+        choice, ok = ask_item(
             self, tr("Import text files"), tr("Language of the imported text(s):"),
-            languages, languages.index(default) if default in languages else 0,
+            labels, languages.index(default) if default in languages else 0,
             True)
-        if not ok or not language.strip():
+        if not ok or not choice.strip():
             return
-        language = language.strip()
+        # Map the localized label back to the canonical English name.
+        language = lang_value(choice.strip())
 
         def work():
             last_id, count, errors = None, 0, []
@@ -698,7 +716,7 @@ class TextsPage(QWidget):
         self._loading = True
         self.title_edit.setText(str(text.get('Title') or ""))
         self.title_edit.setCursorPosition(0)  # show the start, not the end, when elided
-        self.language_combo.setCurrentText(str(text.get('Language') or "English"))
+        set_lang(self.language_combo, str(text.get('Language') or "English"))
         level = str(text.get('Level') or "").strip()
         self.level_combo.setCurrentText(level if level in CEFR_LEVELS else "")
         self.topic_edit.setText(str(text.get('Category') or "").strip())
@@ -759,7 +777,7 @@ class TextsPage(QWidget):
     def _editor_data(self):
         return {
             'Title': self.title_edit.text().strip(),
-            'Language': self.language_combo.currentText().strip(),
+            'Language': get_lang(self.language_combo).strip(),
             'Level': self.level_combo.currentText().strip(),
             'Category': self.topic_edit.text().strip(),
             'Text': self.body.toPlainText().strip(),
@@ -839,10 +857,10 @@ class TextsPage(QWidget):
         """Begin a read-aloud session, optionally from a character offset."""
         if self.current is None:
             return
-        language = self.language_combo.currentText()
+        language = get_lang(self.language_combo)
         if language not in lang_codes:
             show_toast(self.window(), tr("Reader"),
-                       tr("Unsupported language: {language}").format(language=language),
+                       tr("Unsupported language: {language}").format(language=lang_label(language)),
                        "warning")
             return
         self._set_edit_mode(False)
@@ -1118,14 +1136,15 @@ class TextsPage(QWidget):
         menu = QMenu(self)
         current = self._translate_target()
         for name in sorted(DEEPL_LANGUAGE_CODES):
-            action = menu.addAction(name)
+            action = menu.addAction(lang_label(name))
+            action.setData(name)  # store the canonical English name
             action.setCheckable(True)
             action.setChecked(name == current)
         chosen = menu.exec(self.trans_lang_btn.mapToGlobal(
             QPoint(0, self.trans_lang_btn.height())))
-        if chosen and chosen.text() != current:
+        if chosen and chosen.data() != current:
             settings = load_settings()
-            settings["reader_translate_target"] = chosen.text()
+            settings["reader_translate_target"] = chosen.data()
             save_settings(settings)
             if self.translation_visible:
                 self._translate_current()
@@ -1146,7 +1165,7 @@ class TextsPage(QWidget):
             self._set_translation_text("")
             return
         target = self._translate_target()
-        source = self.language_combo.currentText()
+        source = get_lang(self.language_combo)
         source = source if source in DEEPL_LANGUAGE_CODES else None
         if source == target:
             source = None  # let DeepL detect; avoids same-language no-ops
@@ -1360,7 +1379,7 @@ class TextsPage(QWidget):
             return False
         start, end = word_range
         word = self.body.toPlainText()[start:end]
-        self._pronounce(word, self.language_combo.currentText())
+        self._pronounce(word, get_lang(self.language_combo))
         self._show_word_popup(word, start, end)
         return True
 
@@ -1396,7 +1415,7 @@ class TextsPage(QWidget):
                        rect.size())
         self._popup_range = (start, end)  # keep the word marked while open
         self._apply_highlight()
-        self.word_popup.show_for(word, self.language_combo.currentText(),
+        self.word_popup.show_for(word, get_lang(self.language_combo),
                                  sentence, anchor)
 
     def _on_popup_closed(self):
@@ -1421,7 +1440,7 @@ class TextsPage(QWidget):
         cursor = self.body.cursorForPosition(pos)
         cursor.select(QTextCursor.WordUnderCursor)
         word = cursor.selectedText().strip()
-        language = self.language_combo.currentText()
+        language = get_lang(self.language_combo)
         if word and any(ch.isalpha() for ch in word):
             display = word if len(word) <= 24 else word[:21] + "…"
             start_char = cursor.selectionStart()

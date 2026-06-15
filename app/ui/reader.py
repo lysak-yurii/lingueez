@@ -41,7 +41,7 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from app.core import audio
-from app.i18n import tr
+from app.i18n import lang_label, tr
 from app.ui import icons
 from app.ui.widgets import ElidedLabel
 
@@ -179,7 +179,7 @@ class ReaderPlayer(QObject):
         lang_code = audio.lang_codes.get(language)
         if not lang_code:
             self.error.emit(
-                tr("Unsupported language: {language}").format(language=language))
+                tr("Unsupported language: {language}").format(language=lang_label(language)))
             return False
         chunks = tokenize(text)
         if not chunks:
