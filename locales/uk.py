@@ -333,6 +333,12 @@ TRANSLATIONS: dict[str, str] = {
     "To add": "До додавання",
     "To update": "До оновлення",
     "Skipped": "Пропущені",
+    "Unrecognized": "Нерозпізнані",
+    "Only recognized languages": "Лише розпізнані мови",
+    "Exclude rows whose language wasn't recognized.":
+        "Виключити рядки з нерозпізнаною мовою.",
+    "Unrecognized language — will be imported exactly as written.":
+        "Нерозпізнана мова — буде імпортовано точно як написано.",
     "Select all": "Вибрати всі",
     "Activity log": "Журнал дій",
     "Export log…": "Експортувати журнал…",
@@ -756,6 +762,8 @@ TRANSLATIONS: dict[str, str] = {
     "To add ({n})": "До додавання ({n})",
     "To update ({n})": "До оновлення ({n})",
     "Skipped ({n})": "Пропущені ({n})",
+    "Unrecognized ({n})": "Нерозпізнані ({n})",
+    " · {n} with unrecognized language": " · {n} з нерозпізнаною мовою",
     "{total} rows: {add} new · {update} updates · {skip} skipped": (
         "{total} рядків: {add} нових · {update} оновлень · {skip} пропущено"
     ),

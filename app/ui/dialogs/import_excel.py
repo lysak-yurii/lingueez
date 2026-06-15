@@ -66,7 +66,8 @@ def _action_labels():
 
 def _filters():
     return [("all", tr("All")), (ACTION_ADD, tr("To add")),
-            (ACTION_UPDATE, tr("To update")), (ACTION_SKIP, tr("Skipped"))]
+            (ACTION_UPDATE, tr("To update")), (ACTION_SKIP, tr("Skipped")),
+            ("unknown_lang", tr("Unrecognized"))]
 
 
 ACTION_LEVEL = {ACTION_ADD: 'new', ACTION_UPDATE: 'warning', ACTION_SKIP: None}
@@ -205,6 +206,11 @@ class ImportReviewDialog(FramelessDialog):
         layout.addLayout(status_bar)
 
         buttons = QHBoxLayout()
+        self.recognized_only = QCheckBox(tr("Only recognized languages"))
+        self.recognized_only.setToolTip(
+            tr("Exclude rows whose language wasn't recognized."))
+        self.recognized_only.toggled.connect(self._apply_recognized_only)
+        buttons.addWidget(self.recognized_only)
         buttons.addStretch(1)
         self.import_btn = QPushButton(tr("Import"), objectName="primaryButton")
         self.import_btn.setEnabled(False)
@@ -216,6 +222,7 @@ class ImportReviewDialog(FramelessDialog):
         layout.addLayout(buttons)
 
         self.select_all.setEnabled(False)
+        self.recognized_only.setVisible(False)  # shown only if unrecognized rows exist
         for btn in self.filter_buttons.values():
             btn.setEnabled(False)
 
@@ -287,15 +294,21 @@ class ImportReviewDialog(FramelessDialog):
         self.filter_buttons[ACTION_ADD].setText(tr("To add ({n})").format(n=counts['add']))
         self.filter_buttons[ACTION_UPDATE].setText(tr("To update ({n})").format(n=counts['update']))
         self.filter_buttons[ACTION_SKIP].setText(tr("Skipped ({n})").format(n=counts['skip']))
+        unknown = counts.get('unknown_lang', 0)
+        self.filter_buttons["unknown_lang"].setText(
+            tr("Unrecognized ({n})").format(n=unknown))
         for btn in self.filter_buttons.values():
             btn.setEnabled(True)
-        self.summary_label.setText(
-            tr("{total} rows: {add} new · {update} updates · {skip} skipped").format(
-                total=counts['total'], add=counts['add'],
-                update=counts['update'], skip=counts['skip']))
+        summary = tr("{total} rows: {add} new · {update} updates · {skip} skipped").format(
+            total=counts['total'], add=counts['add'],
+            update=counts['update'], skip=counts['skip'])
+        if unknown:
+            summary += tr(" · {n} with unrecognized language").format(n=unknown)
+        self.summary_label.setText(summary)
 
         if counts['add'] or counts['update']:
             self.select_all.setEnabled(True)
+            self.recognized_only.setVisible(unknown > 0)
             self.status_label.setText(tr("Review the proposed changes, then import the selected rows."))
         else:
             self.status_label.setText(tr("Nothing to import — no new or changed entries found."))
@@ -323,11 +336,18 @@ class ImportReviewDialog(FramelessDialog):
             row_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.table.setItem(row_idx, COL_ROW, row_item)
 
-            for col, key in ((COL_WORD1, 'Word1'), (COL_LANG1, 'Language1'),
-                             (COL_WORD2, 'Word2'), (COL_LANG2, 'Language2')):
+            warn = QColor(LEVEL_COLORS['warning'])
+            for col, key, ok_key in ((COL_WORD1, 'Word1', None),
+                                     (COL_LANG1, 'Language1', 'lang1_ok'),
+                                     (COL_WORD2, 'Word2', None),
+                                     (COL_LANG2, 'Language2', 'lang2_ok')):
                 item = QTableWidgetItem(_cell_text(payload[key]))
                 if not actionable:
                     item.setForeground(dim)
+                elif ok_key and not payload.get(ok_key, True):
+                    item.setForeground(warn)
+                    item.setToolTip(tr("Unrecognized language — will be imported "
+                                       "exactly as written."))
                 self.table.setItem(row_idx, col, item)
 
             action_item = QTableWidgetItem(_action_labels()[payload['action']])
@@ -362,7 +382,13 @@ class ImportReviewDialog(FramelessDialog):
         wanted = self._current_filter()
         for row_idx in range(self.table.rowCount()):
             payload = self.table.item(row_idx, COL_CHECK).data(Qt.UserRole)
-            self.table.setRowHidden(row_idx, wanted != "all" and payload['action'] != wanted)
+            if wanted == "all":
+                hidden = False
+            elif wanted == "unknown_lang":
+                hidden = payload.get('lang_ok', True)
+            else:
+                hidden = payload['action'] != wanted
+            self.table.setRowHidden(row_idx, hidden)
 
     def _checkable_items(self, visible_only=False):
         items = []
@@ -383,6 +409,23 @@ class ImportReviewDialog(FramelessDialog):
         self._populating = True
         for item in self._checkable_items(visible_only=True):
             item.setCheckState(state)
+        self._populating = False
+        self._refresh_selection_ui()
+
+    def _apply_recognized_only(self, only_recognized):
+        """Exclude (or restore) actionable rows whose language wasn't recognized."""
+        self._populating = True
+        for row_idx in range(self.table.rowCount()):
+            item = self.table.item(row_idx, COL_CHECK)
+            payload = item.data(Qt.UserRole)
+            if payload['action'] == ACTION_SKIP or payload.get('lang_ok', True):
+                continue
+            if only_recognized:
+                item.setCheckState(Qt.Unchecked)
+                item.setFlags(item.flags() & ~Qt.ItemIsUserCheckable)
+            else:
+                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setCheckState(Qt.Checked)
         self._populating = False
         self._refresh_selection_ui()
 

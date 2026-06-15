@@ -36,3 +36,4 @@ ffmpeg/
 
 # PyInstaller
 *.spec
+import_test_scenarios.xlsx
