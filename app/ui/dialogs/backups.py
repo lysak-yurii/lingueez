@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
+from app.i18n import ntr, tr
 from app.ui.dialogs.base import FramelessDialog
 
 BACKUP_DIR = 'backups'
@@ -65,9 +66,9 @@ def _friendly_date(date):
     days = (today - date.date()).days
     full = f"{date.strftime('%B')} {date.day}, {date.year}"
     if days <= 0:
-        return "Today"
+        return tr("Today")
     if days == 1:
-        return "Yesterday"
+        return tr("Yesterday")
     if days < 7:
         return f"{date.strftime('%A')} · {full}"
     return full
@@ -79,9 +80,9 @@ def _date_phrase(date):
     days = (today - date.date()).days
     full = f"{date.strftime('%B')} {date.day}, {date.year}"
     if days <= 0:
-        return "today"
+        return tr("today")
     if days == 1:
-        return "yesterday"
+        return tr("yesterday")
     if days < 7:
         return f"{date.strftime('%A')}, {full}"
     return full
@@ -93,31 +94,29 @@ def _short_when(moment):
     days = (today - moment.date()).days
     time = moment.strftime('%H:%M')
     if days <= 0:
-        return f"today {time}"
+        return tr("today {time}").format(time=time)
     if days == 1:
-        return f"yesterday {time}"
+        return tr("yesterday {time}").format(time=time)
     return f"{moment.strftime('%b')} {moment.day} {time}"
 
 
 def _content_summary(words, texts, tags):
     """Counts -> 'X words · Y texts · Z tags' with grammar and grouping."""
-    def part(count, noun):
-        label = noun if count == 1 else noun + "s"
-        return f"{count:,} {label}"
-
-    return " · ".join((part(words, "word"), part(texts, "text"), part(tags, "tag")))
+    w_noun = ntr(words, tr("word"), tr("words"), tr("words"))
+    t_noun = ntr(texts, tr("text"), tr("texts"), tr("texts"))
+    g_noun = ntr(tags, tr("tag"), tr("tags"), tr("tags"))
+    return " · ".join((f"{words:,} {w_noun}", f"{texts:,} {t_noun}", f"{tags:,} {g_noun}"))
 
 
 class BackupsDialog(FramelessDialog):
     def __init__(self, parent, on_restored=None):
-        super().__init__(parent, title="Restore an earlier version")
+        super().__init__(parent, title=tr("Restore an earlier version"))
         self.on_restored = on_restored
         self.setMinimumSize(560, 460)
 
         layout = self.content_layout
 
-        hint = QLabel("Your database is backed up automatically after every "
-                      "change. Pick an earlier version below to restore it.")
+        hint = QLabel(tr("Your database is backed up automatically after every change. Pick an earlier version below to restore it."))
         hint.setObjectName("dimLabel")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -128,8 +127,7 @@ class BackupsDialog(FramelessDialog):
         self.listing.itemDoubleClicked.connect(lambda _i: self.restore_selected())
         layout.addWidget(self.listing, 1)
 
-        self.empty_label = QLabel("No saved versions yet. A backup is made "
-                                  "automatically after every change.")
+        self.empty_label = QLabel(tr("No saved versions yet. A backup is made automatically after every change."))
         self.empty_label.setObjectName("dimLabel")
         self.empty_label.setAlignment(Qt.AlignCenter)
         self.empty_label.setWordWrap(True)
@@ -137,14 +135,14 @@ class BackupsDialog(FramelessDialog):
         layout.addWidget(self.empty_label, 1)
 
         buttons = QHBoxLayout()
-        self.restore_btn = QPushButton("Restore this version", objectName="primaryButton")
+        self.restore_btn = QPushButton(tr("Restore this version"), objectName="primaryButton")
         self.restore_btn.clicked.connect(self.restore_selected)
         buttons.addWidget(self.restore_btn)
-        self.delete_btn = QPushButton("Delete", objectName="dangerButton")
+        self.delete_btn = QPushButton(tr("Delete"), objectName="dangerButton")
         self.delete_btn.clicked.connect(self.delete_selected)
         buttons.addWidget(self.delete_btn)
         buttons.addStretch(1)
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.accept)
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
@@ -173,20 +171,22 @@ class BackupsDialog(FramelessDialog):
 
         daily.sort(reverse=True)
         for index, (when, filename) in enumerate(daily):
-            title = _friendly_date(when) + (" · Most recent" if index == 0 else "")
+            title = _friendly_date(when) + (f" · {tr('Most recent')}" if index == 0 else "")
             entries.append({
                 "when": when, "filename": filename, "title": title,
                 "summary": self._summary_for(filename),
-                "phrase": f"the version from {_date_phrase(when)}",
+                "phrase": tr("the version from {date}").format(date=_date_phrase(when)),
             })
 
         # Only the most recent undo point is offered; older ones are pruned on restore.
         if snapshots:
             when, filename = max(snapshots)
             entries.append({
-                "when": when, "filename": filename, "title": "Before your last restore",
-                "summary": f"Saved {_short_when(when)} · {self._summary_for(filename)}",
-                "phrase": "the version from just before your last restore",
+                "when": when, "filename": filename,
+                "title": tr("Before your last restore"),
+                "summary": tr("Saved {when} · {summary}").format(
+                    when=_short_when(when), summary=self._summary_for(filename)),
+                "phrase": tr("the version from just before your last restore"),
             })
 
         entries.sort(key=lambda e: e["when"], reverse=True)
@@ -243,9 +243,8 @@ class BackupsDialog(FramelessDialog):
         if not filename:
             return
         if QMessageBox.question(
-                self, "Restore Version",
-                f"Restore {phrase}?\n\n"
-                "Your current data is saved first, so you can undo this.",
+                self, tr("Restore Version"),
+                tr("Restore {phrase}?\n\nYour current data is saved first, so you can undo this.").format(phrase=phrase),
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         try:
@@ -254,16 +253,16 @@ class BackupsDialog(FramelessDialog):
             shutil.copy2(os.path.join(BACKUP_DIR, filename), DB_PATH)
             self._prune_snapshots(keep=safety)
             QMessageBox.information(
-                self, "Restore",
-                f"Your database has been restored to {phrase}.\n\n"
-                "Changed your mind? Restore “Before your last restore” to undo.")
+                self, tr("Restore"),
+                tr('Your database has been restored to {phrase}.\n\nChanged your mind? Restore "{before}" to undo.').format(
+                    phrase=phrase, before=tr("Before your last restore")))
             if self.on_restored:
                 self.on_restored()
             self.accept()
         except Exception as exc:
             logging.error(f"Restore failed: {exc}")
-            QMessageBox.critical(self, "Restore Error",
-                                 f"Sorry, that version could not be restored:\n{exc}")
+            QMessageBox.critical(self, tr("Restore Error"),
+                                 tr("Sorry, that version could not be restored:\n{error}").format(error=exc))
 
     def _prune_snapshots(self, keep):
         """Keep only one undo point so old pre-restore snapshots don't pile up."""
@@ -279,13 +278,13 @@ class BackupsDialog(FramelessDialog):
         if not filename:
             return
         if QMessageBox.question(
-                self, "Remove Version",
-                f"Remove {phrase}?",
+                self, tr("Remove Version"),
+                tr("Remove {phrase}?").format(phrase=phrase),
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         try:
             os.remove(os.path.join(BACKUP_DIR, filename))
             self.load_backups()
         except Exception as exc:
-            QMessageBox.critical(self, "Remove Error",
-                                 f"Sorry, that version could not be removed:\n{exc}")
+            QMessageBox.critical(self, tr("Remove Error"),
+                                 tr("Sorry, that version could not be removed:\n{error}").format(error=exc))

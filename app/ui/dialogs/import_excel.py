@@ -43,6 +43,7 @@ from app.core.importer import (
     ACTION_ADD, ACTION_SKIP, ACTION_UPDATE, analyze_excel_import,
     apply_additions, apply_updates,
 )
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.dialogs.log_window import LEVEL_COLORS
 from app.ui.workers import run_in_thread
@@ -52,13 +53,23 @@ logger = logging.getLogger(__name__)
 _PY_LEVELS = {'error': logging.ERROR, 'warning': logging.WARNING}
 
 COL_CHECK, COL_ROW, COL_WORD1, COL_LANG1, COL_WORD2, COL_LANG2, COL_ACTION, COL_DETAILS = range(8)
-HEADERS = ["", "Row", "Word 1", "Language 1", "Word 2", "Language 2", "Action", "Details"]
 
-ACTION_LABELS = {ACTION_ADD: "Add", ACTION_UPDATE: "Update", ACTION_SKIP: "Skip"}
+
+def _headers():
+    return ["", tr("Row"), tr("Word 1"), tr("Language 1"),
+            tr("Word 2"), tr("Language 2"), tr("Action"), tr("Details")]
+
+
+def _action_labels():
+    return {ACTION_ADD: tr("Add"), ACTION_UPDATE: tr("Update"), ACTION_SKIP: tr("Skip")}
+
+
+def _filters():
+    return [("all", tr("All")), (ACTION_ADD, tr("To add")),
+            (ACTION_UPDATE, tr("To update")), (ACTION_SKIP, tr("Skipped"))]
+
+
 ACTION_LEVEL = {ACTION_ADD: 'new', ACTION_UPDATE: 'warning', ACTION_SKIP: None}
-
-FILTERS = [("all", "All"), (ACTION_ADD, "To add"),
-           (ACTION_UPDATE, "To update"), (ACTION_SKIP, "Skipped")]
 
 
 def _cell_text(value):
@@ -74,7 +85,7 @@ class ImportReviewDialog(FramelessDialog):
     _log_line = Signal(str, str)  # message, level — safe from worker threads
 
     def __init__(self, parent, db_adapter, path):
-        super().__init__(parent, title="Import from Excel")
+        super().__init__(parent, title=tr("Import from Excel"))
         self.main = parent
         self.db_adapter = db_adapter
         self.path = path
@@ -107,9 +118,9 @@ class ImportReviewDialog(FramelessDialog):
         header.addWidget(self.summary_label)
         layout.addLayout(header)
 
-        hint = QLabel("Expected columns: Language1, Language2, Word1, Word2 — named in a "
-                      "header row, or headerless with the first four columns in that order. "
-                      "A ready-made template is available in the app menu → Save Import Template.")
+        hint = QLabel(tr("Expected columns: Language1, Language2, Word1, Word2 — named in a "
+                         "header row, or headerless with the first four columns in that order. "
+                         "A ready-made template is available in the app menu → Save Import Template."))
         hint.setStyleSheet(f"color: {self.colors['text_dim']};")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -117,7 +128,7 @@ class ImportReviewDialog(FramelessDialog):
         toolbar = QHBoxLayout()
         toolbar.setSpacing(6)
         self.filter_buttons = {}
-        for key, label in FILTERS:
+        for key, label in _filters():
             btn = QPushButton(label, objectName="chipButton")
             btn.setCheckable(True)
             btn.setAutoExclusive(True)
@@ -126,7 +137,7 @@ class ImportReviewDialog(FramelessDialog):
             self.filter_buttons[key] = btn
         self.filter_buttons["all"].setChecked(True)
         toolbar.addStretch(1)
-        self.select_all = QCheckBox("Select all")
+        self.select_all = QCheckBox(tr("Select all"))
         self.select_all.setTristate(False)
         self.select_all.clicked.connect(self._on_select_all)
         toolbar.addWidget(self.select_all)
@@ -135,8 +146,8 @@ class ImportReviewDialog(FramelessDialog):
         toolbar.addWidget(self.selection_label)
         layout.addLayout(toolbar)
 
-        self.table = QTableWidget(0, len(HEADERS))
-        self.table.setHorizontalHeaderLabels(HEADERS)
+        self.table = QTableWidget(0, 8)
+        self.table.setHorizontalHeaderLabels(_headers())
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -161,7 +172,7 @@ class ImportReviewDialog(FramelessDialog):
 
         log_bar = QHBoxLayout()
         self.log_toggle = QToolButton()
-        self.log_toggle.setText("Activity log")
+        self.log_toggle.setText(tr("Activity log"))
         self.log_toggle.setCheckable(True)
         self.log_toggle.setArrowType(Qt.RightArrow)
         self.log_toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -170,7 +181,7 @@ class ImportReviewDialog(FramelessDialog):
         self.log_toggle.toggled.connect(self._toggle_log)
         log_bar.addWidget(self.log_toggle)
         log_bar.addStretch(1)
-        self.export_log_btn = QPushButton("Export log…")
+        self.export_log_btn = QPushButton(tr("Export log…"))
         self.export_log_btn.clicked.connect(self._export_log)
         self.export_log_btn.hide()
         log_bar.addWidget(self.export_log_btn)
@@ -195,11 +206,11 @@ class ImportReviewDialog(FramelessDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch(1)
-        self.import_btn = QPushButton("Import", objectName="primaryButton")
+        self.import_btn = QPushButton(tr("Import"), objectName="primaryButton")
         self.import_btn.setEnabled(False)
         self.import_btn.clicked.connect(self._start_import)
         buttons.addWidget(self.import_btn)
-        self.close_btn = QPushButton("Close")
+        self.close_btn = QPushButton(tr("Close"))
         self.close_btn.clicked.connect(self.close)
         buttons.addWidget(self.close_btn)
         layout.addLayout(buttons)
@@ -237,8 +248,8 @@ class ImportReviewDialog(FramelessDialog):
         self.export_log_btn.setVisible(expanded)
 
     def _export_log(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Export Import Log",
-                                              "import-log.txt", "Text files (*.txt)")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Export Import Log"),
+                                              "import-log.txt", tr("Text files (*.txt)"))
         if path:
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(self.log_view.toPlainText())
@@ -246,7 +257,7 @@ class ImportReviewDialog(FramelessDialog):
     # ------------------------------------------------------------- analyze
 
     def _start_analysis(self):
-        self.status_label.setText("Analyzing file…")
+        self.status_label.setText(tr("Analyzing file…"))
         self.progress.setRange(0, 0)
         self.progress.show()
         self._log(f"Selected file: {self.path}")
@@ -259,34 +270,35 @@ class ImportReviewDialog(FramelessDialog):
 
     def _on_analyze_error(self, error):
         self.progress.hide()
-        self.status_label.setText("Analysis failed — see the activity log.")
+        self.status_label.setText(tr("Analysis failed — see the activity log."))
         self._log(f"Analysis failed: {error}", 'error')
 
     def _on_analyzed(self, result):
         self.progress.hide()
         if result is None:
-            self.status_label.setText("Could not read the Excel file — see the activity log.")
+            self.status_label.setText(tr("Could not read the Excel file — see the activity log."))
             self._log("Could not read the Excel file.", 'error')
             return
 
         rows, counts = result['rows'], result['counts']
         self._populate_table(rows)
 
-        self.filter_buttons["all"].setText(f"All ({counts['total']})")
-        self.filter_buttons[ACTION_ADD].setText(f"To add ({counts['add']})")
-        self.filter_buttons[ACTION_UPDATE].setText(f"To update ({counts['update']})")
-        self.filter_buttons[ACTION_SKIP].setText(f"Skipped ({counts['skip']})")
+        self.filter_buttons["all"].setText(tr("All ({n})").format(n=counts['total']))
+        self.filter_buttons[ACTION_ADD].setText(tr("To add ({n})").format(n=counts['add']))
+        self.filter_buttons[ACTION_UPDATE].setText(tr("To update ({n})").format(n=counts['update']))
+        self.filter_buttons[ACTION_SKIP].setText(tr("Skipped ({n})").format(n=counts['skip']))
         for btn in self.filter_buttons.values():
             btn.setEnabled(True)
         self.summary_label.setText(
-            f"{counts['total']} rows: {counts['add']} new · "
-            f"{counts['update']} updates · {counts['skip']} skipped")
+            tr("{total} rows: {add} new · {update} updates · {skip} skipped").format(
+                total=counts['total'], add=counts['add'],
+                update=counts['update'], skip=counts['skip']))
 
         if counts['add'] or counts['update']:
             self.select_all.setEnabled(True)
-            self.status_label.setText("Review the proposed changes, then import the selected rows.")
+            self.status_label.setText(tr("Review the proposed changes, then import the selected rows."))
         else:
-            self.status_label.setText("Nothing to import — no new or changed entries found.")
+            self.status_label.setText(tr("Nothing to import — no new or changed entries found."))
         self._refresh_selection_ui()
 
     def _populate_table(self, rows):
@@ -318,7 +330,7 @@ class ImportReviewDialog(FramelessDialog):
                     item.setForeground(dim)
                 self.table.setItem(row_idx, col, item)
 
-            action_item = QTableWidgetItem(ACTION_LABELS[payload['action']])
+            action_item = QTableWidgetItem(_action_labels()[payload['action']])
             level = ACTION_LEVEL[payload['action']]
             action_item.setForeground(QColor(LEVEL_COLORS[level]) if level else dim)
             if actionable:
@@ -383,7 +395,8 @@ class ImportReviewDialog(FramelessDialog):
             return
         items = self._checkable_items()
         selected = sum(1 for i in items if i.checkState() == Qt.Checked)
-        self.selection_label.setText(f"{selected} of {len(items)} selected" if items else "")
+        self.selection_label.setText(
+            tr("{selected} of {total} selected").format(selected=selected, total=len(items)) if items else "")
 
         self.select_all.blockSignals(True)
         if not items or selected == 0:
@@ -400,7 +413,8 @@ class ImportReviewDialog(FramelessDialog):
         self.select_all.blockSignals(False)
 
         self.import_btn.setEnabled(selected > 0)
-        self.import_btn.setText(f"Import {selected} Item(s)" if selected else "Import")
+        self.import_btn.setText(
+            tr("Import {count} Item(s)").format(count=selected) if selected else tr("Import"))
 
     # --------------------------------------------------------------- apply
 
@@ -416,11 +430,11 @@ class ImportReviewDialog(FramelessDialog):
         self._set_review_locked(True)
         self.close_btn.setEnabled(False)
         self.import_btn.setEnabled(False)
-        self.import_btn.setText("Importing…")
+        self.import_btn.setText(tr("Importing…"))
         self.progress.setRange(0, total)
         self.progress.setValue(0)
         self.progress.show()
-        self.status_label.setText(f"Importing {total} item(s)…")
+        self.status_label.setText(tr("Importing {count} item(s)…").format(count=total))
         self._log(f"Starting import: {len(adds)} addition(s), {len(updates)} update(s).")
 
         if hasattr(self.main, '_sync_before_db_operation'):
@@ -466,8 +480,8 @@ class ImportReviewDialog(FramelessDialog):
         self._applying = False
         self.progress.hide()
         self.close_btn.setEnabled(True)
-        self.import_btn.setText("Import failed")
-        self.status_label.setText("Import failed — see the activity log.")
+        self.import_btn.setText(tr("Import failed"))
+        self.status_label.setText(tr("Import failed — see the activity log."))
         self._log(f"Import failed: {error}", 'error')
 
     def _on_applied(self, summary):
@@ -491,19 +505,20 @@ class ImportReviewDialog(FramelessDialog):
                 continue
             action_item = self.table.item(row_idx, COL_ACTION)
             if payload['row'] in failed_rows:
-                action_item.setText("Failed")
+                action_item.setText(tr("Failed"))
                 action_item.setForeground(fail_color)
             else:
-                action_item.setText("Added" if payload['action'] == ACTION_ADD else "Updated")
+                action_item.setText(tr("Added") if payload['action'] == ACTION_ADD else tr("Updated"))
                 action_item.setForeground(ok_color)
         self.table.setSortingEnabled(True)
 
-        parts = [f"{summary['added']} added", f"{summary['updated']} updated"]
+        parts = [tr("{n} added").format(n=summary['added']),
+                 tr("{n} updated").format(n=summary['updated'])]
         if summary['failed']:
-            parts.append(f"{len(summary['failed'])} failed")
-        message = "Import finished: " + ", ".join(parts) + "."
+            parts.append(tr("{n} failed").format(n=len(summary['failed'])))
+        message = tr("Import finished:") + " " + ", ".join(parts) + "."
         if summary['backup_error']:
-            message += " Backup failed — see the activity log."
+            message += " " + tr("Backup failed — see the activity log.")
         self.status_label.setText(message)
         self._log(message, 'error' if summary['failed'] else 'success')
 
@@ -531,8 +546,8 @@ class ImportExcelFlow:
         self.db_adapter = db_adapter
 
     def run(self):
-        path, _ = QFileDialog.getOpenFileName(self.main, "Import Excel", "",
-                                              "Excel files (*.xlsx *.xls)")
+        path, _ = QFileDialog.getOpenFileName(self.main, tr("Import Excel"), "",
+                                              tr("Excel files (*.xlsx *.xls)"))
         if not path:
             return
         dialog = ImportReviewDialog(self.main, self.db_adapter, path)

@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QApplication, QHBoxLayout, QLabel, QPushButton, QStackedLayout, QWidget,
 )
 
+from app.i18n import tr
 from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.widgets import ElidedLabel
@@ -130,16 +131,16 @@ class MiniPlayer(QWidget):
         cl = QHBoxLayout(self._controls)
         cl.setContentsMargins(0, 0, 0, 0)
         cl.setSpacing(0)
-        self.prev_btn = self._button("skip-back", "Previous word", self.prev_clicked)
-        self.play_btn = self._button("pause", "Pause", self.toggle_clicked)
-        self.next_btn = self._button("skip-forward", "Next word", self.next_clicked)
+        self.prev_btn = self._button("skip-back", tr("Previous word"), self.prev_clicked)
+        self.play_btn = self._button("pause", tr("Pause"), self.toggle_clicked)
+        self.next_btn = self._button("skip-forward", tr("Next word"), self.next_clicked)
         for b in (self.prev_btn, self.play_btn, self.next_btn):
             cl.addWidget(b)
         self._controls_w = self._controls.sizeHint().width()
         self._controls.setMaximumWidth(0)  # start collapsed
         lay.addWidget(self._controls, 0)
 
-        self._handle = self._button("chevron-left", "Show controls", None)
+        self._handle = self._button("chevron-left", tr("Show controls"), None)
         lay.addWidget(self._handle, 0)
 
         self._dock_anim = QPropertyAnimation(self._controls, b"maximumWidth", self)
@@ -230,7 +231,7 @@ class MiniPlayer(QWidget):
         self._paused = paused
         self.play_btn.setIcon(icons.icon(
             "play" if paused else "pause", self._colors["text"], 14))
-        self.play_btn.setToolTip("Resume" if paused else "Pause")
+        self.play_btn.setToolTip(tr("Resume") if paused else tr("Pause"))
 
     def refresh_theme(self, colors):
         self._colors = colors

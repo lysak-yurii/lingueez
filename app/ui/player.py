@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import audio
+from app.i18n import tr
 from app.ui import icons
 from app.ui.widgets import ElidedLabel
 
@@ -282,7 +283,7 @@ class PlayerBar(QWidget):
         # settings button; the frequently-used transport controls + stop sit on
         # the fixed RIGHT edge so prev/play/next/stop never shift around.
         self.config_btn = self._button(
-            "sliders", "text", "Playback settings", self.config_clicked, 15)
+            "sliders", "text", tr("Playback settings"), self.config_clicked, 15)
         lay.addWidget(self.config_btn)
         self.pos_label = QLabel("", objectName="dimLabel")
         lay.addWidget(self.pos_label)
@@ -295,14 +296,14 @@ class PlayerBar(QWidget):
         lay.addWidget(self.word_label, 1)
         lay.addSpacing(6)
 
-        self.prev_btn = self._button("skip-back", "text", "Previous word", self.prev_clicked)
+        self.prev_btn = self._button("skip-back", "text", tr("Previous word"), self.prev_clicked)
         lay.addWidget(self.prev_btn)
-        self.play_btn = self._button("pause", "text", "Pause", self.toggle_clicked)
+        self.play_btn = self._button("pause", "text", tr("Pause"), self.toggle_clicked)
         lay.addWidget(self.play_btn)
-        self.next_btn = self._button("skip-forward", "text", "Next word", self.next_clicked)
+        self.next_btn = self._button("skip-forward", "text", tr("Next word"), self.next_clicked)
         lay.addWidget(self.next_btn)
 
-        self.stop_btn = self._button("x", "danger", "Stop playback", self.stop_clicked, 15)
+        self.stop_btn = self._button("x", "danger", tr("Stop playback"), self.stop_clicked, 15)
         lay.addWidget(self.stop_btn)
 
     def _button(self, name, color_key, tooltip, signal, size=16):
@@ -322,7 +323,7 @@ class PlayerBar(QWidget):
         self._paused = paused
         self.play_btn.setIcon(icons.icon(
             "play" if paused else "pause", self._colors["text"], 16))
-        self.play_btn.setToolTip("Resume" if paused else "Pause")
+        self.play_btn.setToolTip(tr("Resume") if paused else tr("Pause"))
 
     def refresh_theme(self, colors):
         self._colors = colors
@@ -355,17 +356,17 @@ class PlaybackSettingsPopup(QWidget):
         self.pause_spin = QDoubleSpinBox()
         self.pause_spin.setRange(0, 10)
         self.pause_spin.setSingleStep(0.1)
-        self.pause_spin.setSuffix(" s")
+        self.pause_spin.setSuffix(tr(" s"))
         self.pause_spin.setValue(pause)
         self.pause_spin.valueChanged.connect(self.pause_changed.emit)
-        form.addRow(QLabel("Pause between words"), self.pause_spin)
+        form.addRow(QLabel(tr("Pause between words")), self.pause_spin)
 
         self.repeats_spin = QSpinBox()
         self.repeats_spin.setRange(1, 10)
         self.repeats_spin.setSuffix("×")
         self.repeats_spin.setValue(repeats)
         self.repeats_spin.valueChanged.connect(self.repeats_changed.emit)
-        form.addRow(QLabel("Repeats per word"), self.repeats_spin)
+        form.addRow(QLabel(tr("Repeats per word")), self.repeats_spin)
 
     def popup_at(self, anchor):
         """Show anchored below ``anchor`` (a widget), right-aligned to it."""

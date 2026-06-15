@@ -25,6 +25,7 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
+from app.i18n import tr
 from app.ui import icons
 
 RESIZE_MARGIN = 7
@@ -42,9 +43,9 @@ class WindowControls(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.min_btn = self._button("win-min", "Minimize", window.showMinimized)
-        self.max_btn = self._button("win-max", "Maximize", self._toggle_maximize)
-        self.close_btn = self._button("x", "Close", window.close, close=True)
+        self.min_btn = self._button("win-min", tr("Minimize"), window.showMinimized)
+        self.max_btn = self._button("win-max", tr("Maximize"), self._toggle_maximize)
+        self.close_btn = self._button("x", tr("Close"), window.close, close=True)
 
         window.windowHandle() and None  # noqa: B018 - handle created lazily
         window.installEventFilter(self)
@@ -82,7 +83,7 @@ class WindowControls(QWidget):
             self.max_btn.setIcon(icons.icon(
                 "win-restore" if maximized else "win-max",
                 self._colors["text_dim"], 16))
-            self.max_btn.setToolTip("Restore" if maximized else "Maximize")
+            self.max_btn.setToolTip(tr("Restore") if maximized else tr("Maximize"))
         return False
 
 

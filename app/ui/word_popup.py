@@ -38,6 +38,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QMenu, QPushButton
 
 from app.config import load_settings, save_settings
 from app.core import ai
+from app.i18n import tr
 from app.core.backup_management import backup_database
 from app.core.translator import DEEPL_LANGUAGE_CODES, translate
 from app.ui import icons
@@ -75,11 +76,14 @@ class WordPopup(QFrame):
         lay.addWidget(self.text_label, 1)
 
         lay.addSpacing(4)
-        self.lang_btn = self._button("chevron-down", "Translation language", self._pick_language, size=12)
+        self.lang_btn = self._button("chevron-down", tr("Translation language"),
+                                     self._pick_language, size=12)
         lay.addWidget(self.lang_btn)
-        self.ai_btn = self._button("sparkles", "Add with AI (lemma + best translation)", self._add_with_ai)
+        self.ai_btn = self._button("sparkles",
+                                   tr("Add with AI (lemma + best translation)"),
+                                   self._add_with_ai)
         lay.addWidget(self.ai_btn)
-        self.add_btn = self._button("plus", "Add to vocabulary as is", self._add_plain)
+        self.add_btn = self._button("plus", tr("Add to vocabulary as is"), self._add_plain)
         lay.addWidget(self.add_btn)
 
     def _button(self, name, tooltip, slot, size=15):
@@ -226,16 +230,20 @@ class WordPopup(QFrame):
         inserted, word1, word2 = result
         if not inserted:
             self._set_busy(False)
-            self._toast("Vocabulary", f"'{word1} – {word2}' is already in your dictionary.", "info")
+            self._toast(tr("Vocabulary"),
+                        tr("'{pair}' is already in your dictionary.").format(
+                            pair=f"{word1} – {word2}"), "info")
             return
         label = f"{original} → {word1}" if original and original != word1 else word1
-        self._toast("Vocabulary", f"{label} — {word2} · added", "success")
+        self._toast(tr("Vocabulary"),
+                    tr("{label} — {translation} · added").format(
+                        label=label, translation=word2), "success")
         self.word_saved.emit()
         self.hide()
 
     def _save_failed(self, message):
         self._set_busy(False)
-        self._toast("Vocabulary", message, "error")
+        self._toast(tr("Vocabulary"), message, "error")
 
     def _add_plain(self):
         if self._busy or not self._translation:
@@ -251,7 +259,7 @@ class WordPopup(QFrame):
         word, sentence = self._word, self._sentence
         source, target = self._language, self._target()
         self._set_busy(True)
-        self._set_text("Thinking…", dim=True)
+        self._set_text(tr("Thinking…"), dim=True)
 
         def work():
             lemma, translation = ai.lemma_translate(word, sentence, source, target)
@@ -267,6 +275,6 @@ class WordPopup(QFrame):
                 return
             self._set_busy(False)
             self._set_text(self._translation or "…", dim=not self._translation)
-            self._toast("AI", message, "error")
+            self._toast(tr("AI"), message, "error")
 
         run_in_thread(work, on_result=done, on_error=fail)

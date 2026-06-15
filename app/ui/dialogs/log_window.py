@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QHBoxLayout, QPushButton, QTextEdit,
 )
 
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 
 LEVEL_COLORS = {
@@ -88,14 +89,14 @@ class LogWindow(FramelessDialog):
         layout.addWidget(self.text, 1)
 
         buttons = QHBoxLayout()
-        clear_btn = QPushButton("Clear")
+        clear_btn = QPushButton(tr("Clear"))
         clear_btn.clicked.connect(self.text.clear)
         buttons.addWidget(clear_btn)
-        export_btn = QPushButton("Export…")
+        export_btn = QPushButton(tr("Export…"))
         export_btn.clicked.connect(self.export_log)
         buttons.addWidget(export_btn)
         buttons.addStretch(1)
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.close)
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
@@ -148,8 +149,8 @@ class LogWindow(FramelessDialog):
             self.log_message(message, level)
 
     def export_log(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Export Log", "log.txt",
-                                              "Text files (*.txt)")
+        path, _ = QFileDialog.getSaveFileName(self, tr("Export Log"), "log.txt",
+                                              tr("Text files (*.txt)"))
         if path:
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(self.text.toPlainText())

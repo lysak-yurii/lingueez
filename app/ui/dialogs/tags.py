@@ -29,12 +29,13 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import db as dbq
+from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 
 
 class TagDialog(FramelessDialog):
     def __init__(self, parent, word_ids, db_adapter):
-        super().__init__(parent, title=f"Tags — {len(word_ids)} word(s)")
+        super().__init__(parent, title=tr("Tags — {count} word(s)").format(count=len(word_ids)))
         self.word_ids = word_ids
         self.db_adapter = db_adapter
         self.setMinimumSize(420, 460)
@@ -43,18 +44,20 @@ class TagDialog(FramelessDialog):
         layout.setContentsMargins(18, 18, 18, 14)
         layout.setSpacing(10)
 
-        hint = QLabel("Tags marked ✓ apply to all selected words; "
-                      "“(partial)” means only some of them have the tag.")
+        hint_text = tr("Tags marked ✓ apply to all selected words.")
+        if len(word_ids) > 1:
+            hint_text += "  " + tr("◐ (partial) means only some of them have the tag.")
+        hint = QLabel(hint_text)
         hint.setObjectName("dimLabel")
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
         row = QHBoxLayout()
         self.tag_input = QLineEdit()
-        self.tag_input.setPlaceholderText("New tag name…")
+        self.tag_input.setPlaceholderText(tr("New tag name…"))
         self.tag_input.returnPressed.connect(self.add_tag)
         row.addWidget(self.tag_input, 1)
-        add_btn = QPushButton("Add Tag", objectName="primaryButton")
+        add_btn = QPushButton(tr("Add Tag"), objectName="primaryButton")
         add_btn.clicked.connect(self.add_tag)
         row.addWidget(add_btn)
         layout.addLayout(row)
@@ -64,15 +67,15 @@ class TagDialog(FramelessDialog):
         layout.addWidget(self.listing, 1)
 
         buttons = QHBoxLayout()
-        apply_btn = QPushButton("Apply Selected to All")
-        apply_btn.setToolTip("Attach the selected tag(s) to every selected word")
+        apply_btn = QPushButton(tr("Apply Selected to All"))
+        apply_btn.setToolTip(tr("Attach the selected tag(s) to every selected word"))
         apply_btn.clicked.connect(self.apply_selected)
         buttons.addWidget(apply_btn)
-        remove_btn = QPushButton("Remove Selected", objectName="dangerButton")
+        remove_btn = QPushButton(tr("Remove Selected"), objectName="dangerButton")
         remove_btn.clicked.connect(self.remove_selected)
         buttons.addWidget(remove_btn)
         buttons.addStretch(1)
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.accept)
         buttons.addWidget(close_btn)
         layout.addLayout(buttons)
@@ -97,8 +100,8 @@ class TagDialog(FramelessDialog):
                 marker = "◐ "
             else:
                 marker = "   "
-            partial = "  (partial)" if tag in union and tag not in common else ""
-            item = QListWidgetItem(f"{marker}{tag}{partial}   ·  {counts.get(tag, 0)} use(s)")
+            partial = f"  {tr('(partial)')}" if tag in union and tag not in common else ""
+            item = QListWidgetItem(f"{marker}{tag}{partial}   ·  {counts.get(tag, 0)} {tr('use(s)')}")
             item.setData(Qt.UserRole, tag)
             self.listing.addItem(item)
 
@@ -116,12 +119,12 @@ class TagDialog(FramelessDialog):
             self.populate()
         except Exception as exc:
             logging.error(f"Error adding tag: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to add tag:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to add tag:\n{error}").format(error=exc))
 
     def apply_selected(self):
         tags = self._selected_tags()
         if not tags:
-            QMessageBox.information(self, "Tags", "Select tag(s) in the list first.")
+            QMessageBox.information(self, tr("Tags"), tr("Select tag(s) in the list first."))
             return
         try:
             for tag in tags:
@@ -130,12 +133,12 @@ class TagDialog(FramelessDialog):
             self.populate()
         except Exception as exc:
             logging.error(f"Error applying tags: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to apply tags:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to apply tags:\n{error}").format(error=exc))
 
     def remove_selected(self):
         tags = self._selected_tags()
         if not tags:
-            QMessageBox.information(self, "Tags", "Select tag(s) in the list first.")
+            QMessageBox.information(self, tr("Tags"), tr("Select tag(s) in the list first."))
             return
         try:
             for tag in tags:
@@ -144,4 +147,4 @@ class TagDialog(FramelessDialog):
             self.populate()
         except Exception as exc:
             logging.error(f"Error removing tags: {exc}")
-            QMessageBox.critical(self, "Error", f"Failed to remove tags:\n{exc}")
+            QMessageBox.critical(self, tr("Error"), tr("Failed to remove tags:\n{error}").format(error=exc))

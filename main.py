@@ -83,10 +83,15 @@ def main():
     from app.config import get_float, load_settings
     from app.core.backup_management import manage_backups
     from app.core.db import initialize_database
+    from app.i18n import set_language
     from app.ui import theme
-    from app.ui.main_window import MainWindow
 
     settings = load_settings()
+    # Must run before importing any UI module: some modules resolve tr() into
+    # module-level constants at import time, so the language has to be set first.
+    set_language(settings.get("language", "en"))
+
+    from app.ui.main_window import MainWindow
 
     os.makedirs('backups', exist_ok=True)
     try:
