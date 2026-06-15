@@ -58,7 +58,7 @@ def main():
     logging.info("The application is launched.")
     logging.info(f"Application version: {APP_VERSION}")
 
-    from PySide6.QtCore import QLockFile, Qt
+    from PySide6.QtCore import QLockFile, QStandardPaths, Qt
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -73,9 +73,14 @@ def main():
     app.setWindowIcon(QIcon("icon.png"))
     app.setQuitOnLastWindowClosed(False)  # we live in the tray
 
-    # Single instance guard (stale locks are released automatically)
-    lock = QLockFile(os.path.join(os.getcwd(), "app.lock"))
-    lock.setStaleLockTime(0)
+    # Single instance guard. Keep the lock in a stable, writable runtime dir
+    # (not os.getcwd(), which varies by how the app was launched) so every
+    # launch contends for the same lock. A non-zero stale time lets a crashed
+    # instance's lock be reclaimed instead of blocking startup forever.
+    lock_dir = QStandardPaths.writableLocation(QStandardPaths.TempLocation)
+    os.makedirs(lock_dir, exist_ok=True)
+    lock = QLockFile(os.path.join(lock_dir, f"{APP_ID}.lock"))
+    lock.setStaleLockTime(30000)
     if not lock.tryLock(100):
         QMessageBox.warning(None, APP_NAME, f"{APP_NAME} is already running.")
         return 0
