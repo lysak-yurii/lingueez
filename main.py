@@ -25,15 +25,65 @@ import os
 import sys
 
 
-def _setup_paths():
-    """Run from the project directory so relative data files resolve."""
-    if getattr(sys, 'frozen', False):
-        base = os.path.dirname(sys.executable)
+def _user_data_dir(app_id):
+    """OS-standard per-user, writable data directory for the app."""
+    if sys.platform == 'win32':
+        root = os.environ.get('APPDATA') or os.path.expanduser('~')
+    elif sys.platform == 'darwin':
+        root = os.path.expanduser('~/Library/Application Support')
     else:
+        root = os.environ.get('XDG_DATA_HOME') or os.path.expanduser('~/.local/share')
+    return os.path.join(root, app_id)
+
+
+def _setup_paths():
+    """Establish the working directory so relative data files resolve.
+
+    Dev: run from the project directory (unchanged).
+
+    Frozen: read-only resources (assets/, fonts/, ffmpeg/) are bundled with the
+    executable, but user data (dictionary.db, settings.cfg, backups/, .env, logs)
+    must live in a writable per-user directory — the bundle dir can be read-only
+    (AppImage) or a temporary extract (one-file builds). So seed the bundled
+    resources into that data dir on first run / version change, then chdir there
+    so every relative path the app uses resolves correctly.
+    """
+    if not getattr(sys, 'frozen', False):
         base = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(base)
-    if base not in sys.path:
-        sys.path.insert(0, base)
+        os.chdir(base)
+        if base not in sys.path:
+            sys.path.insert(0, base)
+        return
+
+    import shutil
+    from app.version import APP_ID, BUILD_NUMBER
+
+    bundle = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    data_dir = _user_data_dir(APP_ID)
+    os.makedirs(data_dir, exist_ok=True)
+
+    # Seed/refresh the read-only resources whenever the bundled build changes.
+    marker = os.path.join(data_dir, '.bundle_version')
+    try:
+        seeded = open(marker, encoding='utf-8').read().strip()
+    except OSError:
+        seeded = ''
+    if seeded != BUILD_NUMBER:
+        for name in ('assets', 'fonts', 'ffmpeg'):
+            src = os.path.join(bundle, name)
+            if os.path.isdir(src):
+                # dirs_exist_ok merges, so user-written files (assets/generated)
+                # survive while shipped resources are refreshed.
+                shutil.copytree(src, os.path.join(data_dir, name), dirs_exist_ok=True)
+        try:
+            with open(marker, 'w', encoding='utf-8') as fh:
+                fh.write(BUILD_NUMBER)
+        except OSError:
+            pass
+
+    os.chdir(data_dir)
+    if bundle not in sys.path:        # locales are imported from the bundle (PYZ)
+        sys.path.insert(0, bundle)
 
 
 def _setup_logging():

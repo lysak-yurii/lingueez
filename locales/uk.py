@@ -896,6 +896,22 @@ TRANSLATIONS: dict[str, str] = {
     "Found a bug or have an idea?": "Знайшли помилку або маєте ідею?",
     "Report an issue": "Повідомити про проблему",
 
+    # Updates
+    "Updates": "Оновлення",
+    "Check for updates": "Перевірити оновлення",
+    "You're up to date.": "У вас встановлено останню версію.",
+    "Update available": "Доступне оновлення",
+    "Lingueez {version} is available — you have {current}.":
+        "Доступна версія Lingueez {version} — у вас {current}.",
+    "Skip this version": "Пропустити цю версію",
+    "Later": "Пізніше",
+    "Download": "Завантажити",
+    "Check for updates on startup": "Перевіряти оновлення під час запуску",
+    "Checks GitHub for a newer release once a day and notifies you; "
+    "it never downloads or installs anything automatically.":
+        "Раз на день перевіряє GitHub на наявність новішої версії та сповіщає вас; "
+        "нічого не завантажує й не встановлює автоматично.",
+
     # Misc units
     "in": "дюйм",
     " s": " с",

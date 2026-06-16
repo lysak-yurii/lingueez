@@ -623,6 +623,14 @@ class SettingsDialog(FramelessDialog):
         hotkey_note.setObjectName("dimLabel")
         hotkey_note.setWordWrap(True)
         form.addRow(hotkey_note)
+
+        form.addRow(tr("Check for updates on startup"),
+                    self._check("auto_check_updates", True))
+        updates_note = QLabel(tr("Checks GitHub for a newer release once a day and notifies you; "
+                                 "it never downloads or installs anything automatically."))
+        updates_note.setObjectName("dimLabel")
+        updates_note.setWordWrap(True)
+        form.addRow(updates_note)
         return _scrollable(widget)
 
     # ----------------------------------------------------------- actions
