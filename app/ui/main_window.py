@@ -30,12 +30,14 @@ from datetime import datetime, timedelta
 
 from PySide6.QtCore import QElapsedTimer, QEvent, QPoint, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (
-    QAction, QFont, QFontMetrics, QGuiApplication, QIcon, QKeySequence, QShortcut,
+    QAction, QDesktopServices, QFont, QFontMetrics, QGuiApplication, QIcon,
+    QKeySequence, QShortcut,
 )
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QFileDialog, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPushButton, QStatusBar,
-    QTableView, QVBoxLayout, QWidget, QWidgetAction, QCheckBox, QAbstractItemView,
+    QTableView, QTextEdit, QVBoxLayout, QWidget, QWidgetAction, QCheckBox,
+    QAbstractItemView,
 )
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
@@ -278,6 +280,9 @@ class MainWindow(QMainWindow):
             run_in_thread(self._run_startup_sync)
         elif self.sync_enabled:
             self._update_sync_status_ui("error", tr("Sync enabled but not connected. Check settings."))
+
+        # Check GitHub for a newer release (throttled, non-blocking).
+        QTimer.singleShot(3000, self._maybe_check_for_updates)
 
     # ------------------------------------------------------------------ UI
 
@@ -2026,6 +2031,76 @@ class MainWindow(QMainWindow):
         self._open_dialogs["log"] = win
         win.show()
 
+    # --------------------------------------------------------------- updates
+
+    def _maybe_check_for_updates(self):
+        """Startup check: respect the user's preference and the daily throttle."""
+        if self._quitting or not get_bool(self.settings, "auto_check_updates", True):
+            return
+        from app.core import updater
+        if updater.should_check_now():
+            self._check_for_updates(manual=False)
+
+    def _check_for_updates(self, manual=False):
+        """Run the GitHub release check on a worker thread."""
+        from app.core import updater
+        run_in_thread(updater.check_for_update,
+                      on_result=lambda info: self._on_update_result(info, manual))
+
+    def _on_update_result(self, info, manual):
+        from app.core import updater
+        updater.record_check()
+        if info is None:
+            if manual:
+                show_toast(self, tr("Updates"), tr("You're up to date."), "success")
+            return
+        # On the silent startup path, honour a version the user chose to skip.
+        if not manual and info.version == self.settings.get("skipped_version", ""):
+            return
+        self._show_update_dialog(info)
+
+    def _show_update_dialog(self, info):
+        from PySide6.QtCore import QUrl
+        from app.ui.dialogs.base import FramelessDialog
+        dialog = FramelessDialog(self, title=tr("Update available"))
+        dialog.setMinimumWidth(460)
+        heading = QLabel(
+            tr("Lingueez {version} is available — you have {current}.").format(
+                version=info.version, current=APP_VERSION))
+        heading.setWordWrap(True)
+        dialog.content_layout.addWidget(heading)
+        if info.notes:
+            notes = QTextEdit()
+            notes.setReadOnly(True)
+            notes.setPlainText(info.notes)
+            notes.setMaximumHeight(220)
+            dialog.content_layout.addWidget(notes)
+
+        row = QHBoxLayout()
+        skip = QPushButton(tr("Skip this version"))
+        skip.setCursor(Qt.PointingHandCursor)
+
+        def _skip():
+            self.settings["skipped_version"] = info.version
+            save_settings(self.settings)
+            dialog.reject()
+
+        skip.clicked.connect(_skip)
+        row.addWidget(skip)
+        row.addStretch(1)
+        later = QPushButton(tr("Later"))
+        later.setCursor(Qt.PointingHandCursor)
+        later.clicked.connect(dialog.reject)
+        row.addWidget(later)
+        download = QPushButton(tr("Download"), objectName="primaryButton")
+        download.setCursor(Qt.PointingHandCursor)
+        download.setDefault(True)
+        download.clicked.connect(lambda: (QDesktopServices.openUrl(QUrl(info.url)),
+                                          dialog.accept()))
+        row.addWidget(download)
+        dialog.content_layout.addLayout(row)
+        dialog.exec()
+
     def show_about(self):
         from app.ui.dialogs.base import FramelessDialog
         dialog = FramelessDialog(self, title=f"{tr('About')} {APP_NAME}")
@@ -2044,6 +2119,10 @@ class MainWindow(QMainWindow):
         body.setOpenExternalLinks(True)
         dialog.content_layout.addWidget(body)
         row = QHBoxLayout()
+        check = QPushButton(tr("Check for updates"))
+        check.setCursor(Qt.PointingHandCursor)
+        check.clicked.connect(lambda: self._check_for_updates(manual=True))
+        row.addWidget(check)
         row.addStretch(1)
         ok = QPushButton(tr("OK"), objectName="primaryButton")
         ok.setCursor(Qt.PointingHandCursor)
