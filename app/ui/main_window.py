@@ -322,6 +322,11 @@ class MainWindow(QMainWindow):
         # Check GitHub for a newer release (throttled, non-blocking).
         QTimer.singleShot(3000, self._maybe_check_for_updates)
 
+        # First-launch guided tour (skipped once tour_completed is set).
+        from app.ui.tour import TourController
+        self._tour = TourController(self)
+        self._tour.maybe_start_on_launch()
+
     # ------------------------------------------------------------------ UI
 
     def _apply_table_density(self):
@@ -472,6 +477,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self._icon("list"), tr("View Log"), self.open_log_window)
         if getattr(self, "_pending_update", None):
             menu.addAction(self._build_update_menu_item(menu, self._pending_update))
+        menu.addAction(self._icon("help-circle"), tr("Show Tour"), self.start_tour)
         menu.addAction(tr("About"), self.show_about)
         menu.addAction(self._icon("x"), tr("Quit"), self.quit_app)
         return menu
@@ -483,7 +489,7 @@ class MainWindow(QMainWindow):
         outer.setSpacing(0)
 
         # ---------- sidebar ----------
-        sidebar = QWidget(objectName="Sidebar")
+        sidebar = self.sidebar = QWidget(objectName="Sidebar")
         sidebar.setFixedWidth(58)
         sb = QVBoxLayout(sidebar)
         sb.setContentsMargins(0, 10, 0, 10)
@@ -525,7 +531,7 @@ class MainWindow(QMainWindow):
         self.nav_bin = nav_button("trash", tr("Bin (deleted items)"), self.open_bin)
         self.nav_bin.setVisible(self.sync_enabled)
         sb.addStretch(1)
-        nav_button("sliders", tr("Settings"), self.open_settings)
+        self.nav_settings = nav_button("sliders", tr("Settings"), self.open_settings)
 
         outer.addWidget(sidebar)
 
@@ -875,6 +881,15 @@ class MainWindow(QMainWindow):
             self._fit_word_columns()
         else:
             self._col_fit_timer.start()
+        if getattr(self, "_tour", None) is not None:
+            self._tour.relayout()
+
+    def start_tour(self):
+        """Replay the active tab's onboarding tour on demand (Menu → Show Tour)."""
+        if getattr(self, "_tour", None) is None:
+            from app.ui.tour import TourController
+            self._tour = TourController(self)
+        self._tour.start_current()
 
     def _fit_meta_columns(self):
         """Size the Status / Language / Translation columns to their content
@@ -1182,6 +1197,11 @@ class MainWindow(QMainWindow):
             # maximized on the Texts tab); refit the word columns to the
             # now-current width once the page is shown and laid out
             QTimer.singleShot(0, self._fit_word_columns)
+
+        # First visit to a tab fires its onboarding tour once (only reached on a
+        # real page change — this method early-returns when index == current).
+        if getattr(self, "_tour", None) is not None:
+            self._tour.maybe_start_for_page(index)
 
     def _refresh_stats(self):
         """Recompute the dashboard from the in-memory words DataFrame plus tag

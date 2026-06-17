@@ -135,7 +135,7 @@ TRANSLATIONS: dict[str, str] = {
     # ── settings_dialog.py ─────────────────────────────────────────────────
     "Appearance": "Вигляд",
     "Audio": "Аудіо",
-    "Learning": "Вивчення",
+    "Learning": "Вивчається",
     "System": "Система",
     "Light": "Світла",
     "Dark": "Темна",
@@ -616,7 +616,7 @@ TRANSLATIONS: dict[str, str] = {
     "you set to Mastered or Ignored yourself are never changed, and a "
     "word is never demoted.": (
         "Повне прослуховування слова в «Читати вголос» просуває його по щаблях: "
-        "Нове → Переглянуто → Вивчення → Засвоєно. Кожне число — це загальна кількість "
+        "Нове → Переглянуто → Вивчається → Засвоєно. Кожне число — це загальна кількість "
         "завершених прослуховувань для досягнення рівня. Слова, яким ви самі встановили "
         "статус «Засвоєно» або «Ігнороване», ніколи не змінюються, і слово ніколи "
         "не понижується в статусі."
@@ -1037,6 +1037,113 @@ TRANSLATIONS: dict[str, str] = {
     "Yiddish": "Їдиш",
     "Yoruba": "Йоруба",
     "Zulu": "Зулуська",
+    # --- Onboarding tour ---
+    "Back": "Назад",
+    "Next": "Далі",
+    "Done": "Готово",
+    "Show Tour": "Показати тур",
+    "Step {n} of {total}": "Крок {n} з {total}",
+    "Your library": "Ваша бібліотека",
+    "Switch between your Words, Texts and Statistics from this sidebar.":
+        "Перемикайтеся між Словами, Текстами та Статистикою на цій бічній панелі.",
+    "Add a word": "Додайте слово",
+    "Find anything": "Знайдіть будь-що",
+    "Search across your words, translations and tags as you type.":
+        "Шукайте слова, переклади і теги.",
+    "Add a new word here — its translation can be fetched automatically.":
+        "Додайте нове слово тут із автоматичним перекладом.",
+    "Listen and learn": "Слухайте та вчіться",
+    "Select words and press Read to hear them aloud. Repeated "
+    "listening promotes each word from New to Reviewing, Learning "
+    "and finally Mastered.":
+        "Повторне прослуховування підвищує статус слова з «Нове» до "
+        "«Переглянуто», «Вивчається» і нарешті до «Засвоєно».",
+    "Your vocabulary stays in sync across devices. Click for "
+    "status or to sync right now.":
+        "Ваш словник синхронізується між пристроями. Натисніть, щоб "
+        "переглянути стан або синхронізувати зараз.",
+    "Enable cloud sync, switch language, change appearance and "
+    "more from Settings.":
+        "Увімкніть хмарну синхронізацію, змініть мову, вигляд та інше в "
+        "Налаштуваннях.",
+    # --- Texts tour ---
+    "Add texts": "Додавайте тексти",
+    "Write or paste a text, fetch one from the Internet "
+    "(AI / Wikipedia / URL / RSS), or import .txt files.":
+        "Напишіть чи вставте текст, отримайте його з Інтернету "
+        "(ШІ / Вікіпедія / URL / RSS) або імпортуйте із .txt файлів.",
+    "Your texts": "Ваші тексти",
+    "Browse your saved texts and filter them by language, "
+    "level or topic.":
+        "Переглядайте збережені тексти та фільтруйте їх за мовою, "
+        "рівнем або темою.",
+    "Listen to any text aloud — and click a word while reading "
+    "to see its translation or add it to your vocabulary.":
+        "Прослухайте будь-який текст уголос — і натисніть на слово під час "
+        "слухання, щоб побачити його переклад, або додати до словника.",
+    "Show a parallel translation side-by-side; pick the language "
+    "with the arrow beside it.":
+        "Показуйте паралельний переклад поруч; виберіть мову стрілкою "
+        "поряд.",
+    "Reading modes": "Режими читання",
+    "Focus mode hides the list, Paper mode changes the "
+    "background, and Edit lets you tweak the text.":
+        "Режим фокусування ховає список, режим паперу змінює тло, "
+        "а редагування дозволяє змінити текст.",
+    # --- Statistics tour ---
+    "Your vocabulary at a glance — totals, mastered words, "
+    "languages and your current streak.":
+        "Підсумки статистики по кількості засвоєних слів та інше.",
+    "See how your vocabulary has grown over time.":
+        "Гляньте, як ваш словник зростав із часом.",
+    "Track how much you've reviewed over time.":
+        "Відстежуйте, скільки разів ви прослуховували ваш словник з часом.",
+    # --- Demo text shown during the Texts tour on an empty library ---
+    "Sample: A walk in the city": "Приклад: Прогулянка містом",
+    "The morning was bright and the streets were quiet. A young woman "
+    "walked slowly along the old road, looking at the tall houses and the "
+    "small shops that were just opening. She stopped to buy some fresh "
+    "bread and a cup of coffee, then crossed the square toward the park. "
+    "Children were playing near the river while their parents talked on the "
+    "benches nearby. She sat down under a large tree, opened her book, and "
+    "began to read. The story was about a traveller who crossed the "
+    "mountains in search of an old friend he had not seen for many years. "
+    "After a while she looked up, watching the boats drift slowly down the "
+    "river and the birds circle high above the rooftops. A street musician "
+    "began to play somewhere nearby, and the soft notes followed her "
+    "thoughts. It was a calm and happy morning, the kind she liked best.":
+        "Ранок був яскравий, а вулиці тихі. Молода жінка повільно йшла старою "
+        "дорогою, роздивляючись високі будинки та маленькі крамниці, що тільки "
+        "відчинялися. Вона зупинилася купити свіжого хліба й горнятко кави, а "
+        "потім перетнула площу в напрямку парку. Біля річки бавилися діти, а "
+        "їхні батьки розмовляли на лавках поруч. Вона сіла під великим деревом, "
+        "розгорнула книжку й почала читати. Історія розповідала про мандрівника, "
+        "який перетнув гори в пошуках давнього друга, якого не бачив багато "
+        "років. За якийсь час вона підвела погляд, спостерігаючи, як човни "
+        "повільно пливуть униз річкою, а птахи кружляють високо над дахами. Десь "
+        "неподалік вуличний музикант почав грати, і тихі ноти супроводжували її "
+        "думки. Це був спокійний і щасливий ранок, який вона любила найбільше.",
+    "Demo": "Демо",
+    # demo text-list stub titles
+    "My first story": "Моя перша історія",
+    "A news article": "Новинна стаття",
+    "A short poem": "Короткий вірш",
+    "Travel notes": "Подорожні нотатки",
+    # demo text-list stub first sentences (shown as the list snippet)
+    "Once upon a time, in a small village by the sea, "
+    "there lived a curious young fox.":
+        "Колись давно в маленькому селі біля моря жив допитливий молодий лис.",
+    "Researchers have found a new way to study how "
+    "languages change and grow over the centuries.":
+        "Дослідники знайшли новий спосіб вивчати, як мови змінюються та "
+        "розвиваються впродовж століть.",
+    "The wind walks softly through the autumn trees, "
+    "carrying old and half-forgotten songs.":
+        "Вітер тихо ступає поміж осінніх дерев, несучи давні й напівзабуті пісні.",
+    "Day one: we arrived in the city late at night, and the "
+    "streets were still full of warm light.":
+        "День перший: ми приїхали до міста пізно вночі, а вулиці все ще були "
+        "сповнені теплого світла.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they
