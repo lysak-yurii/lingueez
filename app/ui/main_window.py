@@ -2151,7 +2151,7 @@ class MainWindow(QMainWindow):
         from app.ui.dialogs.base import FramelessDialog
         dialog = FramelessDialog(self, title=f"{tr('About')} {APP_NAME}")
         dialog.setMinimumWidth(420)
-        repo = "https://github.com/lysak-yurii/dictionary-desktop-app"
+        repo = "https://github.com/lysak-yurii/Lingueez"
         body = QLabel(
             f"<h3>{APP_NAME} — {tr('created by')} Yurii Lysak</h3>"
             f"<p>{tr('Version')} {APP_VERSION} &nbsp;·&nbsp; {tr('Build')} {BUILD_NUMBER}</p>"

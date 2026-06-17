@@ -40,7 +40,7 @@ import requests
 from app.version import APP_VERSION
 
 GITHUB_OWNER = "lysak-yurii"
-GITHUB_REPO = "dictionary-desktop-app"
+GITHUB_REPO = "Lingueez"
 LATEST_URL = (
     f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
 )
