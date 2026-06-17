@@ -1,3 +1,9 @@
+<div align="center">
+
+**🇬🇧 English** &nbsp;·&nbsp; [🇺🇦 Українська](README.uk.md)
+
+</div>
+
 # Lingueez
 
 A desktop app for building, studying, and remembering vocabulary across languages.
@@ -29,7 +35,6 @@ translations and synced audio; and keep everything in sync across devices.
   CSV, and **Anki**-friendly TXT.
 - **Sync & backups** — two-way cloud sync, a bin to restore deleted items, and
   automatic daily backups with retention.
-- **System integration** — tray icon, autostart on login, and a global hotkey to add a word straight from the clipboard.
 
 API keys and preferences are all managed inside the app under **Settings**.
 
