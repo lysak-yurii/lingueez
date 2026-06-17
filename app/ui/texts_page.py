@@ -272,9 +272,10 @@ class TextsPage(QWidget):
 
         toolbar = QHBoxLayout()
         toolbar.setSpacing(4)
-        toolbar.addWidget(self._icon_button(
+        self.new_text_btn = self._icon_button(
             "plus", "text", tr("New text (write or paste)"),
-            lambda: self._open_add_dialog(0)))
+            lambda: self._open_add_dialog(0))
+        toolbar.addWidget(self.new_text_btn)
         toolbar.addWidget(self._icon_button(
             "globe", "text", tr("Get text from the Internet (AI / Wikipedia / URL / RSS)"),
             lambda: self._open_add_dialog(1)))

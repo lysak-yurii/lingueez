@@ -40,6 +40,12 @@ DEFAULTS = {
     # user's stored "language" is always respected and detection never re-runs.
     "language": "en",
     "language_configured": "False",
+    # Guided tours: set once the user has seen (or skipped) each page's tour.
+    # "tour_completed" is the legacy first-launch (Words) flag, kept for migration.
+    "tour_completed": "False",
+    "tour_words_seen": "False",
+    "tour_texts_seen": "False",
+    "tour_stats_seen": "False",
     # Audio
     "pause_duration": "0.5",
     "number_of_repeats": "1",

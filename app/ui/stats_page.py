@@ -114,7 +114,7 @@ class StatsPage(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 
-        scroll = QScrollArea(objectName="StatsScroll")
+        self.scroll = scroll = QScrollArea(objectName="StatsScroll")
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -128,7 +128,7 @@ class StatsPage(QWidget):
 
         # ---- Overview: KPI cards -------------------------------------
         root.addWidget(self._section(tr("Overview")))
-        kpi_host = QWidget()
+        self.overview = kpi_host = QWidget()
         flow = charts.FlowLayout(kpi_host, h_spacing=14, v_spacing=14)
         self.kpi_total = charts.KpiCard(tr("Total words"), "accent")
         self.kpi_mastered = charts.KpiCard(tr("Mastered"), "success")
