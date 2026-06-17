@@ -827,6 +827,7 @@ class MainWindow(QMainWindow):
 
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
+        self.texts_page.tour_requested.connect(self.start_tour)
 
         self.stats_page = StatsPage(self.db_adapter, self.colors)
 

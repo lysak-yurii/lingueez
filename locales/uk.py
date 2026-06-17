@@ -1133,6 +1133,15 @@ TRANSLATIONS: dict[str, str] = {
     "No matching words": "Немає відповідних слів",
     "Try a different search or filter.": "Спробуйте інший пошук або фільтр.",
     "Clear filters": "Очистити фільтри",
+    # --- Texts empty state ---
+    "Your reading library starts here": "Ваша бібліотека починається тут",
+    "Add a text to read — write or paste your own, fetch one from the "
+    "Internet, or import a .txt file.":
+        "Додайте текст для читання — напишіть власний, отримайте його із "
+        "інтернету або імпортуйте із файлу .txt.",
+    "Add a text": "Додати текст",
+    "Fetch from the Internet": "Отримати з Інтернету",
+    "Import .txt": "Імпортувати .txt",
     # demo text-list stub titles
     "My first story": "Моя перша історія",
     "A news article": "Новинна стаття",
