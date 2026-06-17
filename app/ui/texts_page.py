@@ -36,10 +36,10 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QAction, QColor, QFont, QFontMetrics, QPainter, QTextCursor
 from PySide6.QtWidgets import (
-    QAbstractItemView, QApplication, QComboBox, QFileDialog, QFrame, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem, QMenu,
-    QMessageBox, QPushButton, QSplitter, QStackedLayout, QStyle,
-    QStyledItemDelegate, QTextEdit, QVBoxLayout, QWidget,
+    QAbstractItemView, QApplication, QComboBox, QFileDialog, QFrame,
+    QGraphicsOpacityEffect, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+    QListWidgetItem, QMenu, QMessageBox, QPushButton, QSplitter, QStackedLayout,
+    QStyle, QStyledItemDelegate, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from app.config import get_float, get_int, load_settings, save_settings
@@ -183,6 +183,7 @@ class TextsPage(QWidget):
     tts_started = Signal()  # lets the main window stop its word player
     add_word_requested = Signal(str, str)  # (word, language)
     vocab_changed = Signal()  # popup saved a word — main window reloads
+    tour_requested = Signal()  # empty-state "Take the tour" link
 
     def __init__(self, db_adapter, colors, parent=None):
         super().__init__(parent)
@@ -456,10 +457,99 @@ class TextsPage(QWidget):
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
         splitter.setSizes([300, 620])
-        root.addWidget(splitter)
+
+        # Page-level swap: the list+reader split, or a single full-width empty
+        # state shown when the user has no texts at all. The stacked layout is
+        # parented to a host widget immediately — a parentless QStackedLayout
+        # briefly shows its current page as a top-level window (a blank flash).
+        page_host = QWidget()
+        self.page_stack = QStackedLayout(page_host)
+        self.page_stack.addWidget(splitter)                  # index 0
+        self.page_stack.addWidget(self._build_texts_empty())  # index 1
+        root.addWidget(page_host)
 
         self._update_paper_button()
         self._apply_reader_style()
+
+    def _build_texts_empty(self):
+        """Full-width empty state shown when there are no texts at all."""
+        page = QWidget()
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(24, 24, 24, 24)
+        outer.addStretch(2)
+
+        self._tempty_icon = QLabel(alignment=Qt.AlignCenter)
+        self._tempty_icon.setPixmap(icons.pixmap("file-text", self._colors["accent"], 56))
+        self._tempty_icon_fx = QGraphicsOpacityEffect(self._tempty_icon)
+        self._tempty_icon.setGraphicsEffect(self._tempty_icon_fx)
+        outer.addWidget(self._tempty_icon)
+        outer.addSpacing(14)
+
+        self._tempty_title = QLabel(tr("Your reading library starts here"),
+                                    objectName="EmptyTitle", alignment=Qt.AlignCenter)
+        outer.addWidget(self._tempty_title)
+        outer.addSpacing(4)
+
+        self._tempty_sub = QLabel(
+            tr("Add a text to read — write or paste your own, fetch one from the "
+               "Internet, or import a .txt file."),
+            objectName="dimLabel", alignment=Qt.AlignCenter)
+        self._tempty_sub.setWordWrap(True)
+        self._tempty_sub.setFixedWidth(420)
+        self._tempty_sub.setFixedHeight(self._tempty_sub.heightForWidth(420))
+        outer.addWidget(self._tempty_sub, 0, Qt.AlignHCenter)
+        outer.addSpacing(18)
+
+        add_btn = QPushButton(tr("Add a text"), objectName="primaryButton")
+        add_btn.setIcon(icons.icon("plus", "#ffffff", 18))
+        add_btn.setIconSize(QSize(18, 18))
+        add_btn.setCursor(Qt.PointingHandCursor)
+        add_btn.setStyleSheet("padding: 9px 18px; border-radius: 8px;")
+        add_btn.clicked.connect(lambda: self._open_add_dialog(0))
+        outer.addWidget(add_btn, 0, Qt.AlignHCenter)
+        outer.addSpacing(12)
+
+        links = QHBoxLayout()
+        links.setSpacing(8)
+        links.addStretch(1)
+
+        def link_button(text, slot):
+            b = QPushButton(text)
+            b.setCursor(Qt.PointingHandCursor)
+            b.setFlat(True)
+            b.clicked.connect(slot)
+            return b
+
+        self._tempty_fetch = link_button(tr("Fetch from the Internet"),
+                                         lambda: self._open_add_dialog(1))
+        dot1 = QLabel("·", objectName="dimLabel")
+        self._tempty_import = link_button(tr("Import .txt"), self._import_txt_files)
+        dot2 = QLabel("·", objectName="dimLabel")
+        self._tempty_tour = link_button(tr("Take the tour"), self.tour_requested.emit)
+        self._tempty_links = (self._tempty_fetch, self._tempty_import, self._tempty_tour)
+        self._style_tempty_links()
+        for w in (self._tempty_fetch, dot1, self._tempty_import, dot2, self._tempty_tour):
+            links.addWidget(w)
+        links.addStretch(1)
+        outer.addLayout(links)
+        outer.addStretch(3)
+
+        anim = QPropertyAnimation(self._tempty_icon_fx, b"opacity", self)
+        anim.setDuration(2500)
+        anim.setEasingCurve(QEasingCurve.InOutSine)
+        anim.setKeyValueAt(0.0, 1.0)
+        anim.setKeyValueAt(0.5, 0.55)
+        anim.setKeyValueAt(1.0, 1.0)
+        anim.setLoopCount(-1)
+        self._tempty_anim = anim
+        return page
+
+    def _style_tempty_links(self):
+        css = (f"QPushButton {{ color: {self._colors['text_dim']}; border: none;"
+               f" background: transparent; padding: 2px 4px; }}"
+               f"QPushButton:hover {{ color: {self._colors['accent']}; }}")
+        for b in self._tempty_links:
+            b.setStyleSheet(css)
 
     def refresh_theme(self, colors):
         """Re-tint icons and delegate colors after a theme change."""
@@ -478,6 +568,8 @@ class TextsPage(QWidget):
             self.focus_btn.setIcon(icons.icon("book-open", colors["accent_text"], 18))
         self._update_paper_button()
         self.empty_icon.setPixmap(icons.pixmap("file-text", colors["text_dim"], 44))
+        self._tempty_icon.setPixmap(icons.pixmap("file-text", colors["accent"], 56))
+        self._style_tempty_links()
         self.reader_bar.refresh_theme(colors)
         self.word_popup.refresh_theme(colors)
         self._reader_base_pt = self._compute_reader_base_pt(load_settings())
@@ -600,22 +692,30 @@ class TextsPage(QWidget):
             self._set_dirty(False)
             self._reset_modes()
             if self.texts:
+                # filter matched nothing — keep the list/filters, show a hint
+                self._set_texts_empty(False)
                 self.empty_title.setText(tr("No matching texts"))
                 self.empty_sub.setText(tr("Try a different search or language filter."))
+                self.reader_stack.setCurrentIndex(0)
             else:
-                self.empty_title.setText(tr("No texts yet"))
-                self.empty_sub.setText(
-                    tr('Click "+" to write or paste a text, the globe to fetch one\n'
-                       'from the Internet, or select words in the Words view and\n'
-                       'use the "Text" action to generate a study text.'))
-            self.reader_stack.setCurrentIndex(0)
+                # no texts at all — collapse to the full-page empty state
+                self._set_texts_empty(True)
             return
 
+        self._set_texts_empty(False)
         # setCurrentRow with the same row index would not re-emit, so force
         # a refresh of the reader for the (possibly different) record
         self.listing.setCurrentRow(target_row)
         if self.listing.currentRow() == target_row:
             self._on_row_changed(target_row)
+
+    def _set_texts_empty(self, full_empty):
+        """Toggle between the list/reader split and the full-page empty state."""
+        self.page_stack.setCurrentIndex(1 if full_empty else 0)
+        if full_empty:
+            self._tempty_anim.start()
+        else:
+            self._tempty_anim.pause()
 
     # ----------------------------------------------------------- new texts
 
