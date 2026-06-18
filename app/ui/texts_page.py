@@ -31,7 +31,7 @@ import logging
 from pathlib import Path
 
 from PySide6.QtCore import (
-    QEasingCurve, QEvent, QParallelAnimationGroup, QPoint, QPointF,
+    QAbstractAnimation, QEasingCurve, QEvent, QParallelAnimationGroup, QPoint, QPointF,
     QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal,
 )
 from PySide6.QtGui import QAction, QColor, QFont, QFontMetrics, QPainter, QTextCursor
@@ -714,7 +714,7 @@ class TextsPage(QWidget):
         self.page_stack.setCurrentIndex(1 if full_empty else 0)
         if full_empty:
             self._tempty_anim.start()
-        else:
+        elif self._tempty_anim.state() != QAbstractAnimation.Stopped:
             self._tempty_anim.pause()
 
     # ----------------------------------------------------------- new texts

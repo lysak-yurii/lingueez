@@ -28,8 +28,9 @@ import sys
 import threading
 from datetime import datetime, timedelta
 
-from PySide6.QtCore import (QEasingCurve, QElapsedTimer, QEvent, QPoint,
-                            QPropertyAnimation, QSize, Qt, QTimer, Signal)
+from PySide6.QtCore import (QAbstractAnimation, QEasingCurve, QElapsedTimer,
+                            QEvent, QPoint, QPropertyAnimation, QSize, Qt,
+                            QTimer, Signal)
 from PySide6.QtGui import (
     QAction, QDesktopServices, QFont, QFontMetrics, QGuiApplication, QIcon,
     QKeySequence, QShortcut,
@@ -1416,7 +1417,8 @@ class MainWindow(QMainWindow):
         if shown > 0:
             self.filter_row.setVisible(True)
             self.table_stack.setCurrentIndex(0)
-            self._empty_anim.pause()
+            if self._empty_anim.state() != QAbstractAnimation.Stopped:
+                self._empty_anim.pause()
             return
         first_run = total == 0
         # hide the tag/Favorites chips above the first-run empty state; keep them
