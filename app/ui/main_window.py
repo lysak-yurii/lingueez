@@ -1034,6 +1034,9 @@ class MainWindow(QMainWindow):
         # the search opened/closed in compact mode — re-evaluate which header
         # controls yield room for it.
         self._update_header_layout()
+        if not expanded and self.stack.currentIndex() == PAGE_WORDS:
+            # hand keyboard focus back to the list so arrow keys work right away
+            self.table.setFocus()
 
     def showEvent(self, event):
         super().showEvent(event)
