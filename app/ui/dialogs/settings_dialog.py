@@ -24,7 +24,8 @@ import os
 import shutil
 import sys
 
-from PySide6.QtGui import QKeySequence
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QGuiApplication, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialogButtonBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QKeySequenceEdit,
@@ -587,13 +588,26 @@ class SettingsDialog(FramelessDialog):
         form.addRow(tr("Supabase URL (.env)"), self.supabase_url_edit)
         self.supabase_key_edit = self._secret(QLineEdit(self.env.get("SUPABASE_KEY", "")))
         form.addRow(tr("Supabase key (.env)"), self.supabase_key_edit)
-        form.addRow(tr("Bin cleanup grace (days)"), self._spin("cleanup_grace_period_days", 1, 365, 30))
         test_btn = QPushButton(tr("Test Connection"))
         test_btn.clicked.connect(self._test_supabase)
         form.addRow(test_btn)
-        note = QLabel(tr("Restart the app after enabling sync for the first time."))
-        note.setObjectName("dimLabel")
-        form.addRow(note)
+
+        schema_note = QLabel(tr("Cloud sync uses your own Supabase project. Create the "
+                                "required tables once, then enter the URL and anon key above."))
+        schema_note.setObjectName("dimLabel")
+        schema_note.setWordWrap(True)
+        form.addRow(schema_note)
+        schema_row = QHBoxLayout()
+        copy_schema_btn = QPushButton(tr("Copy schema SQL"))
+        copy_schema_btn.clicked.connect(self._copy_schema_sql)
+        schema_row.addWidget(copy_schema_btn)
+        open_editor_btn = QPushButton(tr("Open SQL editor ↗"))
+        open_editor_btn.clicked.connect(lambda: QDesktopServices.openUrl(
+            QUrl("https://supabase.com/dashboard/project/_/sql/new")))
+        schema_row.addWidget(open_editor_btn)
+        schema_row.addStretch(1)
+        form.addRow(schema_row)
+        form.addRow(tr("Bin cleanup grace (days)"), self._spin("cleanup_grace_period_days", 1, 365, 30))
         tabs.addTab(_scrollable(sync), tr("Sync"))
 
         return tabs
@@ -674,6 +688,14 @@ class SettingsDialog(FramelessDialog):
                                               tr("JSON files (*.json)"))
         if path:
             self.w_google_cloud_tts_credentials_path.setText(path)
+
+    def _copy_schema_sql(self):
+        from app.core.supabase_schema import SCHEMA_SQL
+        QGuiApplication.clipboard().setText(SCHEMA_SQL)
+        QMessageBox.information(self, "Supabase",
+                                tr("Schema SQL copied to the clipboard. Open your "
+                                   "Supabase project's SQL editor, paste it, and press Run "
+                                   "to create the tables."))
 
     def _test_supabase(self):
         _write_env({
