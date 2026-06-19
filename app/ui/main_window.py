@@ -226,6 +226,11 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon("assets/icons/icon.png"))
         # Client-side decorations: window controls live in the app's top bar
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
+        # A stable floor for the frameless window: the icon sidebar (58) plus a
+        # usable content width. Everything inside collapses above this, so the
+        # compositor (which drives resizing via startSystemResize) always has a
+        # fixed lower bound to honour and can't be pushed around by content.
+        self.setMinimumSize(420, 360)
         load_geometry(self, "main_window")
 
         # --- backend ---
@@ -898,12 +903,15 @@ class MainWindow(QMainWindow):
         self.table.horizontalScrollBar().valueChanged.connect(self._position_header_filters)
         QTimer.singleShot(0, self._position_header_filters)
 
-        # The responsive column decision runs once per resize burst, deferred to
-        # after the layout settles (see resizeEvent) so it reads the real viewport
-        # width rather than the pre-resize one — a stale read would briefly show
-        # then hide a column, which looks like flicker. `_col_fit_pending`
-        # coalesces a burst and also serves as the "UI is built" guard.
-        self._col_fit_pending = False
+        # The responsive column decision runs synchronously per resize, keyed off
+        # the predicted viewport width (window width minus this cached chrome
+        # overhead) so it stays consistent with the header/toolbar reflow in the
+        # same pass — a deferred, separately-timed pass left the layout briefly
+        # half-updated and spiked the frameless window's minimum width, jolting it
+        # wider then back. `_table_chrome` (None until first measured) also serves
+        # as the "UI is built" guard. Non-resize callers pass no width and read the
+        # real viewport, refreshing the cache.
+        self._table_chrome = None
         QTimer.singleShot(0, self._apply_responsive_columns)
 
         self.table_stack.addWidget(self.table)               # index 0
@@ -1032,29 +1040,31 @@ class MainWindow(QMainWindow):
         # from the tray. At construction the table viewport had no real width,
         # so the word columns were sized to a stale/narrow viewport, leaving
         # empty space on the right. Refit once the real geometry is in place.
-        if hasattr(self, '_col_fit_pending'):
+        if hasattr(self, '_table_chrome'):
             QTimer.singleShot(0, self._apply_responsive_columns)
         self._apply_responsive_header()
         self._apply_toolbar_layout()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if not hasattr(self, '_col_fit_pending'):
+        if not hasattr(self, '_table_chrome'):
             return
+        # Update columns, header and toolbar together in one synchronous pass so
+        # the layout never sits half-updated mid-resize (which spiked the frameless
+        # window's minimum width and jolted it wider then back). Columns go first
+        # so the filter-popover cascade toggles the "Filters" chip before the
+        # toolbar reflows. The column decision needs the *new* viewport width;
+        # reading table.viewport().width() here returns the stale, pre-resize value,
+        # so predict it from the new window width minus the cached chrome overhead.
+        if self._table_chrome is not None:
+            predicted = max(1, event.size().width() - self._table_chrome)
+        else:
+            predicted = None  # not measured yet — fall back to the real viewport
+        self._apply_responsive_columns(predicted)
         self._apply_responsive_header()
         self._apply_toolbar_layout()
-        # Defer the column hide/show to after this resize lays out, so it reads
-        # the settled viewport width (a synchronous read here sees the old width
-        # and flickers a column in then out). Coalesce a burst into one pass.
-        if not self._col_fit_pending:
-            self._col_fit_pending = True
-            QTimer.singleShot(0, self._run_responsive_columns)
         if getattr(self, "_tour", None) is not None:
             self._tour.relayout()
-
-    def _run_responsive_columns(self):
-        self._col_fit_pending = False
-        self._apply_responsive_columns()
 
     def start_tour(self):
         """Replay the active tab's onboarding tour on demand (Menu → Show Tour)."""
@@ -1083,14 +1093,22 @@ class MainWindow(QMainWindow):
     # width hovering on the threshold can't flicker the column in and out.
     _RESPONSIVE_HYST = 40
 
-    def _apply_responsive_columns(self):
+    def _apply_responsive_columns(self, viewport_w=None):
         """Progressively hide meta columns when the table is too narrow to give
         the Word/Translation columns a readable width, restoring them as it
-        widens. Filters for hidden Status/Language columns move to a popover."""
+        widens. Filters for hidden Status/Language columns move to a popover.
+
+        `viewport_w` is the table viewport width to decide against. The resize
+        path passes a value predicted from the new window width (the real viewport
+        hasn't relaid out yet); other callers pass None to read the settled
+        viewport and refresh the cached chrome overhead used for that prediction."""
         if not hasattr(self, "_meta_col_min"):
             return
         table = self.table
-        viewport_w = table.viewport().width()
+        if viewport_w is None:
+            viewport_w = table.viewport().width()
+            if viewport_w > 1:
+                self._table_chrome = self.width() - viewport_w
         if viewport_w <= 1:
             return
 
