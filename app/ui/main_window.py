@@ -28,7 +28,7 @@ import sys
 import threading
 from datetime import datetime, timedelta
 
-from PySide6.QtCore import (QAbstractAnimation, QEasingCurve, QElapsedTimer,
+from PySide6.QtCore import (QAbstractAnimation, QEasingCurve,
                             QEvent, QPoint, QPropertyAnimation, QSize, Qt,
                             QTimer, Signal)
 from PySide6.QtGui import (
@@ -61,7 +61,7 @@ from app.ui.player import PlaybackSettingsPopup, PlayerBar, WordPlayer
 from app.ui.texts_page import TextsPage
 from app.ui.stats_page import StatsPage
 from app.ui.toast import show_toast
-from app.ui.widgets import ElidedLabel, SearchField
+from app.ui.widgets import ContentComboBox, ElidedLabel, OverflowToolBar, SearchField
 from app.ui.word_model import (
     COL_ID, COL_CREATED, COL_LANG1, COL_LANG2, COL_ROWNUM, COL_SOURCE, COL_STATUS,
     COL_WORD1, COL_WORD2, HEADERS, WordFilter, WordTableModel, words_to_dataframe,
@@ -251,6 +251,7 @@ class MainWindow(QMainWindow):
         self._header_compact = False     # search collapsed to its icon
         self._buttons_collapsed = False  # Add/Search-scope folded into "⋯"
         self._header_metrics = None      # cached widths of the header controls
+        self._toolbar_metrics = None     # cached widths of the filter/action toolbar
         self._quitting = False
         self._open_dialogs = {}
         self._tts_fallback_warned = False
@@ -400,6 +401,7 @@ class MainWindow(QMainWindow):
         self._on_favorites_toggled(self.favorites_btn.isChecked())
         if self.is_reading_active:
             self.read_button.setIcon(self._icon("stop", "danger", 17))
+        self.action_tools.refresh_theme(self.colors)  # re-tint "⋯" + rebuild menu
         self.texts_page.refresh_theme(self.colors)
         self.stats_page.refresh_theme(self.colors)
         self.player_bar.refresh_theme(self.colors)
@@ -659,18 +661,38 @@ class MainWindow(QMainWindow):
 
         root.addWidget(header)
 
-        # ---------- filter row ----------
+        # ---------- top toolbar (filter chips + contextual actions) ----------
+        # One row when everything fits; while reading at narrow widths the filter
+        # chips drop to a bar *beneath the table* (self.tb_row_bottom) so the
+        # player keeps its full width on top without growing the window. The
+        # action bar self-collapses into a "⋯", so it never needs the extra row.
+        # See _apply_toolbar_layout.
         filters = QWidget()
-        f = QHBoxLayout(filters)
-        f.setContentsMargins(16, 12, 16, 6)
-        f.setSpacing(8)
+        self._tb_top = QHBoxLayout(filters)
+        self._tb_top.setContentsMargins(16, 12, 16, 6)
+        self._tb_top.setSpacing(8)
+        self.tb_row_top = filters
+        self.filter_row = filters
 
-        self.tag_combo = QComboBox()
-        self.tag_combo.setMinimumWidth(125)
+        # Bar that sits below the table; holds the chips (+ player) while the
+        # toolbar is stacked. Collapsed to zero height until revealed.
+        self.tb_row_bottom = QWidget(objectName="ToolbarBottomBar")
+        self._tb_bottom = QHBoxLayout(self.tb_row_bottom)
+        self._tb_bottom.setContentsMargins(16, 6, 16, 6)
+        self._tb_bottom.setSpacing(8)
+        self.tb_row_bottom.setMaximumHeight(0)
+        self.tb_row_bottom.setVisible(False)
+
+        # ---------- filter chips ----------
+        # ContentComboBox so the chip sizes to the current selection ("All tags")
+        # rather than the widest tag in the dropdown — otherwise a single long tag
+        # would inflate the chip and force the whole chip cluster to squash.
+        self.tag_combo = ContentComboBox(min_chars=4)
         self.tag_combo.currentTextChanged.connect(self.on_filters_changed)
-        f.addWidget(self.tag_combo)
 
-        # icon-only stand-in for the tag combo while the player is shown
+        # icon-only stand-in for the tag combo while the chips are squashed — used
+        # only on the bottom shelf when the player drops down beside them and needs
+        # the room (never just to save space on an otherwise empty row).
         self.tag_icon_btn = QPushButton(objectName="chipButton")
         self._set_icon(self.tag_icon_btn, "tag", "text_dim", 16)
         self.tag_icon_btn.setIconSize(QSize(16, 16))
@@ -678,14 +700,12 @@ class MainWindow(QMainWindow):
         self.tag_icon_btn.setCursor(Qt.PointingHandCursor)
         self.tag_icon_btn.clicked.connect(self._show_tag_menu)
         self.tag_icon_btn.setVisible(False)
-        f.addWidget(self.tag_icon_btn)
 
         self.favorites_btn = QPushButton(tr(" Favorites"), objectName="chipButton")
         self.favorites_btn.setIcon(self._icon("star", "text_dim", 16))  # re-tinted via _on_favorites_toggled
         self.favorites_btn.setCheckable(True)
         self.favorites_btn.setCursor(Qt.PointingHandCursor)
         self.favorites_btn.toggled.connect(self._on_favorites_toggled)
-        f.addWidget(self.favorites_btn)
 
         # Holds the Status/Language/Translation filters when their columns are
         # collapsed away at narrow widths (see _apply_responsive_columns); hidden
@@ -696,52 +716,57 @@ class MainWindow(QMainWindow):
         self.more_filters_btn.setToolTip(tr("Filters that don't fit the table"))
         self.more_filters_btn.clicked.connect(self._toggle_filter_popover)
         self.more_filters_btn.setVisible(False)
-        f.addWidget(self.more_filters_btn)
 
-        f.addStretch(1)
-        self.filter_row = filters
-
-        # ---------- contextual actions (right side of the filter row) ----------
-        # The row is fixed-height and wide enough for chips + actions even at
-        # the minimum window width, so showing the bar never moves anything.
+        # ---------- contextual actions (shown on selection / while reading) ----------
+        # The action buttons live in an OverflowToolBar, so they fold into a "⋯"
+        # menu on their own when the bar is narrow and the bar reports only a
+        # tiny minimum width — it can never force the window wider. The selection
+        # label sits to its left and Delete is pinned (always reachable) on the
+        # right.
         self.action_bar = QWidget(objectName="ActionBar")
         ab = QHBoxLayout(self.action_bar)
         ab.setContentsMargins(10, 0, 10, 0)
-        ab.setSpacing(2)
+        ab.setSpacing(6)
+        self._action_ab = ab
 
-        self.selection_label = QLabel("")
+        # ElidedLabel so the count never enforces a width floor — it elides at
+        # the narrowest sizes instead of pushing the action buttons off-screen.
+        self.selection_label = ElidedLabel(min_width=24)
         ab.addWidget(self.selection_label)
-        ab.addSpacing(8)
 
-        def action_button(icon_name, text, tip, slot):
+        self.action_tools = OverflowToolBar(self.colors)
+        ab.addWidget(self.action_tools, 1)
+
+        def action_button(icon_name, text, slot, priority):
             btn = QPushButton()
             self._set_icon(btn, icon_name, "text", 17)
             btn.setIconSize(QSize(17, 17))
-            btn.setToolTip(f"{text} — {tip}")
+            btn.setToolTip(text)  # also the label used in the "⋯" overflow menu
             btn.setCursor(Qt.PointingHandCursor)
             btn.clicked.connect(slot)
-            ab.addWidget(btn)
+            self.action_tools.add_button(btn, priority)
             return btn
 
-        action_button("book", tr("Definition"), tr("View definition (double-click)"), self.view_definition)
-        self.read_button = action_button("volume", tr("Read"), tr("Read selected words aloud"),
-                                         self.read_words_action)
-        action_button("star", tr("Favorite"), tr("Toggle favorite"), self.toggle_favorite)
-        action_button("tag", tr("Tags"), tr("Add / remove tags"), self.open_tags)
-        action_button("edit", tr("Edit"), tr("Edit word"), self.edit_row)
-        action_button("copy", tr("Copy"), tr("Copy words"), self.show_copy_menu)
-        action_button("sparkles", tr("Text"), tr("Generate text from selection"),
-                      self.generate_text_action)
-        ab.addSpacing(6)
-        delete_btn = QPushButton()
-        self._set_icon(delete_btn, "trash", "danger", 17)
-        delete_btn.setIconSize(QSize(17, 17))
-        delete_btn.setToolTip(tr("Delete selected (Del)"))
-        delete_btn.setCursor(Qt.PointingHandCursor)
-        delete_btn.clicked.connect(self.delete_rows)
-        ab.addWidget(delete_btn)
+        # higher priority stays visible longer; lower folds into "⋯" first
+        action_button("book", tr("Definition"), self.view_definition, priority=90)
+        self.read_button = action_button("volume", tr("Read"), self.read_words_action,
+                                         priority=100)
+        action_button("star", tr("Favorite"), self.toggle_favorite, priority=60)
+        action_button("tag", tr("Tags"), self.open_tags, priority=50)
+        action_button("edit", tr("Edit"), self.edit_row, priority=70)
+        action_button("copy", tr("Copy"), self.show_copy_menu, priority=40)
+        action_button("sparkles", tr("Text"), self.generate_text_action, priority=30)
 
-        # ---------- playback bar (appears left of the actions while reading) ----------
+        self.delete_btn = QPushButton()
+        self._set_icon(self.delete_btn, "trash", "danger", 17)
+        self.delete_btn.setIconSize(QSize(17, 17))
+        self.delete_btn.setToolTip(tr("Delete selected (Del)"))
+        self.delete_btn.setCursor(Qt.PointingHandCursor)
+        self.delete_btn.clicked.connect(self.delete_rows)
+        ab.addWidget(self.delete_btn)
+        self.action_bar.setVisible(False)
+
+        # ---------- playback bar (sits with the actions / filters while reading) ----------
         self.player_bar = PlayerBar(self.colors)
         self.player_bar.setVisible(False)
         self.player_bar.prev_clicked.connect(self.word_player.prev)
@@ -760,10 +785,10 @@ class MainWindow(QMainWindow):
         self.mini_player.moved.connect(
             lambda: save_geometry(self.mini_player, "mini_player"))
 
-        self.action_bar.setVisible(False)
-        f.addWidget(self.player_bar)
-        f.addSpacing(8)
-        f.addWidget(self.action_bar)
+        self._toolbar_state = None       # (filters_on_top, player_on_top, reading, contextual)
+        self._bottom_shown = False       # intended state of the bottom bar
+        self._bottom_row_anim = None     # persistent reveal animation
+        self._populate_toolbar(filters_on_top=True, player_on_top=True, reading=False)
         self._lock_filter_row_height()
 
         # ---------- pages (words / texts) ----------
@@ -807,6 +832,15 @@ class MainWindow(QMainWindow):
         table_header = self.table.horizontalHeader()
         table_header.setSectionResizeMode(QHeaderView.Interactive)
         table_header.setStretchLastSection(False)
+        # The two Word columns split the leftover width via Stretch, so they track
+        # the viewport per pixel as the window resizes. The old approach refit them
+        # manually on an ~80ms throttle, which stepped the columns and briefly
+        # overflowed the viewport — flickering the horizontal scrollbar and bouncing
+        # the table. Stretch is native and smooth; the scrollbar is turned off since
+        # the columns are always sized to fit (meta columns hide responsively).
+        table_header.setSectionResizeMode(COL_WORD1, QHeaderView.Stretch)
+        table_header.setSectionResizeMode(COL_WORD2, QHeaderView.Stretch)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.table.setColumnHidden(COL_ID, True)
         # column widths must fit the header labels at the active font
         # scaling; QSS renders header sections at font-weight 600
@@ -864,20 +898,18 @@ class MainWindow(QMainWindow):
         self.table.horizontalScrollBar().valueChanged.connect(self._position_header_filters)
         QTimer.singleShot(0, self._position_header_filters)
 
-        # Refitting the word columns repaints the whole viewport, which is
-        # too slow to do on every resize tick — throttle to ~12 fps and
-        # always run once more after the drag stops.
-        self._col_fit_timer = QTimer(self)
-        self._col_fit_timer.setSingleShot(True)
-        self._col_fit_timer.setInterval(80)
-        self._col_fit_timer.timeout.connect(self._apply_responsive_columns)
-        self._col_fit_elapsed = QElapsedTimer()
-        self._col_fit_elapsed.start()
+        # The responsive column decision runs once per resize burst, deferred to
+        # after the layout settles (see resizeEvent) so it reads the real viewport
+        # width rather than the pre-resize one — a stale read would briefly show
+        # then hide a column, which looks like flicker. `_col_fit_pending`
+        # coalesces a burst and also serves as the "UI is built" guard.
+        self._col_fit_pending = False
         QTimer.singleShot(0, self._apply_responsive_columns)
 
         self.table_stack.addWidget(self.table)               # index 0
         self.table_stack.addWidget(self._build_words_empty())  # index 1
         wp.addWidget(table_wrap, 1)
+        wp.addWidget(self.tb_row_bottom)  # chips + player drop here when stacked
 
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
@@ -1000,21 +1032,29 @@ class MainWindow(QMainWindow):
         # from the tray. At construction the table viewport had no real width,
         # so the word columns were sized to a stale/narrow viewport, leaving
         # empty space on the right. Refit once the real geometry is in place.
-        if hasattr(self, '_col_fit_timer'):
+        if hasattr(self, '_col_fit_pending'):
             QTimer.singleShot(0, self._apply_responsive_columns)
         self._apply_responsive_header()
+        self._apply_toolbar_layout()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if not hasattr(self, '_col_fit_timer'):
+        if not hasattr(self, '_col_fit_pending'):
             return
         self._apply_responsive_header()
-        if self._col_fit_elapsed.elapsed() >= self._col_fit_timer.interval():
-            self._apply_responsive_columns()
-        else:
-            self._col_fit_timer.start()
+        self._apply_toolbar_layout()
+        # Defer the column hide/show to after this resize lays out, so it reads
+        # the settled viewport width (a synchronous read here sees the old width
+        # and flickers a column in then out). Coalesce a burst into one pass.
+        if not self._col_fit_pending:
+            self._col_fit_pending = True
+            QTimer.singleShot(0, self._run_responsive_columns)
         if getattr(self, "_tour", None) is not None:
             self._tour.relayout()
+
+    def _run_responsive_columns(self):
+        self._col_fit_pending = False
+        self._apply_responsive_columns()
 
     def start_tour(self):
         """Replay the active tab's onboarding tour on demand (Menu → Show Tour)."""
@@ -1039,6 +1079,9 @@ class MainWindow(QMainWindow):
     # Status (kept longest); optional Created/Source go before everything.
     _RESPONSIVE_DROP_ORDER = (COL_CREATED, COL_SOURCE, COL_LANG2, COL_LANG1, COL_STATUS)
     _MIN_WORD_COL = 110  # keep each word column at least this readable
+    # A hidden column must regain this much extra room before it reappears, so a
+    # width hovering on the threshold can't flicker the column in and out.
+    _RESPONSIVE_HYST = 40
 
     def _apply_responsive_columns(self):
         """Progressively hide meta columns when the table is too narrow to give
@@ -1065,8 +1108,15 @@ class MainWindow(QMainWindow):
         rownum_w = table.columnWidth(COL_ROWNUM)
         visible = set(wanted)
         for col in self._RESPONSIVE_DROP_ORDER:
+            if col not in visible:
+                continue
             fixed = rownum_w + sum(col_w(c) for c in visible)
-            if viewport_w - fixed >= 2 * self._MIN_WORD_COL:
+            # showing a currently-hidden column needs extra slack (hysteresis);
+            # keeping an already-visible one only needs the base width.
+            need = 2 * self._MIN_WORD_COL
+            if col in self._responsive_hidden:
+                need += self._RESPONSIVE_HYST
+            if viewport_w - fixed >= need:
                 break
             visible.discard(col)
 
@@ -1080,21 +1130,6 @@ class MainWindow(QMainWindow):
                 self._responsive_hidden.add(col)
 
         self._sync_filter_popover()
-        self._fit_word_columns()
-
-    def _fit_word_columns(self):
-        self._col_fit_timer.stop()
-        self._col_fit_elapsed.restart()
-        header = self.table.horizontalHeader()
-        viewport_w = self.table.viewport().width()
-        fixed = sum(
-            self.table.columnWidth(c)
-            for c in range(header.count())
-            if c not in (COL_WORD1, COL_WORD2) and not self.table.isColumnHidden(c)
-        )
-        available = max(100, viewport_w - fixed)
-        self.table.setColumnWidth(COL_WORD1, available // 2)
-        self.table.setColumnWidth(COL_WORD2, available - available // 2)
 
     # ---------- "Filters" popover for responsively-hidden header filters -------
     def _sync_filter_popover(self):
@@ -1137,6 +1172,8 @@ class MainWindow(QMainWindow):
         if not hidden and self._filter_popover.isVisible():
             self._filter_popover.hide()
         self._position_header_filters()
+        # the Filters chip widened/narrowed the chip cluster — re-place the chips
+        self._apply_toolbar_layout()
 
     def _toggle_filter_popover(self):
         pop = self._filter_popover
@@ -1157,23 +1194,216 @@ class MainWindow(QMainWindow):
         pop.show()
 
     def _lock_filter_row_height(self):
-        """Fix the filter row height so swapping chips/actions can't shift
-        the table; recompute after theme/scaling changes."""
+        """Fix each toolbar row's height so swapping chips/actions can't shift
+        the table; the bottom row's height is driven by the reveal animation.
+        Recompute after theme/scaling changes (which also invalidates the
+        cached toolbar widths)."""
+        self._toolbar_metrics = None
         chips = (self.tag_combo, self.favorites_btn)
         row_h = max(w.sizeHint().height() for w in chips)
         self.action_bar.setMaximumHeight(row_h)
         self.player_bar.setMaximumHeight(row_h)
-        margins = self.filter_row.layout().contentsMargins()
-        self.filter_row.setFixedHeight(row_h + margins.top() + margins.bottom())
+        top_m = self._tb_top.contentsMargins()
+        self.tb_row_top.setFixedHeight(row_h + top_m.top() + top_m.bottom())
+        bot_m = self._tb_bottom.contentsMargins()
+        self._bottom_row_h = row_h + bot_m.top() + bot_m.bottom()
+        # keep the collapsed/expanded height in sync with the current state
+        if self.tb_row_bottom.isVisible():
+            self.tb_row_bottom.setMaximumHeight(self._bottom_row_h)
+
+    # ------------------------------------------------------------------ toolbar
+    def _measure_toolbar_metrics(self):
+        """Cache the natural widths of the toolbar pieces (once, while the chips
+        are on the top row) so the chips-stacking decision is made from real
+        sizes. Mirrors _measure_header_metrics."""
+        if self._toolbar_metrics is not None:
+            return self._toolbar_metrics
+        # the chips must be on the top row at full width to measure them
+        if not self.tag_combo.isVisible() or self.tag_combo.width() == 0:
+            return None
+        self._toolbar_metrics = {
+            # chips measured individually so the natural width can be recomputed
+            # for whichever ones are actually visible (the Filters chip toggles)
+            "tag": self.tag_combo.sizeHint().width(),
+            "fav": self.favorites_btn.sizeHint().width(),
+            "more": self.more_filters_btn.sizeHint().width(),
+            "chip_icon": self._COMPACT_CHIP_W,  # one squashed chip (capped width)
+            "player": self.player_bar.sizeHint().width(),
+        }
+        return self._toolbar_metrics
+
+    def _filters_width(self, m, squashed=False):
+        """Width of the currently-relevant filter chips, full or squashed."""
+        sp = self._tb_top.spacing()
+        n = 3 if self.more_filters_btn.isVisible() else 2
+        if squashed:
+            return m["chip_icon"] * n + sp * (n - 1)
+        w = m["tag"] + sp + m["fav"]
+        if n == 3:
+            w += sp + m["more"]
+        return w
+
+    def _action_full_width(self, has_sel):
+        """The action bar with *every* button shown: selection label (if any) +
+        all action buttons + the pinned Delete. OverflowToolBar.sizeHint() already
+        reports the all-buttons width regardless of its current overflow state."""
+        sp = self._action_ab.spacing()
+        sel_w = (self.selection_label.sizeHint().width() + sp) if has_sel else 0
+        return (20 + sel_w + self.action_tools.sizeHint().width()
+                + sp + self.delete_btn.sizeHint().width())
+
+    def _apply_toolbar_layout(self):
+        """Single source of truth for the toolbar. The filter chips are the
+        lowest-priority occupant of the top row, and the player gives the action
+        bar room before it overflows. As the window narrows while a selection /
+        playback is active:
+
+          1. everything fits → chips, player and all actions on the top row;
+          2. chips drop to the shelf beneath the table (still full there), so the
+             player + all actions keep the top row;
+          3. keeping the player up would start folding action buttons into "⋯" →
+             the player drops to the shelf too (right side) and squashes the chips
+             there to make room, freeing the whole top row for the action bar to
+             spread its buttons out.
+
+        The action bar's own minimum is tiny (it self-collapses into "⋯"), so none
+        of this can grow the window."""
+        if not hasattr(self, "tb_row_top"):
+            return
+        has_sel = bool(self.table.selectionModel().selectedRows())
+        reading = self.is_reading_active
+        contextual = has_sel or reading
+
+        m = self._measure_toolbar_metrics()
+        if m is None:
+            prev = self._toolbar_state
+            filters_on_top = prev[0] if prev else True
+            player_on_top = prev[1] if prev else True
+            squash = False
+        elif not contextual:
+            filters_on_top, player_on_top, squash = True, True, False  # idle
+        else:
+            sp = self._tb_top.spacing()
+            M = 32  # 16px left/right row margins
+            content_w = self.width() - 58  # minus the fixed icon sidebar
+            chips_full = self._filters_width(m)
+            action_full = self._action_full_width(has_sel)
+            player_full = m["player"] if reading else 0
+            squash = False
+            if chips_full + M + sp + action_full + (sp + player_full if reading
+                                                    else 0) <= content_w:
+                filters_on_top, player_on_top = True, True            # (1) all up
+            elif (not reading) or (M + player_full + sp + action_full <= content_w):
+                filters_on_top, player_on_top = False, True           # (2) chips down
+            else:
+                # (3) the player would crowd the actions — send it to the shelf's
+                # right. Squash the chips unconditionally: the player shares the
+                # shelf, so full-width chips beside it would pin the shelf (and the
+                # window) wide and make the minimum non-monotonic — the source of
+                # the resize jump.
+                filters_on_top, player_on_top = False, False
+                squash = True
+        self._arrange_toolbar(filters_on_top, player_on_top, reading,
+                              contextual, has_sel, squash)
+
+    def _arrange_toolbar(self, filters_on_top, player_on_top, reading,
+                         contextual, has_sel, squash):
+        state = (filters_on_top, player_on_top, reading, contextual)
+        changed = state != self._toolbar_state
+        if changed:
+            prev = self._toolbar_state
+            # Crossfade the row's old look over the rearrangement. Nothing here
+            # can spike the window's minimum (every cluster self-shrinks), so no
+            # width compensation is needed — unlike the old reparenting toolbar.
+            if prev is not None:
+                fade_swap(self.filter_row, 200)
+            self._toolbar_state = state
+            self._populate_toolbar(filters_on_top, player_on_top, reading)
+            self.action_bar.setVisible(contextual)
+            self.player_bar.setVisible(reading)
+        self.selection_label.setVisible(has_sel)
+        self._set_filters_compact(squash)
+        self._reveal_bottom_row(not filters_on_top)
+
+    def _populate_toolbar(self, filters_on_top, player_on_top, reading):
+        """(Re)place the chips, player and actions across the two rows. The action
+        bar always stays on the top row; the player sits to its left when on top,
+        otherwise on the right of the shelf; the chips sit on whichever row they
+        weren't pushed off."""
+        for lay in (self._tb_top, self._tb_bottom):
+            while lay.count():
+                lay.takeAt(0)  # widgets stay alive; re-added below
+        chips = (self.tag_combo, self.tag_icon_btn,
+                 self.favorites_btn, self.more_filters_btn)
+        # ----- top row: [chips?] <stretch> [player?] [actions] -----
+        if filters_on_top:
+            for w in chips:
+                self._tb_top.addWidget(w)
+        self._tb_top.addStretch(1)
+        if reading and player_on_top:
+            self._tb_top.addWidget(self.player_bar)
+            self._tb_top.addSpacing(8)
+        self._tb_top.addWidget(self.action_bar)
+        # ----- bottom shelf (under the table): [chips?] <stretch> [player?] -----
+        if not filters_on_top:
+            for w in chips:
+                self._tb_bottom.addWidget(w)
+        self._tb_bottom.addStretch(1)
+        if reading and not player_on_top:
+            self._tb_bottom.addWidget(self.player_bar)
+
+    # Width each chip is capped to when squashed into an icon — kept tight so the
+    # squashed chips + the player fit on the shelf without growing the window.
+    _COMPACT_CHIP_W = 36
+
+    def _set_filters_compact(self, compact):
+        """Squash the tag combo to its icon stand-in and drop the Favorites /
+        Filters labels so the chips make room for the player on the shelf. The
+        squashed chips are capped to a tight icon width (independent of theme
+        padding / locale) so the shelf never has to grow the window."""
+        self.tag_combo.setVisible(not compact)
+        self.tag_icon_btn.setVisible(compact)
+        self.favorites_btn.setText("" if compact else tr(" Favorites"))
+        self.more_filters_btn.setText("" if compact else tr(" Filters"))
+        cap = self._COMPACT_CHIP_W if compact else 16777215  # QWIDGETSIZE_MAX
+        for b in (self.tag_icon_btn, self.favorites_btn, self.more_filters_btn):
+            b.setMaximumWidth(cap)
+
+    def _reveal_bottom_row(self, show):
+        """Animate the bottom bar open/closed; driving its height slides the
+        table down/up smoothly instead of letting it jump."""
+        # Compare against the *intended* state, not the live (mid-animation)
+        # height: starting a read clears the selection (which would close the
+        # bar) then turns on playback (which re-opens it) in the same burst, and
+        # reading the half-collapsed height would let the stale close animation
+        # win and leave the stacked chips hidden.
+        if self._bottom_shown == show:
+            return
+        self._bottom_shown = show
+        if self._bottom_row_anim is None:
+            # one persistent animation, reused: a per-call DeleteWhenStopped
+            # animation gets freed on finish, and stopping that dangling object
+            # on the next transition raises and aborts the playback start.
+            anim = QPropertyAnimation(self.tb_row_bottom, b"maximumHeight", self)
+            anim.setDuration(200)
+            anim.setEasingCurve(QEasingCurve.OutCubic)
+            anim.finished.connect(self._on_bottom_row_done)
+            self._bottom_row_anim = anim
+        self._bottom_row_anim.stop()  # safe: never an opposite anim left running
+        if show:
+            self.tb_row_bottom.setVisible(True)
+        self._bottom_row_anim.setStartValue(self.tb_row_bottom.maximumHeight())
+        self._bottom_row_anim.setEndValue(self._bottom_row_h if show else 0)
+        self._bottom_row_anim.start()
+
+    def _on_bottom_row_done(self):
+        if not self._bottom_shown:
+            self.tb_row_bottom.setVisible(False)
 
     def _on_selection_changed(self, *_):
         count = len(self.table.selectionModel().selectedRows())
-        self.selection_label.setText(tr("{count} selected").format(count=count))
-        # with no selection the bar is only up for playback — "0 selected"
-        # would be noise and widens the row at minimum window width
-        self.selection_label.setVisible(count > 0)
-        # the action bar stays up while reading aloud (it holds the stop button)
-        self.action_bar.setVisible(count > 0 or self.is_reading_active)
+        self.selection_label.set_full_text(tr("{count} selected").format(count=count))
+        self._apply_toolbar_layout()
 
     def _on_favorites_toggled(self, checked):
         self.favorites_btn.setIcon(
@@ -1432,9 +1662,10 @@ class MainWindow(QMainWindow):
 
         if on_words:
             # the table can miss resizes while hidden (e.g. the window was
-            # maximized on the Texts tab); refit the word columns to the
-            # now-current width once the page is shown and laid out
-            QTimer.singleShot(0, self._fit_word_columns)
+            # maximized on the Texts tab); recompute which meta columns fit at the
+            # now-current width once the page is shown (the Word columns restretch
+            # themselves)
+            QTimer.singleShot(0, self._apply_responsive_columns)
 
         # First visit to a tab fires its onboarding tour once (only reached on a
         # real page change — this method early-returns when index == current).
@@ -2034,9 +2265,11 @@ class MainWindow(QMainWindow):
         # doesn't drown out the moving played-row highlight — and so the
         # selection label never coexists with the player in one layout pass
         self.table.clearSelection()
-        self._set_playback_ui(True)
+        # set the word first so the toolbar layout pass in _set_playback_ui sees
+        # the player at its real width when deciding whether it fits on top
         self.player_bar.set_paused(False)
         self.player_bar.set_position(0, len(records), records[0].get('Word1', ''))
+        self._set_playback_ui(True)
         self.mini_player.set_paused(False)
         self.mini_player.set_pair(records[0].get('Word1', ''), records[0].get('Word2', ''))
         self.word_player.play(
@@ -2071,59 +2304,21 @@ class MainWindow(QMainWindow):
         popup.popup_at(self.player_bar.config_btn)
 
     def _set_playback_ui(self, active):
-        """Show/hide the player bar; the words-only filter chips squash to
-        icons while it is visible. The whole row swaps under a crossfade."""
+        """Toggle reading state; the toolbar handles where the player goes
+        (inline when it fits, otherwise on the second row with the chips)."""
         if self.is_reading_active == active:
             return
         self.is_reading_active = active
-        fade_swap(self.filter_row, 200)
-        # hide before show: a transient state holding both the wide chips and
-        # the player would spike the row's minimum width and, at the smallest
-        # window size, force the window to grow permanently
-        has_selection = len(self.table.selectionModel().selectedRows()) > 0
-        if active:
-            self._pre_playback_width = self.width()
-            self._playback_grown_width = 0
-            self.tag_combo.setVisible(False)
-            self.favorites_btn.setText("")
-            self.tag_icon_btn.setVisible(True)
-            self.player_bar.setVisible(True)
-            self.action_bar.setVisible(True)
-            # after the layout settles, note whether it force-grew the window
-            QTimer.singleShot(0, lambda: setattr(
-                self, "_playback_grown_width",
-                self.width() if self.width() > self._pre_playback_width else 0))
-        else:
-            self.player_bar.setVisible(False)
-            self.tag_icon_btn.setVisible(False)
-            self.favorites_btn.setText(tr(" Favorites"))
-            self.tag_combo.setVisible(True)
-            self.action_bar.setVisible(has_selection)
-            QTimer.singleShot(0, self._restore_pre_playback_width)
         if active:
             self.read_button.setIcon(self._icon("stop", "danger", 17))
             self.read_button.setToolTip(tr("Stop reading"))
         else:
             self.read_button.setIcon(self._icon("volume", "text", 17))
             self.read_button.setToolTip(tr("Read — Read selected words aloud"))
-
-    def _restore_pre_playback_width(self, attempts=10):
-        """If showing the player force-grew the window (minimum-size
-        enforcement at small widths), shrink back once it is gone. A manual
-        resize during playback (width no longer the forced one) is kept."""
-        width = getattr(self, "_pre_playback_width", 0)
-        grown = getattr(self, "_playback_grown_width", 0)
-        if not (width and grown and self.width() == grown and not self.isMaximized()):
-            return
-        if self.minimumSizeHint().width() > width:
-            # the layout hasn't dropped its minimum yet — try again shortly
-            if attempts > 0:
-                QTimer.singleShot(30, lambda: self._restore_pre_playback_width(attempts - 1))
-            return
-        self.resize(width, self.height())
+        self._apply_toolbar_layout()
 
     def _show_tag_menu(self):
-        """Dropdown stand-in for the squashed tag combo."""
+        """Dropdown stand-in for the squashed tag combo (chips on the shelf)."""
         menu = QMenu(self)
         current = self.tag_combo.currentText()
         for i in range(self.tag_combo.count()):
