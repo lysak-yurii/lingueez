@@ -394,10 +394,19 @@ class PlaybackSettingsPopup(QWidget):
         form.addRow(QLabel(tr("Repeats per word")), self.repeats_spin)
 
     def popup_at(self, anchor):
-        """Show anchored below ``anchor`` (a widget), right-aligned to it."""
+        """Show anchored below ``anchor`` (a widget), right-aligned to it —
+        flipping above when there's no room below (e.g. the player is on the
+        bottom shelf, near the screen's bottom edge)."""
         self.adjustSize()
         bottom_right = anchor.mapToGlobal(anchor.rect().bottomRight())
         x = bottom_right.x() - self.width()
         y = bottom_right.y() + 6
-        self.move(max(0, x), y)
+        screen = anchor.screen().availableGeometry() if anchor.screen() else None
+        if screen:
+            x = max(screen.left() + 4, min(x, screen.right() - self.width() - 4))
+            if y + self.height() > screen.bottom() - 4:  # no room below: flip above
+                y = anchor.mapToGlobal(anchor.rect().topRight()).y() - self.height() - 6
+        else:
+            x = max(0, x)
+        self.move(x, y)
         self.show()
