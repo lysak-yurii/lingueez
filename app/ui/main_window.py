@@ -793,6 +793,7 @@ class MainWindow(QMainWindow):
         self._toolbar_state = None       # (filters_on_top, player_on_top, reading, contextual)
         self._bottom_shown = False       # intended state of the bottom bar
         self._bottom_row_anim = None     # persistent reveal animation
+        self._suppress_sel_relayout = False  # set while a read clears selection
         self._populate_toolbar(filters_on_top=True, player_on_top=True, reading=False)
         self._lock_filter_row_height()
 
@@ -1246,8 +1247,11 @@ class MainWindow(QMainWindow):
             "fav": self.favorites_btn.sizeHint().width(),
             "more": self.more_filters_btn.sizeHint().width(),
             "chip_icon": self._COMPACT_CHIP_W,  # one squashed chip (capped width)
-            "player": self.player_bar.sizeHint().width(),
         }
+        # NB: the player width is NOT cached here — it grows with the current
+        # word, so _apply_toolbar_layout reads it live (see there). A width cached
+        # at startup (empty word) would understate it and misjudge whether the
+        # player fits on the top row for longer words.
         return self._toolbar_metrics
 
     def _filters_width(self, m, squashed=False):
@@ -1306,7 +1310,9 @@ class MainWindow(QMainWindow):
             content_w = self.width() - 58  # minus the fixed icon sidebar
             chips_full = self._filters_width(m)
             action_full = self._action_full_width(has_sel)
-            player_full = m["player"] if reading else 0
+            # Live, not cached: the player's width tracks the current word, so a
+            # stale (empty-word) width would misjudge whether it fits on top.
+            player_full = self.player_bar.sizeHint().width() if reading else 0
             squash = False
             if chips_full + M + sp + action_full + (sp + player_full if reading
                                                     else 0) <= content_w:
@@ -1421,6 +1427,12 @@ class MainWindow(QMainWindow):
     def _on_selection_changed(self, *_):
         count = len(self.table.selectionModel().selectedRows())
         self.selection_label.set_full_text(tr("{count} selected").format(count=count))
+        # Starting a read clears the selection first; relaying out here (with no
+        # selection and reading not yet on) would bounce the chips back to the top
+        # row for a frame, which the next pass's crossfade then flashes. Skip it —
+        # _set_playback_ui does the single, correct relayout right after.
+        if self._suppress_sel_relayout:
+            return
         self._apply_toolbar_layout()
 
     def _on_favorites_toggled(self, checked):
@@ -2281,8 +2293,13 @@ class MainWindow(QMainWindow):
         self.texts_page.stop_reading()  # one player at a time
         # the queue is captured; clear the selection first so its highlight
         # doesn't drown out the moving played-row highlight — and so the
-        # selection label never coexists with the player in one layout pass
+        # selection label never coexists with the player in one layout pass.
+        # Suppress the relayout this fires so the chips don't bounce to the top
+        # row mid-start (the next pass's crossfade would flash that stale frame);
+        # _set_playback_ui below performs the one correct relayout.
+        self._suppress_sel_relayout = True
         self.table.clearSelection()
+        self._suppress_sel_relayout = False
         # set the word first so the toolbar layout pass in _set_playback_ui sees
         # the player at its real width when deciding whether it fits on top
         self.player_bar.set_paused(False)
