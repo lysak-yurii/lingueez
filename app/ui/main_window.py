@@ -1561,6 +1561,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         self.tray_add_action = menu.addAction(tr("Add Word"), self.open_add_word_and_translate)
         self._update_tray_hotkey_label()
+        menu.addAction(tr("Settings"), self._open_settings_from_tray)
         menu.addSeparator()
         menu.addAction(tr("Quit"), self.quit_app)
         self.tray.setContextMenu(menu)
@@ -2774,6 +2775,12 @@ class MainWindow(QMainWindow):
         if mode != "system":
             return
         crossfade_during(self, self._apply_appearance)
+
+    def _open_settings_from_tray(self):
+        # Restore the window first: saving applies a crossfade restyle and a toast,
+        # both of which need a visible window to land on.
+        self.show_window()
+        self.open_settings()
 
     def open_settings(self):
         from app.ui.dialogs.settings_dialog import SettingsDialog
