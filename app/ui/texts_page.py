@@ -269,7 +269,9 @@ class TextsPage(QWidget):
         left = QWidget()
         self._left_panel = left
         ll = QVBoxLayout(left)
-        ll.setContentsMargins(0, 0, 0, 0)
+        # small right inset so the filters / list don't sit flush against the
+        # splitter handle dividing this panel from the reader (matches the 8px grid)
+        ll.setContentsMargins(0, 0, 8, 0)
         ll.setSpacing(8)
 
         toolbar = QHBoxLayout()
