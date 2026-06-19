@@ -61,7 +61,8 @@ from app.ui.player import PlaybackSettingsPopup, PlayerBar, WordPlayer
 from app.ui.texts_page import TextsPage
 from app.ui.stats_page import StatsPage
 from app.ui.toast import show_toast
-from app.ui.widgets import ContentComboBox, ElidedLabel, OverflowToolBar, SearchField
+from app.ui.widgets import (ContentComboBox, ElidedLabel, OverflowToolBar,
+                            SearchField, clamp_combo_popup_onscreen)
 from app.ui.word_model import (
     COL_ID, COL_CREATED, COL_LANG1, COL_LANG2, COL_ROWNUM, COL_SOURCE, COL_STATUS,
     COL_WORD1, COL_WORD2, HEADERS, WordFilter, WordTableModel, words_to_dataframe,
@@ -154,6 +155,10 @@ class _HeaderFilterCombo(QComboBox):
 
     def wheelEvent(self, event):
         event.ignore()
+
+    def showPopup(self):
+        super().showPopup()
+        clamp_combo_popup_onscreen(self)  # flip above when low on the shelf
 
 
 class WordTableView(QTableView):
@@ -1212,6 +1217,10 @@ class MainWindow(QMainWindow):
         if x + pop.width() > screen.right():
             x = btn.mapToGlobal(btn.rect().bottomRight()).x() - pop.width()
         x = max(screen.left(), min(x, screen.right() - pop.width()))
+        # flip above the button when there's no room below — e.g. the chip is on
+        # the bottom shelf, near the screen's bottom edge.
+        if y + pop.height() > screen.bottom():
+            y = btn.mapToGlobal(btn.rect().topLeft()).y() - pop.height() - 4
         pop.move(x, y)
         pop.show()
 

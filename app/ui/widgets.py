@@ -182,6 +182,39 @@ class SearchField(QWidget):
         self.icon_btn.setIcon(icons.icon("search", colors["text_dim"], 18))
 
 
+def clamp_combo_popup_onscreen(combo, _retry=True):
+    """Anchor a just-shown QComboBox dropdown directly below the combo, flipping
+    it above when there isn't room below. Call right after super().showPopup().
+
+    Qt positions the list so the *current* item sits over the combo, so with the
+    first/placeholder item selected the list opens fully downward and runs off the
+    bottom (e.g. when the combo is on the toolbar's bottom shelf). Recomputing the
+    position from the combo's own geometry makes it behave like a normal dropdown
+    regardless of selection, and keeps it on screen."""
+    screen = combo.screen()
+    if screen is None:
+        return
+    area = screen.availableGeometry()
+    popup = combo.view().window()  # the dropdown's top-level container
+    w, h = popup.width(), popup.height()
+    top_left = combo.mapToGlobal(QPoint(0, 0))
+    combo_bottom = top_left.y() + combo.height()
+    room_below = area.bottom() - combo_bottom
+    room_above = top_left.y() - area.top()
+    if h > room_below and room_above > room_below:   # flip above: bottom at combo top
+        y = max(area.top(), top_left.y() - h)
+    else:                                            # below, clamped onto the screen
+        y = min(combo_bottom, area.bottom() - h)
+        y = max(area.top(), y)
+    x = max(area.left(), min(top_left.x(), area.right() - w))
+    popup.move(x, y)
+    if _retry:
+        # On the dropdown's very first show the container isn't sized yet, so the
+        # width/height read above are stale. Re-run once after layout settles; a
+        # no-op on every later open (geometry is already correct).
+        QTimer.singleShot(0, lambda: clamp_combo_popup_onscreen(combo, _retry=False))
+
+
 class ContentComboBox(QComboBox):
     """Combo that sizes to its *current* text — not the widest item in the list,
     which is what `AdjustToContents` does and what makes a short selection (e.g.
@@ -217,6 +250,7 @@ class ContentComboBox(QComboBox):
                       for i in range(self.count())), default=0)
         self.view().setMinimumWidth(widest + 48)
         super().showPopup()
+        clamp_combo_popup_onscreen(self)
 
 
 class FlowLayout(QLayout):
