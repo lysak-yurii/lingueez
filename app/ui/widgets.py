@@ -26,9 +26,9 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QCheckBox, QColorDialog, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLayout,
-    QLineEdit, QMenu, QPushButton, QSizePolicy, QStyle, QStyleOptionComboBox,
-    QToolButton, QWidget,
+    QApplication, QCheckBox, QColorDialog, QComboBox, QGridLayout, QHBoxLayout,
+    QLabel, QLayout, QLineEdit, QMenu, QPushButton, QSizePolicy, QStyle,
+    QStyleOptionComboBox, QToolButton, QWidget,
 )
 
 from app.i18n import tr
@@ -54,6 +54,7 @@ class SearchField(QWidget):
         self._compact = False
         self._expanded = True
         self._max_expanded = 560
+        self._app_filter_on = False  # app-level click-outside filter, only while open
 
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
@@ -122,8 +123,23 @@ class SearchField(QWidget):
             target = self.COLLAPSED_W
         self._animate(target, animate)
         self.updateGeometry()  # minimum changes between collapsed and open
+        # Watch app-wide clicks only while the field is actually open, so a click
+        # on non-focusable chrome (which never fires FocusOut) can still dismiss it.
+        self._set_app_filter(self.is_open())
         if self._compact and expanded != was:
             self.expandedChanged.emit(expanded)
+
+    def _set_app_filter(self, on):
+        if on == self._app_filter_on:
+            return
+        app = QApplication.instance()
+        if app is None:
+            return
+        if on:
+            app.installEventFilter(self)
+        else:
+            app.removeEventFilter(self)
+        self._app_filter_on = on
 
     def _animate(self, target, animate):
         self._anim.stop()
@@ -141,8 +157,23 @@ class SearchField(QWidget):
         return super().minimumSizeHint()
 
     def eventFilter(self, obj, ev):
-        if obj is self.line_edit and ev.type() == QEvent.FocusOut:
-            QTimer.singleShot(0, lambda: self._sync(animate=True))
+        if obj is self.line_edit:
+            if ev.type() == QEvent.FocusOut:
+                QTimer.singleShot(0, lambda: self._sync(animate=True))
+            elif ev.type() == QEvent.KeyPress and ev.key() == Qt.Key_Escape:
+                # Escape dismisses the search: clear the query and drop focus, so
+                # FocusOut collapses it back to the icon (the one way to close a
+                # non-empty field). Swallow it so it can't bubble elsewhere.
+                self.line_edit.clear()
+                self.line_edit.clearFocus()
+                return True
+        elif ev.type() == QEvent.MouseButtonPress and self.is_open():
+            # A click anywhere outside the open field dismisses it — landing on a
+            # focusable widget isn't required. Reuses the FocusOut collapse path
+            # (so a non-empty active filter still stays put). Let the click through.
+            pos = self.mapFromGlobal(ev.globalPosition().toPoint())
+            if not self.rect().contains(pos):
+                self.line_edit.clearFocus()
         return False
 
     def refresh_theme(self, colors):
