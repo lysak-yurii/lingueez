@@ -47,6 +47,7 @@ from urllib.parse import parse_qs, urlparse
 from app.core.accounts import get_account_registry
 from app.core.secure_store import SecureStore
 from app.core.supabase_client import get_supabase
+from app.i18n import tr
 
 # Must exactly match a redirect URL registered in Supabase
 # (Auth → URL Configuration → Redirect URLs): http://127.0.0.1:53682
@@ -126,7 +127,7 @@ class AuthManager:
         except Exception as exc:
             return False, self._friendly(exc)
         if not getattr(res, "session", None):
-            return False, "Sign-in failed. Check your email and password."
+            return False, tr("Sign-in failed. Check your email and password.")
         self._on_session(res.session)
         return True, None
 
@@ -149,10 +150,10 @@ class AuthManager:
         user = getattr(res, "user", None)
         identities = getattr(user, "identities", None) if user else None
         if identities is not None and len(identities) == 0:
-            return False, "That email is already registered. Try signing in instead."
+            return False, tr("That email is already registered. Try signing in instead.")
         #  • Confirmation is ON: Supabase emailed a 6-digit code. We're still logged
         #    out, so the dialog moves to its verify step and calls verify_signup_otp().
-        return True, "We emailed you a 6-digit code. Enter it to finish signing up."
+        return True, tr("We emailed you a 6-digit code. Enter it to finish signing up.")
 
     def verify_signup_otp(self, email: str, token: str) -> Result:
         """Confirm a brand-new account with the 6-digit code from the signup email
@@ -169,7 +170,7 @@ class AuthManager:
         except Exception as exc:
             return False, self._friendly(exc)
         if not getattr(res, "session", None):
-            return False, "That code didn't work. Check it and try again."
+            return False, tr("That code didn't work. Check it and try again.")
         self._on_session(res.session)
         return True, None
 
@@ -183,7 +184,7 @@ class AuthManager:
             auth.reset_password_for_email(email.strip())
         except Exception as exc:
             return False, self._friendly(exc)
-        return True, "If that account exists, a 6-digit reset code is on its way."
+        return True, tr("If that account exists, a 6-digit reset code is on its way.")
 
     def verify_recovery_otp(self, email: str, token: str, new_password: str) -> Result:
         """Finish a password reset: exchange the 6-digit recovery code for a
@@ -200,7 +201,7 @@ class AuthManager:
         except Exception as exc:
             return False, self._friendly(exc)
         if not getattr(res, "session", None):
-            return False, "That code didn't work. Check it and try again."
+            return False, tr("That code didn't work. Check it and try again.")
         # The recovery session lets us set a new password for this account.
         self._on_session(res.session)
         try:
@@ -217,7 +218,7 @@ class AuthManager:
             auth.resend({"type": "signup", "email": email.strip()})
         except Exception as exc:
             return False, self._friendly(exc)
-        return True, "Confirmation email re-sent."
+        return True, tr("Confirmation email re-sent.")
 
     # ---- Google OAuth (desktop loopback + PKCE) -----------------------
     def sign_in_with_google(self, timeout: float = 180.0) -> Result:
@@ -229,8 +230,9 @@ class AuthManager:
         try:
             server = _OAuthCatcher(("127.0.0.1", LOOPBACK_PORT), _OAuthHandler)
         except OSError as exc:
-            return False, (f"Could not start the local sign-in helper on port "
-                           f"{LOOPBACK_PORT} ({exc}). Close whatever is using it and retry.")
+            return False, tr("Could not start the local sign-in helper on port {port} "
+                             "({error}). Close whatever is using it and retry.").format(
+                                 port=LOOPBACK_PORT, error=exc)
         try:
             try:
                 resp = auth.sign_in_with_oauth({
@@ -245,20 +247,20 @@ class AuthManager:
 
             url = getattr(resp, "url", None)
             if not url:
-                return False, "Could not start Google sign-in."
+                return False, tr("Could not start Google sign-in.")
             webbrowser.open(url)
 
             code = server.wait_for_code(timeout)
             if server.error:
-                return False, f"Google sign-in failed: {server.error}"
+                return False, tr("Google sign-in failed: {error}").format(error=server.error)
             if not code:
-                return False, "Google sign-in was cancelled or timed out."
+                return False, tr("Google sign-in was cancelled or timed out.")
             try:
                 res = auth.exchange_code_for_session({"auth_code": code})
             except Exception as exc:
                 return False, self._friendly(exc)
             if not getattr(res, "session", None):
-                return False, "Google sign-in failed."
+                return False, tr("Google sign-in failed.")
             self._on_session(res.session)
             return True, None
         finally:
@@ -336,7 +338,7 @@ class AuthManager:
         if auth is None:
             return False, self._not_configured()
         data = self.store.load(uid)
-        stale_msg = "Your saved sign-in for this account expired. Sign in again."
+        stale_msg = tr("Your saved sign-in for this account expired. Sign in again.")
         if not data or not data.get("refresh_token"):
             self.registry.mark_needs_reauth(uid, True)
             return False, stale_msg
@@ -415,12 +417,37 @@ class AuthManager:
 
     @staticmethod
     def _friendly(exc: Exception) -> str:
-        return getattr(exc, "message", None) or str(exc) or "Something went wrong."
+        """Turn a raw GoTrue/network exception into a localized, user-facing message.
+        The server's own messages are English-only, so map the common ones to tr()
+        strings; fall back to the raw text (untranslated) only for the unexpected."""
+        raw = (getattr(exc, "message", None) or str(exc) or "").strip()
+        low = raw.lower()
+        if "invalid login credentials" in low:
+            return tr("Wrong email or password.")
+        if "email not confirmed" in low:
+            return tr("Your email isn't confirmed yet. Enter the 6-digit code we emailed you.")
+        if "already registered" in low or "already been registered" in low:
+            return tr("That email is already registered. Try signing in instead.")
+        if "rate limit" in low or "too many requests" in low or "for security purposes" in low:
+            return tr("Too many attempts. Please wait a minute and try again.")
+        if "expired" in low or "invalid" in low and ("token" in low or "otp" in low or "code" in low):
+            return tr("That code didn't work. Check it and try again.")
+        if "password should be at least" in low or "password should be" in low:
+            return tr("Your password is too short — use at least 6 characters.")
+        if "signups not allowed" in low or "signup is disabled" in low:
+            return tr("Sign-ups are disabled on this server.")
+        if any(k in low for k in ("network", "connection", "timed out", "timeout",
+                                  "getaddrinfo", "name or service not known",
+                                  "failed to establish", "temporary failure", "unreachable")):
+            return tr("Can't reach the server. Check your internet connection.")
+        # Unexpected server message: tr() leaves unknown strings unchanged, so this
+        # shows the original text rather than a key.
+        return tr(raw) if raw else tr("Something went wrong.")
 
     @staticmethod
     def _not_configured() -> str:
-        return ("Cloud sync is not configured yet. Add the Supabase URL and key "
-                "in Settings → Sync first.")
+        return tr("Cloud sync is not configured yet. Add the Supabase URL and key "
+                  "in Settings → Sync first.")
 
 
 # ---------------------------------------------------------------------------
