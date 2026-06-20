@@ -110,6 +110,93 @@ class SyncManager:
     def set_synced_account_id(self, uid: Optional[str]):
         self.db_adapter.set_sync_metadata('synced_account_id', uid or '')
 
+    # ---- contribute local-only data into the signed-in account --------
+    def local_only_delta(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Words/texts in the logged-out local store (``dictionary.db``) that the
+        active account lacks, matched by *content* (UUIDs differ across stores).
+
+        Returns ``{"words": [...], "texts": [...]}`` — each word dict carries a
+        ``_tags`` list. Empty when an account DB is not active (still logged out)
+        or the local store file is absent. Read-only: ``dictionary.db`` is never
+        modified. Words match on ``(Word1, Word2)`` (the local UNIQUE key and the
+        cloud per-user uniqueness); texts have no content constraint, so they match
+        on the synthetic key ``(Title, Text, Language)``.
+        """
+        from app.core.db import DB_PATH, get_tags_for_word
+        empty = {"words": [], "texts": []}
+        if os.path.abspath(self.local_db) == os.path.abspath(DB_PATH):
+            return empty  # still logged out — the active DB *is* the local store
+        if not os.path.exists(DB_PATH):
+            return empty
+
+        # Read the local-only store through a throwaway, cloud-off adapter so this
+        # never touches the network or the active account file.
+        source = DatabaseAdapter(use_cloud=False)
+        source.set_local_db(DB_PATH)
+        src_words = source.get_words()
+        src_texts = source.get_texts()
+        if not src_words and not src_texts:
+            return empty
+
+        # Content keys already present in the active account DB (self.db_adapter
+        # is pointed at it; cloud-off, so this is a local read).
+        acct_word_keys = {(w.get('Word1'), w.get('Word2'))
+                          for w in self.db_adapter.get_words()}
+        acct_text_keys = {(t.get('Title'), t.get('Text'), t.get('Language'))
+                          for t in self.db_adapter.get_texts()}
+
+        delta_words = []
+        for w in src_words:
+            if (w.get('Word1'), w.get('Word2')) in acct_word_keys:
+                continue
+            w = dict(w)
+            w['_tags'] = get_tags_for_word(w.get('ID'), db_path=DB_PATH)
+            delta_words.append(w)
+        delta_texts = [dict(t) for t in src_texts
+                       if (t.get('Title'), t.get('Text'), t.get('Language')) not in acct_text_keys]
+        return {"words": delta_words, "texts": delta_texts}
+
+    def contribute_local_items(self, words: List[Dict[str, Any]],
+                               texts: List[Dict[str, Any]], db_adapter) -> Tuple[int, int]:
+        """Copy the given local-only words/texts into the active account through
+        the cloud-enabled ``db_adapter`` (writes locally AND pushes/queues to the
+        cloud). Purely additive — never overwrites an existing account row. Each
+        word is inserted with a fresh UUID, its definitions/favorite filled in, and
+        its tags re-attached. Returns ``(added, failed)``.
+
+        ``db_adapter`` must be the app's cloud-enabled adapter (the SyncManager's
+        own is queue-only / cloud-off), so passing it in keeps the push correct.
+        """
+        added = failed = 0
+        for w in words:
+            try:
+                row = db_adapter.insert_word(w)
+                if not row:
+                    failed += 1
+                    continue
+                # insert_word carries only the base fields — fill the rest.
+                extra = {k: w[k] for k in ('Definition', 'Definition2', 'favorite')
+                         if w.get(k) not in (None, '')}
+                if extra:
+                    db_adapter.update_word(row['ID'], extra)
+                for tag in w.get('_tags', []):
+                    db_adapter.add_tag_to_word(row['ID'], tag)
+                added += 1
+            except Exception as exc:
+                failed += 1
+                logging.error(f"Could not contribute word "
+                              f"{w.get('Word1')!r}/{w.get('Word2')!r}: {exc}")
+        for t in texts:
+            try:
+                if db_adapter.insert_text(t):
+                    added += 1
+                else:
+                    failed += 1
+            except Exception as exc:
+                failed += 1
+                logging.error(f"Could not contribute text {t.get('Title')!r}: {exc}")
+        return added, failed
+
     def _local_db_belongs_to_current_user(self) -> bool:
         """Defense in depth for the per-account-file model: each account has its
         own SQLite file, but never sync into a file whose recorded owner differs

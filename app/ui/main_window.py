@@ -44,7 +44,7 @@ from PySide6.QtWidgets import (
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
 from app.core import db as dbq
-from app.i18n import fill_lang_combo, tr
+from app.i18n import fill_lang_combo, ntr, tr
 from app.core import progression
 from app.core import exporters
 from app.core import translator
@@ -247,6 +247,12 @@ class MainWindow(QMainWindow):
         # on; local-only means not signed in. ``sync_enabled`` is a read-only view of
         # that (the actual sync also needs connectivity — sync_manager.is_sync_enabled).
         self.auth = get_auth_manager()
+        # Open straight onto the last-active account's DB (resolved synchronously
+        # from the registry) so the dashboard's first paint shows that account's
+        # data, not the logged-out local store. The async session restore below
+        # then just confirms it — without this, local words flash up before the
+        # restore repoints us to the account file.
+        self._preselect_active_db()
         # Not connected until the first sync result confirms reachability; the Bin
         # button tracks this so it hides when the cloud is unreachable.
         self._cloud_connected = False
@@ -2694,6 +2700,28 @@ class MainWindow(QMainWindow):
         # (reload, possible adoption prompt) and the shared adapters.
         self.account_switch_requested.emit(uid)
 
+    def _preselect_active_db(self):
+        """Point the active DB at the last-active account's file at startup, before
+        the first data load, so the dashboard opens on that account's cached data
+        rather than briefly showing the logged-out local store. No-op when logged
+        out or the account's file doesn't exist yet (the async restore handles the
+        rest, and an expired session keeps showing the user's own cached data)."""
+        from app.core.db import (account_db_path, set_active_db_path,
+                                  initialize_database)
+        try:
+            uid = self.auth.registry.get_active()
+        except Exception:
+            uid = None
+        if not uid:
+            return
+        path = account_db_path(uid)
+        if os.path.exists(path):
+            try:
+                initialize_database(path)   # ensure schema/migration (idempotent)
+                set_active_db_path(path)
+            except Exception as exc:
+                logging.warning(f"Could not preselect account DB {path}: {exc}")
+
     def _local_db_has_data(self, path) -> bool:
         """True if the given SQLite file holds any words or texts."""
         import sqlite3
@@ -2752,14 +2780,80 @@ class MainWindow(QMainWindow):
             except OSError as exc:
                 logging.warning(f"Could not remove stale sync marker {marker}: {exc}")
 
-    def switch_active_account(self, uid):
+    def _maybe_offer_local_contribution(self, uid, force=False):
+        """After signing into an account, offer to ALSO add any local-only
+        words/texts the account doesn't have yet — non-destructive: the local-only
+        ``dictionary.db`` is never modified. Auto-fires on login when a delta
+        exists; skipped silently when this account opted out or the cloud is
+        unreachable (the counts would be wrong). The Settings button passes
+        ``force=True`` to ignore the opt-out and report when nothing is missing.
+        All work runs off the UI thread; the dialog/toasts run on the main thread
+        via the worker's result signal."""
+        if not uid:
+            return
+        registry = self.auth.registry
+        if not force and registry.contribution_suppressed(uid):
+            return
+        if not self.sync_manager.is_sync_enabled():
+            if force:
+                show_toast(self, tr("Account"),
+                           tr("Connect to the internet to add local items to your account."),
+                           "warning")
+            return
+
+        def present(delta):
+            words, texts = delta.get("words", []), delta.get("texts", [])
+            if not words and not texts:
+                if force:
+                    show_toast(self, tr("Account"),
+                               tr("Everything on this device is already in your account."), "info")
+                return
+            from PySide6.QtWidgets import QDialog
+            from app.ui.dialogs.contribute_dialog import ContributeDialog
+            email = (registry.get(uid) or {}).get("email")
+            was_suppressed = registry.contribution_suppressed(uid)
+            dlg = ContributeDialog(self, email, words, texts, suppressed=was_suppressed)
+            result = dlg.exec()
+            # The opt-out is a per-account setting: persist its final state whether
+            # the user adds items or cancels, so it can be toggled back on/off here.
+            now_suppressed = dlg.suppress_check.isChecked()
+            if now_suppressed != was_suppressed:
+                registry.set_contribution_suppressed(uid, now_suppressed)
+            if result != QDialog.Accepted:
+                return
+            sel_words, sel_texts, _ = dlg.selection()
+            if not sel_words and not sel_texts:
+                return
+
+            def done(res):
+                added, failed = res
+                self.reload_requested.emit()
+                msg = ntr(added, tr("Added {n} item to your account."),
+                          tr("Added {n} items to your account.")).format(n=added)
+                if failed:
+                    msg += " " + tr("{n} couldn't be added.").format(n=failed)
+                show_toast(self, tr("Account"), msg, "success" if added else "warning")
+
+            run_in_thread(
+                lambda: self.sync_manager.contribute_local_items(
+                    sel_words, sel_texts, self.db_adapter),
+                on_result=done)
+
+        run_in_thread(self.sync_manager.local_only_delta, on_result=present)
+
+    def switch_active_account(self, uid, offer_contribution=False):
         """The single, guarded account transition. Points the whole app at the local
         DB for ``uid`` (or the local-only ``dictionary.db`` when uid is None), after:
         flushing the account being left so offline edits aren't stranded; ensuring the
         auth session matches the target (the no-password fast-switch path); and, on the
         *first* sign-in ever after local use, offering once to adopt the local-only
         words. Each account keeps its own SQLite file so words and sync state never
-        cross accounts."""
+        cross accounts.
+
+        ``offer_contribution`` is set only by *explicit* user actions — signing into a
+        new account or switching accounts — so the local-contribution prompt fires
+        then, but NOT on a silent session restore at app launch (that would nag every
+        start; the Settings button covers that case)."""
         from app.core.db import (account_db_path, get_active_db_path,
                                   set_active_db_path, initialize_database, DB_PATH)
         registry = self.auth.registry
@@ -2796,7 +2890,9 @@ class MainWindow(QMainWindow):
             # Already on this file (e.g. opening the account dialog while signed in).
             self._refresh_account_dependent_ui()
             if self.sync_enabled:
-                run_in_thread(self._run_startup_sync)
+                cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
+                      if offer_contribution else None)
+                run_in_thread(self._run_startup_sync, on_finished=cb)
             return
 
         # 3. One-time import of local-only words into the first account ever signed
@@ -2847,7 +2943,9 @@ class MainWindow(QMainWindow):
         self._refresh_account_dependent_ui()
         self.reload_requested.emit()
         if self.sync_enabled:
-            run_in_thread(self._run_startup_sync)
+            cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
+                  if offer_contribution else None)
+            run_in_thread(self._run_startup_sync, on_finished=cb)
         else:
             self._cloud_connected = False
             if hasattr(self, "nav_bin"):

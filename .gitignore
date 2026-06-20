@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Tests (kept local, not tracked)
+tests/
+
 # Virtual environment
 venv/
 .venv/
