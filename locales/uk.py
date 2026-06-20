@@ -141,6 +141,8 @@ TRANSLATIONS: dict[str, str] = {
     "Audio": "Аудіо",
     "Learning": "Вивчається",
     "Listening": "Прослуховування",
+    "DeepL request failed — using free Google Translate instead.": "Запит до DeepL не вдався — використовується безкоштовний Google Перекладач.",
+    "DeepL key isn't set — using free Google Translate instead.": "Ключ DeepL не вказано — використовується безкоштовний Google Перекладач.",
     "System": "Система",
     "Light": "Світла",
     "Dark": "Темна",
