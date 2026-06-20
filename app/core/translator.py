@@ -239,11 +239,18 @@ def translate(word, target_language, source_language=None):
     provider = str(settings.get("translation_provider", "google")).strip().lower()
     api_key = settings.get("api_key", "")
 
-    if provider == "deepl" and api_key and api_key != "YOUR_DEEPL_API_KEY_HERE":
-        try:
-            return _translate_deepl(word, target_language, source_language, settings)
-        except TranslationError as exc:
-            logging.warning("DeepL translation failed, falling back to Google: %s", exc)
-            _notify_fallback("DeepL request failed — using free Google Translate instead.")
+    if provider == "deepl":
+        from app.i18n import tr
+        if api_key and api_key != "YOUR_DEEPL_API_KEY_HERE":
+            try:
+                return _translate_deepl(word, target_language, source_language, settings)
+            except TranslationError as exc:
+                logging.warning("DeepL translation failed, falling back to Google: %s", exc)
+                _notify_fallback(tr("DeepL request failed — using free Google Translate instead."))
+        else:
+            # DeepL selected but no key configured — fall back, and say so (otherwise the
+            # switch to Google is silent and looks like the provider setting is ignored).
+            logging.info("DeepL selected but no API key set — using Google Translate.")
+            _notify_fallback(tr("DeepL key isn't set — using free Google Translate instead."))
 
     return _translate_google_by_name(word, target_language, source_language)
