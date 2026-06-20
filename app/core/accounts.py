@@ -163,6 +163,20 @@ class AccountRegistry:
                 entry["needs_reauth"] = bool(needs)
                 self._save(data)
 
+    def contribution_suppressed(self, uid: str) -> bool:
+        """Whether this account opted out of the 'add local words?' auto-prompt."""
+        with self._lock:
+            entry = self._load()["accounts"].get(uid) or {}
+            return bool(entry.get("contribution_suppressed", False))
+
+    def set_contribution_suppressed(self, uid: str, suppressed: bool = True) -> None:
+        with self._lock:
+            data = self._load()
+            entry = data["accounts"].get(uid)
+            if entry is not None:
+                entry["contribution_suppressed"] = bool(suppressed)
+                self._save(data)
+
 
 # ---------------------------------------------------------------------------
 # Process-wide shared registry.

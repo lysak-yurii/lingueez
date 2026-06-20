@@ -601,11 +601,14 @@ class SettingsDialog(FramelessDialog):
         self.addaccount_btn.clicked.connect(self._open_account_dialog)
         self.local_btn = QPushButton(tr("Use local-only"))
         self.local_btn.clicked.connect(self._use_local_only)
+        self.add_local_btn = QPushButton(tr("Add local items to account…"))
+        self.add_local_btn.clicked.connect(self._add_local_to_account)
         self.export_data_btn = QPushButton(tr("Export my data…"))
         self.export_data_btn.clicked.connect(self._export_account_data)
         self.delete_account_btn = QPushButton(tr("Delete account…"), objectName="dangerButton")
         self.delete_account_btn.clicked.connect(self._delete_account)
-        for b in (self.addaccount_btn, self.local_btn, self.export_data_btn, self.delete_account_btn):
+        for b in (self.addaccount_btn, self.local_btn, self.add_local_btn,
+                  self.export_data_btn, self.delete_account_btn):
             acct_row.addWidget(b)
         acct_row.addStretch(1)
         form.addRow(acct_row)
@@ -783,7 +786,7 @@ class SettingsDialog(FramelessDialog):
                 self.accounts_box.addWidget(self._account_row(acc, active))
         logged_in = auth.is_logged_in()
         self.local_btn.setVisible(logged_in)
-        for b in (self.export_data_btn, self.delete_account_btn):
+        for b in (self.add_local_btn, self.export_data_btn, self.delete_account_btn):
             b.setVisible(logged_in)
 
     def _account_row(self, acc, active_uid):
@@ -819,8 +822,21 @@ class SettingsDialog(FramelessDialog):
     def _switch_account(self, uid):
         mw = self.parent()
         if mw is not None and hasattr(mw, "switch_active_account"):
-            mw.switch_active_account(uid)
+            # Explicit account switch — offer to add local-only items afterwards.
+            mw.switch_active_account(uid, offer_contribution=True)
         self._refresh_account_ui()
+
+    def _add_local_to_account(self):
+        """Manually offer to add local-only words/texts to the signed-in account
+        (the non-destructive contribute flow), even if it was opted out / already
+        shown this session."""
+        auth = get_auth_manager()
+        uid = auth.current_user_id() if auth.is_logged_in() else None
+        if not uid:
+            return
+        mw = self.parent()
+        if mw is not None and hasattr(mw, "_maybe_offer_local_contribution"):
+            mw._maybe_offer_local_contribution(uid, force=True)
 
     def _use_local_only(self):
         mw = self.parent()
@@ -876,7 +892,9 @@ class SettingsDialog(FramelessDialog):
         if self._account_changed:
             mw = self.parent()
             if mw is not None and hasattr(mw, "switch_active_account"):
-                mw.switch_active_account(get_auth_manager().current_user_id())
+                # Explicit sign-in — offer to add local-only items afterwards.
+                mw.switch_active_account(get_auth_manager().current_user_id(),
+                                         offer_contribution=True)
 
     def _export_account_data(self):
         path, _ = QFileDialog.getSaveFileName(
