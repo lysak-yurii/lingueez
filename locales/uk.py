@@ -140,6 +140,7 @@ TRANSLATIONS: dict[str, str] = {
     "Appearance": "Вигляд",
     "Audio": "Аудіо",
     "Learning": "Вивчається",
+    "Listening": "Прослуховування",
     "System": "Система",
     "Light": "Світла",
     "Dark": "Темна",
