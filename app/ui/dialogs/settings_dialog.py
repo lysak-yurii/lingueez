@@ -92,7 +92,7 @@ class SettingsDialog(FramelessDialog):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._appearance_tab(), tr("Appearance"))
         self.tabs.addTab(self._audio_tab(), tr("Audio"))
-        self.tabs.addTab(self._learning_tab(), tr("Learning"))
+        self.tabs.addTab(self._learning_tab(), tr("Listening"))
         self.tabs.addTab(self._export_tab(), tr("Export"))
         self.tabs.addTab(self._import_tab(), tr("Import"))
         self.tabs.addTab(self._apis_tab(), tr("APIs"))
