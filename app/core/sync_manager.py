@@ -533,6 +533,91 @@ class SyncManager:
             # Always release sync lock
             self.db_adapter.release_sync_lock()
     
+    def reconcile_preview(self) -> Dict[str, int]:
+        """Cheap, read-only divergence estimate for the manual Sync button's confirm.
+        Counts (by id) how many rows would upload / download, and how many would be
+        removed (local pending deletions + cloud soft-deletions present locally).
+        Approximate — words actually reconcile by content key — but enough to decide
+        whether to warn before a big change. Returns {'upload','download','remove'}."""
+        summary = {"upload": 0, "download": 0, "remove": 0}
+        if not self.is_sync_enabled() or not self._local_db_belongs_to_current_user():
+            return summary
+        try:
+            cloud_word_ids = set(self.supabase.get_all_ids('words'))
+            cloud_text_ids = set(self.supabase.get_all_ids('texts'))
+            conn = sqlite3.connect(self.local_db)
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT ID FROM words")
+                local_word_ids = {r[0] for r in cur.fetchall()}
+                cur.execute("SELECT ID FROM texts")
+                local_text_ids = {r[0] for r in cur.fetchall()}
+            finally:
+                conn.close()
+            summary["upload"] = (len(local_word_ids - cloud_word_ids)
+                                 + len(local_text_ids - cloud_text_ids))
+            summary["download"] = (len(cloud_word_ids - local_word_ids)
+                                   + len(cloud_text_ids - local_text_ids))
+            remove = len(self.db_adapter._get_pending_deletions())
+            cloud_del = self._get_cloud_deletions_since(None)
+            for table, local_ids in (("words", local_word_ids), ("texts", local_text_ids)):
+                for d in cloud_del.get(table, []):
+                    if (d.get("ID") or d.get("id")) in local_ids:
+                        remove += 1
+            summary["remove"] = remove
+        except Exception as exc:
+            logging.warning(f"reconcile_preview failed: {exc}")
+        return summary
+
+    def reconcile(self) -> None:
+        """Manual 'Sync Now': a full bidirectional reconcile that ignores the
+        incremental queue/last_sync gating, so out-of-band divergence (e.g. a restored
+        backup, a direct DB swap) converges. Pushes local edits + deletions, applies
+        cloud deletions, then runs the full union (push local-only, pull cloud-only,
+        newer-wins on overlap). Raises SyncError on a real data-integrity failure."""
+        if not (self.auth.is_logged_in() or is_custom_server()):
+            return
+        if not self._local_db_belongs_to_current_user():
+            return
+        self.auth.refresh_if_needed()
+        if not self.is_sync_enabled() or not self.supabase.client:
+            return
+        if not self.db_adapter.acquire_sync_lock(self.instance_id, timeout_seconds=600):
+            logging.warning("Sync already in progress, skipping reconcile")
+            return
+        try:
+            from app.core.db import initialize_database
+            initialize_database(self.local_db)
+
+            # 1. Push local edits + deletions first, so cloud state is current before
+            #    the union and offline edits aren't stranded.
+            pending_operations = self.db_adapter._get_pending_operations()
+            if pending_operations:
+                self._sync_operation_queue(pending_operations)
+            pending_deletions = self.db_adapter._get_pending_deletions()
+            if pending_deletions:
+                self._sync_deletions(pending_deletions)
+
+            # 2. Apply ALL cloud soft-deletions to local (not just since last_sync), so
+            #    the union below won't re-push a row the cloud deleted.
+            cloud_deletions = self._get_cloud_deletions_since(None)
+            if cloud_deletions.get("words") or cloud_deletions.get("texts"):
+                self._apply_cloud_deletions_to_local(
+                    cloud_deletions, {}, pending_deletions, [], pending_operations)
+
+            # 3. Full union: push content-only-local rows, pull cloud-only, resolve
+            #    overlaps newer-wins (reuses the proven first-sync merge).
+            self._perform_initial_sync()
+
+            # 4. Stamp bookkeeping so subsequent automatic syncs go incremental again.
+            self.db_adapter._clear_synced_operations()
+            self._update_last_sync_time()
+            self.db_adapter.set_sync_metadata('first_sync_completed', 'true')
+            self.set_synced_account_id(self.current_owner_id())
+            logging.info("Manual reconcile completed")
+        finally:
+            self.db_adapter.release_sync_lock()
+
     def flush_pending(self, timeout_seconds: int = 15) -> bool:
         """Push only the local sync queue + deletions to the cloud — no pull, no
         conflict resolution. Called when *leaving* an account (sign-out, account

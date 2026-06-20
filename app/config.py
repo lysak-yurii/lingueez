@@ -209,6 +209,9 @@ DEFAULTS = {
     # Sync
     "enable_sync": "False",
     "cleanup_grace_period_days": "30",
+    # Set after a backup restore so the next time a sync server is active we offer to
+    # upload the restored library (a restore bypasses the normal per-edit sync queue).
+    "pending_restore_merge": "False",
     # Updates (notify-only check against GitHub Releases)
     "auto_check_updates": "True",       # check for a newer release on startup
     "skipped_version": "",              # release the user chose to skip

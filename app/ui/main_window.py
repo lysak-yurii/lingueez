@@ -2698,6 +2698,7 @@ class MainWindow(QMainWindow):
         self.db_adapter.set_use_cloud(self.sync_enabled)
         self._refresh_account_dependent_ui()
         if self.sync_enabled:
+            self._maybe_prompt_restore_merge()  # offer to upload a just-restored library
             run_in_thread(self._run_startup_sync)
         else:
             self._cloud_connected = False
@@ -2788,27 +2789,7 @@ class MainWindow(QMainWindow):
         # Reset sync bookkeeping so the union first-sync upserts everything by its
         # UUID id (cloud also has unique(user_id, word1, word2), so no duplicates)
         # and isn't mistaken for an already-completed incremental sync.
-        conn = sqlite3.connect(target_path)
-        try:
-            cur = conn.cursor()
-            for t in ("sync_queue", "sync_deletions", "sync_metadata"):
-                try:
-                    cur.execute(f"DELETE FROM {t}")
-                except sqlite3.OperationalError:
-                    pass
-            conn.commit()
-        finally:
-            conn.close()
-        # Drop the per-account last-sync marker so the next sync is detected as a
-        # first-time (union) sync and actually pushes the adopted words — clearing
-        # the DB metadata above is not enough on its own, because _is_first_sync
-        # also consults this file. (Also remove the legacy global '.last_sync'.)
-        for marker in (f"{target_path}.last_sync", ".last_sync"):
-            try:
-                if os.path.exists(marker):
-                    os.remove(marker)
-            except OSError as exc:
-                logging.warning(f"Could not remove stale sync marker {marker}: {exc}")
+        dbq.reset_sync_state(target_path)
 
     def _maybe_offer_local_contribution(self, uid, force=False):
         """After signing into an account, offer to ALSO add any local-only
@@ -2921,6 +2902,7 @@ class MainWindow(QMainWindow):
             # Already on this file (e.g. opening the account dialog while signed in).
             self._refresh_account_dependent_ui()
             if self.sync_enabled:
+                self._maybe_prompt_restore_merge()
                 cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
                       if offer_contribution else None)
                 run_in_thread(self._run_startup_sync, on_finished=cb)
@@ -2974,6 +2956,7 @@ class MainWindow(QMainWindow):
         self._refresh_account_dependent_ui()
         self.reload_requested.emit()
         if self.sync_enabled:
+            self._maybe_prompt_restore_merge()
             cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
                   if offer_contribution else None)
             run_in_thread(self._run_startup_sync, on_finished=cb)
@@ -3029,11 +3012,65 @@ class MainWindow(QMainWindow):
         if self.sync_popover is None:
             from app.ui.sync_popover import SyncPopover
             self.sync_popover = SyncPopover(self.colors, parent=self)
-            self.sync_popover.sync_requested.connect(
-                lambda: run_in_thread(self._run_startup_sync))
+            # The manual button does a full reconcile (deep two-way check), not the
+            # incremental startup sync.
+            self.sync_popover.sync_requested.connect(self._run_full_sync)
         self.sync_popover.show_below(self.sync_button,
                                      self.sync_manager.get_sync_status,
                                      syncing=self._sync_running)
+
+    # Above this many uploads/downloads/removals, a manual reconcile asks first.
+    RECONCILE_CONFIRM_THRESHOLD = 25
+
+    def _run_full_sync(self):
+        """Manual 'Sync Now' → full reconcile. Previews divergence on a worker, confirms
+        if it's a big change, then applies (also on a worker). Background/startup sync is
+        unaffected and stays incremental."""
+        if not (self.auth.is_logged_in() or is_custom_server()):
+            self._update_sync_status_ui("idle", tr("Sign in to sync (Settings → Sync)"))
+            return
+        if self._sync_running:
+            return
+
+        def on_preview(summary):
+            up, down, rem = (summary.get("upload", 0), summary.get("download", 0),
+                             summary.get("remove", 0))
+            big = max(up, down, rem) > self.RECONCILE_CONFIRM_THRESHOLD
+            if big:
+                from app.ui.dialogs.base import confirm
+                ok = confirm(
+                    self, tr("Sync your library?"),
+                    tr("This will reconcile your device with the cloud:"),
+                    ok_text=tr("Sync now"), cancel_text=tr("Cancel"),
+                    rows=[("upload", tr("Upload"), up),
+                          ("download", tr("Download"), down),
+                          ("trash", tr("Remove"), rem)])
+                if not ok:
+                    return
+            self._update_sync_status_ui("syncing", tr("Syncing with cloud…"))
+            run_in_thread(self.sync_manager.reconcile,
+                          on_result=lambda _r: self._after_full_sync(summary),
+                          on_error=self._after_full_sync_error)
+
+        run_in_thread(self.sync_manager.reconcile_preview, on_result=on_preview,
+                      on_error=self._after_full_sync_error)
+
+    def _after_full_sync(self, summary):
+        self.reload_requested.emit()
+        self._update_sync_status_ui("success", tr("Sync completed successfully"))
+        show_toast(self, tr("Cloud sync"),
+                   tr("Synced — ↑{up} ↓{down}").format(
+                       up=summary.get("upload", 0), down=summary.get("download", 0)),
+                   "success")
+
+    def _after_full_sync_error(self, exc):
+        from app.core.sync_manager import SyncError
+        if isinstance(exc, SyncError):
+            logging.error(f"Reconcile incomplete: {exc}")
+            self._update_sync_status_ui("error", tr("Sync incomplete: {reason}").format(reason=str(exc)))
+        else:
+            logging.error(f"Reconcile failed: {exc}")
+            self._update_sync_status_ui("error", "Sync failed: check internet or credentials")
 
     def _sync_before_db_operation(self, force=False):
         """Quick background pull from cloud before local writes."""
@@ -3092,8 +3129,64 @@ class MainWindow(QMainWindow):
 
     def open_backups(self):
         from app.ui.dialogs.backups import BackupsDialog
-        dialog = BackupsDialog(self, on_restored=self.load_data)
+        dialog = BackupsDialog(self, on_restored=self._on_backup_restored)
         dialog.exec()
+
+    def _on_backup_restored(self):
+        """After a restore: reload the UI, then — if a sync server is active on the
+        local-only store — offer to upload the restored library right away. When not
+        connected, the offer is deferred to the next connect (the pending flag set by
+        the restore dialog drives _maybe_prompt_restore_merge there)."""
+        self.load_data()
+        from app.core.db import get_active_db_path, DB_PATH
+        local_active = os.path.abspath(get_active_db_path()) == os.path.abspath(DB_PATH)
+        if self.sync_enabled and local_active:
+            if self._maybe_prompt_restore_merge():
+                run_in_thread(self._run_startup_sync)
+        elif local_active:
+            show_toast(self, tr("Backups"),
+                       tr("Library restored. You'll be asked to upload it the next time "
+                          "you connect a sync server."), "info", 6000)
+
+    def _maybe_prompt_restore_merge(self) -> bool:
+        """If a backup was just restored and a sync server is now active on the
+        local-only store, ask whether to upload+merge the restored library. On yes,
+        reset the sync bookkeeping so the next sync runs as a full union (push + pull).
+        Returns True if the user opted to upload. Clears the pending flag either way."""
+        from app.core.db import get_active_db_path, DB_PATH
+        if not (get_bool(self.settings, "pending_restore_merge", False)
+                and self.sync_enabled
+                and os.path.abspath(get_active_db_path()) == os.path.abspath(DB_PATH)):
+            return False
+
+        def _clear_flag():
+            self.settings = load_settings()
+            self.settings["pending_restore_merge"] = "False"
+            save_settings(self.settings)
+
+        n_words = self._count_rows(DB_PATH, "words")
+        upload = QMessageBox.question(
+            self, tr("Upload restored library?"),
+            tr("You restored a backup with {n} words that may not be in your cloud yet. "
+               "Upload and merge them into your cloud now?\n\nChoose No to leave your "
+               "cloud unchanged for now.").format(n=n_words),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes
+        _clear_flag()
+        if upload:
+            dbq.reset_sync_state(DB_PATH)   # next sync = full union (push local-only + pull)
+        return upload
+
+    @staticmethod
+    def _count_rows(db_path, table) -> int:
+        import sqlite3
+        try:
+            conn = sqlite3.connect(db_path)
+            try:
+                return int(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            return 0
 
     def _apply_appearance(self):
         """Re-resolve and re-apply the theme from current settings."""

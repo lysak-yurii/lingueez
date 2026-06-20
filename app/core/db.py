@@ -71,6 +71,38 @@ def account_db_path(uid) -> str:
     return DB_PATH if not uid else f'dictionary_{uid}.db'
 
 
+def reset_sync_state(db_path: str) -> None:
+    """Wipe a DB file's sync bookkeeping so the next sync is treated as a first-time
+    (union) sync that re-pushes everything, instead of an already-done incremental.
+
+    Clears the ``sync_queue``, ``sync_deletions`` and ``sync_metadata`` tables (which
+    hold ``first_sync_completed`` / ``synced_account_id`` / ``last_sync_time``) and
+    removes the ``<db>.last_sync`` marker file — clearing the metadata alone is not
+    enough, because ``SyncManager._is_first_sync`` also consults that file. Used after
+    a whole-file change (account adoption, backup restore) that bypassed the sync
+    queue. Safe to call on a fresh DB (missing tables/markers are ignored)."""
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.cursor()
+            for table in ("sync_queue", "sync_deletions", "sync_metadata"):
+                try:
+                    cur.execute(f"DELETE FROM {table}")
+                except sqlite3.OperationalError:
+                    pass  # table doesn't exist yet
+            conn.commit()
+        finally:
+            conn.close()
+    except sqlite3.Error as exc:
+        logging.warning(f"Could not reset sync state for {db_path}: {exc}")
+    for marker in (f"{db_path}.last_sync", ".last_sync"):
+        try:
+            if os.path.exists(marker):
+                os.remove(marker)
+        except OSError as exc:
+            logging.warning(f"Could not remove stale sync marker {marker}: {exc}")
+
+
 def _ensure_column(cursor, table, column, decl):
     """Additive migration: add a column to pre-existing databases."""
     cols = {row[1] for row in cursor.execute(f"PRAGMA table_info({table})")}
