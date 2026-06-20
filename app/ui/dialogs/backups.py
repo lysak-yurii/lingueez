@@ -252,6 +252,11 @@ class BackupsDialog(FramelessDialog):
             shutil.copy2(DB_PATH, os.path.join(BACKUP_DIR, safety))
             shutil.copy2(os.path.join(BACKUP_DIR, filename), DB_PATH)
             self._prune_snapshots(keep=safety)
+            # The restored rows bypass the per-edit sync queue, so flag that the next
+            # time a sync server is active we should offer to upload them (handled by
+            # MainWindow._on_backup_restored / _maybe_prompt_restore_merge).
+            from app.config import load_settings, save_settings
+            save_settings({**load_settings(), "pending_restore_merge": "True"})
             QMessageBox.information(
                 self, tr("Restore"),
                 tr('Your database has been restored to {phrase}.\n\nChanged your mind? Restore "{before}" to undo.').format(

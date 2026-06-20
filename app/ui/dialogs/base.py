@@ -22,7 +22,7 @@
 """Frameless dialog base with an integrated title bar matching the app."""
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
+    QApplication, QComboBox, QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QSpinBox, QVBoxLayout, QWidget,
 )
 
@@ -133,3 +133,55 @@ def ask_text(parent, title, label, text=""):
     edit.returnPressed.connect(dialog.accept)
     ok = dialog.exec() == QDialog.Accepted
     return edit.text(), ok
+
+
+def confirm(parent, title, message, *, ok_text=None, cancel_text=None,
+            danger=False, rows=None):
+    """Themed (frameless) yes/no confirmation — a drop-in for QMessageBox.question
+    that matches the app instead of the OS's native chrome + giant icon.
+
+    *rows*: optional summary shown as a tidy grid under the message — each item is
+    ``(label, value)`` or ``(icon_name, label, value)`` (icon from ``app.ui.icons``),
+    e.g. an Upload/Download/Remove summary. Returns True on accept.
+    """
+    dialog = FramelessDialog(parent, title=title)
+    dialog.setMinimumWidth(360)
+    if message:
+        text = QLabel(message)
+        text.setWordWrap(True)
+        dialog.content_layout.addWidget(text)
+    if rows:
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(9)
+        grid.setContentsMargins(2, 4, 2, 4)
+        for i, item in enumerate(rows):
+            icon_name, label, value = item if len(item) == 3 else (None, *item)
+            if icon_name:
+                glyph = QLabel()
+                glyph.setPixmap(
+                    icons.icon(icon_name, dialog.colors["text_dim"], 16).pixmap(16, 16))
+                grid.addWidget(glyph, i, 0)
+            name = QLabel(str(label), objectName="dimLabel")
+            grid.addWidget(name, i, 1)
+            val = QLabel(str(value))
+            grid.addWidget(val, i, 2, Qt.AlignRight)
+        grid.setColumnStretch(1, 1)
+        holder = QWidget()
+        holder.setLayout(grid)
+        dialog.content_layout.addWidget(holder)
+
+    row = QHBoxLayout()
+    row.addStretch(1)
+    cancel = QPushButton(cancel_text or tr("Cancel"))
+    cancel.setCursor(Qt.PointingHandCursor)
+    cancel.clicked.connect(dialog.reject)
+    row.addWidget(cancel)
+    ok = QPushButton(ok_text or tr("OK"),
+                     objectName="dangerButton" if danger else "primaryButton")
+    ok.setCursor(Qt.PointingHandCursor)
+    ok.setDefault(True)
+    ok.clicked.connect(dialog.accept)
+    row.addWidget(ok)
+    dialog.content_layout.addLayout(row)
+    return dialog.exec() == QDialog.Accepted
