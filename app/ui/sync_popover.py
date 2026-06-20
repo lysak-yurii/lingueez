@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from PySide6.QtCore import QPoint, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
-    QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
+    QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget,
 )
 
 from app.i18n import month_abbr, ntr, tr
@@ -93,6 +93,24 @@ class SyncPopover(QFrame):
         head.addStretch(1)
         lay.addLayout(head)
 
+        # Who/where the app is syncing, with a mode icon: a person for a built-in
+        # account (shows the email), a server for the personal own-Supabase mode
+        # (shows just "Personal"). Hidden when local-only.
+        ident_row = QHBoxLayout()
+        ident_row.setContentsMargins(0, 0, 0, 0)  # align flush with the header, no extra inset
+        ident_row.setSpacing(6)
+        self.identity_icon = QLabel()
+        ident_row.addWidget(self.identity_icon)
+        self.identity_label = QLabel("")
+        self.identity_label.setObjectName("dimLabel")
+        self.identity_label.setWordWrap(True)
+        self.identity_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        ident_row.addWidget(self.identity_label, 1)
+        self.identity_widget = QWidget()
+        self.identity_widget.setLayout(ident_row)
+        self.identity_widget.setVisible(False)
+        lay.addWidget(self.identity_widget)
+
         grid = QGridLayout()
         grid.setHorizontalSpacing(18)
         grid.setVerticalSpacing(6)
@@ -131,6 +149,7 @@ class SyncPopover(QFrame):
         self._set_value("status", "…", dim=True)
         self._set_value("last", "…", dim=True)
         self._set_value("pending", "…", dim=True)
+        self.identity_widget.setVisible(False)
         self.note_label.setVisible(False)
         self.sync_btn.setEnabled(not syncing)
         self.sync_btn.setText(tr("Syncing…") if syncing else tr("Sync Now"))
@@ -209,6 +228,19 @@ class SyncPopover(QFrame):
         label.setToolTip(tooltip)
 
     def _fill(self, info):
+        # Mode icon on the identity line only: a person for a built-in account, a server
+        # for the own-Supabase mode. The header keeps the cloud icon in every mode.
+        mode = info.get("mode")
+        identity = info.get("identity")
+        if identity:
+            mode_icon = {"personal": "server", "account": "user"}.get(mode, "cloud")
+            self.identity_icon.setPixmap(
+                icons.icon(mode_icon, self._colors["text_dim"], 14).pixmap(14, 14))
+            self.identity_label.setText(identity)
+            self.identity_widget.setVisible(True)
+        else:
+            self.identity_widget.setVisible(False)
+
         connected = bool(info.get("enabled"))
         self._set_value(
             "status",
