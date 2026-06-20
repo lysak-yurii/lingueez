@@ -54,6 +54,7 @@ from app.core.database_adapter import DatabaseAdapter
 from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager, SyncError
 from app.core.auth_manager import get_auth_manager
+from app.core.supabase_client import is_custom_server
 from app.core.data_management import open_words_from_excel
 from app.ui import icons, theme
 from app.ui.animations import AnimatedStackedWidget, crossfade_during, fade_swap
@@ -256,7 +257,7 @@ class MainWindow(QMainWindow):
         # Not connected until the first sync result confirms reachability; the Bin
         # button tracks this so it hides when the cloud is unreachable.
         self._cloud_connected = False
-        self.db_adapter = DatabaseAdapter(use_cloud=self.auth.is_logged_in())
+        self.db_adapter = DatabaseAdapter(use_cloud=self.auth.is_logged_in() or is_custom_server())
         self.sync_manager = SyncManager()
 
         self.word_filter = WordFilter()
@@ -364,9 +365,10 @@ class MainWindow(QMainWindow):
 
     @property
     def sync_enabled(self) -> bool:
-        """Cloud sync follows the login state: signed in ⇒ sync on. Read-only —
-        there is no separate enable/disable toggle anymore."""
-        return self.auth.is_logged_in()
+        """Cloud sync follows the backend identity: signed into an account (built-in
+        mode) OR a configured personal own-Supabase server (anonymous custom mode) ⇒
+        sync on. Read-only — there is no separate enable/disable toggle."""
+        return self.auth.is_logged_in() or is_custom_server()
 
     # ------------------------------------------------------------------ UI
 
@@ -1658,8 +1660,9 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         # Best-effort, time-bounded push of any pending edits so they aren't stranded
-        # in the active account's local queue until next launch.
-        if self.auth.is_logged_in():
+        # in the active local queue until next launch (built-in account or personal
+        # own-server mode alike).
+        if self.sync_enabled:
             try:
                 self.sync_manager.flush_pending(timeout_seconds=8)
             except Exception as exc:
@@ -2665,13 +2668,31 @@ class MainWindow(QMainWindow):
             self.nav_bin.setVisible(self.sync_enabled and self._cloud_connected)
 
     def _reapply_sync(self):
-        """Re-apply the Supabase client configuration live after the advanced
-        URL/key changed, without an app restart. Sync itself follows the login
-        state now, so this just refreshes the client and re-syncs when signed in."""
+        """Re-apply the Supabase client configuration live after the Sync settings
+        changed, without an app restart. Sync follows the backend identity (a
+        signed-in account, or a configured personal own-server), so this refreshes
+        the client and re-syncs, and handles the built-in ↔ custom transition."""
         try:
             self.sync_manager.supabase.reconfigure()
         except Exception as exc:
             logging.warning(f"Sync client reconfigure failed: {exc}")
+        # Entering personal own-server mode while a built-in account is still signed
+        # in: that account's session token is meaningless to the other project, so
+        # drop to local-only. No flush — the built-in account's pending edits live in
+        # its OWN per-account DB file (not the local-only dictionary.db the personal
+        # server syncs), so they stay safe there. Signing out first makes the guarded
+        # switch skip its flush and just repoint + sync against the personal server.
+        if is_custom_server() and self.auth.is_logged_in():
+            try:
+                self.auth.sign_out_to_local()
+            except Exception as exc:
+                logging.warning(f"Sign-out for custom-server switch failed: {exc}")
+            self.switch_active_account(None)
+            return
+        # Keep the data layer's cloud flag in step with the (possibly just-changed)
+        # mode: entering custom mode from local-only turns cloud on; disconnecting
+        # back to the built-in server while logged out turns it off.
+        self.db_adapter.set_use_cloud(self.sync_enabled)
         self._refresh_account_dependent_ui()
         if self.sync_enabled:
             run_in_thread(self._run_startup_sync)
@@ -2687,6 +2708,12 @@ class MainWindow(QMainWindow):
         A remembered-but-expired session surfaces a re-auth hint instead of silently
         dropping to local-only."""
         from app.core.auth_manager import RESTORE_NEEDS_REAUTH
+        # Personal own-server mode is anonymous and belongs to a different project, so
+        # never restore a remembered built-in account's session into it (its token
+        # would 401 against the custom server). Sync the local-only DB instead.
+        if is_custom_server():
+            self.account_switch_requested.emit(None)
+            return
         result = None
         try:
             result = self.auth.restore_session()
@@ -2883,7 +2910,7 @@ class MainWindow(QMainWindow):
         elif self.auth.is_logged_in():
             self.auth.sign_out_to_local()
 
-        self.db_adapter.set_use_cloud(bool(uid))
+        self.db_adapter.set_use_cloud(bool(uid) or is_custom_server())
 
         prev = get_active_db_path()  # unchanged, re-read for clarity
         if target == prev:
@@ -2954,7 +2981,7 @@ class MainWindow(QMainWindow):
 
     def _run_startup_sync(self):
         try:
-            if not self.auth.is_logged_in():
+            if not (self.auth.is_logged_in() or is_custom_server()):
                 self.sync_status_changed.emit("idle", tr("Sign in to sync (Settings → Sync)"))
                 return
             if not self.sync_manager.is_sync_enabled():

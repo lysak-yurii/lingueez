@@ -38,6 +38,48 @@ DEFAULT_SUPABASE_URL = "https://dtyrmkynrideeknsdlrn.supabase.co"
 DEFAULT_SUPABASE_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0eXJta3lucmlkZWVrbnNkbHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njc1MTQsImV4cCI6MjA5NzQ0MzUxNH0.dds5SyMBN9u-0TUumB2nSCx68FJfpm3n63fLq1n9o10"
 
 
+def is_custom_server() -> bool:
+    """True when the user has pointed sync at their own Supabase project via
+    ``.env`` (``SUPABASE_URL`` set and different from the built-in central one).
+
+    This is the single source of truth for which backend mode the app is in:
+    built-in (account-based, multi-user) vs. custom (personal, anonymous). It
+    reads the live environment, so it reflects ``.env`` edits applied through
+    ``_write_env`` without an app restart.
+    """
+    url = (os.getenv('SUPABASE_URL') or '').strip()
+    return bool(url) and url != DEFAULT_SUPABASE_URL
+
+
+def custom_server_host() -> Optional[str]:
+    """Hostname of the custom Supabase project (for display), or None in built-in
+    mode."""
+    if not is_custom_server():
+        return None
+    from urllib.parse import urlparse
+    try:
+        return urlparse((os.getenv('SUPABASE_URL') or '').strip()).hostname
+    except Exception:
+        return (os.getenv('SUPABASE_URL') or '').strip() or None
+
+
+def probe_credentials(url: str, key: str) -> tuple[bool, Optional[str]]:
+    """Test a Supabase URL + anon key without touching the shared client.
+
+    Builds a throwaway client, applies the anon key, and runs a lightweight query.
+    Returns ``(ok, error)``. Used by the Settings "Test Connection" button so a test
+    never activates the creds or mutates the process-wide singleton."""
+    if not url or not key:
+        return False, "URL and key are required."
+    try:
+        client = create_client(url, key, options=_client_options())
+        client.postgrest.auth(key)
+        client.table('words').select('id').limit(1).execute()
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
 def _client_options():
     """Desktop-tuned client options. PKCE flow is required for the Google OAuth
     loopback (``exchange_code_for_session``); session persistence is handled by

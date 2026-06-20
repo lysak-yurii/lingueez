@@ -20,7 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 from app.core.database_adapter import DatabaseAdapter
-from app.core.supabase_client import get_supabase
+from app.core.supabase_client import get_supabase, is_custom_server, custom_server_host
 from app.core.auth_manager import get_auth_manager
 import sqlite3
 from datetime import datetime, timezone
@@ -92,19 +92,34 @@ class SyncManager:
         self.db_adapter.set_local_db(path)
 
     def is_sync_enabled(self) -> bool:
-        """Sync requires a signed-in account AND a reachable Supabase.
+        """Sync requires a backend identity AND a reachable Supabase.
 
-        The auth check is essential: with RLS on, an anonymous connectivity
-        probe returns an empty result (no error), so is_connected() alone would
-        report True while logged out and we'd "sync" nothing under no identity.
+        Two identities qualify: a signed-in account (built-in, multi-user) or a
+        configured custom server (the personal own-Supabase mode, which connects
+        anonymously and so has no account). The identity check is essential: with
+        RLS on, an anonymous connectivity probe to the built-in project returns an
+        empty result (no error), so is_connected() alone would report True while
+        logged out of the built-in project and we'd "sync" nothing under no identity.
         """
-        if not self.auth.is_logged_in():
+        if not (self.auth.is_logged_in() or is_custom_server()):
             return False
         return self.supabase.is_connected()
 
+    def current_owner_id(self) -> Optional[str]:
+        """Identity that owns the active local DB for sync purposes: the signed-in
+        user_id (built-in mode), or a synthetic ``custom:<host>`` marker (personal
+        own-Supabase mode, which has no account). None means local-only."""
+        uid = self.auth.current_user_id() if self.auth.is_logged_in() else None
+        if uid:
+            return uid
+        if is_custom_server():
+            return f"custom:{custom_server_host() or 'server'}"
+        return None
+
     # ---- account ownership of the local DB ----------------------------
     def get_synced_account_id(self) -> Optional[str]:
-        """The user_id this local dictionary.db was last synced with."""
+        """The identity this local DB was last synced with (a user_id, or a
+        ``custom:<host>`` marker for the personal own-Supabase mode)."""
         return self.db_adapter.get_sync_metadata('synced_account_id')
 
     def set_synced_account_id(self, uid: Optional[str]):
@@ -201,14 +216,17 @@ class SyncManager:
         """Defense in depth for the per-account-file model: each account has its
         own SQLite file, but never sync into a file whose recorded owner differs
         from the signed-in user (e.g. if an account switch only half-completed).
-        A blank owner is fine — that's a first sync."""
+        A blank owner is fine — that's a first sync. The owner is a user_id in
+        built-in mode or a ``custom:<host>`` marker in personal own-Supabase mode,
+        so this also stops a local store synced to one personal server from being
+        pushed to a different one."""
         prev = self.get_synced_account_id()
-        uid = self.auth.current_user_id()
-        if prev and uid and prev != uid:
+        owner = self.current_owner_id()
+        if prev and owner and prev != owner:
             logging.error(
-                "Refusing to sync: local DB %s is owned by %s but the signed-in "
-                "user is %s — aborting to avoid cross-account contamination.",
-                self.local_db, prev, uid)
+                "Refusing to sync: local DB %s is owned by %s but the active "
+                "identity is %s — aborting to avoid cross-account contamination.",
+                self.local_db, prev, owner)
             return False
         return True
 
@@ -281,17 +299,39 @@ class SyncManager:
         """Get current sync status information."""
         status = {
             'enabled': self.is_sync_enabled(),
+            'mode': self.sync_mode(),
+            'identity': self.sync_identity(),
             'last_sync_time': self._get_last_sync_time(),
             'first_sync_completed': self.db_adapter.get_sync_metadata('first_sync_completed') == 'true',
             'pending_operations': len(self.db_adapter._get_pending_operations()),
             'pending_deletions': len(self.db_adapter._get_pending_deletions())
         }
         return status
+
+    def sync_mode(self) -> str:
+        """Which backend the app is syncing through: 'account' (built-in, signed in),
+        'personal' (own-Supabase server, anonymous), or 'off' (local-only)."""
+        if self.auth.is_logged_in():
+            return 'account'
+        if is_custom_server():
+            return 'personal'
+        return 'off'
+
+    def sync_identity(self) -> Optional[str]:
+        """Short label for who/where the app is syncing: the account email (built-in),
+        or just "Personal" for the own-Supabase mode (the server's address is private
+        and not worth surfacing in the status bubble). None when local-only."""
+        if self.auth.is_logged_in():
+            return self.auth.current_user() or self.auth.current_user_id()
+        if is_custom_server():
+            from app.i18n import tr
+            return tr("Personal")
+        return None
     
     def sync_on_startup(self):
         """Sync when app starts. Enhanced sync with deletion tracking and conflict resolution."""
-        if not self.auth.is_logged_in():
-            logging.info("Not signed in — staying local-only, skipping sync")
+        if not (self.auth.is_logged_in() or is_custom_server()):
+            logging.info("No backend identity — staying local-only, skipping sync")
             return
         if not self._local_db_belongs_to_current_user():
             return
@@ -463,10 +503,10 @@ class SyncManager:
             # Mark that sync has been performed at least once (only if successful)
             if sync_successful:
                 self.db_adapter.set_sync_metadata('first_sync_completed', 'true')
-                # Record which account this local DB now belongs to, so a later
-                # login as a different user is caught by
-                # _local_db_belongs_to_current_user instead of cross-contaminating data.
-                self.set_synced_account_id(self.auth.current_user_id())
+                # Record which identity this local DB now belongs to, so a later
+                # login as a different user (or a different personal server) is caught
+                # by _local_db_belongs_to_current_user instead of cross-contaminating.
+                self.set_synced_account_id(self.current_owner_id())
 
                 # Validate sync
                 validation_result = self._validate_sync()
@@ -499,7 +539,7 @@ class SyncManager:
         switch, app close) so edits made offline aren't stranded in that account's
         local queue. Best-effort and time-bounded so a flaky network can't hang the
         transition."""
-        if not self.auth.is_logged_in() or not self.is_sync_enabled():
+        if not (self.auth.is_logged_in() or is_custom_server()) or not self.is_sync_enabled():
             return False
         if not self._local_db_belongs_to_current_user():
             return False
@@ -1997,9 +2037,16 @@ class SyncManager:
                     # Do NOT let the caller stamp first_sync_completed — that would
                     # mark a partial upload as done and strand the dropped rows
                     # (they'd never be retried). Surface it instead.
+                    if is_custom_server():
+                        hint = ("your own Supabase project rejected the rows — re-run "
+                                "the schema SQL there (Settings → Sync → Copy schema "
+                                "SQL); a project left on the multi-user schema blocks "
+                                "anonymous writes via Row-Level Security")
+                    else:
+                        hint = "possible duplicate words across accounts — see logs"
                     raise SyncError(
                         f"{push_failures} item(s) could not be uploaded to the cloud "
-                        f"(possible duplicate words across accounts — see logs)")
+                        f"({hint})")
             elif cloud_has_data and not local_has_data:
                 logging.info("Step 4: Strategy selected - PULL (cloud -> local)")
                 logging.info("Cloud has data, local is empty - pulling all cloud data to local")

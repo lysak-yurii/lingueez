@@ -24,13 +24,13 @@ import os
 import shutil
 import sys
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QGuiApplication, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialogButtonBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QKeySequenceEdit,
-    QLabel, QLineEdit, QMessageBox, QProgressBar, QPushButton, QScrollArea,
-    QSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
+    QLabel, QLineEdit, QMenu, QMessageBox, QProgressBar, QPushButton, QScrollArea,
+    QSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
 )
 
 from app.config import get_bool, get_float, get_int, load_settings, save_settings
@@ -587,54 +587,84 @@ class SettingsDialog(FramelessDialog):
         form = QFormLayout(sync)
         form.setContentsMargins(18, 18, 18, 18)
 
-        # --- Accounts (cloud sync follows being signed in) ---
-        # Several accounts can be remembered on one device and switched between
-        # without re-entering the password; the active one is what syncs.
-        self.accounts_box = QVBoxLayout()
-        self.accounts_box.setContentsMargins(0, 0, 0, 0)
-        accounts_container = QWidget()
-        accounts_container.setLayout(self.accounts_box)
-        form.addRow(tr("Accounts"), accounts_container)
+        from app.core.supabase_client import is_custom_server, custom_server_host
+        custom_mode = is_custom_server()
 
-        acct_row = QHBoxLayout()
-        self.addaccount_btn = QPushButton(tr("Add account…"))
-        self.addaccount_btn.clicked.connect(self._open_account_dialog)
-        self.local_btn = QPushButton(tr("Use local-only"))
-        self.local_btn.clicked.connect(self._use_local_only)
-        self.add_local_btn = QPushButton(tr("Add local items to account…"))
-        self.add_local_btn.clicked.connect(self._add_local_to_account)
-        self.export_data_btn = QPushButton(tr("Export my data…"))
-        self.export_data_btn.clicked.connect(self._export_account_data)
-        self.delete_account_btn = QPushButton(tr("Delete account…"), objectName="dangerButton")
-        self.delete_account_btn.clicked.connect(self._delete_account)
-        for b in (self.addaccount_btn, self.local_btn, self.add_local_btn,
-                  self.export_data_btn, self.delete_account_btn):
-            acct_row.addWidget(b)
-        acct_row.addStretch(1)
-        form.addRow(acct_row)
-        self._refresh_account_ui()
+        # --- Status (always visible): what is happening with the data right now ---
+        form.addRow(tr("Status"), self._sync_status_label())
 
-        # Bring-your-own Supabase project: hidden by default — the app ships with a
-        # built-in central project, so normal users just sign in. Set
-        # show_advanced=True in settings.cfg to point sync at your own project.
-        if self.show_advanced:
-            self.supabase_url_edit = QLineEdit(self.env.get("SUPABASE_URL", ""))
-            form.addRow(tr("Supabase URL (.env)"), self.supabase_url_edit)
-            self.supabase_key_edit = self._secret(QLineEdit(self.env.get("SUPABASE_KEY", "")))
-            form.addRow(tr("Supabase key (.env)"), self.supabase_key_edit)
+        if not custom_mode:
+            # --- Accounts (built-in server: cloud sync follows being signed in) ---
+            # Several accounts can be remembered on one device and switched between
+            # without re-entering the password; the active one is what syncs. In
+            # personal own-server mode there is no sign-in, so this is hidden.
+            self.accounts_box = QVBoxLayout()
+            self.accounts_box.setContentsMargins(0, 0, 0, 0)
+            accounts_container = QWidget()
+            accounts_container.setLayout(self.accounts_box)
+            form.addRow(tr("Accounts"), accounts_container)
+
+            # Only truly global actions live here. Per-account actions (add local
+            # items / export / delete) hang off the active account's own row in a
+            # tidy "⋮" menu, so this row stays short and never overflows.
+            acct_row = QHBoxLayout()
+            self.addaccount_btn = QPushButton(tr("Add account…"))
+            self.addaccount_btn.clicked.connect(self._open_account_dialog)
+            self.local_btn = QPushButton(tr("Turn off cloud sync"))
+            self.local_btn.clicked.connect(self._use_local_only)
+            for b in (self.addaccount_btn, self.local_btn):
+                acct_row.addWidget(b)
+            acct_row.addStretch(1)
+            form.addRow(acct_row)
+            self._refresh_account_ui()
+
+        # Bring-your-own Supabase project (advanced, personal use). Hidden by
+        # default — the app ships with a built-in central project, so normal users
+        # just sign in. Reveal by setting show_advanced=True in settings.cfg; once a
+        # custom server is configured the section also stays visible so it can be
+        # tested or disconnected without hand-editing files.
+        if self.show_advanced or custom_mode:
+            group = QGroupBox(tr("Use your own Supabase server (personal)"))
+            g = QFormLayout(group)
+            # Leave clear room below the group title — at OS display scaling the default
+            # top margin is too tight and clips the first line of the note.
+            g.setContentsMargins(12, 18, 12, 12)
+
+            note = QLabel(tr("Personal, single-user sync to a Supabase project you own. "
+                             "No account or sign-in — the app connects with the project's "
+                             "anon key. Run the schema SQL in your project, paste its URL "
+                             "and anon key below, test it, then press “Use this server”.\n\n"
+                             "Note: anyone with this URL and key can read the data, so "
+                             "keep the project private and don't share the key."))
+            note.setObjectName("dimLabel")
+            note.setWordWrap(True)
+            g.addRow(note)
+
+            # Prefill from the active server, or the last-saved one (so disconnecting
+            # never loses the credentials — they can be re-activated with one click).
+            saved_url = self.env.get("SUPABASE_URL") or self.env.get("CUSTOM_SUPABASE_URL", "")
+            saved_key = self.env.get("SUPABASE_KEY") or self.env.get("CUSTOM_SUPABASE_KEY", "")
+            self.supabase_url_edit = QLineEdit(saved_url)
+            g.addRow(tr("Supabase URL"), self.supabase_url_edit)
+            self.supabase_key_edit = self._secret(QLineEdit(saved_key))
+            g.addRow(tr("Supabase key (anon)"), self.supabase_key_edit)
+
+            btn_row = QHBoxLayout()
             test_btn = QPushButton(tr("Test Connection"))
             test_btn.clicked.connect(self._test_supabase)
-            form.addRow(test_btn)
+            btn_row.addWidget(test_btn)
+            if custom_mode:
+                disconnect_btn = QPushButton(tr("Disconnect — use the built-in server"),
+                                             objectName="dangerButton")
+                disconnect_btn.clicked.connect(self._disconnect_custom_server)
+                btn_row.addWidget(disconnect_btn)
+            else:
+                use_btn = QPushButton(tr("Use this server"), objectName="primaryButton")
+                use_btn.clicked.connect(self._use_custom_server)
+                btn_row.addWidget(use_btn)
+            btn_row.addStretch(1)
+            g.addRow(btn_row)
 
-            schema_note = QLabel(tr("To use your own Supabase project instead of the built-in "
-                                    "one, run the schema SQL there, enter its URL and anon key "
-                                    "above, then sign in. Each account's words stay private "
-                                    "(Row-Level Security is on). New sign-ups are verified by a "
-                                    "6-digit email code — configure SMTP and the confirm-signup "
-                                    "email template (see the schema comments)."))
-            schema_note.setObjectName("dimLabel")
-            schema_note.setWordWrap(True)
-            form.addRow(schema_note)
             schema_row = QHBoxLayout()
             copy_schema_btn = QPushButton(tr("Copy schema SQL"))
             copy_schema_btn.clicked.connect(self._copy_schema_sql)
@@ -644,12 +674,80 @@ class SettingsDialog(FramelessDialog):
                 QUrl("https://supabase.com/dashboard/project/_/sql/new")))
             schema_row.addWidget(open_editor_btn)
             schema_row.addStretch(1)
-            form.addRow(schema_row)
+            g.addRow(schema_row)
 
-        form.addRow(tr("Bin cleanup grace (days)"), self._spin("cleanup_grace_period_days", 1, 365, 30))
+            # Bin retention only matters once you sync to a server, and is a
+            # power-user concern — kept out of the normal (built-in) view.
+            g.addRow(tr("Bin cleanup grace (days)"),
+                     self._spin("cleanup_grace_period_days", 1, 365, 30))
+
+            form.addRow(group)
+
         tabs.addTab(_scrollable(sync), tr("Sync"))
 
         return tabs
+
+    def _sync_status_label(self):
+        """Plain-language 'what's happening with my data' line (dot + sentence) shown
+        at the top of the Sync tab. The dot turns green only once a live check confirms
+        the active backend is actually reachable — so wrong credentials don't read as
+        'connected'. Kept fresh via _update_sync_status() after account changes."""
+        label = QLabel()
+        label.setTextFormat(Qt.RichText)
+        label.setWordWrap(True)
+        self.sync_status_lbl = label
+        self._update_sync_status()
+        return label
+
+    def _update_sync_status(self):
+        """(Re)compute the Sync-tab status line for the current mode, then verify
+        reachability on a worker thread and recolour the dot. Safe to call repeatedly;
+        a token guards against a stale probe overwriting a newer one."""
+        label = getattr(self, "sync_status_lbl", None)
+        if label is None:
+            return
+        from app.ui import theme
+        from app.core.supabase_client import is_custom_server, custom_server_host, get_supabase
+        colors = theme.current_colors()
+        auth = get_auth_manager()
+
+        def render(dot, color, text):
+            try:
+                label.setText(f'<span style="color:{color};">{dot}</span> {text}')
+            except RuntimeError:
+                pass  # dialog closed; label gone
+
+        if is_custom_server():
+            on_text = tr("Cloud sync is on — your own server ({host})").format(
+                host=custom_server_host() or tr("your server"))
+        elif auth.is_logged_in():
+            on_text = tr("Cloud sync is on — signed in as {email}").format(
+                email=auth.current_user() or auth.current_user_id() or "")
+        else:
+            render("○", colors["text_dim"],
+                   tr("Cloud sync is off — your words are saved on this device only"))
+            return
+
+        # Active backend: stay neutral until a live probe confirms it actually connects.
+        render("●", colors["text_dim"], on_text + "  " + tr("(checking…)"))
+        token = object()
+        self._sync_status_token = token
+
+        def probe():
+            try:
+                return get_supabase().is_connected()
+            except Exception:
+                return False
+
+        def done(ok):
+            if getattr(self, "_sync_status_token", None) is not token:
+                return  # superseded by a newer refresh
+            if ok:
+                render("●", colors["success"], on_text)
+            else:
+                render("●", colors["danger"], on_text + "  " + tr("(can't connect)"))
+
+        run_in_thread(probe, on_result=done, on_error=lambda _e: done(False))
 
     def _system_tab(self):
         widget = QWidget()
@@ -729,32 +827,101 @@ class SettingsDialog(FramelessDialog):
             self.w_google_cloud_tts_credentials_path.setText(path)
 
     def _copy_schema_sql(self):
-        from app.core.supabase_schema import SCHEMA_SQL
-        QGuiApplication.clipboard().setText(SCHEMA_SQL)
+        # The advanced section is the personal own-server path, so copy the
+        # single-user (no-RLS) schema — not the multi-user hosted one.
+        from app.core.supabase_schema import PERSONAL_SCHEMA_SQL
+        QGuiApplication.clipboard().setText(PERSONAL_SCHEMA_SQL)
         QMessageBox.information(self, "Supabase",
                                 tr("Schema SQL copied to the clipboard. Open your "
                                    "Supabase project's SQL editor, paste it, and press Run "
                                    "to create the tables."))
 
-    def _test_supabase(self):
-        _write_env({
-            "SUPABASE_URL": self.supabase_url_edit.text().strip(),
-            "SUPABASE_KEY": self.supabase_key_edit.text().strip(),
-        })
+    def _use_custom_server(self):
+        """Start syncing with the personal own-Supabase server in the fields. Saves the
+        creds to both the active slot (SUPABASE_*) and the remembered slot (CUSTOM_*),
+        then closes Settings so the main window applies the built-in→custom transition."""
+        url = self.supabase_url_edit.text().strip()
+        key = self.supabase_key_edit.text().strip()
+        if not url or not key:
+            QMessageBox.warning(self, "Supabase",
+                                tr("Enter your server's URL and anon key first."))
+            return
+        # Verify the creds actually connect before switching to them. If they don't,
+        # warn but still let the user proceed (e.g. they're offline right now but know
+        # the details are correct).
+        from app.core.supabase_client import probe_credentials
+        ok, err = probe_credentials(url, key)
+        if not ok:
+            detail = (tr("Could not connect to this server:\n{error}").format(error=err)
+                      if err else tr("Could not connect to this server."))
+            proceed = QMessageBox.warning(
+                self, "Supabase",
+                tr("{detail}\n\nCheck the URL and anon key, and that you've run the "
+                   "schema SQL there. Use these details anyway?").format(detail=detail),
+                QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+            if proceed != QMessageBox.Yes:
+                return
+        _write_env({"SUPABASE_URL": url, "SUPABASE_KEY": key,
+                    "CUSTOM_SUPABASE_URL": url, "CUSTOM_SUPABASE_KEY": key})
         try:
-            # Reconfigure the shared client so the typed creds take effect and the
-            # signed-in token (if any) is re-applied, then probe connectivity.
             from app.core.supabase_client import get_supabase
-            client = get_supabase()
-            client.reconfigure()
-            get_auth_manager().refresh_if_needed()
-            if client.is_connected():
-                QMessageBox.information(self, "Supabase", tr("Connection successful! ✅"))
-            else:
-                QMessageBox.warning(self, "Supabase",
-                                    tr("Could not connect. Check the URL/key and your internet connection."))
-        except Exception as exc:
-            QMessageBox.critical(self, "Supabase", tr("Connection test failed:\n{error}").format(error=exc))
+            get_supabase().reconfigure()
+        except Exception:
+            pass
+        show_toast(self, tr("Sync"), tr("Now syncing with your own server."), "success")
+        self.accept()
+
+    def _disconnect_custom_server(self):
+        """Leave personal own-server mode and revert to the built-in central project.
+        The credentials are REMEMBERED (kept in the CUSTOM_* slot) so they can be
+        re-activated with one click; only the active slot is cleared. The data stays in
+        the user's own project and on disk."""
+        confirm = QMessageBox.question(
+            self, tr("Disconnect server"),
+            tr("Stop syncing with your own Supabase server and use the built-in one "
+               "again?\n\nYour words stay in your own project and on this device. The "
+               "server details are remembered so you can switch back anytime. You'll be "
+               "local-only until you sign into an account."),
+            QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if confirm != QMessageBox.Yes:
+            return
+        # Remember the server we're leaving, then clear only the active slot.
+        cur = _read_env()
+        updates = {"SUPABASE_URL": "", "SUPABASE_KEY": ""}
+        if cur.get("SUPABASE_URL") and cur.get("SUPABASE_KEY"):
+            updates["CUSTOM_SUPABASE_URL"] = cur["SUPABASE_URL"]
+            updates["CUSTOM_SUPABASE_KEY"] = cur["SUPABASE_KEY"]
+        _write_env(updates)
+        try:
+            from app.core.supabase_client import get_supabase
+            get_supabase().reconfigure()
+        except Exception:
+            pass
+        show_toast(self, tr("Sync"), tr("Disconnected — using the built-in server."), "info")
+        # Close Settings so the main window re-applies sync (back to built-in,
+        # local-only) and the tab rebuilds cleanly on next open.
+        self.accept()
+
+    def _test_supabase(self):
+        # Test exactly what is typed, against a throwaway client — never mutate .env or
+        # the live connection (testing must not silently switch servers), and never
+        # report success for an empty config (which would fall back to the built-in
+        # project and look "connected").
+        url = self.supabase_url_edit.text().strip()
+        key = self.supabase_key_edit.text().strip()
+        if not url or not key:
+            QMessageBox.warning(self, "Supabase",
+                                tr("Enter your server's URL and anon key first, then test."))
+            return
+        from app.core.supabase_client import probe_credentials
+        ok, err = probe_credentials(url, key)
+        if ok:
+            QMessageBox.information(self, "Supabase", tr("Connection successful! ✅"))
+        elif err:
+            QMessageBox.critical(self, "Supabase", tr("Connection test failed:\n{error}").format(error=err))
+        else:
+            QMessageBox.warning(self, "Supabase",
+                                tr("Could not connect. Check the URL/key and your internet connection."))
 
     # ----------------------------------------------------------- account
 
@@ -767,6 +934,10 @@ class SettingsDialog(FramelessDialog):
         return self._sm
 
     def _refresh_account_ui(self):
+        # The account UI is built only in built-in mode; in personal own-server mode
+        # there is no sign-in, so nothing to refresh.
+        if not hasattr(self, "accounts_box"):
+            return
         auth = get_auth_manager()
         # Rebuild the remembered-accounts list.
         while self.accounts_box.count():
@@ -786,8 +957,9 @@ class SettingsDialog(FramelessDialog):
                 self.accounts_box.addWidget(self._account_row(acc, active))
         logged_in = auth.is_logged_in()
         self.local_btn.setVisible(logged_in)
-        for b in (self.add_local_btn, self.export_data_btn, self.delete_account_btn):
-            b.setVisible(logged_in)
+        # Signing in / switching / turning sync off changes the live status, so keep
+        # the status line in step without needing to reopen Settings.
+        self._update_sync_status()
 
     def _account_row(self, acc, active_uid):
         row = QWidget()
@@ -814,10 +986,44 @@ class SettingsDialog(FramelessDialog):
             switch = QPushButton(tr("Switch"))
             switch.clicked.connect(lambda _=False, u=uid: self._switch_account(u))
             h.addWidget(switch)
+        if is_active:
+            # Per-account actions live in a compact ⋮ menu on the active account, so
+            # they're discoverable but never crowd the row.
+            from app.ui import icons, theme
+            more = QPushButton()
+            more.setIcon(icons.icon("more", theme.current_colors()["text"], 16))
+            more.setToolTip(tr("Account actions"))
+            menu = QMenu(more)
+            self._account_menu_item(menu, tr("Sync this device's data to my account…"),
+                                    self._add_local_to_account)
+            self._account_menu_item(menu, tr("Export my data…"), self._export_account_data)
+            menu.addSeparator()
+            self._account_menu_item(menu, tr("Delete account…"), self._delete_account,
+                                    danger=True)
+            more.setMenu(menu)
+            h.addWidget(more)
         remove = QPushButton(tr("Remove"))
         remove.clicked.connect(lambda _=False, u=uid, e=email: self._forget_account(u, e))
         h.addWidget(remove)
         return row
+
+    def _account_menu_item(self, menu, text, slot, danger=False):
+        """A menu row that supports a danger (red) colour — QMenu actions can't be
+        recoloured directly, so destructive items use a flat, left-aligned button with
+        a consistent menu-item look."""
+        from app.ui import theme
+        colors = theme.current_colors()
+        btn = QPushButton(text)
+        btn.setFlat(True)
+        btn.setCursor(Qt.PointingHandCursor)
+        color = colors["danger"] if danger else colors["text"]
+        btn.setStyleSheet(
+            f"QPushButton{{border:none;text-align:left;padding:6px 14px;color:{color};}}"
+            f"QPushButton:hover{{background:{colors['surface_alt']};}}")
+        btn.clicked.connect(lambda: (menu.hide(), slot()))
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(btn)
+        menu.addAction(action)
 
     def _switch_account(self, uid):
         mw = self.parent()
@@ -843,7 +1049,7 @@ class SettingsDialog(FramelessDialog):
         if mw is not None and hasattr(mw, "switch_active_account"):
             mw.switch_active_account(None)
         self._refresh_account_ui()
-        show_toast(self, tr("Account"), tr("Using local-only mode."), "info")
+        show_toast(self, tr("Account"), tr("Cloud sync turned off — this device only."), "info")
 
     def _forget_account(self, uid, email):
         confirm = QMessageBox.question(
@@ -866,20 +1072,10 @@ class SettingsDialog(FramelessDialog):
                    tr("Removed {email} from this device.").format(email=email), "success")
 
     def _open_account_dialog(self):
-        # Advanced (bring-your-own) mode only: apply whatever URL/key is currently
-        # typed so sign-in works without the user having to Save and reopen Settings
-        # first. In normal mode there are no fields — the built-in central project is
-        # already live, so we just open the dialog.
-        if getattr(self, "supabase_url_edit", None) is not None:
-            url, key = self.supabase_url_edit.text().strip(), self.supabase_key_edit.text().strip()
-            if url and key and (url != self.env.get("SUPABASE_URL", "")
-                                or key != self.env.get("SUPABASE_KEY", "")):
-                _write_env({"SUPABASE_URL": url, "SUPABASE_KEY": key})
-                try:
-                    from app.core.supabase_client import get_supabase
-                    get_supabase().reconfigure()
-                except Exception:
-                    pass
+        # Accounts exist only on the built-in central project (always live), so just
+        # open the sign-in dialog. The advanced "own server" fields configure a
+        # separate, anonymous personal backend and are intentionally NOT applied
+        # here — that switch happens on Save / Test Connection.
         dlg = AccountDialog(self, auth=get_auth_manager())
         dlg.authenticated.connect(self._refresh_account_ui)
         self._account_changed = False
@@ -1015,12 +1211,21 @@ class SettingsDialog(FramelessDialog):
             env_updates["OPENAI_API_KEY"] = self.openai_key_edit.text().strip()
         if self.gemini_key_edit.text().strip() != self.env.get("GOOGLE_API_KEY", ""):
             env_updates["GOOGLE_API_KEY"] = self.gemini_key_edit.text().strip()
-        # Supabase URL/key fields only exist in advanced (bring-your-own) mode.
+        # Supabase URL/key fields only exist in advanced (bring-your-own) mode. Plain OK
+        # just remembers the typed creds in the saved slot (CUSTOM_*) — it does NOT
+        # activate a server (that's the explicit "Use this server" button). The only
+        # exception: editing the creds while already on the custom server updates the
+        # active slot too, so the change takes effect.
         if getattr(self, "supabase_url_edit", None) is not None:
-            if self.supabase_url_edit.text().strip() != self.env.get("SUPABASE_URL", ""):
-                env_updates["SUPABASE_URL"] = self.supabase_url_edit.text().strip()
-            if self.supabase_key_edit.text().strip() != self.env.get("SUPABASE_KEY", ""):
-                env_updates["SUPABASE_KEY"] = self.supabase_key_edit.text().strip()
+            from app.core.supabase_client import is_custom_server
+            url = self.supabase_url_edit.text().strip()
+            key = self.supabase_key_edit.text().strip()
+            if url and key:
+                env_updates["CUSTOM_SUPABASE_URL"] = url
+                env_updates["CUSTOM_SUPABASE_KEY"] = key
+                if is_custom_server():
+                    env_updates["SUPABASE_URL"] = url
+                    env_updates["SUPABASE_KEY"] = key
         if env_updates:
             _write_env(env_updates)
             if "OPENAI_API_KEY" in env_updates or "GOOGLE_API_KEY" in env_updates:
