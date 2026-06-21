@@ -40,6 +40,7 @@ from reportlab.platypus import Image as RepImage
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
 from app.config import get_bool, get_float, get_int
+from app.core.db import get_active_db_path
 
 # Display headers in the same column order as the table
 EXPORT_COLUMNS = ["ID", "RowNumber", "Status", "Language1", "Word1", "Language2", "Word2", "Source", "created_at"]
@@ -122,7 +123,8 @@ def _rows_to_table(rows, exclude_columns, db_path=None):
     return headers, data, included + extras
 
 
-def export_to_excel_file(rows, file_path, settings, db_path='dictionary.db'):
+def export_to_excel_file(rows, file_path, settings, db_path=None):
+    db_path = db_path or get_active_db_path()
     sheet_name = settings.get("sheet_name", "Sheet1")
     start_row = get_int(settings, "start_row", 0)
     start_column = get_int(settings, "start_column", 0)
@@ -159,7 +161,8 @@ def export_to_excel_file(rows, file_path, settings, db_path='dictionary.db'):
             worksheet.freeze_panes = worksheet['A2']
 
 
-def export_to_csv_file(rows, file_path, settings, db_path='dictionary.db'):
+def export_to_csv_file(rows, file_path, settings, db_path=None):
+    db_path = db_path or get_active_db_path()
     delimiter = settings.get("csv_delimiter", ",")
     exclude_columns = settings.get("exclude_columns_excel", "ID,Source").split(',')
     headers, data, included = _rows_to_table(rows, exclude_columns, db_path)
@@ -169,7 +172,8 @@ def export_to_csv_file(rows, file_path, settings, db_path='dictionary.db'):
     pd.DataFrame(data, columns=headers).to_csv(file_path, sep=delimiter, index=False)
 
 
-def export_to_txt_file(rows, file_path, settings, db_path='dictionary.db'):
+def export_to_txt_file(rows, file_path, settings, db_path=None):
+    db_path = db_path or get_active_db_path()
     delimiter_setting = settings.get("txt_delimiter", "\\t")
     delimiter = "\t" if delimiter_setting in ("\\t",) or delimiter_setting.lower() == "tab" else delimiter_setting
     exclude_columns = [c.strip() for c in settings.get("exclude_columns_txt", "ID,Source").split(',')]
@@ -190,11 +194,12 @@ def export_to_txt_file(rows, file_path, settings, db_path='dictionary.db'):
             txt_file.write(delimiter.join(str(v) for v in row) + "\n")
 
 
-def export_to_pdf_file(rows, file_path, settings, db_path='dictionary.db'):
+def export_to_pdf_file(rows, file_path, settings, db_path=None):
     """Render rows into a styled PDF table, optionally with definitions.
 
     Returns a list of warning strings (empty on a clean export).
     """
+    db_path = db_path or get_active_db_path()
     warnings = []
     left_margin = get_float(settings, "left_margin", 10)
     right_margin = get_float(settings, "right_margin", 10)

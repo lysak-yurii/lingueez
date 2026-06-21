@@ -3133,38 +3133,38 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _on_backup_restored(self):
-        """After a restore: reload the UI, then — if a sync server is active on the
-        local-only store — offer to upload the restored library right away. When not
-        connected, the offer is deferred to the next connect (the pending flag set by
-        the restore dialog drives _maybe_prompt_restore_merge there)."""
+        """After a restore: reload the UI, then — if a sync server is active — offer to
+        upload the restored library right away. The restore wrote whichever database is
+        active (the local-only store or the signed-in account's file), so this applies
+        to both. When not connected, the offer is deferred to the next connect (the
+        pending flag set by the restore dialog drives _maybe_prompt_restore_merge there)."""
         self.load_data()
-        from app.core.db import get_active_db_path, DB_PATH
-        local_active = os.path.abspath(get_active_db_path()) == os.path.abspath(DB_PATH)
-        if self.sync_enabled and local_active:
+        if self.sync_enabled:
             if self._maybe_prompt_restore_merge():
                 run_in_thread(self._run_startup_sync)
-        elif local_active:
+        else:
             show_toast(self, tr("Backups"),
                        tr("Library restored. You'll be asked to upload it the next time "
                           "you connect a sync server."), "info", 6000)
 
     def _maybe_prompt_restore_merge(self) -> bool:
-        """If a backup was just restored and a sync server is now active on the
-        local-only store, ask whether to upload+merge the restored library. On yes,
-        reset the sync bookkeeping so the next sync runs as a full union (push + pull).
+        """If a backup was just restored and a sync server is now active, ask whether to
+        upload+merge the restored library into the cloud. On yes, reset the active
+        database's sync bookkeeping so the next sync runs as a full union (push + pull).
         Returns True if the user opted to upload. Clears the pending flag either way."""
-        from app.core.db import get_active_db_path, DB_PATH
+        from app.core.db import get_active_db_path
         if not (get_bool(self.settings, "pending_restore_merge", False)
-                and self.sync_enabled
-                and os.path.abspath(get_active_db_path()) == os.path.abspath(DB_PATH)):
+                and self.sync_enabled):
             return False
+
+        active_db = get_active_db_path()
 
         def _clear_flag():
             self.settings = load_settings()
             self.settings["pending_restore_merge"] = "False"
             save_settings(self.settings)
 
-        n_words = self._count_rows(DB_PATH, "words")
+        n_words = self._count_rows(active_db, "words")
         upload = QMessageBox.question(
             self, tr("Upload restored library?"),
             tr("You restored a backup with {n} words that may not be in your cloud yet. "
@@ -3173,7 +3173,7 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) == QMessageBox.Yes
         _clear_flag()
         if upload:
-            dbq.reset_sync_state(DB_PATH)   # next sync = full union (push local-only + pull)
+            dbq.reset_sync_state(active_db)   # next sync = full union (push local + pull)
         return upload
 
     @staticmethod

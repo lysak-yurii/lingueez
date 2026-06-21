@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 from app.core.data_management import check_duplicate_entry, normalize_language_pairs
+from app.core.db import get_active_db_path
 from app.i18n import canonical_language
 
 logger = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ def _norm(value):
     return str(value).strip().lower()
 
 
-def analyze_excel_import(file_path, settings, log=_noop_log, db_path='dictionary.db'):
+def analyze_excel_import(file_path, settings, log=_noop_log, db_path=None):
     """Classify every spreadsheet row for user review.
 
     Returns ``{'rows': [...], 'counts': {'add', 'update', 'skip', 'total'}}``
@@ -119,6 +120,7 @@ def analyze_excel_import(file_path, settings, log=_noop_log, db_path='dictionary
     updates/duplicates) and ``existing`` (current DB languages for updates).
     Returns None when the file could not be read.
     """
+    db_path = db_path or get_active_db_path()
     placeholders_str = settings.get("excel_import_placeholders", "(  ),'',N/A,---,None,null, ")
     placeholders = set(p.strip().lower() for p in placeholders_str.split(',')) if placeholders_str else set()
     skip_placeholders = str(settings.get("excel_import_skip_placeholders", "True")) == 'True'
