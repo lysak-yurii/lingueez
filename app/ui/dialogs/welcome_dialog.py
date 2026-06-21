@@ -25,8 +25,8 @@ Shown once on a fresh, signed-out launch. The primary action funnels into the
 app's shared sign-in flow; "Continue on this device" simply closes and the user
 keeps working locally (sync can still be enabled later from the cloud icon or
 Settings). Marking it as seen is the caller's job (MainWindow._show_welcome)."""
-from PySide6.QtCore import (Property, QEasingCurve, QParallelAnimationGroup,
-                            QPropertyAnimation, QRectF, Qt)
+from PySide6.QtCore import (Property, QEasingCurve, QPropertyAnimation, QRectF,
+                            QSequentialAnimationGroup, Qt)
 from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import QLabel, QPushButton, QWidget
 
@@ -35,39 +35,53 @@ from app.ui.dialogs.base import FramelessDialog, quiet_frame, quiet_row
 from app.version import APP_NAME
 
 # Resting display size of the app icon (px) and the box it lives in. The box has
-# headroom so the entrance overshoot and the idle float never clip or reflow.
+# generous vertical headroom so the cover's drop and the idle float never clip.
 ICON_BASE = 62
-ICON_BOX = 88
+ICON_BOX = 104
+# The logo is a book: a blue top block (cover + "L·Z") over a yellow bottom block
+# (base), separated by a fully transparent gap. Cutting the single source at this
+# height ratio yields two layers that reconstruct the mark exactly when joined.
+SPLIT_RATIO = 0.71
 
 
 class AnimatedAppIcon(QWidget):
-    """The app icon, custom-painted so scale / vertical offset / opacity are all
-    animatable independently of the layout. On show it scales in with a soft
-    overshoot and fades up; then it settles into a slow, barely-there float —
-    elegant and alive without the 'loading spinner' feel of a hard pulse."""
+    """The app icon as two custom-painted layers — the blue cover and the yellow
+    base — so they can animate independently of the layout. On show, the base is
+    already in place and the cover drops down onto it like a book closing, with a
+    soft landing damp; then the whole mark settles into a slow, barely-there
+    float. Elegant and alive without the 'loading spinner' feel of a hard pulse."""
+
+    DROP = 18.0     # how far above its resting seam the cover starts (display px)
+    HOLD_MS = 520   # pre-roll: hold the open-book pose so the close isn't missed
 
     def __init__(self, pixmap, dpr, parent=None):
         super().__init__(parent)
         self._dpr = dpr
-        # Pre-scale ONCE to the largest size we'll draw (base size × overshoot
-        # headroom × dpr). Per-frame we then only blit this small pixmap, instead
-        # of re-sampling the 549px source every tick — that resampling was the
-        # cause of the dropped frames / "low fps" look.
-        maxpx = max(1, int(ICON_BASE * 1.2 * dpr))
-        self._base = pixmap.scaled(
-            maxpx, maxpx, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self._scale = 0.6      # animated 0.6 -> 1.0 on entrance
-        self._offset = 10.0    # animated vertical px, eases to 0 then floats
-        self._opacity = 0.0    # animated 0 -> 1 on entrance
+        # Slice the source at the transparent gap, then pre-scale each layer ONCE
+        # to the size we'll draw (× dpr for HiDPI crispness). Per frame we only
+        # blit these small pixmaps instead of re-sampling the 549px source every
+        # tick — that resampling was the cause of the dropped frames / low-fps look.
+        w, h = pixmap.width(), pixmap.height()
+        split = round(h * SPLIT_RATIO)
+        self._split_ratio = (split / h) if h else SPLIT_RATIO
+        maxpx = max(1, int(ICON_BASE * dpr))
+        self._top = pixmap.copy(0, 0, w, split).scaledToWidth(
+            maxpx, Qt.SmoothTransformation)
+        self._bottom = pixmap.copy(0, split, w, h - split).scaledToWidth(
+            maxpx, Qt.SmoothTransformation)
+
+        self._gap_top = self.DROP  # cover's drop, animated DROP -> 0 on entrance
+        self._offset = 0.0         # whole-mark vertical px: landing damp, then float
+        self._opacity = 0.0        # animated 0 -> 1 on entrance
         self.setFixedSize(ICON_BOX, ICON_BOX)
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
     # --- animatable Qt properties ---------------------------------------
-    def _get_scale(self):
-        return self._scale
+    def _get_gap_top(self):
+        return self._gap_top
 
-    def _set_scale(self, v):
-        self._scale = v
+    def _set_gap_top(self, v):
+        self._gap_top = v
         self.update()
 
     def _get_offset(self):
@@ -84,40 +98,75 @@ class AnimatedAppIcon(QWidget):
         self._opacity = v
         self.update()
 
-    scaleF = Property(float, _get_scale, _set_scale)
+    gapTop = Property(float, _get_gap_top, _set_gap_top)
     offsetY = Property(float, _get_offset, _set_offset)
     opacityF = Property(float, _get_opacity, _set_opacity)
 
     # --- paint -----------------------------------------------------------
     def paintEvent(self, event):
-        if self._base.isNull():
+        if self._top.isNull() or self._bottom.isNull():
             return
         p = QPainter(self)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         p.setOpacity(max(0.0, min(1.0, self._opacity)))
-        size = ICON_BASE * self._scale
+        size = float(ICON_BASE)
+        top_h = size * self._split_ratio
+        bot_h = size * (1.0 - self._split_ratio)
         x = (self.width() - size) / 2.0
-        y = (self.height() - size) / 2.0 + self._offset
-        # Draw the pre-scaled base; QRectF keeps the position subpixel-smooth.
-        p.drawPixmap(QRectF(x, y, size, size), self._base, QRectF(self._base.rect()))
+        base_y = (self.height() - size) / 2.0 + self._offset
+        # Cover (top) carries the drop offset; base (bottom) stays put. At
+        # gap_top == 0 the two layers are contiguous and form the whole mark.
+        # QRectF keeps every position subpixel-smooth.
+        p.drawPixmap(QRectF(x, base_y - self._gap_top, size, top_h),
+                     self._top, QRectF(self._top.rect()))
+        p.drawPixmap(QRectF(x, base_y + top_h, size, bot_h),
+                     self._bottom, QRectF(self._bottom.rect()))
 
     # --- choreography ----------------------------------------------------
     def play(self):
-        """Run the entrance, then hand off to the perpetual idle float."""
-        entrance = QParallelAnimationGroup(self)
-        for prop, start, end, dur, curve in (
-                (b"opacityF", 0.0, 1.0, 460, QEasingCurve.OutCubic),
-                (b"scaleF", 0.6, 1.0, 700, QEasingCurve.OutBack),
-                (b"offsetY", 10.0, 0.0, 700, QEasingCurve.OutCubic)):
-            a = QPropertyAnimation(self, prop, self)
-            a.setStartValue(start)
-            a.setEndValue(end)
-            a.setDuration(dur)
-            a.setEasingCurve(curve)
-            entrance.addAnimation(a)
-        entrance.finished.connect(self._start_float)
-        entrance.start()
-        self._entrance = entrance  # keep a ref so it isn't GC'd
+        """Fade the open book in, hold a beat so the user's gaze can land, then
+        close the cover onto the base and hand off to the landing damp.
+
+        The pre-roll hold is the key: starting the close on the very first paint
+        means it finishes before the eye reaches the freshly-shown dialog. We show
+        the 'before' pose (cover raised) during the hold so the close is legible."""
+        self._gap_top = self.DROP
+        self._offset = 0.0
+        self._opacity = 0.0
+
+        # Fade the raised-cover pose in immediately, parallel to the hold below.
+        fade = QPropertyAnimation(self, b"opacityF", self)
+        fade.setStartValue(0.0)
+        fade.setEndValue(1.0)
+        fade.setDuration(340)
+        fade.setEasingCurve(QEasingCurve.OutCubic)
+        fade.start()
+        self._fade = fade  # keep a ref so it isn't GC'd
+
+        # Hold the open book, then close it — unhurried so it reads clearly.
+        seq = QSequentialAnimationGroup(self)
+        seq.addPause(self.HOLD_MS)
+        drop = QPropertyAnimation(self, b"gapTop", self)
+        drop.setStartValue(self.DROP)
+        drop.setEndValue(0.0)
+        drop.setDuration(780)
+        drop.setEasingCurve(QEasingCurve.OutCubic)
+        seq.addAnimation(drop)
+        seq.finished.connect(self._land)
+        seq.start()
+        self._entrance = seq  # keep a ref so it isn't GC'd
+
+    def _land(self):
+        """A 2.5px micro-bounce of the whole mark — the soft landing on contact."""
+        land = QPropertyAnimation(self, b"offsetY", self)
+        land.setDuration(320)
+        land.setKeyValueAt(0.0, 0.0)
+        land.setKeyValueAt(0.5, 2.5)
+        land.setKeyValueAt(1.0, 0.0)
+        land.setEasingCurve(QEasingCurve.OutCubic)
+        land.finished.connect(self._start_float)
+        land.start()
+        self._landing = land
 
     def _start_float(self):
         """A slow, ~5px vertical drift that loops forever — the resting state."""
