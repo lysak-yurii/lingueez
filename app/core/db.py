@@ -239,6 +239,19 @@ def initialize_database(db_path=None):
         )
     ''')
 
+    # Items the user permanently deleted from the Bin. Their cloud row stays
+    # soft-deleted (the tombstone propagates the removal and is physically purged by
+    # the grace-period cleanup), so this marker hides it from THIS device's Bin in the
+    # meantime — without it the live cloud soft-delete would re-surface the item.
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bin_purged (
+            table_name TEXT NOT NULL,
+            record_id TEXT NOT NULL,
+            purged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (table_name, record_id)
+        )
+    ''')
+
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sync_deletions_table_record ON sync_deletions(table_name, record_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sync_deletions_synced ON sync_deletions(synced_at)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sync_queue_synced ON sync_queue(synced_at)')

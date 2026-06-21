@@ -119,9 +119,12 @@ class BinWindow(FramelessDialog):
                 items[key] = it
         cloud = self._cloud()
         if cloud:
+            # Items permanently deleted on this device keep a (propagating) cloud
+            # soft-delete until the grace-period purge; hide those from this Bin.
+            purged = self.db_adapter.get_purged_ids(table_name)
             for it in cloud.get_all_soft_deleted_items(table_name):
                 key = it.get('ID') or it.get('id')
-                if key is not None and key not in items:
+                if key is not None and key not in items and key not in purged:
                     items[key] = it
         return list(items.values())
 

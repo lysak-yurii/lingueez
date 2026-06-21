@@ -221,6 +221,10 @@ class MainWindow(QMainWindow):
     hotkey_pressed = Signal()
     reload_requested = Signal()
     translation_fallback = Signal(str)
+    # Raised on the GUI thread after a stale reconnect finishes syncing, so the
+    # deleted-elsewhere review (which shows a dialog) runs on the main thread. Carries
+    # the pre-sync orphan payload (detected before the sync re-stamps last_sync).
+    stale_review_requested = Signal(object)
     # Marshals an account switch onto the GUI thread (the startup session restore
     # runs on a worker). Payload is the user_id, or None for the local-only store.
     account_switch_requested = Signal(object)
@@ -300,6 +304,8 @@ class MainWindow(QMainWindow):
         self.hotkey_pressed.connect(self.open_add_word_and_translate)
         self.reload_requested.connect(self.load_data)
         self.account_switch_requested.connect(self.switch_active_account)
+        self.stale_review_requested.connect(
+            lambda orphans: self._review_stale_orphans(orphans=orphans))
         # Surface DeepL->Google fallbacks (raised on worker threads) as a toast.
         self.translation_fallback.connect(
             lambda msg: show_toast(self, tr("Translation"), msg, "info"))
@@ -2966,9 +2972,20 @@ class MainWindow(QMainWindow):
                 self.sync_status_changed.emit("error", tr("Not connected. Check internet or credentials"))
                 return
             self.sync_status_changed.emit("syncing", tr("Syncing with cloud…"))
+            # Detect rows deleted elsewhere while this device was offline BEFORE the
+            # sync runs — sync_on_startup re-stamps last_sync to 'now', which would
+            # otherwise make the staleness check always read as fresh. Cheap no-op
+            # unless the device is genuinely stale (returns empty before any cloud read).
+            try:
+                stale_orphans = self.sync_manager.detect_stale_orphans()
+            except Exception as exc:
+                logging.warning(f"Stale-orphan detection skipped: {exc}")
+                stale_orphans = None
             self.sync_manager.sync_on_startup()
             self.sync_status_changed.emit("success", tr("Sync completed successfully"))
             self.reload_requested.emit()
+            if stale_orphans and (stale_orphans.get("words") or stale_orphans.get("texts")):
+                self.stale_review_requested.emit(stale_orphans)
         except RuntimeError:
             pass  # app shut down mid-sync; nothing to report
         except SyncError as exc:
@@ -3045,8 +3062,46 @@ class MainWindow(QMainWindow):
                           on_result=lambda _r: self._after_full_sync(summary),
                           on_error=self._after_full_sync_error)
 
-        run_in_thread(self.sync_manager.reconcile_preview, on_result=on_preview,
-                      on_error=self._after_full_sync_error)
+        def preview():
+            run_in_thread(self.sync_manager.reconcile_preview, on_result=on_preview,
+                          on_error=self._after_full_sync_error)
+
+        # Resolve "deleted on another device while offline" rows BEFORE the reconcile —
+        # the union would otherwise silently re-upload them. No-op unless stale.
+        self._review_stale_orphans(on_done=preview)
+
+    def _review_stale_orphans(self, orphans=None, on_done=None):
+        """Ask the user to Keep (re-upload) or Remove rows that were deleted on other
+        devices while this one was offline past the retention window, then apply the
+        choice on a worker and call ``on_done``. Always calls ``on_done`` so a caller
+        can continue its own sync afterward.
+
+        ``orphans`` may be a pre-detected payload (the startup path detects *before*
+        the sync re-stamps last_sync); when None, it detects on a worker (manual-sync
+        fallback). A cheap no-op unless the device is genuinely stale."""
+        done = on_done or (lambda: None)
+
+        def show(detected_orphans):
+            words = (detected_orphans or {}).get('words', [])
+            texts = (detected_orphans or {}).get('texts', [])
+            if not words and not texts:
+                done()
+                return
+            from app.ui.dialogs.sync_review import SyncReviewDialog
+            choice = SyncReviewDialog.ask(self, words, texts)  # True=keep / False=remove / None=defer
+            if choice is None:
+                done()
+                return
+            run_in_thread(
+                lambda: self.sync_manager.resolve_stale_orphans(detected_orphans, choice),
+                on_result=lambda _r: (self.reload_requested.emit(), done()),
+                on_error=lambda _e: done())
+
+        if orphans is not None:
+            show(orphans)
+        else:
+            run_in_thread(self.sync_manager.detect_stale_orphans,
+                          on_result=show, on_error=lambda _e: done())
 
     def _after_full_sync(self, summary):
         self.reload_requested.emit()
