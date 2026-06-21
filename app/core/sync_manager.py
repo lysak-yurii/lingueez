@@ -569,6 +569,124 @@ class SyncManager:
             logging.warning(f"reconcile_preview failed: {exc}")
         return summary
 
+    def detect_stale_orphans(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Local rows that were almost certainly deleted on another device while THIS
+        device was offline longer than the tombstone-retention (grace) window.
+
+        Past that window the cloud has physically purged the tombstone, so absence
+        alone can't distinguish "deleted while away" from "new local data". We don't
+        guess — we return these for the user to review (keep or remove). The trigger is
+        gated hard so first-sync, backup-restore, and normal (non-stale) syncs never
+        reach it; on those it returns empty *before* doing any cloud read.
+
+        Returns ``{'words': [...], 'texts': [...]}`` of candidate rows, or empty.
+        """
+        empty = {'words': [], 'texts': []}
+        if not self.is_sync_enabled() or not self._local_db_belongs_to_current_user():
+            return empty
+
+        # 1. Must be a device that already completed a sync with THIS cloud — not a
+        #    first sync (which seeds local→cloud), and not a different backend.
+        if self.db_adapter.get_sync_metadata('first_sync_completed') != 'true':
+            return empty
+        synced = self.get_synced_account_id()
+        if not synced or synced != self.current_owner_id():
+            return empty
+
+        # 2. Must be stale: offline longer than the grace horizon, or the tombstone
+        #    would still be live and normal sync would handle the deletion.
+        last_sync = self._get_last_sync_time()
+        if not last_sync:
+            return empty
+        from datetime import datetime, timezone, timedelta
+        try:
+            ts = datetime.fromisoformat(str(last_sync).replace('Z', '+00:00'))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+        except Exception:
+            return empty
+        horizon = timedelta(days=max(1, self.cleanup_grace_period_days))
+        if datetime.now(timezone.utc) - ts <= horizon:
+            return empty
+
+        # 3. Must not be an in-progress backup restore (that flow intentionally seeds
+        #    local-only rows up to the cloud and has its own consent prompt).
+        try:
+            from app.config import load_settings
+            if str(load_settings().get('pending_restore_merge', 'False')) == 'True':
+                return empty
+        except Exception:
+            pass
+
+        # 4. Read the cloud id sets; bail safely if the read failed.
+        try:
+            cloud_word_ids = set(self.supabase.get_all_ids('words'))
+            cloud_text_ids = set(self.supabase.get_all_ids('texts'))
+        except Exception as e:
+            logging.warning(f"detect_stale_orphans: cloud id read failed: {e}")
+            return empty
+
+        conn = sqlite3.connect(self.local_db)
+        conn.row_factory = sqlite3.Row
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT ID, Language1, Word1, Language2, Word2 FROM words")
+            local_words = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT ID, Title, Language, Category FROM texts")
+            local_texts = [dict(r) for r in cur.fetchall()]
+        finally:
+            conn.close()
+
+        result = {'words': [], 'texts': []}
+        for table, rows, cloud_ids in (
+                ('words', local_words, cloud_word_ids),
+                ('texts', local_texts, cloud_text_ids)):
+            # Completeness guard: a non-empty local table against an empty cloud read is
+            # a likely partial/failed read, not a mass deletion — never quarantine then.
+            if rows and not cloud_ids:
+                logging.warning(
+                    f"detect_stale_orphans: skipping {table}; cloud read returned none")
+                continue
+            pending_new = self.db_adapter.get_pending_insert_ids(table)  # my offline work
+            pending_del = self.db_adapter.get_pending_deleted_ids(table)  # already deleting
+            for row in rows:
+                rid = row.get('ID')
+                if (rid and rid not in cloud_ids
+                        and rid not in pending_new
+                        and rid not in pending_del):
+                    result[table].append(row)
+        n = len(result['words']) + len(result['texts'])
+        if n:
+            logging.info(f"detect_stale_orphans: {n} candidate(s) for user review")
+        return result
+
+    def resolve_stale_orphans(self, orphans: Dict[str, List[Dict[str, Any]]],
+                              keep: bool) -> None:
+        """Apply the user's review decision. ``keep`` re-queues an INSERT so the next
+        sync re-uploads the rows (a conscious, user-chosen resurrection); otherwise the
+        rows are removed from this device."""
+        for table in ('words', 'texts'):
+            for row in orphans.get(table, []):
+                rid = row.get('ID') or row.get('id')
+                if not rid:
+                    continue
+                try:
+                    if keep:
+                        full = (self.db_adapter._get_word_sqlite(rid) if table == 'words'
+                                else self.db_adapter._get_text_sqlite(rid))
+                        if full:
+                            self.db_adapter._queue_operation('INSERT', table, rid, full)
+                    else:
+                        if table == 'words':
+                            self.db_adapter._delete_word_sqlite(rid)
+                        else:
+                            self.db_adapter._delete_text_sqlite(rid)
+                        # No tombstone needed — the cloud already doesn't have it.
+                        self.db_adapter._remove_deletion_tracking(table, rid)
+                        self.db_adapter._remove_queued_operations(table, rid)
+                except Exception as e:
+                    logging.error(f"resolve_stale_orphans: {table} {rid} failed: {e}")
+
     def reconcile(self) -> None:
         """Manual 'Sync Now': a full bidirectional reconcile that ignores the
         incremental queue/last_sync gating, so out-of-band divergence (e.g. a restored

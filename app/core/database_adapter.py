@@ -333,8 +333,12 @@ class DatabaseAdapter:
         cursor = conn.cursor()
         try:
             cursor.execute("DELETE FROM bin_items WHERE deleted_at < ?", (cutoff,))
+            removed = cursor.rowcount or 0
+            # Drain purged markers older than the grace window: by now the cloud row
+            # has itself been physically purged, so the marker has nothing left to hide.
+            cursor.execute("DELETE FROM bin_purged WHERE purged_at < ?", (cutoff,))
             conn.commit()
-            return cursor.rowcount or 0
+            return removed
         except Exception as e:
             logging.error(f"Error purging old bin items: {e}")
             conn.rollback()
@@ -353,34 +357,81 @@ class DatabaseAdapter:
         return int(n or 0)
 
     def delete_binned_item(self, table_name: str, record_id: int) -> bool:
-        """Permanently delete a binned item: drop the local copy and hard-delete the
-        cloud row (now, or durably on the next sync if we're offline).
+        """Permanently delete a binned item.
 
-        Offline, the live cloud row outlives the local one until the next sync. We
-        must keep the row's deletion *tombstone* (its ``sync_deletions`` row) until
-        the cloud copy is actually gone — otherwise the next pull, which re-adds any
-        live cloud row missing locally, would resurrect it. Only once the cloud
-        hard-delete succeeds is the tombstone safe to clear."""
+        Multi-device-safe: we do NOT physically hard-delete the cloud row, because
+        that leaves no tombstone — other devices would never learn of the deletion and
+        a later reconcile could resurrect it. Instead we ensure a soft-delete tombstone
+        (``deleted_at``), which replicates the removal to every device; the physical
+        cloud row is reclaimed later by the grace-period cleanup
+        (``cleanup_old_soft_deletes``), once the tombstone has had time to propagate.
+
+        The tombstone keeps the cloud row visible as a soft-delete, so we also record a
+        local ``bin_purged`` marker to hide it from THIS device's Bin in the meantime.
+        """
         self._bin_remove(table_name, record_id)
-        # The id is gone for good — cancel any pending sync intents (e.g. a queued
-        # RESTORE/INSERT) so they can't resurrect it on the cloud.
+        # Cancel a stale pending INSERT/RESTORE so it can't undo the deletion.
         self._remove_queued_operations(table_name, record_id)
+        # Guarantee a propagating tombstone (the row was binned, so one usually exists;
+        # re-tracking is idempotent and harmless).
+        self._track_deletion(table_name, record_id)
+        # Hide the still-soft-deleted cloud row from this device's Bin.
+        self.mark_bin_purged(table_name, record_id)
 
-        hard_delete = (self.supabase.hard_delete_word if table_name == 'words'
-                       else self.supabase.hard_delete_text)
         if self._use_cloud():
             try:
-                if hard_delete(record_id):
-                    # Cloud row is gone — no resurrection risk, drop the tombstone.
-                    self._remove_deletion_tracking(table_name, record_id)
-                    return True
-                logging.warning(f"Cloud hard-delete of {table_name} {record_id} failed, queued for later")
+                ok = (self.supabase.delete_word(record_id) if table_name == 'words'
+                      else self.supabase.delete_text(record_id))
+                if ok:
+                    self._mark_deletion_synced(table_name, record_id)
             except Exception as e:
-                logging.warning(f"Cloud hard-delete of {table_name} {record_id} failed: {e}, queued for later")
-        # Offline (or cloud call failed): keep the tombstone so the pull can't
-        # resurrect the still-live cloud row, and durably hard-delete on the next sync.
-        self._queue_operation('HARD_DELETE', table_name, record_id, None)
+                logging.warning(f"Cloud soft-delete of {table_name} {record_id} failed: "
+                                f"{e}, will propagate on the next sync")
         return True
+
+    def mark_bin_purged(self, table_name: str, record_id: int):
+        """Record that a binned item was permanently deleted on this device, so its
+        lingering cloud soft-delete is hidden from this device's Bin."""
+        conn = sqlite3.connect(self.local_db)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT OR REPLACE INTO bin_purged (table_name, record_id, purged_at) "
+                "VALUES (?, ?, datetime('now'))", (table_name, record_id))
+            conn.commit()
+        except Exception as e:
+            logging.warning(f"Error marking {table_name} {record_id} purged: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def clear_bin_purged(self, table_name: str, record_id: int):
+        """Drop a purged marker (on restore, or once the cloud row is actually gone)."""
+        conn = sqlite3.connect(self.local_db)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM bin_purged WHERE table_name = ? AND record_id = ?",
+                (table_name, record_id))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def get_purged_ids(self, table_name: str) -> set:
+        """Ids permanently deleted on this device whose cloud soft-delete should stay
+        hidden from the Bin."""
+        conn = sqlite3.connect(self.local_db)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT record_id FROM bin_purged WHERE table_name = ?", (table_name,))
+            return {row[0] for row in cursor.fetchall()}
+        except Exception:
+            return set()
+        finally:
+            conn.close()
 
     def _get_pending_deletions(self) -> List[Dict[str, Any]]:
         """Get all pending deletions that need to be synced."""
@@ -427,6 +478,24 @@ class DatabaseAdapter:
         finally:
             conn.close()
         return ids
+
+    def get_pending_insert_ids(self, table_name: str) -> set:
+        """Record ids with an *unsynced* INSERT in the queue — rows created locally
+        that haven't reached the cloud yet. The stale-reconnect review uses this to
+        tell genuine offline creations (push) apart from rows deleted elsewhere."""
+        conn = sqlite3.connect(self.local_db)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT record_id FROM sync_queue "
+                "WHERE table_name = ? AND synced_at IS NULL AND operation_type = 'INSERT'",
+                (table_name,))
+            return {row[0] for row in cursor.fetchall()}
+        except Exception as e:
+            logging.error(f"Error reading pending insert ids for {table_name}: {e}")
+            return set()
+        finally:
+            conn.close()
 
     def _get_pending_operations(self) -> List[Dict[str, Any]]:
         """Get all pending operations that need to be synced."""
@@ -1201,6 +1270,7 @@ class DatabaseAdapter:
                 self._queue_restore_intent('words', word_id)
                 self._bin_remove('words', word_id)
                 self._remove_deletion_tracking('words', word_id)
+                self.clear_bin_purged('words', word_id)
                 logging.info(f"Restored word {word_id} from local bin")
                 return True
 
@@ -1247,6 +1317,7 @@ class DatabaseAdapter:
                 self._queue_restore_intent('texts', text_id)
                 self._bin_remove('texts', text_id)
                 self._remove_deletion_tracking('texts', text_id)
+                self.clear_bin_purged('texts', text_id)
                 logging.info(f"Restored text {text_id} from local bin")
                 return True
 
