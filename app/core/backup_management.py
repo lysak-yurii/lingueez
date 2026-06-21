@@ -24,10 +24,35 @@ import sqlite3
 import os
 from datetime import datetime
 
+from app.core.db import DB_PATH, get_active_db_path
 
-def backup_database():
-    # Ensure the "database" folder exists
-    backup_dir = 'backups'
+BACKUP_ROOT = 'backups'
+
+
+def _db_stem(db_path):
+    """The bare filename without extension — ``dictionary`` or ``dictionary_<uid>``."""
+    return os.path.splitext(os.path.basename(db_path))[0]
+
+
+def backup_dir_for(db_path=None):
+    """Directory that holds restore points for the given (default: active) database.
+
+    The logged-out local store keeps the historical flat ``backups/`` location so
+    existing restore points stay visible. Each signed-in account gets its own
+    subfolder (``backups/dictionary_<uid>/``) so that, on a device shared by several
+    accounts, daily backups (named only by date) never collide or let one account
+    restore another's data."""
+    db_path = db_path or get_active_db_path()
+    if _db_stem(db_path) == _db_stem(DB_PATH):
+        return BACKUP_ROOT
+    return os.path.join(BACKUP_ROOT, _db_stem(db_path))
+
+
+def backup_database(db_path=None):
+    """Snapshot the active (or given) database into today's restore point."""
+    db_path = db_path or get_active_db_path()
+
+    backup_dir = backup_dir_for(db_path)
     os.makedirs(backup_dir, exist_ok=True)  # Create directory if it does not exist
 
     # Get today's date as a string
@@ -37,7 +62,7 @@ def backup_database():
     backup_file_path = os.path.join(backup_dir, f'dictionary_backup_{date_str}.db')
 
     # Connect to the original and backup database files
-    conn = sqlite3.connect('dictionary.db')
+    conn = sqlite3.connect(db_path)
     backup_conn = sqlite3.connect(backup_file_path)
 
     # Perform the backup
@@ -49,7 +74,22 @@ def backup_database():
     conn.close()
 
 
-def manage_backups(backup_dir):
+def manage_backups(backup_root):
+    """Prune old restore points down to one-per-month + the last 10 this month.
+
+    Applies to the shared root (the local store's backups) and to every per-account
+    subfolder, so account restore points are pruned the same way and don't pile up."""
+    _prune_dir(backup_root)
+    try:
+        for entry in os.listdir(backup_root):
+            sub = os.path.join(backup_root, entry)
+            if os.path.isdir(sub):
+                _prune_dir(sub)
+    except OSError as exc:
+        logging.error(f"Could not enumerate backup folders in {backup_root}: {exc}")
+
+
+def _prune_dir(backup_dir):
     current_month = datetime.now().strftime('%Y-%m')
     backups = []
 

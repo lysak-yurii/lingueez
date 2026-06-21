@@ -32,11 +32,11 @@ from PySide6.QtWidgets import (
     QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
+from app.core.backup_management import backup_dir_for
+from app.core.db import get_active_db_path
 from app.i18n import full_date, month_abbr, ntr, tr, weekday_name
 from app.ui.dialogs.base import FramelessDialog
 
-BACKUP_DIR = 'backups'
-DB_PATH = 'dictionary.db'
 DAILY_PREFIX = 'dictionary_backup_'
 SNAPSHOT_PREFIX = 'dictionary_pre_restore_'
 
@@ -112,6 +112,11 @@ class BackupsDialog(FramelessDialog):
     def __init__(self, parent, on_restored=None):
         super().__init__(parent, title=tr("Restore an earlier version"))
         self.on_restored = on_restored
+        # Resolve once, at open time, so the dialog acts on whichever library is
+        # active right now — the logged-out local store or a signed-in account's
+        # database — and never on a stale hardcoded path.
+        self.backup_dir = backup_dir_for()
+        self.db_path = get_active_db_path()
         self.setMinimumSize(560, 460)
 
         layout = self.content_layout
@@ -152,11 +157,11 @@ class BackupsDialog(FramelessDialog):
     def _collect_entries(self):
         """Restore points sorted newest-first: daily backups + the latest undo point."""
         entries = []
-        if not os.path.isdir(BACKUP_DIR):
+        if not os.path.isdir(self.backup_dir):
             return entries
 
         daily, snapshots = [], []
-        for filename in os.listdir(BACKUP_DIR):
+        for filename in os.listdir(self.backup_dir):
             if not filename.endswith('.db'):
                 continue
             try:
@@ -192,9 +197,8 @@ class BackupsDialog(FramelessDialog):
         entries.sort(key=lambda e: e["when"], reverse=True)
         return entries
 
-    @staticmethod
-    def _summary_for(filename):
-        words, texts, tags = _backup_counts(os.path.join(BACKUP_DIR, filename))
+    def _summary_for(self, filename):
+        words, texts, tags = _backup_counts(os.path.join(self.backup_dir, filename))
         return _content_summary(words, texts, tags)
 
     def load_backups(self):
@@ -249,8 +253,8 @@ class BackupsDialog(FramelessDialog):
             return
         try:
             safety = f"{SNAPSHOT_PREFIX}{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
-            shutil.copy2(DB_PATH, os.path.join(BACKUP_DIR, safety))
-            shutil.copy2(os.path.join(BACKUP_DIR, filename), DB_PATH)
+            shutil.copy2(self.db_path, os.path.join(self.backup_dir, safety))
+            shutil.copy2(os.path.join(self.backup_dir, filename), self.db_path)
             self._prune_snapshots(keep=safety)
             # The restored rows bypass the per-edit sync queue, so flag that the next
             # time a sync server is active we should offer to upload them (handled by
@@ -271,10 +275,10 @@ class BackupsDialog(FramelessDialog):
 
     def _prune_snapshots(self, keep):
         """Keep only one undo point so old pre-restore snapshots don't pile up."""
-        for filename in os.listdir(BACKUP_DIR):
+        for filename in os.listdir(self.backup_dir):
             if filename.startswith(SNAPSHOT_PREFIX) and filename != keep:
                 try:
-                    os.remove(os.path.join(BACKUP_DIR, filename))
+                    os.remove(os.path.join(self.backup_dir, filename))
                 except OSError as exc:
                     logging.error(f"Could not remove old snapshot {filename}: {exc}")
 
@@ -288,7 +292,7 @@ class BackupsDialog(FramelessDialog):
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
         try:
-            os.remove(os.path.join(BACKUP_DIR, filename))
+            os.remove(os.path.join(self.backup_dir, filename))
             self.load_backups()
         except Exception as exc:
             QMessageBox.critical(self, tr("Remove Error"),
