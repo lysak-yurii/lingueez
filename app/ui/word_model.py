@@ -26,7 +26,7 @@ search → tags) reproduces the original app's behavior on a pandas
 DataFrame.
 """
 import pandas as pd
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariantAnimation
 from PySide6.QtGui import QBrush, QColor
 
 from app.core import db as dbq
@@ -112,6 +112,11 @@ class WordTableModel(QAbstractTableModel):
         self._queued_ids = frozenset()
         self._queued_rows = frozenset()
         self._header_overrides = {}
+        # Transient highlight that fades out on freshly appeared rows.
+        self._flash_rows = set()
+        self._flash_min = self._flash_max = -1
+        self._flash_alpha = 0.0
+        self._flash_anim = None
         self.set_colors(colors)
 
     def set_header_text(self, col, text):
@@ -129,8 +134,10 @@ class WordTableModel(QAbstractTableModel):
         queued = QColor(colors["accent"])
         queued.setAlpha(18)  # barely-there tint for words awaiting playback
         self._queued_brush = QBrush(queued)
+        self._flash_color = QColor(colors["accent"])  # alpha set per animation tick
 
     def set_dataframe(self, df):
+        self._clear_flash()  # row indices change on reset; drop any running glow
         self.beginResetModel()
         self._df = df.reset_index(drop=True)
         # Language names are stored in English; localize only the display value.
@@ -183,6 +190,61 @@ class WordTableModel(QAbstractTableModel):
                                       [Qt.BackgroundRole])
         return self._playing_row
 
+    def flash_words(self, word_ids):
+        """Briefly highlight the rows of freshly appeared words with a soft accent
+        glow that holds, then fades out — the way polished apps confirm new items
+        (whether added by hand, pulled in by sync, or imported). Returns the list
+        of highlighted rows (skipping any word not currently visible)."""
+        rows = sorted(r for r in (self._row_for_id(i) for i in word_ids) if r >= 0)
+        if not rows:
+            return []
+        self._stop_flash_anim()
+        self._flash_rows = set(rows)
+        self._flash_min, self._flash_max = rows[0], rows[-1]
+        self._flash_alpha = 1.0
+        anim = QVariantAnimation(self)
+        anim.setStartValue(1.0)
+        anim.setKeyValueAt(0.35, 1.0)   # hold at full, then…
+        anim.setEndValue(0.0)           # …fade away
+        anim.setDuration(1800)
+        anim.valueChanged.connect(self._on_flash_tick)
+        anim.finished.connect(self._on_flash_finished)
+        self._flash_anim = anim
+        anim.start()
+        self._emit_flash()
+        return rows
+
+    def _emit_flash(self):
+        # One dataChanged spanning the (usually contiguous, newest-on-top) block;
+        # Qt only repaints the visible rows, so the count of new words is cheap.
+        if self._flash_rows:
+            last_col = len(COLUMNS) - 1
+            self.dataChanged.emit(self.index(self._flash_min, 0),
+                                  self.index(self._flash_max, last_col),
+                                  [Qt.BackgroundRole])
+
+    def _on_flash_tick(self, value):
+        self._flash_alpha = float(value)
+        self._emit_flash()
+
+    def _on_flash_finished(self):
+        # alpha is ~0, so data() already yields no tint; free the one-shot anim.
+        if self._flash_anim is not None:
+            self._flash_anim.deleteLater()
+            self._flash_anim = None
+
+    def _stop_flash_anim(self):
+        if self._flash_anim is not None:
+            self._flash_anim.stop()
+            self._flash_anim.deleteLater()
+            self._flash_anim = None
+
+    def _clear_flash(self):
+        self._stop_flash_anim()
+        self._flash_rows = set()
+        self._flash_min = self._flash_max = -1
+        self._flash_alpha = 0.0
+
     def update_status(self, word_id, status):
         """Update one word's Status in place (no model reset) so the status
         pill repaints without disturbing selection, scroll or playback tints.
@@ -232,6 +294,9 @@ class WordTableModel(QAbstractTableModel):
             return _ALIGN_RIGHT if index.column() in _RIGHT_COLS else None
         if role == _ROLE_BACKGROUND:
             row = index.row()
+            if self._flash_alpha > 0.0 and row in self._flash_rows:
+                self._flash_color.setAlpha(int(self._flash_alpha * 80))
+                return QBrush(self._flash_color)
             if row == self._playing_row:
                 return self._playing_brush
             if row in self._queued_rows:
