@@ -404,12 +404,11 @@ TRANSLATIONS: dict[str, str] = {
     "The text was truncated to the first 100 words.": "Текст скорочено до перших 100 слів.",
 
     # ── definition.py ──────────────────────────────────────────────────────
-    "Show translation's definition": "Показати визначення перекладу",
-    "Show word's definition": "Показати визначення слова",
     "Generate with AI": "Згенерувати за допомогою ШІ",
     "Regenerate with AI": "Перегенерувати за допомогою ШІ",
     "Definition 2": "Визначення 2",
-    "No definition stored yet. Use \"Generate with AI\" or \"Edit\" to add one.": "Визначення ще не додано. Використайте «Згенерувати за допомогою ШІ» або «Редагувати».",
+    "No definition yet": "Визначення ще немає",
+    "Generate one with AI, or write your own with Edit.": "Згенеруйте його за допомогою ШІ або напишіть власне через «Редагувати».",
     "There is no word to define.": "Немає слова для визначення.",
     "API key missing": "Відсутній ключ API",
     "Set your {ai} API key in Settings → Translation & AI → AI first.": "Спочатку вкажіть ключ {ai} у Налаштуваннях → Переклад та ШІ → ШІ.",
