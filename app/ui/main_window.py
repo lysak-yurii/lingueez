@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
 
         self.word_filter = WordFilter()
         self.df = None
+        self._known_word_ids = None   # vocabulary IDs seen so far (None = first load)
         self.is_reading_active = False
         self.word_player = WordPlayer(self)
         self._mini_positioned = False  # mini player placed on first show
@@ -1805,6 +1806,7 @@ class MainWindow(QMainWindow):
             self._total_texts = self.db_adapter.count_texts()
             self.update_filter_combos()
             self.refresh_display()
+            self._flash_new_words()
             self._words_subtitle = tr("Vocabulary")
             self._file_view = False
             self._update_file_view()
@@ -2184,6 +2186,26 @@ class MainWindow(QMainWindow):
 
     def _after_db_change(self):
         self.load_data()
+
+    def _flash_new_words(self):
+        """Glow-highlight any words that appeared since the last vocabulary load —
+        whether added by hand, pulled in by sync, or imported. Skips the very
+        first load (when everything is 'new') and reloads with no additions."""
+        try:
+            current = set(self.df['ID'].tolist()) if self.df is not None else set()
+        except Exception:
+            return
+        previous, self._known_word_ids = self._known_word_ids, current
+        if previous is None:
+            return
+        new_ids = current - previous
+        if not new_ids:
+            return
+        rows = self.model.flash_words(new_ids)
+        # Bring a single new word into view; don't yank the scroll for bulk sync/import.
+        if len(new_ids) == 1 and rows:
+            self.table.scrollTo(self.model.index(rows[0], COL_WORD1),
+                                QAbstractItemView.PositionAtCenter)
 
     def edit_row(self):
         records = self._require_selection("edit")
