@@ -781,6 +781,22 @@ TRANSLATIONS: dict[str, str] = {
 
     # ── log_window.py (additions) ──────────────────────────────────────────
     "Export Log": "Експортувати журнал",
+    "Activity Log": "Журнал дій",
+    "Warnings & errors": "Попередження та помилки",
+    "Errors only": "Лише помилки",
+    "Find…": "Пошук…",
+    "Open log folder": "Відкрити теку журналу",
+    "Export diagnostics": "Експортувати діагностику",
+    "Clear the log file? This cannot be undone.":
+        "Очистити файл журналу? Цю дію неможливо скасувати.",
+    "Could not create the diagnostics file.":
+        "Не вдалося створити файл діагностики.",
+    "Diagnostics saved to:\n{path}": "Діагностику збережено до:\n{path}",
+    "**Describe the problem**\n\n\n**Steps to reproduce**\n\n\n---\n":
+        "**Опишіть проблему**\n\n\n**Кроки для відтворення**\n\n\n---\n",
+    "\nPlease attach the diagnostics file:\n{path}\n":
+        "\nБудь ласка, додайте файл діагностики:\n{path}\n",
+    "Bug report: ": "Звіт про помилку: ",
 
     # ── titlebar.py ────────────────────────────────────────────────────────
     "Minimize": "Згорнути",

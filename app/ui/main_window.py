@@ -607,7 +607,10 @@ class MainWindow(QMainWindow):
         menu.addAction(self.action_show_created)
         menu.addAction(self._icon("rows"), tr("Max words…"), self.prompt_row_limit)
         menu.addSeparator()
-        menu.addAction(self._icon("list"), tr("View Log"), self.open_log_window)
+        # Raw log viewer is a power-user tool — hidden unless show_advanced is on
+        # (same opt-in flag as the AI prompt editors / own-Supabase fields).
+        if get_bool(self.settings, "show_advanced", False):
+            menu.addAction(self._icon("list"), tr("View Log"), self.open_log_window)
         if getattr(self, "_pending_update", None):
             menu.addAction(self._build_update_menu_item(menu, self._pending_update))
         menu.addAction(self._icon("help-circle"), tr("Show Tour"), self.start_tour)
@@ -3986,12 +3989,14 @@ class MainWindow(QMainWindow):
 
         # --- Links: source code / report an issue ---
         links = QHBoxLayout()
-        for label, url in ((tr("Source code"), GITHUB_URL),
-                           (tr("Report an issue"), f"{GITHUB_URL}/issues")):
-            link = QPushButton(label, objectName="tonalButton")
-            link.setCursor(Qt.PointingHandCursor)
-            link.clicked.connect(lambda _=False, u=url: QDesktopServices.openUrl(QUrl(u)))
-            links.addWidget(link)
+        source = QPushButton(tr("Source code"), objectName="tonalButton")
+        source.setCursor(Qt.PointingHandCursor)
+        source.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(GITHUB_URL)))
+        links.addWidget(source)
+        report = QPushButton(tr("Report an issue"), objectName="tonalButton")
+        report.setCursor(Qt.PointingHandCursor)
+        report.clicked.connect(self._report_an_issue)
+        links.addWidget(report)
         links.addStretch(1)
         dialog.content_layout.addLayout(links)
 
@@ -4009,3 +4014,33 @@ class MainWindow(QMainWindow):
         row.addWidget(ok)
         dialog.content_layout.addLayout(row)
         dialog.exec()
+
+    def _report_an_issue(self):
+        """Bundle diagnostics and open a prefilled GitHub issue.
+
+        The raw Log viewer is advanced-only, so this is the primary support path
+        for ordinary users: it zips the (already-redacted) logs, reveals them so
+        the user can attach the file, then opens GitHub's new-issue form with the
+        environment details prefilled.
+        """
+        from urllib.parse import urlencode
+        from PySide6.QtCore import QUrl
+        from app.core.updater import GITHUB_URL
+        from app.core.diagnostics import build_diagnostics_zip, system_info
+
+        zip_path = None
+        try:
+            zip_path = build_diagnostics_zip()
+        except Exception as exc:
+            logging.warning(f"Could not build diagnostics bundle: {exc}")
+
+        body = tr("**Describe the problem**\n\n\n"
+                  "**Steps to reproduce**\n\n\n"
+                  "---\n") + system_info() + "\n"
+        if zip_path:
+            body += tr("\nPlease attach the diagnostics file:\n{path}\n").format(
+                path=zip_path)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(zip_path)))
+
+        query = urlencode({"labels": "bug", "title": tr("Bug report: "), "body": body})
+        QDesktopServices.openUrl(QUrl(f"{GITHUB_URL}/issues/new?{query}"))

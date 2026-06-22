@@ -148,12 +148,15 @@ def _forward_add_word(socket_name, activation_token=""):
 
 
 def _setup_logging():
-    logging.basicConfig(
-        filename='app.log',
-        filemode='a',
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        level=logging.INFO,
-    )
+    import logging.handlers
+    from app.core.log_redaction import RedactionFilter
+    handler = logging.handlers.RotatingFileHandler(
+        'app.log', maxBytes=1_000_000, backupCount=3, encoding='utf-8')
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    handler.addFilter(RedactionFilter())
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addHandler(handler)
     # Native-crash stack traces land in crash.log (segfaults bypass app.log)
     import faulthandler
     global _crash_log
