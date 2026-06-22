@@ -130,9 +130,9 @@ DEFAULTS = {
     "chatgpt_temperature": "0.3",
     "chatgpt_role": "assistant",
     "chatgpt_content": (
-        "Define the word: {word} in {language1} and in {language2}. "
+        "Define the word: {word} in {language1}. "
         "Also provide example sentences (in different contexts) with that word, "
-        "and synonyms solely in {language1}. Markups: '***' for 'Definition', "
+        "and synonyms, all solely in {language1}. Markups: '***' for 'Definition', "
         "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'. "
         "Put each list item (e.g. each synonym) on its own line starting with '- '."
     ),
@@ -172,9 +172,9 @@ DEFAULTS = {
     "gemini_max_tokens": "400",
     "gemini_temperature": "0.3",
     "gemini_content": (
-        "Define the word: {word} in {language1} and in {language2}. "
+        "Define the word: {word} in {language1}. "
         "Also provide example sentences (in different contexts) with that word, "
-        "and synonyms solely in {language1}. Markups: '***' for 'Definition', "
+        "and synonyms, all solely in {language1}. Markups: '***' for 'Definition', "
         "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'. "
         "Put each list item (e.g. each synonym) on its own line starting with '- '."
     ),
