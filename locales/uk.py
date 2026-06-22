@@ -437,6 +437,20 @@ TRANSLATIONS: dict[str, str] = {
     "Restore Selected": "Відновити вибрані",
     "Delete Permanently": "Видалити назавжди",
     "Cleanup Old Items…": "Очистити старі елементи…",
+    "{n} selected": "{n} вибрано",
+    "The bin is empty. Deleted words will appear here.":
+        "Кошик порожній. Тут з'являтимуться видалені слова.",
+    "The bin is empty. Deleted texts will appear here.":
+        "Кошик порожній. Тут з'являтимуться видалені тексти.",
+    "deleted {when}": "видалено {when}",
+    "(empty)": "(порожньо)",
+    "Untitled": "Без назви",
+    "Auto-deletes soon": "Скоро буде видалено автоматично",
+    "Auto-deletes in {n} day": "Автовидалення через {n} день",
+    "Auto-deletes in {n} days": "Автовидалення через {n} дні",
+    "Auto-deletes in {n} days (genitive)": "Автовидалення через {n} днів",
+    "Permanently delete {count} item(s)? This cannot be undone.":
+        "Остаточно видалити {count} елемент(ів)? Цю дію не можна скасувати.",
 
     # ── backups.py ─────────────────────────────────────────────────────────
     "Restore an earlier version": "Відновити попередню версію",

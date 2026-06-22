@@ -225,6 +225,7 @@ QPushButton#primaryButton {{
 }}
 QPushButton#primaryButton:hover {{ background: {c['accent_hover']}; }}
 QPushButton#primaryButton:pressed {{ background: {c['accent_pressed']}; }}
+QPushButton#primaryButton:disabled {{ background: {c['surface']}; color: {c['text_dim']}; }}
 QPushButton#tonalButton {{
     background: {c['accent_soft']};
     border: none;
@@ -239,6 +240,7 @@ QPushButton#dangerButton {{
     color: {c['danger']};
 }}
 QPushButton#dangerButton:hover {{ background: {c['danger']}; color: white; }}
+QPushButton#dangerButton:disabled {{ background: transparent; border-color: {c['border']}; color: {c['text_dim']}; }}
 QPushButton#iconButton {{
     background: transparent;
     border: none;
@@ -519,20 +521,20 @@ QPushButton#navButton {{
 }}
 #TextsList::item {{ background: transparent; border: none; }}
 
-/* ---------- backups / restore points ---------- */
-#BackupsList {{
+/* ---------- backups / restore points · bin ---------- */
+#BackupsList, #BinList {{
     background: {c['bg_alt']};
     border: 1px solid {c['border']};
     border-radius: 10px;
     padding: 4px 2px;
     outline: 0;
 }}
-#BackupsList::item {{
+#BackupsList::item, #BinList::item {{
     border-radius: 8px;
     margin: 1px 2px;
 }}
-#BackupsList::item:hover {{ background: {c['surface_alt']}; }}
-#BackupsList::item:selected {{ background: {c['selection']}; }}
+#BackupsList::item:hover, #BinList::item:hover {{ background: {c['surface_alt']}; }}
+#BackupsList::item:selected, #BinList::item:selected {{ background: {c['selection']}; }}
 QLabel#backupTitle {{ font-weight: 600; }}
 #ReaderCard {{
     background: {c['bg_alt']};
