@@ -30,13 +30,15 @@ import html
 import logging
 import re
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import (
-    QHBoxLayout, QLabel, QMessageBox, QPushButton, QTextEdit,
+    QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QTextEdit,
+    QVBoxLayout, QWidget,
 )
 
 from app.core import ai
-from app.i18n import tr
+from app.i18n import lang_label, tr
+from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
@@ -70,52 +72,126 @@ class DefinitionDialog(FramelessDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         layout = self.content_layout
-        layout.setContentsMargins(18, 18, 18, 14)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(12)
 
-        self.header_label = QLabel()
-        self.header_label.setObjectName("AppTitle")
-        layout.addWidget(self.header_label)
+        # Header: the word being defined, led by a small book glyph.
+        head = QHBoxLayout()
+        head.setSpacing(10)
+        glyph = QLabel()
+        glyph.setPixmap(icons.icon("book-open", self.colors["text_dim"], 20).pixmap(QSize(20, 20)))
+        head.addWidget(glyph, 0, Qt.AlignVCenter)
+        self.header_label = QLabel(objectName="AppTitle")
+        head.addWidget(self.header_label, 0, Qt.AlignVCenter)
+        head.addStretch(1)
+        layout.addLayout(head)
 
-        self.sub_label = QLabel()
-        self.sub_label.setObjectName("dimLabel")
-        layout.addWidget(self.sub_label)
+        # Segmented toggle: pick which side's definition to show — the word's or
+        # its translation's. Replaces the old "Show … definition" text button.
+        toggle = QHBoxLayout()
+        toggle.setSpacing(6)
+        self.lang_chips = []
+        for field, lang_key in (('Word1', 'Language1'), ('Word2', 'Language2')):
+            chip = QPushButton(lang_label(self.record.get(lang_key, '')), objectName="chipButton")
+            chip.setCheckable(True)
+            chip.setAutoExclusive(True)
+            chip.setCursor(Qt.PointingHandCursor)
+            chip.clicked.connect(lambda _checked, f=field: self._select_field(f))
+            toggle.addWidget(chip)
+            self.lang_chips.append((chip, field))
+        toggle.addStretch(1)
+        layout.addLayout(toggle)
 
+        # Definition body inside a soft card: a rich-text view that doubles as the
+        # raw-markup editor, with a centered empty state when nothing is stored.
+        card = QFrame(objectName="DefinitionCard")
+        card.setStyleSheet(
+            f"#DefinitionCard{{background:{self.colors['surface']};"
+            f" border:1px solid {self.colors['border']}; border-radius:10px;}}")
+        card_lay = QVBoxLayout(card)
+        card_lay.setContentsMargins(4, 4, 4, 4)
+        card_lay.setSpacing(0)
         self.text = QTextEdit()
         self.text.setReadOnly(True)
-        layout.addWidget(self.text, 1)
+        self.text.setStyleSheet("QTextEdit{background:transparent; border:none; padding:8px 10px;}")
+        card_lay.addWidget(self.text, 1)
+        self.empty_widget = self._build_empty_state()
+        card_lay.addWidget(self.empty_widget, 1)
+        layout.addWidget(card, 1)
 
+        # Footer: the AI action on the left; edit/save/cancel + close on the right.
         buttons = QHBoxLayout()
-        self.switch_btn = QPushButton(tr("Show translation's definition"))
-        self.switch_btn.clicked.connect(self.switch_definition)
-        buttons.addWidget(self.switch_btn)
-
-        self.generate_btn = QPushButton(tr("Generate with AI"))
+        buttons.setSpacing(8)
+        self.generate_btn = QPushButton(tr("Generate with AI"), objectName="tonalButton")
+        self.generate_btn.setIcon(icons.icon("sparkles", self.colors["accent_text"], 15))
+        self.generate_btn.setIconSize(QSize(15, 15))
+        self.generate_btn.setCursor(Qt.PointingHandCursor)
         self.generate_btn.clicked.connect(self.generate_definition)
         buttons.addWidget(self.generate_btn)
-
         buttons.addStretch(1)
 
         self.edit_btn = QPushButton(tr("Edit"))
+        self.edit_btn.setIcon(icons.icon("edit", self.colors["text_dim"], 15))
+        self.edit_btn.setIconSize(QSize(15, 15))
+        self.edit_btn.setCursor(Qt.PointingHandCursor)
         self.edit_btn.clicked.connect(self.toggle_edit)
         buttons.addWidget(self.edit_btn)
 
-        self.save_btn = QPushButton(tr("Save"), objectName="primaryButton")
-        self.save_btn.clicked.connect(self.save_definition)
-        self.save_btn.hide()
-        buttons.addWidget(self.save_btn)
-
         self.cancel_btn = QPushButton(tr("Cancel"))
+        self.cancel_btn.setCursor(Qt.PointingHandCursor)
         self.cancel_btn.clicked.connect(self.cancel_edit)
         self.cancel_btn.hide()
         buttons.addWidget(self.cancel_btn)
 
-        close_btn = QPushButton(tr("Close"))
-        close_btn.clicked.connect(self.close)
-        buttons.addWidget(close_btn)
+        self.save_btn = QPushButton(tr("Save"), objectName="primaryButton")
+        self.save_btn.setIcon(icons.icon("check", "#ffffff", 15))
+        self.save_btn.setIconSize(QSize(15, 15))
+        self.save_btn.setCursor(Qt.PointingHandCursor)
+        self.save_btn.clicked.connect(self.save_definition)
+        self.save_btn.hide()
+        buttons.addWidget(self.save_btn)
+
+        self.close_btn = QPushButton(tr("Close"))
+        self.close_btn.setCursor(Qt.PointingHandCursor)
+        self.close_btn.clicked.connect(self.close)
+        buttons.addWidget(self.close_btn)
         layout.addLayout(buttons)
 
         self.reload_word()
+
+    def _build_empty_state(self):
+        """Centered placeholder shown in the card when no definition is stored."""
+        wrap = QWidget()
+        col = QVBoxLayout(wrap)
+        col.setContentsMargins(20, 20, 20, 20)
+        col.setSpacing(8)
+        col.addStretch(1)
+        glyph = QLabel()
+        glyph.setPixmap(icons.icon("file-text", self.colors["text_dim"], 34).pixmap(QSize(34, 34)))
+        glyph.setAlignment(Qt.AlignCenter)
+        col.addWidget(glyph)
+        title = QLabel(tr("No definition yet"), objectName="EmptyTitle")
+        title.setAlignment(Qt.AlignCenter)
+        col.addWidget(title)
+        self.empty_hint = QLabel(objectName="dimLabel")
+        self.empty_hint.setAlignment(Qt.AlignCenter)
+        self.empty_hint.setWordWrap(True)
+        col.addWidget(self.empty_hint)
+        col.addStretch(1)
+        return wrap
+
+    def _styled_html(self, body):
+        """Wrap the converted markup with light typography: accent headings and
+        comfortable line spacing, themed to the current palette."""
+        body = body.replace("<h3>", f"<h3 style='color:{self.colors['accent_text']}; margin:10px 0 4px;'>")
+        return f"<div style='line-height:148%;'>{body}</div>"
+
+    def _show_body(self, empty):
+        """Swap between the editor/viewer and the empty placeholder. The editor
+        always wins while editing, regardless of content."""
+        show_empty = empty and not self.editing
+        self.text.setVisible(not show_empty)
+        self.empty_widget.setVisible(show_empty)
 
     # ------------------------------------------------------------------
 
@@ -137,28 +213,23 @@ class DefinitionDialog(FramelessDialog):
         return self.word.get(self.current_field) or ""
 
     def refresh_view(self):
-        definition = self.word.get(self._definition_column()) or ""
-        word_label = self._displayed_word()
-        lang = self.word.get('Language1' if self.current_field == 'Word1' else 'Language2') or ""
-        self.header_label.setText(str(word_label))
-        def_label = tr("Definition") if self.current_field == 'Word1' else tr("Definition 2")
-        self.sub_label.setText(f"{lang} · {def_label}")
+        definition = str(self.word.get(self._definition_column()) or "").strip()
+        self.header_label.setText(str(self._displayed_word()))
+        for chip, field in self.lang_chips:
+            chip.setChecked(field == self.current_field)
         if definition:
-            self.text.setHtml(markup_to_html(str(definition)))
+            self.text.setHtml(self._styled_html(markup_to_html(definition)))
             self.generate_btn.setText(tr("Regenerate with AI"))
+            self._show_body(empty=False)
         else:
-            self.text.setHtml(
-                f"<i>{tr('No definition stored yet. Use \"Generate with AI\" or \"Edit\" to add one.')}</i>")
             self.generate_btn.setText(tr("Generate with AI"))
-        if self.current_field == 'Word2':
-            self.switch_btn.setText(tr("Show word's definition"))
-        else:
-            self.switch_btn.setText(tr("Show translation's definition"))
+            self.empty_hint.setText(tr("Generate one with AI, or write your own with Edit."))
+            self._show_body(empty=True)
 
-    def switch_definition(self):
-        if self.editing:
+    def _select_field(self, field):
+        if self.editing or field == self.current_field:
             return
-        self.current_field = 'Word2' if self.current_field == 'Word1' else 'Word1'
+        self.current_field = field
         self.refresh_view()
 
     # ------------------------------------------------------------ editing
@@ -168,20 +239,26 @@ class DefinitionDialog(FramelessDialog):
         raw = self.word.get(self._definition_column()) or ""
         self.text.setReadOnly(False)
         self.text.setPlainText(str(raw))
+        self._show_body(empty=False)
         self.edit_btn.hide()
+        self.close_btn.hide()
         self.save_btn.show()
         self.cancel_btn.show()
-        self.switch_btn.setEnabled(False)
         self.generate_btn.setEnabled(False)
+        for chip, _field in self.lang_chips:
+            chip.setEnabled(False)
+        self.text.setFocus()
 
     def cancel_edit(self):
         self.editing = False
         self.text.setReadOnly(True)
         self.edit_btn.show()
+        self.close_btn.show()
         self.save_btn.hide()
         self.cancel_btn.hide()
-        self.switch_btn.setEnabled(True)
         self.generate_btn.setEnabled(True)
+        for chip, _field in self.lang_chips:
+            chip.setEnabled(True)
         self.refresh_view()
 
     def save_definition(self):
@@ -213,7 +290,8 @@ class DefinitionDialog(FramelessDialog):
             lang1, lang2 = lang2, lang1
 
         self.generate_btn.setEnabled(False)
-        self.text.setHtml(f"<i>{tr('Generating definition…')}</i>")
+        self._show_body(empty=False)
+        self.text.setHtml(self._styled_html(f"<i>{tr('Generating definition…')}</i>"))
 
         field = self.current_field
 
