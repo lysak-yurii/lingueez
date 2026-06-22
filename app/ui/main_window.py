@@ -876,7 +876,8 @@ class MainWindow(QMainWindow):
         action_button("tag", tr("Tags"), self.open_tags, priority=50)
         action_button("edit", tr("Edit"), self.edit_row, priority=70)
         action_button("copy", tr("Copy"), self.show_copy_menu, priority=40)
-        action_button("sparkles", tr("Text"), self.generate_text_action, priority=30)
+        self.generate_text_btn = action_button("sparkles", tr("Text"),
+                                                self.generate_text_action, priority=30)
 
         self.delete_btn = QPushButton()
         self._set_icon(self.delete_btn, "trash", "danger", 17)

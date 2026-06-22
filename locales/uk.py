@@ -1289,6 +1289,11 @@ TRANSLATIONS: dict[str, str] = {
     "and finally Mastered.":
         "Повторне прослуховування підвищує статус слова з «Нове» до "
         "«Переглянуто», «Вивчається» і нарешті до «Засвоєно».",
+    "Generate a text": "Згенеруйте текст",
+    "Turn selected words into a short AI-written story — "
+    "your vocabulary in context.":
+        "Перетворіть вибрані слова на коротку історію від ШІ — "
+        "ваш словник у контексті.",
     "Your vocabulary stays in sync across devices. Click for "
     "status or to sync right now.":
         "Ваш словник синхронізується між пристроями. Натисніть, щоб "

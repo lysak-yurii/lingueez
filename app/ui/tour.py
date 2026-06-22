@@ -236,7 +236,7 @@ class TourController(QObject):
         # side-effect (e.g. select a row) to reveal a contextual target.
         self._tours = {
             "words": [self._step_nav, self._step_search, self._step_add,
-                      self._step_read, self._step_sync],
+                      self._step_read, self._step_generate, self._step_sync],
             "texts": [self._step_texts_add, self._step_texts_list,
                       self._step_texts_read, self._step_texts_translate,
                       self._step_texts_modes],
@@ -386,6 +386,22 @@ class TourController(QObject):
                 tr("Select words and press Read to hear them aloud. Repeated "
                    "listening promotes each word from New to Reviewing, Learning "
                    "and finally Mastered."))
+
+    def _step_generate(self):
+        w = self.win
+        sm = w.table.selectionModel()
+        if sm is not None and not sm.hasSelection() and w.model.rowCount() > 0:
+            w.table.selectRow(0)
+            self._auto_selected = True
+        if w.generate_text_btn.isVisible():
+            target = w.generate_text_btn
+        elif w.action_bar.isVisible():
+            target = w.action_bar
+        else:
+            target = w.table
+        return (target, tr("Generate a text"),
+                tr("Turn selected words into a short AI-written story — "
+                   "your vocabulary in context."))
 
     def _step_sync(self):
         w = self.win
