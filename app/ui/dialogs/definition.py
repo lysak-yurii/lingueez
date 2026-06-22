@@ -43,16 +43,34 @@ from app.ui.dialogs.base import FramelessDialog
 from app.ui.workers import run_in_thread
 
 
+def _inline_markup(text):
+    """Apply the inline ***bold*** / **bold** / *italic* markup to escaped text."""
+    text = re.sub(r'\*\*\*(.+?)\*\*\*', r'<b>\1</b>', text, flags=re.S)
+    text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text, flags=re.S)
+    text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', text, flags=re.S)
+    return text
+
+
 def markup_to_html(text):
-    """Convert the legacy ***heading** / **bold** / *italic* markup to HTML."""
+    """Convert the stored ***heading*** / **bold** / *italic* markup into clean
+    block HTML — one ``<h3>`` per heading line and one ``<p>`` per paragraph, so
+    vertical spacing stays even instead of piling up stray ``<br>`` between
+    blank lines."""
     if not text:
         return ""
-    out = html.escape(text)
-    out = re.sub(r'\*\*\*(.+?)\*\*\*', r'<h3>\1</h3>', out, flags=re.S)
-    out = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', out, flags=re.S)
-    out = re.sub(r'\*(.+?)\*', r'<i>\1</i>', out, flags=re.S)
-    out = out.replace("\n", "<br>")
-    return out
+    text = re.sub(r'\n{3,}', '\n\n', text.replace('\r\n', '\n').strip())
+    out = []
+    for block in re.split(r'\n{2,}', text):
+        block = block.strip()
+        if not block:
+            continue
+        heading = re.fullmatch(r'\*\*\*(.+?)\*\*\*', block, flags=re.S)
+        if heading:
+            out.append(f"<h3>{_inline_markup(html.escape(heading.group(1).strip()))}</h3>")
+        else:
+            body = _inline_markup(html.escape(block)).replace("\n", "<br>")
+            out.append(f"<p>{body}</p>")
+    return "".join(out)
 
 
 class DefinitionDialog(FramelessDialog):
@@ -114,6 +132,11 @@ class DefinitionDialog(FramelessDialog):
         self.text = QTextEdit()
         self.text.setReadOnly(True)
         self.text.setStyleSheet("QTextEdit{background:transparent; border:none; padding:8px 10px;}")
+        # Themed, tight block spacing for the rendered definition (accent
+        # headings; modest paragraph gaps instead of blank-line pile-up).
+        self.text.document().setDefaultStyleSheet(
+            f"h3 {{ color:{self.colors['accent_text']}; margin-top:14px; margin-bottom:2px; }}"
+            "p { margin-top:0px; margin-bottom:8px; }")
         card_lay.addWidget(self.text, 1)
         self.empty_widget = self._build_empty_state()
         card_lay.addWidget(self.empty_widget, 1)
@@ -180,12 +203,6 @@ class DefinitionDialog(FramelessDialog):
         col.addStretch(1)
         return wrap
 
-    def _styled_html(self, body):
-        """Wrap the converted markup with light typography: accent headings and
-        comfortable line spacing, themed to the current palette."""
-        body = body.replace("<h3>", f"<h3 style='color:{self.colors['accent_text']}; margin:10px 0 4px;'>")
-        return f"<div style='line-height:148%;'>{body}</div>"
-
     def _show_body(self, empty):
         """Swap between the editor/viewer and the empty placeholder. The editor
         always wins while editing, regardless of content."""
@@ -218,7 +235,7 @@ class DefinitionDialog(FramelessDialog):
         for chip, field in self.lang_chips:
             chip.setChecked(field == self.current_field)
         if definition:
-            self.text.setHtml(self._styled_html(markup_to_html(definition)))
+            self.text.setHtml(markup_to_html(definition))
             self.generate_btn.setText(tr("Regenerate with AI"))
             self._show_body(empty=False)
         else:
@@ -291,7 +308,7 @@ class DefinitionDialog(FramelessDialog):
 
         self.generate_btn.setEnabled(False)
         self._show_body(empty=False)
-        self.text.setHtml(self._styled_html(f"<i>{tr('Generating definition…')}</i>"))
+        self.text.setHtml(f"<p><i>{tr('Generating definition…')}</i></p>")
 
         field = self.current_field
 
