@@ -214,6 +214,8 @@ DEFAULTS = {
     "rss_feeds_user": "[]",           # single-line JSON list of {name, url, language}
     "addtext_language": "",           # last-used language in the Add Text dialog
     "addtext_level": "",              # last-used CEFR level in the Add Text dialog
+    # Add Word dialog
+    "addword_target_language": "",    # last-used translation (target) language
     # Sync
     "enable_sync": "False",
     "cleanup_grace_period_days": "30",

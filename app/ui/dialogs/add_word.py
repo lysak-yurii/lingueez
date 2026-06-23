@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from app.config import get_bool, load_settings
+from app.config import get_bool, load_settings, save_settings
 from app.core.audio import speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
@@ -94,7 +94,8 @@ class AddWordDialog(FramelessDialog):
 
         self.lang2_combo = QComboBox()
         fill_lang_combo(self.lang2_combo, languages)
-        set_lang(self.lang2_combo, "German")
+        last_target = settings.get("addword_target_language") or "German"
+        set_lang(self.lang2_combo, last_target if last_target in languages else "German")
         self.lang2_combo.setFixedWidth(150)
         self.lang2_combo.setCursor(Qt.PointingHandCursor)
         grid.addWidget(self.lang2_combo, 1, 0)
@@ -238,6 +239,10 @@ class AddWordDialog(FramelessDialog):
                 'Status': 'New', 'Source': 'manual',
             })
             backup_database()
+            # Remember the translation language for the next time the dialog opens.
+            settings = load_settings()
+            settings["addword_target_language"] = lang2
+            save_settings(settings)
             self.word_saved.emit()
             self.accept()
         except DuplicateWordError as exc:
