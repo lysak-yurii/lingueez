@@ -452,7 +452,10 @@ class MainWindow(QMainWindow):
     def sync_enabled(self) -> bool:
         """Cloud sync follows the backend identity: signed into an account (built-in
         mode) OR a configured personal own-Supabase server (anonymous custom mode) ⇒
-        sync on. Read-only — there is no separate enable/disable toggle."""
+        sync on. An active offline profile forces it off regardless. Read-only — there
+        is no separate enable/disable toggle."""
+        if self.auth.is_local_active():
+            return False
         return self.auth.is_logged_in() or is_custom_server()
 
     # ------------------------------------------------------------------ UI
@@ -2271,7 +2274,11 @@ class MainWindow(QMainWindow):
             self._empty_add_btn.setText(tr("Add your first word"))
             self._empty_import_btn.setText(tr("Import from Excel"))
             self._empty_tour_btn.setText(tr("Take the tour"))
-            self._empty_signin_btn.setText(tr("Sign in to sync across devices"))
+            # On a named offline profile the link upgrades it into a synced account;
+            # word it for that. The Default-local store keeps the plain sign-in copy.
+            self._empty_signin_btn.setText(
+                tr("Enable cloud sync for this profile") if self.auth.is_local_active()
+                else tr("Sign in to sync across devices"))
         else:
             self._empty_title.setText(tr("No matching words"))
             self._empty_sub.setText(tr("Try a different search or filter."))
@@ -3102,7 +3109,14 @@ class MainWindow(QMainWindow):
         """Shared sign-in entry point for the welcome dialog, the empty-state link
         and the local-only sync popover. Mirrors Settings' account flow: open the
         sign-in dialog and, on success, switch to that account's local DB (with the
-        first-time local-data adoption prompt) and sync."""
+        first-time local-data adoption prompt) and sync.
+
+        When a *named offline profile* is active this is instead the on-ramp to
+        upgrade it into a synced account (the Default-local store, uid None, keeps the
+        normal sign-in path)."""
+        if self.auth.is_local_active():
+            self.upgrade_active_local_profile()
+            return
         from app.ui.dialogs.account_dialog import AccountDialog
         dlg = AccountDialog(self, auth=self.auth)
         signed_in = {"ok": False}
@@ -3112,6 +3126,142 @@ class MainWindow(QMainWindow):
         if signed_in["ok"]:
             self.switch_active_account(self.auth.current_user_id(),
                                        offer_contribution=True)
+
+    def upgrade_active_local_profile(self):
+        """Turn the active offline profile into a synced cloud account: sign in (or
+        create an account), then make this profile's data that account's data.
+
+        Two strategies, chosen by whether the signed-in account already has a local DB
+        on this device:
+          • no local file yet (new sign-up, or an account used only elsewhere) → ADOPT
+            the profile's file wholesale as the account's file + union first-sync;
+          • a local file already exists here → ADDITIVE MERGE: switch to that account,
+            then non-destructively contribute the profile's missing items into it.
+        The profile's original DB is archived to backups/ first; its registry entry is
+        dropped only after the data is safely in place."""
+        from app.core.db import account_db_path, is_local_uid
+        from app.ui.dialogs.base import confirm
+        from app.ui.dialogs.account_dialog import AccountDialog
+
+        if not self.auth.is_local_active() or is_custom_server():
+            return
+        local_uid = self.auth.active_local_uid()
+        source_path = account_db_path(local_uid)
+        info = self.auth.registry.get(local_uid) or {}
+        name = info.get("name") or tr("this profile")
+        nwords = getattr(self, "_total_words", 0)
+        ntexts = getattr(self, "_total_texts", 0)
+
+        if not confirm(
+                self, tr("Enable cloud sync"),
+                tr("Sign in or create an account to back up “{name}” and sync it across "
+                   "your devices. This profile's words and texts are uploaded and it "
+                   "becomes your synced account on this device. A copy is archived to the "
+                   "backups folder first.").format(name=name),
+                ok_text=tr("Continue"), cancel_text=tr("Not now")):
+            return
+
+        # Pre-fill the new-account form with the profile's name (the real one, not the
+        # "this profile" fallback) so it carries over.
+        dlg = AccountDialog(self, auth=self.auth, prefill_name=info.get("name") or "")
+        signed_in = {"ok": False}
+        dlg.authenticated.connect(lambda: signed_in.__setitem__("ok", True))
+        dlg.exec()
+        if not signed_in["ok"]:
+            return  # cancelled / failed — profile stays active and intact
+
+        target_uid = self.auth.current_user_id()
+        if not target_uid:
+            return
+        target_path = account_db_path(target_uid)
+
+        if os.path.exists(target_path) and os.path.abspath(target_path) != os.path.abspath(source_path):
+            # The account already has a local DB on this device → additive merge so its
+            # existing data is never clobbered.
+            self._merge_profile_into_account(local_uid, source_path, target_uid)
+            return
+
+        # Common case: adopt the profile's file as the account's file, then union-sync.
+        rows = []
+        if nwords:
+            rows.append(("book", tr("Upload words"), nwords))
+        if ntexts:
+            rows.append(("file-text", tr("Upload texts"), ntexts))
+        if not confirm(
+                self, tr("Upload “{name}” to your account").format(name=name),
+                tr("Your profile becomes the synced account “{who}” on this device and "
+                   "uploads to the cloud.").format(who=self.auth.current_user() or target_uid),
+                ok_text=tr("Upload & sync"), cancel_text=tr("Cancel"),
+                rows=rows or None):
+            # User backed out after signing in: they're now signed in but still on the
+            # profile's file. Repoint to the account safely without uploading the profile.
+            self.switch_active_account(target_uid)
+            return
+        try:
+            self._adopt_local_db_into_account(source_path, target_path)
+        except Exception as exc:
+            logging.error(f"Could not adopt profile into account: {exc}")
+            show_toast(self, tr("Account"),
+                       tr("Could not upload this profile. Your data is unchanged."),
+                       "error", 6000)
+            self.switch_active_account(target_uid)
+            return
+        # Drop the offline-profile registry entry (its file is now the account's file).
+        self.auth.registry.remove(local_uid)
+        # Repoint the data layer at the account's file and run the union first-sync.
+        from app.core.db import set_active_db_path, initialize_database
+        if not os.path.exists(target_path):
+            initialize_database(target_path)
+        set_active_db_path(target_path)
+        self.db_adapter.set_local_db(target_path)
+        self.sync_manager.set_local_db(target_path)
+        self.db_adapter.set_use_cloud(True)
+        try:
+            if not self.sync_manager.get_synced_account_id():
+                self.sync_manager.set_synced_account_id(target_uid)
+        except Exception as exc:
+            logging.warning(f"Could not stamp account owner after upgrade: {exc}")
+        self._refresh_account_dependent_ui()
+        self.reload_requested.emit()
+        show_toast(self, tr("Account"),
+                   tr("“{name}” is now synced to your account.").format(name=name), "success")
+        run_in_thread(self._run_startup_sync)
+
+    def _merge_profile_into_account(self, local_uid, source_path, target_uid):
+        """Additive-merge branch of the upgrade: the account already has a local DB on
+        this device. Switch to it and, *after its sync settles*, offer to copy the
+        profile's still-missing items in (the detailed picker is the single
+        confirmation), then archive + drop the profile. Never clobbers the account.
+
+        Running the picker post-sync (via ``on_synced``) is essential: the account's
+        startup sync pulls its cloud rows into the local file, so computing the delta
+        first would race that pull and show items the picker then can't add."""
+        name = (self.auth.registry.get(local_uid) or {}).get("name") or tr("this profile")
+
+        def finalize():
+            """Archive + remove the profile once the merge actually completes."""
+            try:
+                import shutil
+                os.makedirs("backups", exist_ok=True)
+                if os.path.exists(source_path):
+                    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    shutil.copy2(source_path, os.path.join(
+                        "backups", f"{os.path.basename(source_path)}.merged_{stamp}.db"))
+            except Exception as exc:
+                logging.warning(f"Could not archive merged profile DB {source_path}: {exc}")
+            self.auth.forget_account(local_uid)
+            try:
+                if os.path.exists(source_path):
+                    os.remove(source_path)
+            except OSError as exc:
+                logging.warning(f"Could not remove merged profile DB {source_path}: {exc}")
+
+        # Switch to the account; once its sync settles, present the (now-accurate) delta.
+        # finalize is NOT called on cancel / offline / error, so no un-merged data is lost.
+        self.switch_active_account(
+            target_uid,
+            on_synced=lambda: self._offer_contribution_from(
+                target_uid, source_path, on_merged=finalize, profile_name=name))
 
     def _sync_prompt_due(self):
         """Local-only: surface the cloud entry point only once there's content
@@ -3184,6 +3334,14 @@ class MainWindow(QMainWindow):
         A remembered-but-expired session surfaces a re-auth hint instead of silently
         dropping to local-only."""
         from app.core.auth_manager import RESTORE_NEEDS_REAUTH
+        from app.core.db import is_local_uid
+        # An offline profile was last active: activate it (no cloud session, no sync) and
+        # point the app at its DB. _preselect_active_db already opened its file.
+        active = self.auth.registry.get_active()
+        if is_local_uid(active):
+            self.auth.activate_local(active)
+            self.account_switch_requested.emit(active)
+            return
         # Personal own-server mode is anonymous and belongs to a different project, so
         # never restore a remembered built-in account's session into it (its token
         # would 401 against the custom server). Sync the local-only DB instead.
@@ -3325,7 +3483,74 @@ class MainWindow(QMainWindow):
 
         run_in_thread(self.sync_manager.local_only_delta, on_result=present)
 
-    def switch_active_account(self, uid, offer_contribution=False):
+    def _offer_contribution_from(self, uid, source_path, on_merged=None, profile_name=None):
+        """Like ``_maybe_offer_local_contribution`` but reads the content delta from an
+        arbitrary *source_path* (used to merge an offline profile into an existing
+        account during an upgrade). Always shown (no opt-out). ``profile_name`` tailors
+        the picker's title/hint for the upgrade (and notes the profile is then retired).
+
+        ``on_merged()`` runs ONLY when the merge genuinely completes and the source is
+        safe to retire — i.e. its items were contributed, or there was nothing to add.
+        It is deliberately NOT called when the cloud is unreachable, the user cancels
+        the picker, or an error occurs: in those cases the source profile must stay
+        intact so no un-merged data is lost."""
+        merged = on_merged or (lambda: None)
+        if not uid:
+            return
+        if not self.sync_manager.is_sync_enabled():
+            # Can't push to the cloud right now — keep the profile; let the user retry.
+            show_toast(self, tr("Account"),
+                       tr("Connect to the internet to merge this profile into your account."),
+                       "warning", 6000)
+            return
+
+        def present(delta):
+            words, texts = delta.get("words", []), delta.get("texts", [])
+            if not words and not texts:
+                show_toast(self, tr("Account"),
+                           tr("Everything in this profile is already in your account."),
+                           "info")
+                merged()  # nothing to add — the profile is fully redundant
+                return
+            from PySide6.QtWidgets import QDialog
+            from app.ui.dialogs.contribute_dialog import ContributeDialog
+            email = (self.auth.registry.get(uid) or {}).get("email")
+            title = hint = None
+            if profile_name:
+                title = tr("Merge “{name}” into your account").format(name=profile_name)
+                hint = tr("Choose the items to add. They're copied into your account and "
+                          "uploaded to the cloud. “{name}” is then archived to the backups "
+                          "folder and removed.").format(name=profile_name)
+            dlg = ContributeDialog(self, email, words, texts, title=title, hint=hint)
+            # Hide the per-account "don't ask again" opt-out — irrelevant to a one-off
+            # upgrade merge.
+            dlg.suppress_check.setVisible(False)
+            if dlg.exec() != QDialog.Accepted:
+                return  # cancelled — keep the profile untouched
+            sel_words, sel_texts, _ = dlg.selection()
+            if not sel_words and not sel_texts:
+                return  # nothing selected — keep the profile
+
+            def done(res):
+                added, failed = res
+                self.reload_requested.emit()
+                msg = ntr(added, tr("Added {n} item to your account."),
+                          tr("Added {n} items to your account."),
+                          tr("Added {n} items to your account. (genitive)")).format(n=added)
+                if failed:
+                    msg += " " + tr("{n} couldn't be added.").format(n=failed)
+                show_toast(self, tr("Account"), msg, "success" if added else "warning")
+                merged()  # items contributed — safe to retire the profile
+
+            run_in_thread(
+                lambda: self.sync_manager.contribute_local_items(
+                    sel_words, sel_texts, self.db_adapter),
+                on_result=done)
+
+        run_in_thread(lambda: self.sync_manager.local_only_delta(source_path),
+                      on_result=present)
+
+    def switch_active_account(self, uid, offer_contribution=False, on_synced=None):
         """The single, guarded account transition. Points the whole app at the local
         DB for ``uid`` (or the local-only ``dictionary.db`` when uid is None), after:
         flushing the account being left so offline edits aren't stranded; ensuring the
@@ -3337,10 +3562,17 @@ class MainWindow(QMainWindow):
         ``offer_contribution`` is set only by *explicit* user actions — signing into a
         new account or switching accounts — so the local-contribution prompt fires
         then, but NOT on a silent session restore at app launch (that would nag every
-        start; the Settings button covers that case)."""
+        start; the Settings button covers that case).
+
+        ``on_synced`` is a callback run once the target account's startup sync settles
+        (delivered as ``_run_startup_sync``'s ``on_finished``). The offline-profile merge
+        uses it to offer its contribution *after* the account is synced, so the picker
+        reflects the synced state instead of racing the cloud pull."""
         from app.core.db import (account_db_path, get_active_db_path,
-                                  set_active_db_path, initialize_database, DB_PATH)
+                                  set_active_db_path, initialize_database, DB_PATH,
+                                  is_local_uid)
         registry = self.auth.registry
+        local = is_local_uid(uid)
 
         # 1. Flush the account we're leaving (best-effort, bounded) before its DB is
         #    repointed away — otherwise queued offline edits would be stranded.
@@ -3353,7 +3585,11 @@ class MainWindow(QMainWindow):
                 logging.warning(f"Pre-switch flush failed: {exc}")
 
         # 2. Ensure the auth session matches the target account.
-        if uid:
+        if local:
+            # Offline profile: no session to restore — just mark it active (drops any
+            # cloud session, so sync is off and RLS reverts to anon).
+            self.auth.activate_local(uid)
+        elif uid:
             if self.auth.current_user_id() != uid:
                 ok, msg = self.auth.switch_to(uid)
                 if not ok:
@@ -3364,10 +3600,10 @@ class MainWindow(QMainWindow):
                                "error", 6000)
                     self.sync_status_changed.emit("error", tr("Sign in again to sync"))
                     return
-        elif self.auth.is_logged_in():
+        elif self.auth.is_logged_in() or self.auth.is_local_active():
             self.auth.sign_out_to_local()
 
-        self.db_adapter.set_use_cloud(bool(uid) or is_custom_server())
+        self.db_adapter.set_use_cloud((not local) and (bool(uid) or is_custom_server()))
 
         prev = get_active_db_path()  # unchanged, re-read for clarity
         if target == prev:
@@ -3375,7 +3611,7 @@ class MainWindow(QMainWindow):
             self._refresh_account_dependent_ui()
             if self.sync_enabled:
                 cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
-                      if offer_contribution else None)
+                      if offer_contribution else on_synced)
                 self._maybe_prompt_restore_merge(
                     on_done=lambda _up, cb=cb: run_in_thread(
                         self._run_startup_sync, on_finished=cb))
@@ -3386,7 +3622,7 @@ class MainWindow(QMainWindow):
         #    leftover/test account file can't silently skip the upload. After either
         #    choice the local store is consumed/archived so it is never re-offered to
         #    a second account.
-        if (uid and prev == DB_PATH and self._local_db_has_data(prev)
+        if (uid and not local and prev == DB_PATH and self._local_db_has_data(prev)
                 and not registry.local_import_done()):
             adopt = QMessageBox.question(
                 self, tr("Upload local words?"),
@@ -3420,7 +3656,7 @@ class MainWindow(QMainWindow):
         set_active_db_path(target)
         self.db_adapter.set_local_db(target)
         self.sync_manager.set_local_db(target)
-        if uid:
+        if uid and not local:
             try:
                 if not self.sync_manager.get_synced_account_id():
                     self.sync_manager.set_synced_account_id(uid)
@@ -3430,12 +3666,14 @@ class MainWindow(QMainWindow):
         self.reload_requested.emit()
         if self.sync_enabled:
             cb = ((lambda u=uid: self._maybe_offer_local_contribution(u))
-                  if offer_contribution else None)
+                  if offer_contribution else on_synced)
             self._maybe_prompt_restore_merge(
                 on_done=lambda _up, cb=cb: run_in_thread(
                     self._run_startup_sync, on_finished=cb))
         else:
             self._update_sync_status_ui("idle")
+            if on_synced is not None:
+                on_synced()
 
     def _run_startup_sync(self):
         try:
@@ -3506,10 +3744,12 @@ class MainWindow(QMainWindow):
                                          syncing=self._sync_running)
         else:
             # Local-only: the button is a sign-in nudge, so pitch sync instead of
-            # showing a status grid that would read "Not connected".
+            # showing a status grid that would read "Not connected". On a named offline
+            # profile, the CTA upgrades that profile into a synced account.
             self.sync_popover.show_promo(self.sync_button,
                                          getattr(self, "_total_words", 0),
-                                         getattr(self, "_total_texts", 0))
+                                         getattr(self, "_total_texts", 0),
+                                         local_profile=self.auth.is_local_active())
 
     # Above this many uploads/downloads/removals, a manual reconcile asks first.
     RECONCILE_CONFIRM_THRESHOLD = 25

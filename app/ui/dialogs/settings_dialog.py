@@ -20,9 +20,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """Settings dialog. Persists to settings.cfg (and API keys to .env)."""
+import logging
 import os
 import shutil
 import sys
+from datetime import datetime
 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QGuiApplication, QDesktopServices, QKeySequence
@@ -39,7 +41,7 @@ from app.core.auth_manager import get_auth_manager
 from app.i18n import available_languages, tr
 from app.system.autostart import get_autostart_enabled, set_autostart
 from app.ui.dialogs.account_dialog import AccountDialog
-from app.ui.dialogs.base import FramelessDialog
+from app.ui.dialogs.base import FramelessDialog, ask_text, confirm
 from app.ui.toast import show_toast
 from app.ui.widgets import ColorButton, ColumnPicker
 from app.ui.workers import run_in_thread
@@ -642,6 +644,32 @@ class SettingsDialog(FramelessDialog):
             form.addRow(acct_row)
             self._refresh_account_ui()
 
+        # --- Offline profiles (advanced, power-user) --------------------------
+        # Separate, device-only libraries, each with its own database, that never
+        # sync and need no sign-in. Hidden unless show_advanced=True. Independent of
+        # the cloud/custom-server choice above: an active offline profile forces sync
+        # off regardless.
+        if self.show_advanced:
+            self.local_box = QVBoxLayout()
+            self.local_box.setContentsMargins(0, 0, 0, 0)
+            local_container = QWidget()
+            local_container.setLayout(self.local_box)
+            form.addRow(tr("Offline profiles"), local_container)
+
+            add_row = QHBoxLayout()
+            self.add_local_btn = QPushButton(tr("Add offline profile…"))
+            self.add_local_btn.clicked.connect(self._add_local_profile)
+            add_row.addWidget(self.add_local_btn)
+            add_row.addStretch(1)
+            form.addRow(add_row)
+
+            local_note = QLabel(tr("Separate, device-only libraries with their own "
+                                   "database. They never sync and need no sign-in."))
+            local_note.setObjectName("dimLabel")
+            local_note.setWordWrap(True)
+            form.addRow(local_note)
+            self._refresh_local_profiles_ui()
+
         # Bring-your-own Supabase project (advanced, personal use). Hidden by
         # default — the app ships with a built-in central project, so normal users
         # just sign in. Reveal by setting show_advanced=True in settings.cfg; once a
@@ -1013,7 +1041,8 @@ class SettingsDialog(FramelessDialog):
             w = item.widget()
             if w is not None:
                 w.deleteLater()
-        accounts = auth.registry.list_accounts()
+        # Offline profiles are managed in their own section below, so exclude them here.
+        accounts = [a for a in auth.registry.list_accounts() if not a.get("local")]
         active = auth.current_user_id() if auth.is_logged_in() else None
         if not accounts:
             lbl = QLabel(tr("No accounts yet. Add one to sync your words across devices."))
@@ -1025,6 +1054,8 @@ class SettingsDialog(FramelessDialog):
                 self.accounts_box.addWidget(self._account_row(acc, active))
         logged_in = auth.is_logged_in()
         self.local_btn.setVisible(logged_in)
+        # The active offline profile (if any) is shown there; keep it in step too.
+        self._refresh_local_profiles_ui()
         # Signing in / switching / turning sync off changes the live status, so keep
         # the status line in step without needing to reopen Settings.
         self._update_sync_status()
@@ -1119,6 +1150,154 @@ class SettingsDialog(FramelessDialog):
             mw.switch_active_account(None)
         self._refresh_account_ui()
         show_toast(self, tr("Account"), tr("Cloud sync turned off — this device only."), "info")
+
+    # ---- offline (local-only) profiles --------------------------------
+    def _refresh_local_profiles_ui(self):
+        if not hasattr(self, "local_box"):
+            return
+        from app.core.supabase_client import is_custom_server
+        auth = get_auth_manager()
+        while self.local_box.count():
+            item = self.local_box.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.deleteLater()
+        # Which offline profile is active? "Default (local)" (uid=None) counts as active
+        # only when fully local — logged out, no custom server, no named profile active.
+        cloud_or_custom = object()  # sentinel: a cloud account / custom server is active
+        if auth.is_local_active():
+            active_local = auth.active_local_uid()
+        elif not auth.is_logged_in() and not is_custom_server():
+            active_local = None
+        else:
+            active_local = cloud_or_custom
+        self.local_box.addWidget(self._local_profile_row(
+            None, tr("Default (local)"), active_local is None))
+        for acc in auth.registry.list_accounts():
+            if not acc.get("local"):
+                continue
+            uid = acc["uid"]
+            self.local_box.addWidget(self._local_profile_row(
+                uid, acc.get("name") or tr("Untitled profile"), uid == active_local))
+
+    def _local_profile_row(self, uid, name, is_active):
+        row = QWidget()
+        h = QHBoxLayout(row)
+        h.setContentsMargins(0, 0, 0, 0)
+        text = name + ("  " + tr("(active)") if is_active else "")
+        label = QLabel(text)
+        label.setWordWrap(True)
+        if is_active:
+            label.setObjectName("accentLabel")
+        h.addWidget(label, 1)
+        if not is_active:
+            switch = QPushButton(tr("Switch"))
+            switch.clicked.connect(lambda _=False, u=uid: self._switch_local_profile(u))
+            h.addWidget(switch)
+        if uid is not None:  # the Default store can't be upgraded, renamed or deleted
+            # Per-profile actions live in a compact "⋮" menu so the row never widens the
+            # dialog (mirrors the cloud-account rows).
+            from app.ui import icons, theme
+            from app.core.supabase_client import is_custom_server
+            more = QPushButton()
+            more.setIcon(icons.icon("more", theme.current_colors()["text"], 16))
+            more.setToolTip(tr("Profile actions"))
+            menu = QMenu(more)
+            if not is_custom_server():  # accounts only exist on the built-in server
+                self._account_menu_item(menu, tr("Enable cloud sync…"),
+                                        lambda u=uid: self._connect_local_profile(u))
+            self._account_menu_item(menu, tr("Rename"),
+                                    lambda u=uid, n=name: self._rename_local_profile(u, n))
+            menu.addSeparator()
+            self._account_menu_item(menu, tr("Delete"),
+                                    lambda u=uid, n=name: self._delete_local_profile(u, n),
+                                    danger=True)
+            more.setMenu(menu)
+            h.addWidget(more)
+        return row
+
+    def _switch_local_profile(self, uid):
+        mw = self.parent()
+        if mw is not None and hasattr(mw, "switch_active_account"):
+            mw.switch_active_account(uid)
+        self._refresh_account_ui()  # also refreshes the offline list + status
+
+    def _connect_local_profile(self, uid):
+        """Upgrade an offline profile into a synced account: make it active (so it's
+        loaded), then run the main window's upgrade flow (sign in / create account →
+        the profile becomes that account)."""
+        mw = self.parent()
+        if mw is None or not hasattr(mw, "upgrade_active_local_profile"):
+            return
+        auth = get_auth_manager()
+        if not (auth.is_local_active() and auth.active_local_uid() == uid):
+            mw.switch_active_account(uid)
+        mw.upgrade_active_local_profile()
+        self._refresh_account_ui()
+
+    def _add_local_profile(self):
+        name, ok = ask_text(self, tr("New offline profile"), tr("Profile name:"))
+        if not ok or not name.strip():
+            return
+        auth = get_auth_manager()
+        created, result = auth.create_local_account(name)
+        if not created:
+            show_toast(self, tr("Offline profile"),
+                       result or tr("Could not create the profile."), "error", 6000)
+            return
+        uid = result  # the new profile's uid is returned in the message field
+        mw = self.parent()
+        if mw is not None and hasattr(mw, "switch_active_account"):
+            mw.switch_active_account(uid)
+        self._refresh_account_ui()
+        show_toast(self, tr("Offline profile"),
+                   tr("Created and switched to “{name}”.").format(name=name.strip()),
+                   "success")
+
+    def _rename_local_profile(self, uid, current_name):
+        name, ok = ask_text(self, tr("Rename offline profile"), tr("Profile name:"),
+                            text=current_name)
+        if not ok or not name.strip():
+            return
+        get_auth_manager().registry.upsert(uid, None, name.strip(), local=True)
+        self._refresh_local_profiles_ui()
+
+    def _delete_local_profile(self, uid, name):
+        if not confirm(
+                self, tr("Delete offline profile"),
+                tr("Permanently delete the offline profile “{name}”? Its words and texts "
+                   "exist only on this device — there is no cloud copy. The database is "
+                   "archived to the backups folder first, but this cannot be undone in "
+                   "the app.").format(name=name),
+                ok_text=tr("Delete"), cancel_text=tr("Cancel"), danger=True):
+            return
+        from app.core.db import account_db_path
+        auth = get_auth_manager()
+        was_active = auth.is_local_active() and auth.active_local_uid() == uid
+        path = account_db_path(uid)
+        # Archive the only copy before anything destructive.
+        try:
+            if os.path.exists(path):
+                os.makedirs("backups", exist_ok=True)
+                stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                shutil.copy2(path, os.path.join(
+                    "backups", f"{os.path.basename(path)}.deleted_{stamp}.db"))
+        except Exception as exc:
+            logging.warning(f"Could not archive offline profile DB {path}: {exc}")
+        # If it's active, repoint the app off this file (to Default) before removing it.
+        if was_active:
+            mw = self.parent()
+            if mw is not None and hasattr(mw, "switch_active_account"):
+                mw.switch_active_account(None)
+        auth.forget_account(uid)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except OSError as exc:
+            logging.warning(f"Could not remove offline profile DB {path}: {exc}")
+        self._refresh_account_ui()
+        show_toast(self, tr("Offline profile"),
+                   tr("Deleted “{name}”.").format(name=name), "success")
 
     def _forget_account(self, uid, email):
         confirm = QMessageBox.question(

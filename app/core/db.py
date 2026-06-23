@@ -48,6 +48,33 @@ def new_id() -> str:
     """A fresh row id: a UUIDv4 string, identical in SQLite and Supabase."""
     return str(uuid.uuid4())
 
+
+# Offline ("local") profiles are accounts that exist only on this device and never
+# sync. They reuse the per-account DB machinery below but get a locally-minted,
+# filename-safe uid prefixed with ``local-`` so they are trivially told apart from a
+# Supabase user id (a bare UUID) everywhere — in the registry, in sync gating, and in
+# the ``dictionary_local-<uuid>.db`` filename ``account_db_path`` derives from it.
+LOCAL_UID_PREFIX = "local-"
+
+
+def new_local_uid() -> str:
+    """A fresh offline-profile id: ``local-<uuidv4>`` (filename-safe, no scheme/colon)."""
+    return f"{LOCAL_UID_PREFIX}{uuid.uuid4()}"
+
+
+def is_local_uid(uid) -> bool:
+    """True for an offline-profile uid (``local-…``); False for None or a cloud uid."""
+    return bool(uid) and str(uid).startswith(LOCAL_UID_PREFIX)
+
+
+def is_local_db_path(path) -> bool:
+    """True if *path* is an offline-profile DB file (``dictionary_local-<uuid>.db``).
+
+    Note it is deliberately False for the logged-out default store ``dictionary.db`` —
+    only named offline profiles are matched. Used to ensure an offline profile's sync
+    queue is never pushed to a cloud account."""
+    return bool(path) and os.path.basename(str(path)).startswith(f"dictionary_{LOCAL_UID_PREFIX}")
+
 # Active local database. The app keeps one SQLite file per account
 # (``dictionary_<uid>.db``) plus the logged-out, local-only ``dictionary.db``.
 # Switching accounts repoints this so each account's words, sync queues and

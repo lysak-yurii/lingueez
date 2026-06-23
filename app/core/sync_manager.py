@@ -101,6 +101,8 @@ class SyncManager:
         empty result (no error), so is_connected() alone would report True while
         logged out of the built-in project and we'd "sync" nothing under no identity.
         """
+        if self.auth.is_local_active():
+            return False  # offline profiles are device-only and never sync
         if not (self.auth.is_logged_in() or is_custom_server()):
             return False
         return self.supabase.is_connected()
@@ -109,6 +111,8 @@ class SyncManager:
         """Identity that owns the active local DB for sync purposes: the signed-in
         user_id (built-in mode), or a synthetic ``custom:<host>`` marker (personal
         own-Supabase mode, which has no account). None means local-only."""
+        if self.auth.is_local_active():
+            return None  # offline profile: device-only, owned by nobody for sync
         uid = self.auth.current_user_id() if self.auth.is_logged_in() else None
         if uid:
             return uid
@@ -126,28 +130,33 @@ class SyncManager:
         self.db_adapter.set_sync_metadata('synced_account_id', uid or '')
 
     # ---- contribute local-only data into the signed-in account --------
-    def local_only_delta(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Words/texts in the logged-out local store (``dictionary.db``) that the
-        active account lacks, matched by *content* (UUIDs differ across stores).
+    def local_only_delta(self, source_path: Optional[str] = None) -> Dict[str, List[Dict[str, Any]]]:
+        """Words/texts in a *source* store that the active account lacks, matched by
+        *content* (UUIDs differ across stores).
+
+        ``source_path`` defaults to the logged-out local store (``dictionary.db``) —
+        the "add this device's local words to my account" flow. It can also be an
+        offline-profile file, for upgrading that profile into an account that already
+        has data on this device (the additive-merge path).
 
         Returns ``{"words": [...], "texts": [...]}`` — each word dict carries a
-        ``_tags`` list. Empty when an account DB is not active (still logged out)
-        or the local store file is absent. Read-only: ``dictionary.db`` is never
-        modified. Words match on ``(Word1, Word2)`` (the local UNIQUE key and the
-        cloud per-user uniqueness); texts have no content constraint, so they match
-        on the synthetic key ``(Title, Text, Language)``.
+        ``_tags`` list. Empty when the source *is* the active DB or its file is absent.
+        Read-only: the source store is never modified. Words match on ``(Word1, Word2)``
+        (the local UNIQUE key and the cloud per-user uniqueness); texts have no content
+        constraint, so they match on the synthetic key ``(Title, Text, Language)``.
         """
         from app.core.db import DB_PATH, get_tags_for_word
+        src_path = source_path or DB_PATH
         empty = {"words": [], "texts": []}
-        if os.path.abspath(self.local_db) == os.path.abspath(DB_PATH):
-            return empty  # still logged out — the active DB *is* the local store
-        if not os.path.exists(DB_PATH):
+        if os.path.abspath(self.local_db) == os.path.abspath(src_path):
+            return empty  # the source *is* the active DB — nothing to contribute
+        if not os.path.exists(src_path):
             return empty
 
-        # Read the local-only store through a throwaway, cloud-off adapter so this
+        # Read the source store through a throwaway, cloud-off adapter so this
         # never touches the network or the active account file.
         source = DatabaseAdapter(use_cloud=False)
-        source.set_local_db(DB_PATH)
+        source.set_local_db(src_path)
         src_words = source.get_words()
         src_texts = source.get_texts()
         if not src_words and not src_texts:
@@ -165,7 +174,7 @@ class SyncManager:
             if (w.get('Word1'), w.get('Word2')) in acct_word_keys:
                 continue
             w = dict(w)
-            w['_tags'] = get_tags_for_word(w.get('ID'), db_path=DB_PATH)
+            w['_tags'] = get_tags_for_word(w.get('ID'), db_path=src_path)
             delta_words.append(w)
         delta_texts = [dict(t) for t in src_texts
                        if (t.get('Title'), t.get('Text'), t.get('Language')) not in acct_text_keys]
@@ -311,6 +320,8 @@ class SyncManager:
     def sync_mode(self) -> str:
         """Which backend the app is syncing through: 'account' (built-in, signed in),
         'personal' (own-Supabase server, anonymous), or 'off' (local-only)."""
+        if self.auth.is_local_active():
+            return 'off'
         if self.auth.is_logged_in():
             return 'account'
         if is_custom_server():
@@ -817,6 +828,15 @@ class SyncManager:
         switch, app close) so edits made offline aren't stranded in that account's
         local queue. Best-effort and time-bounded so a flaky network can't hang the
         transition."""
+        from app.core.db import is_local_db_path
+        # An offline profile's queue must NEVER be pushed to a cloud account. During an
+        # upgrade we sign in (identity becomes the cloud account) while still pointed at
+        # the profile file; without this guard step-1 of switch_active_account would
+        # flush the profile's queued inserts to the just-signed-in account, bypassing the
+        # merge picker and its content-dedup. The profile's data is handled explicitly by
+        # the adopt/merge flow instead.
+        if is_local_db_path(self.local_db):
+            return False
         if not (self.auth.is_logged_in() or is_custom_server()) or not self.is_sync_enabled():
             return False
         if not self._local_db_belongs_to_current_user():
