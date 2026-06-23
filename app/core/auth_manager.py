@@ -59,6 +59,10 @@ LOOPBACK_REDIRECT = f"http://127.0.0.1:{LOOPBACK_PORT}"
 # this is blocked.
 MAX_ACCOUNTS = 5
 
+# Offline ("local") profiles are device-only and don't consume the cloud-account slots
+# above, so power users can keep several separate local libraries. Counted on their own.
+MAX_LOCAL_ACCOUNTS = 10
+
 Result = Tuple[bool, Optional[str]]
 
 # restore_session outcomes
@@ -110,10 +114,20 @@ class AuthManager:
         self.registry = get_account_registry()
         self._session = None
         self._user = None
+        # The active offline profile's uid, or None. Distinct from a Supabase session:
+        # an offline profile is "active" without being "logged in", and forces sync off.
+        self._active_local_uid = None
 
     # ---- state ---------------------------------------------------------
     def is_logged_in(self) -> bool:
         return self._session is not None
+
+    def is_local_active(self) -> bool:
+        """Whether an offline profile is the active account (no cloud session, no sync)."""
+        return self._active_local_uid is not None
+
+    def active_local_uid(self) -> Optional[str]:
+        return self._active_local_uid
 
     def current_user(self) -> Optional[str]:
         """Signed-in user's email, or None."""
@@ -306,6 +320,35 @@ class AuthManager:
             except Exception:
                 pass
 
+    # ---- offline (local-only) profiles --------------------------------
+    def create_local_account(self, name: str) -> Result:
+        """Create a new offline profile (device-only, never synced) and return its uid
+        in the message field on success. Does *not* activate it or touch the keychain —
+        the caller drives activation through ``MainWindow.switch_active_account`` so the
+        data layer is repointed in one guarded transition."""
+        from app.core.db import new_local_uid
+        name = (name or "").strip()
+        if not name:
+            return False, tr("Enter a name for the offline profile.")
+        existing_local = [a for a in self.registry.list_accounts() if a.get("local")]
+        if len(existing_local) >= MAX_LOCAL_ACCOUNTS:
+            return False, tr("You can keep up to {max} offline profiles. Remove one to "
+                             "add another.").format(max=MAX_LOCAL_ACCOUNTS)
+        uid = new_local_uid()
+        self.registry.upsert(uid, email=None, name=name, local=True)
+        return True, uid
+
+    def activate_local(self, uid: str) -> Result:
+        """Activate an offline profile: drop any cloud session (so sync is off and RLS
+        reverts to anon) and mark this profile active. The DB repoint is the caller's
+        job (``switch_active_account``)."""
+        self._session = None
+        self._user = None
+        self.sb.set_auth_token(None)  # revert PostgREST to the anon key
+        self._active_local_uid = uid
+        self.registry.set_active(uid)
+        return True, None
+
     # ---- leaving / removing accounts ----------------------------------
     def sign_out_to_local(self) -> Result:
         """Leave the active account and go local-only, but keep it *remembered*
@@ -313,6 +356,7 @@ class AuthManager:
         token is intentionally not revoked server-side (that's ``forget_account``)."""
         self._session = None
         self._user = None
+        self._active_local_uid = None
         self.sb.set_auth_token(None)  # revert PostgREST to the anon key
         self.registry.set_active(None)
         return True, None
@@ -320,7 +364,15 @@ class AuthManager:
     def forget_account(self, uid: str) -> Result:
         """Remove an account from this device: delete its stored token and registry
         entry. If it is the active session, revoke it remotely (best effort) and
-        drop to local-only."""
+        drop to local-only. For an offline profile there is no remote session or stored
+        token — just clear the active marker and drop its registry entry."""
+        from app.core.db import is_local_uid
+        if is_local_uid(uid):
+            if uid == self._active_local_uid:
+                self._active_local_uid = None
+            self.store.clear(uid)  # harmless no-op; offline profiles store no token
+            self.registry.remove(uid)
+            return True, None
         if uid and uid == self.current_user_id():
             auth = self.sb.get_auth()
             try:
@@ -342,6 +394,12 @@ class AuthManager:
         tell "nothing to restore" apart from "an account is remembered but its token
         expired" (which deserves a visible prompt rather than a silent drop to
         local-only)."""
+        from app.core.db import is_local_uid
+        # An active offline profile has no cloud session to restore — the startup handler
+        # activates it directly. Returning NONE keeps the app local-only without a stale
+        # re-auth prompt.
+        if is_local_uid(self.registry.get_active()):
+            return RESTORE_NONE
         auth = self.sb.get_auth()
         if auth is None:
             return RESTORE_NONE
@@ -456,6 +514,7 @@ class AuthManager:
             return False
         self._session = session
         self._user = user
+        self._active_local_uid = None  # adopting a cloud session leaves any offline profile
         self.sb.set_auth_token(session.access_token)
         try:
             self.store.save(uid, {

@@ -39,8 +39,9 @@ from app.ui.dialogs.base import FramelessDialog
 class ContributeDialog(FramelessDialog):
     """Counts + selectable checklist of local items missing from the account."""
 
-    def __init__(self, parent, email, words, texts, suppressed=False):
-        super().__init__(parent, title=tr("Sync this device's data to your account"))
+    def __init__(self, parent, email, words, texts, suppressed=False,
+                 title=None, hint=None):
+        super().__init__(parent, title=title or tr("Sync this device's data to your account"))
         self._words = words
         self._texts = texts
         self.setMinimumWidth(440)
@@ -67,18 +68,25 @@ class ContributeDialog(FramelessDialog):
         intro.setStyleSheet(f"font-size:14px; font-weight:600; color:{c['text']};")
         self.content_layout.addWidget(intro)
 
-        hint = QLabel(tr("Select the items to add. They are copied to your account and "
-                         "uploaded to the cloud, so they appear on your other devices. "
-                         "The copy on this device is kept."))
-        hint.setWordWrap(True)
-        hint.setStyleSheet(f"color: {c['text_dim']}; font-size:12.5px;")
-        self.content_layout.addWidget(hint)
+        hint_lbl = QLabel(hint or tr(
+            "Select the items to add. They are copied to your account and "
+            "uploaded to the cloud, so they appear on your other devices. "
+            "The copy on this device is kept."))
+        hint_lbl.setWordWrap(True)
+        hint_lbl.setStyleSheet(f"color: {c['text_dim']}; font-size:12.5px;")
+        self.content_layout.addWidget(hint_lbl)
 
         self._word_list = self._build_section(
             tr("Words"), "book", words, lambda w: self._word_label(w)) if nw else None
         self._text_list = self._build_section(
             tr("Texts"), "file-text", texts,
             lambda t: (t.get('Title') or tr("(untitled)"))) if nt else None
+
+        # Collect any leftover vertical space here so the blocks pack tightly at the
+        # top instead of QVBoxLayout spreading the gap evenly between them (which made
+        # the short, texts-only case look very loose). Keeps the opt-out + buttons at
+        # the bottom.
+        self.content_layout.addStretch(1)
 
         self.suppress_check = QCheckBox(tr("Don't ask again for this account"))
         self.suppress_check.setCursor(Qt.PointingHandCursor)

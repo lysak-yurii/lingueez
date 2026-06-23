@@ -125,8 +125,12 @@ class AccountRegistry:
             data["local_import_done"] = bool(done)
             self._save(data)
 
-    def upsert(self, uid: str, email: Optional[str], name: Optional[str] = None) -> None:
-        """Add or update an account, preserving fields not given here."""
+    def upsert(self, uid: str, email: Optional[str], name: Optional[str] = None,
+               local: bool = False) -> None:
+        """Add or update an account, preserving fields not given here.
+
+        ``local=True`` marks an offline profile (no cloud account, never synced); it is
+        sticky once set so a later rename via ``upsert`` keeps the flag."""
         with self._lock:
             data = self._load()
             entry = data["accounts"].get(uid, {})
@@ -135,10 +139,17 @@ class AccountRegistry:
                 entry["email"] = email
             if name:
                 entry["name"] = name
+            if local:
+                entry["local"] = True
             entry.setdefault("last_synced_at", None)
             entry["needs_reauth"] = entry.get("needs_reauth", False)
             data["accounts"][uid] = entry
             self._save(data)
+
+    def is_local(self, uid: str) -> bool:
+        """Whether the given account is an offline (local-only) profile."""
+        with self._lock:
+            return bool((self._load()["accounts"].get(uid) or {}).get("local"))
 
     def remove(self, uid: str) -> None:
         with self._lock:

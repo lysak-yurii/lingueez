@@ -373,10 +373,14 @@ class SyncPopover(QFrame):
         self.note_label.setVisible(True)
         self._resize_to_content()
 
-    def show_promo(self, button, word_count, text_count=0):
+    def show_promo(self, button, word_count, text_count=0, local_profile=False):
         """Open under *button* in the local-only promo state: pitch sync + offer a
         Sign in CTA. No worker fetch — the content is static save for the counts.
-        The body names words, and texts too once at least one is saved."""
+        The body names words, and texts too once at least one is saved.
+
+        ``local_profile=True`` tailors the copy for an active offline profile, where
+        signing in *upgrades that profile* into a synced account rather than a plain
+        first sign-in."""
         self._request += 1  # orphan any in-flight status fetch from a prior open
         self.status_widget.setVisible(False)
         n, m = int(word_count or 0), int(text_count or 0)
@@ -390,9 +394,16 @@ class SyncPopover(QFrame):
             # Drop the empty side so the icon-by-texts-only case doesn't read
             # "0 words and N texts".
             items = texts if not n else words
-        self.promo_body.setText(
-            tr("You've saved {items} here. Sign in to keep them safe and "
-               "study on all your devices.").format(items=items))
+        if local_profile:
+            self.promo_body.setText(
+                tr("This profile has {items}, saved only on this device. Enable cloud "
+                   "sync to back them up and study on all your devices.").format(items=items))
+            self.promo_signin_btn.setText(tr("Enable cloud sync"))
+        else:
+            self.promo_body.setText(
+                tr("You've saved {items} here. Sign in to keep them safe and "
+                   "study on all your devices.").format(items=items))
+            self.promo_signin_btn.setText(tr("Sign in"))
         self.promo_widget.setVisible(True)
         self._anchor = button
         self._resize_to_content()

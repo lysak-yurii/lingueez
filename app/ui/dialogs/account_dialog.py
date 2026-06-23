@@ -31,7 +31,7 @@ results come back as ``(ok, message)`` tuples and are surfaced via toast. Emits
 refresh their account status.
 """
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton
 
 from app.core.auth_manager import get_auth_manager
 from app.i18n import tr
@@ -48,13 +48,15 @@ class AccountDialog(FramelessDialog):
     # up we hide "Forgot password?"; flip this to True once email actually sends.
     _PASSWORD_RESET_ENABLED = False
 
-    def __init__(self, parent, auth=None):
+    def __init__(self, parent, auth=None, prefill_name=""):
         super().__init__(parent, title=tr("Sign in"))
-        self.setMinimumWidth(380)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.auth = auth or get_auth_manager()
         self._owner = parent
-        self._mode = "sign_in"  # "sign_in" | "sign_up" | "verify" | "reset"
+        # When upgrading an offline profile we arrive with its name; open straight on
+        # the create-account form (pre-filled) since that's the intent — the user can
+        # still toggle to "I already have an account".
+        self._mode = "sign_up" if prefill_name else "sign_in"
         self._verify_email = None  # email awaiting its 6-digit code
 
         layout = self.content_layout
@@ -63,12 +65,15 @@ class AccountDialog(FramelessDialog):
         # (e.g. in the Supabase dashboard) just like a Google account's name.
         self.name = QLineEdit()
         self.name.setPlaceholderText(tr("Name"))
+        if prefill_name:
+            self.name.setText(prefill_name)
         self.name.returnPressed.connect(self._submit)
         self.name.setVisible(False)
         layout.addWidget(self.name)
 
         self.email = QLineEdit()
         self.email.setPlaceholderText(tr("Email"))
+        self.email.setMinimumWidth(340)  # anchors width to ~380 under SetFixedSize
         layout.addWidget(self.email)
 
         self.password = QLineEdit()
@@ -139,6 +144,11 @@ class AccountDialog(FramelessDialog):
 
         self._apply_mode()
         self.email.setFocus()
+        # Always hug the content: the visible field set changes per mode (sign-up adds
+        # name + confirm; code steps hide most) and the status label toggles. SetFixedSize
+        # re-fits the window on every layout change — shrinking included, which a soft
+        # adjustSize() won't do for a frameless window on Wayland.
+        self.layout().setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
     # ---- mode ----------------------------------------------------------
     def _apply_mode(self):
