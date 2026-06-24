@@ -1,0 +1,15 @@
+title: Lingueez
+description: Lingueez — legal documents
+
+# Pages is served from /docs. Every page under legal/ uses the shared layout, so the
+# Markdown files only need a title + permalink in their front matter.
+defaults:
+  - scope:
+      path: legal
+    values:
+      layout: legal
+
+# Keep the internal GDPR runbooks and the maintainer README off the public site.
+exclude:
+  - legal/gdpr
+  - legal/README.md

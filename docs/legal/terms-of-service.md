@@ -1,10 +1,15 @@
+---
+title: Terms of Service
+permalink: /legal/terms-of-service/
+---
+
 # Terms of Service — Lingueez
 
 **Last updated:** 2026-06-23 · **Version:** 1.0
 
 > These Terms govern your use of the **Lingueez** desktop application and the optional hosted
 > sync service. By creating an account or using the sync service you agree to these Terms.
-> A Ukrainian version is available in [terms-of-service.uk.md](terms-of-service.uk.md).
+> A Ukrainian version is available [here](/legal/uk/terms-of-service/).
 
 ---
 
@@ -55,7 +60,7 @@ service. We do not claim ownership and do not use your content to train models o
 The app can connect to third-party services (translation, text-to-speech, AI, dictionary/web
 lookups). Some require your own API key and are subject to **those providers' own terms and
 privacy policies**. The default free translation/read-aloud sends the text you translate or
-play to Google's free endpoints; see the [Privacy Policy](privacy-policy.md) for details and
+play to Google's free endpoints; see the [Privacy Policy](/legal/privacy-policy/) for details and
 how to switch providers.
 
 ## 7. Availability — no warranty

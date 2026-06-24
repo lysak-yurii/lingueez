@@ -1,3 +1,8 @@
+---
+title: Privacy Policy
+permalink: /legal/privacy-policy/
+---
+
 # Privacy Policy — Lingueez
 
 **Last updated:** 2026-06-23 · **Version:** 1.0
@@ -6,7 +11,7 @@
 > ("Lingueez", "the app", "we") collects, why, and what rights you have. It is written
 > to satisfy Articles 12–14 of the EU General Data Protection Regulation (GDPR).
 >
-> ℹ️ A Ukrainian version is available in [privacy-policy.uk.md](privacy-policy.uk.md).
+> ℹ️ A Ukrainian version is available [here](/legal/uk/privacy-policy/).
 
 ---
 
@@ -110,8 +115,6 @@ decision-making with legal effect, and **no sale of personal data**.
   monthly snapshots) and stay until your storage rules prune them or you delete them.
 - **Logs** rotate automatically and are capped at a few megabytes.
 
-See [gdpr/data-retention.md](gdpr/data-retention.md) for the full schedule.
-
 ---
 
 ## 5. Sub-processors and international transfers
@@ -129,10 +132,7 @@ We use the following processors/sub-processors for the hosted service:
 > Google endpoints that are **not** covered by a data-processing agreement and may transfer
 > data outside the EU without standard safeguards. They run only when you use those features,
 > and you can switch to the official, agreement-backed alternatives (DeepL, Google Cloud TTS)
-> in Settings. See [gdpr/subprocessors.md](gdpr/subprocessors.md).
-
-The current sub-processor list is maintained in
-[gdpr/subprocessors.md](gdpr/subprocessors.md).
+> in Settings.
 
 ---
 
