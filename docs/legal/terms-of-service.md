@@ -1,6 +1,8 @@
 ---
 title: Terms of Service
 permalink: /legal/terms-of-service/
+lang: en
+alt: /legal/uk/terms-of-service/
 ---
 
 # Terms of Service — Lingueez

@@ -1,6 +1,8 @@
 ---
 title: Умови надання послуг
 permalink: /legal/uk/terms-of-service/
+lang: uk
+alt: /legal/terms-of-service/
 ---
 
 # Умови надання послуг — Lingueez
