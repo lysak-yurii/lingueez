@@ -308,7 +308,7 @@ def save_audio_file(words, file_path, languages, progress_callback=None, is_canc
                 logging.error(f"Error processing word '{word}': {exc}")
             return index, temp_files
 
-        word_pairs_with_indices = list(enumerate(zip(words, languages)))
+        word_pairs_with_indices = list(enumerate(zip(words, languages, strict=False)))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent_workers) as executor:
             futures = [executor.submit(process_word_pair, idx, wp)

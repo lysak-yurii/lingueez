@@ -115,7 +115,7 @@ def _rows_to_table(rows, exclude_columns, db_path=None):
     extras = [c for c in EXTRA_COLUMNS if c not in exclude] if db_path else []
     if extras:
         definitions = _fetch_definitions(rows, db_path)
-        for row, table_row in zip(rows, data):
+        for row, table_row in zip(rows, data, strict=False):
             d1, d2 = definitions.get(row.get("ID"), ("", ""))
             values = {"Definition": d1, "Definition2": d2}
             table_row.extend(values[c] for c in extras)

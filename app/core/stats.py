@@ -225,7 +225,7 @@ def compute_stats(df, tag_counts=None, definition_counts=None,
         # language pairs
         if "Language1" in df and "Language2" in df:
             pair_counts = {}
-            for l1, l2 in zip(df["Language1"], df["Language2"]):
+            for l1, l2 in zip(df["Language1"], df["Language2"], strict=False):
                 a = str(l1).strip() if isinstance(l1, str) else ""
                 b = str(l2).strip() if isinstance(l2, str) else ""
                 if not a and not b:
@@ -312,7 +312,6 @@ def resample(daily: list, granularity: str = "day", max_points: int = 0) -> list
     if granularity == "day":
         out = list(daily)
     else:
-        freq = "W-MON" if granularity == "week" else "MS"
         idx = pd.to_datetime([d for d, _ in daily])
         ser = pd.Series([c for _, c in daily], index=idx)
         if granularity == "week":
@@ -357,7 +356,6 @@ def heatmap_weeks(daily: list, weeks: int = 27) -> dict:
                 week_col.append((cur, c))
             cur += timedelta(days=1)
         # month label when the month changes at the top of a column
-        top = columns and None  # noop placeholder
         month_of_col = month_abbr(start + timedelta(days=col * 7))
         month_num = (start + timedelta(days=col * 7)).month
         if month_num != last_month:

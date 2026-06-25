@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from app.config import get_bool, load_settings, save_settings
+from app.config import load_settings, save_settings
 from app.core.audio import speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter

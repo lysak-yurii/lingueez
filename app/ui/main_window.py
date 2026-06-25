@@ -25,7 +25,6 @@ import logging
 import os
 import sqlite3
 import sys
-import threading
 from datetime import datetime, timedelta
 
 from PySide6.QtCore import (QAbstractAnimation, QEasingCurve,
@@ -38,8 +37,8 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QFileDialog, QFrame, QGraphicsOpacityEffect,
-    QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox,
-    QPushButton, QStackedLayout, QStatusBar, QTableView, QVBoxLayout, QWidget,
+    QHBoxLayout, QHeaderView, QLabel, QMainWindow, QMenu, QMessageBox,
+    QPushButton, QStackedLayout, QTableView, QVBoxLayout, QWidget,
     QWidgetAction, QCheckBox, QAbstractItemView,
 )
 
@@ -3140,7 +3139,7 @@ class MainWindow(QMainWindow):
             then non-destructively contribute the profile's missing items into it.
         The profile's original DB is archived to backups/ first; its registry entry is
         dropped only after the data is safely in place."""
-        from app.core.db import account_db_path, is_local_uid
+        from app.core.db import account_db_path
         from app.ui.dialogs.base import confirm
         from app.ui.dialogs.account_dialog import AccountDialog
 

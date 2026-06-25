@@ -172,7 +172,7 @@ def main():
     logging.info("The application is launched.")
     logging.info(f"Application version: {APP_VERSION}")
 
-    from PySide6.QtCore import QLockFile, QStandardPaths, Qt
+    from PySide6.QtCore import QLockFile, QStandardPaths
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication, QMessageBox
 

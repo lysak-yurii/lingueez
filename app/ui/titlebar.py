@@ -21,8 +21,7 @@
 
 """Client-side window decorations: integrated min/max/close controls,
 drag-to-move header and frameless edge resizing."""
-from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt
-from PySide6.QtGui import QCursor
+from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 from app.i18n import tr

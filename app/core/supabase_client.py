@@ -186,7 +186,7 @@ class SupabaseClient:
             # Make a lightweight query to test connectivity
             # Use a simple select with limit 1 to minimize data transfer
             # This will raise an exception if there's no internet connection
-            test_response = self.client.table('words').select('id').limit(1).execute()
+            self.client.table('words').select('id').limit(1).execute()
             
             # If we get here without exception, we have connectivity
             # (even if result is empty, the network call succeeded)
@@ -228,9 +228,9 @@ class SupabaseClient:
             return False, "Please check your internet connection or credentials."
         
         try:
-            test_response = self.client.table('words').select('id').limit(1).execute()
+            self.client.table('words').select('id').limit(1).execute()
             return True, None
-        except Exception as e:
+        except Exception:
             # For any connection failure, suggest checking both internet and credentials
             # since we can't reliably distinguish between network errors and credential errors
             return False, "Please check your internet connection or credentials."
@@ -1262,7 +1262,7 @@ class SupabaseClient:
                 try:
                     # Hard delete (actually remove from database)
                     # Note: delete() doesn't support .select(), so we just execute and check for errors
-                    delete_response = self.client.table(table_name).delete().eq('id', record_id).execute()
+                    self.client.table(table_name).delete().eq('id', record_id).execute()
                     # If no exception was raised, deletion was successful
                     # We can verify by checking if the record still exists
                     verify_response = self.client.table(table_name).select('id').eq('id', record_id).execute()

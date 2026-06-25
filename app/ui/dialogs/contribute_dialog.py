@@ -27,8 +27,8 @@ items to copy up (all checked by default); the chosen subset is returned via
 """
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QCheckBox, QDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
-    QPushButton, QVBoxLayout, QWidget,
+    QCheckBox, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
+    QPushButton,
 )
 
 from app.i18n import ntr, tr

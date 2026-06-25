@@ -1,0 +1,6 @@
+# Development / CI-only tooling. Not needed to run the app.
+# Install with:  pip install -r requirements-dev.txt
+#
+# Tests use the standard library (unittest), so nothing extra is required to
+# run them — only the linter lives here.
+ruff==0.6.9

@@ -31,8 +31,35 @@ jobs:
           fi
           echo "version=$APP_VERSION" >> "$GITHUB_OUTPUT"
 
+  # Lint + unit tests must pass before any artifact is built, so a broken
+  # import or a regression can never ship in a tagged release. Mirrors ci.yml.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: System libraries for headless Qt
+        # libegl1/libgl1: Qt rendering; libpulse0: Qt Multimedia links libpulse
+        # at import time (used by the audio player modules).
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libpulse0
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check tests
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m unittest discover -s tests -t . -p 'test_*.py'
+
   build-windows:
-    needs: validate
+    needs: [validate, test]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +94,7 @@ jobs:
           path: installer_output/Lingueez-${{ needs.validate.outputs.version }}-Setup.exe
 
   build-linux:
-    needs: validate
+    needs: [validate, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
