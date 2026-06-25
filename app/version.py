@@ -20,7 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 APP_VERSION = "2.0.0"
-BUILD_NUMBER = "2026062404"
+BUILD_NUMBER = "2026062502"
 APP_NAME = "Lingueez"
 APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 
@@ -37,6 +37,20 @@ WEBSITE_URL = "https://lingueez.app"
 CONTACT_EMAIL = "support@lingueez.app"
 
 # Bumped whenever the Terms/Privacy change materially enough to require users to
-# re-accept. The stored "policy_accepted_version" is compared against this; a higher
-# value here re-triggers the consent gate at the next account creation.
+# re-accept. The stored "policy_accepted_version" is compared against this on launch
+# for signed-in accounts; a higher value here re-triggers the consent gate (see
+# MainWindow._maybe_require_policy_consent).
 POLICY_VERSION = "1.0"
+
+
+def policy_needs_acceptance(stored_version: str) -> bool:
+    """True when the user's last-accepted policy version is missing or older than
+    the current POLICY_VERSION. Versions compare as dotted integer tuples so
+    "1.10" > "1.2"; an empty/unparseable stored value parses to () and is < any
+    real version, so a never-accepted state also returns True."""
+    def parse(v):
+        try:
+            return tuple(int(p) for p in str(v).split("."))
+        except (ValueError, AttributeError):
+            return ()
+    return parse(stored_version) < parse(POLICY_VERSION)

@@ -281,10 +281,7 @@ class AccountDialog(FramelessDialog):
     def _record_consent(self):
         """Record the latest Terms/Privacy acceptance (version + timestamp) for the
         audit trail. The consent UI is always shown regardless; this is just a log."""
-        settings = load_settings()
-        settings["policy_accepted_version"] = POLICY_VERSION
-        settings["policy_accepted_at"] = datetime.now(timezone.utc).isoformat()
-        save_settings(settings)
+        record_policy_consent()
 
     # ---- actions -------------------------------------------------------
     def _submit(self):
@@ -419,3 +416,73 @@ class AccountDialog(FramelessDialog):
     def _on_thread_error(self, err):
         self._set_busy(False)
         self._set_status(str(err))
+
+
+def record_policy_consent():
+    """Persist the current POLICY_VERSION and a UTC timestamp as the user's
+    accepted Terms/Privacy consent. Shared by the sign-in flow and the
+    re-consent gate so every acceptance path writes an identical record."""
+    settings = load_settings()
+    settings["policy_accepted_version"] = POLICY_VERSION
+    settings["policy_accepted_at"] = datetime.now(timezone.utc).isoformat()
+    save_settings(settings)
+
+
+class PolicyConsentDialog(FramelessDialog):
+    """Blocking re-consent gate shown when the Terms/Privacy version a signed-in
+    user last accepted is behind the current POLICY_VERSION. Accepting records the
+    new version; rejecting (Sign out or the close button) leaves the caller to drop
+    the account to local-only."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent, title=tr("Updated Terms & Privacy"))
+        self.setMinimumWidth(420)
+
+        from app.ui.legal_links import open_legal
+
+        intro = QLabel(tr(
+            "We've updated our Terms of Service and Privacy Policy. Please review "
+            "and accept them to keep using your account."))
+        intro.setWordWrap(True)
+        self.content_layout.addWidget(intro)
+
+        consent_row = QHBoxLayout()
+        self.consent = QCheckBox()
+        self.consent.setCursor(Qt.PointingHandCursor)
+        consent_row.addWidget(self.consent, 0, Qt.AlignTop)
+        label = QLabel(tr(
+            'I agree to the updated <a href="{terms}">Terms of Service</a> and '
+            '<a href="{privacy}">Privacy Policy</a>.').format(
+                terms=TERMS_URL, privacy=PRIVACY_URL))
+        label.setWordWrap(True)
+        label.setObjectName("dimLabel")
+        label.linkActivated.connect(open_legal)
+        consent_row.addWidget(label, 1)
+        self.content_layout.addLayout(consent_row)
+
+        self.status = QLabel()
+        self.status.setStyleSheet("color: #e5534b; background: transparent;")
+        self.status.setVisible(False)
+        self.content_layout.addWidget(self.status)
+
+        buttons = QHBoxLayout()
+        sign_out = QPushButton(tr("Sign out"))
+        sign_out.setCursor(Qt.PointingHandCursor)
+        sign_out.clicked.connect(self.reject)
+        buttons.addWidget(sign_out)
+        buttons.addStretch(1)
+        agree = QPushButton(tr("I agree"), objectName="primaryButton")
+        agree.setCursor(Qt.PointingHandCursor)
+        agree.setDefault(True)
+        agree.clicked.connect(self._accept)
+        buttons.addWidget(agree)
+        self.content_layout.addLayout(buttons)
+
+    def _accept(self):
+        if not self.consent.isChecked():
+            self.status.setText(tr(
+                "Please accept the Terms of Service and Privacy Policy to continue."))
+            self.status.setVisible(True)
+            return
+        record_policy_consent()
+        self.accept()
