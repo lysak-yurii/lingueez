@@ -32,7 +32,7 @@ from __future__ import annotations
 import logging
 
 from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QFont, QFontMetrics, QPainter
+from PySide6.QtGui import QFont, QPainter
 from PySide6.QtWidgets import (
     QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
@@ -40,7 +40,6 @@ from PySide6.QtWidgets import (
 from app.core import stats as stats_mod
 from app.i18n import tr
 from app.ui import charts
-from app.ui import theme
 
 
 class _ProgressRow(QWidget):
@@ -62,7 +61,6 @@ class _ProgressRow(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         rect = self.rect()
-        c = theme.current_colors
         text = charts._c("text")
         dim = charts._c("text_dim")
         accent = charts._c("accent")

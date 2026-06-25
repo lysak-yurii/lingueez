@@ -39,19 +39,18 @@ Widgets:
 """
 from __future__ import annotations
 
-from datetime import date
 
 from PySide6.QtCore import (
     QEasingCurve, QPoint, QPointF, QRect, QRectF, QSize, Qt, QVariantAnimation,
     Signal,
 )
 from PySide6.QtGui import (
-    QBrush, QColor, QFont, QFontMetrics, QLinearGradient, QPainter,
+    QColor, QFont, QFontMetrics, QLinearGradient, QPainter,
     QPainterPath, QPen,
 )
 from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QLayout, QPushButton, QSizePolicy,
-    QStyle, QStyleOption, QToolTip, QVBoxLayout, QWidget,
+    QToolTip, QVBoxLayout, QWidget,
 )
 
 from app.ui import theme
@@ -316,7 +315,7 @@ class DonutChart(_Animated, QWidget):
         start = 90.0  # 12 o'clock
         swept_total = 360.0 * self._progress
         drawn = 0.0
-        for label, count, key in self._items:
+        for _label, count, key in self._items:
             span = 360.0 * count / total
             allow = max(0.0, min(span, swept_total - drawn))
             if allow <= 0:

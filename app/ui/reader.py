@@ -38,7 +38,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import QObject, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QWidget
 
 from app.core import audio
 from app.i18n import lang_label, tr
@@ -304,7 +304,7 @@ class ReaderPlayer(QObject):
                 self._goto(self._index + 1)
 
     def _word_at(self, index, char_pos):
-        for w, (start, end) in enumerate(self._chunks[index].words):
+        for w, (_start, end) in enumerate(self._chunks[index].words):
             if end > char_pos:
                 return w
         return 0

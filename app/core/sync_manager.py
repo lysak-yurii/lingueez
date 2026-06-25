@@ -369,7 +369,7 @@ class SyncManager:
             # Try a direct query that will raise an exception on network error
             # The Supabase Python client raises exceptions for network errors
             try:
-                test_response = self.supabase.client.table('words').select('id').limit(1).execute()
+                self.supabase.client.table('words').select('id').limit(1).execute()
                 # If we get here, we have connectivity (even if result is empty)
             except Exception as network_error:
                 # Check if it's a network-related error
@@ -1277,10 +1277,7 @@ class SyncManager:
             # Create mappings
             local_tag_by_name = {t.get('tag_name'): t for t in local_tags}
             cloud_tag_by_name = {t.get('tag_name'): t for t in cloud_tags}
-            
-            local_tag_by_id = {t.get('tag_id'): t for t in local_tags}
-            cloud_tag_by_id = {t.get('tag_id'): t for t in cloud_tags}
-            
+
             local_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in local_word_tags}
             cloud_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in cloud_word_tags}
             
@@ -2343,7 +2340,7 @@ class SyncManager:
             local_has_data = len(all_local_words) > 0 or len(all_local_texts) > 0
             cloud_has_data = len(all_cloud_words) > 0 or len(all_cloud_texts) > 0
             
-            logging.info(f"Step 3: Determining sync strategy...")
+            logging.info("Step 3: Determining sync strategy...")
             logging.info(f"  - Local has data: {local_has_data} ({len(all_local_words)} words, {len(all_local_texts)} texts)")
             logging.info(f"  - Cloud has data: {cloud_has_data} ({len(all_cloud_words)} words, {len(all_cloud_texts)} texts)")
             
@@ -2890,7 +2887,6 @@ class SyncManager:
         logging.info("Merging tags and word_tags...")
         
         # Create tag name mappings
-        local_tag_by_name = {t.get('tag_name'): t for t in local_tags}
         cloud_tag_by_name = {t.get('tag_name'): t for t in cloud_tags}
         
         # Sync tags to local
@@ -2926,7 +2922,6 @@ class SyncManager:
                     logging.warning(f"Failed to push tag {tag_name}: {e}")
         
         # Push local word_tags to cloud
-        local_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in local_word_tags}
         cloud_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in cloud_word_tags}
         
         for word_tag in local_word_tags:

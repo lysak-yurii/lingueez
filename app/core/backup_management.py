@@ -126,5 +126,5 @@ def _prune_dir(backup_dir):
 
     # Remove older backups from the current month if there are more than 10
     if len(current_month_backups) > 10:
-        for date, filename in current_month_backups[:-10]:  # Keep last 10
+        for _date, filename in current_month_backups[:-10]:  # Keep last 10
             os.remove(os.path.join(backup_dir, filename))

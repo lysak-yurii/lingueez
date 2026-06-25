@@ -29,7 +29,7 @@ from datetime import datetime
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QGuiApplication, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialogButtonBox, QDoubleSpinBox,
+    QCheckBox, QComboBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QKeySequenceEdit,
     QLabel, QLineEdit, QMenu, QMessageBox, QProgressBar, QPushButton, QScrollArea,
     QSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
@@ -613,7 +613,7 @@ class SettingsDialog(FramelessDialog):
         form = QFormLayout(sync)
         form.setContentsMargins(18, 18, 18, 18)
 
-        from app.core.supabase_client import is_custom_server, custom_server_host
+        from app.core.supabase_client import is_custom_server
         custom_mode = is_custom_server()
 
         # --- Status (always visible): what is happening with the data right now ---

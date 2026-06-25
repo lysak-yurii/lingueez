@@ -26,7 +26,7 @@ theme. No binary assets, no emoji.
 """
 import os
 
-from PySide6.QtCore import QByteArray, QRectF, Qt, QSize
+from PySide6.QtCore import QByteArray, QRectF, Qt
 from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 

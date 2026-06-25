@@ -1,0 +1,36 @@
+# Tooling configuration for Lingueez. The app itself is run from source
+# (see run.sh / main.py) and packaged with PyInstaller (lingueez.spec); this
+# file only configures the linter used in CI and locally.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["backups", "dist", "build", "ffmpeg", "locales/uk.py"]
+
+[tool.ruff.lint]
+# Deliberately bug-focused rather than stylistic, so the gate stays signal-rich
+# on a large existing UI codebase and a release is never blocked on cosmetics:
+#   E9  syntax errors
+#   F   pyflakes (undefined names, unused imports/variables, redefinitions)
+#   B   bugbear (likely bugs)
+# Stylistic/modernization families (import sorting `I`, pyupgrade `UP`) are left
+# out on purpose — they are large mechanical diffs better done as a dedicated
+# follow-up, not bundled into a pre-release change.
+select = ["E9", "F", "B"]
+ignore = [
+    # `func(arg=QModelIndex())` defaults are the documented Qt idiom; QModelIndex
+    # is a value type, so the mutable-default concern does not apply.
+    "B008",
+    # Exception chaining (`raise ... from`) only affects traceback display, not
+    # behaviour — left as a future cleanup rather than a release blocker.
+    "B904",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules prepend the repo root to sys.path before importing app.*,
+# so their app imports legitimately follow code (E402).
+"tests/*" = ["E402"]
+# The nested skip()/note_unknown_lang() closures are *called synchronously*
+# within the same loop iteration, so the late-binding pattern B023 warns about
+# cannot occur here.
+"app/core/importer.py" = ["B023"]

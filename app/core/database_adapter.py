@@ -22,7 +22,7 @@
 import sqlite3
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any
-from app.core.supabase_client import SupabaseClient, get_supabase
+from app.core.supabase_client import get_supabase
 from app.core.db import new_id
 from app.core.errors import DuplicateWordError
 import logging
@@ -792,7 +792,6 @@ class DatabaseAdapter:
     def get_words(self) -> List[Dict[str, Any]]:
         """Get all words. Reads from Supabase if cloud is available and local DB doesn't exist, otherwise from local SQLite."""
         # Check if local database exists and has the words table
-        import os
         local_db_exists = os.path.exists(self.local_db)
         
         if local_db_exists:
@@ -823,7 +822,6 @@ class DatabaseAdapter:
     
     def get_word(self, word_id: int) -> Optional[Dict[str, Any]]:
         """Get a single word by ID. Reads from Supabase if cloud is available and local DB doesn't exist, otherwise from local SQLite."""
-        import os
         local_db_exists = os.path.exists(self.local_db)
         
         if local_db_exists:
@@ -1137,7 +1135,6 @@ class DatabaseAdapter:
     # Texts operations
     def get_texts(self) -> List[Dict[str, Any]]:
         """Get all texts. Reads from Supabase if cloud is available and local DB doesn't exist, otherwise from local SQLite."""
-        import os
         local_db_exists = os.path.exists(self.local_db)
         
         if local_db_exists:
@@ -1165,7 +1162,6 @@ class DatabaseAdapter:
     def count_texts(self) -> int:
         """Lightweight count of saved texts (COUNT(*), no bodies loaded). Used for
         the local-only sync nudge; returns 0 when the table/DB isn't there yet."""
-        import os
         if os.path.exists(self.local_db):
             try:
                 conn = sqlite3.connect(self.local_db)
@@ -1184,7 +1180,6 @@ class DatabaseAdapter:
 
     def get_text(self, text_id: int) -> Optional[Dict[str, Any]]:
         """Get a single text by ID. Reads from Supabase if cloud is available and local DB doesn't exist, otherwise from local SQLite."""
-        import os
         local_db_exists = os.path.exists(self.local_db)
         
         if local_db_exists:
@@ -1529,7 +1524,6 @@ class DatabaseAdapter:
     # Tags operations
     def get_tags(self) -> List[Dict[str, Any]]:
         """Get all tags. Reads from Supabase if cloud is available and local DB doesn't exist, otherwise from local SQLite."""
-        import os
         local_db_exists = os.path.exists(self.local_db)
         
         if local_db_exists:
@@ -1618,7 +1612,7 @@ class DatabaseAdapter:
                 # Use cloud_id for Supabase tag addition
                 cloud_success = self.supabase.add_tag_to_word(cloud_word_id, tag_id)
                 if not cloud_success:
-                    logging.warning(f"Failed to sync tag addition to cloud, but added locally")
+                    logging.warning("Failed to sync tag addition to cloud, but added locally")
             else:
                 # Word not in Supabase, queue tag operation for later sync
                 self._queue_operation('INSERT', 'word_tags', word_id, {'tag_id': tag_id})
@@ -1682,7 +1676,7 @@ class DatabaseAdapter:
         if self._use_cloud() and local_success:
             cloud_success = self.supabase.remove_tag_from_word(word_id, tag_id)
             if not cloud_success:
-                logging.warning(f"Failed to sync tag removal to cloud, but removed locally")
+                logging.warning("Failed to sync tag removal to cloud, but removed locally")
         
         return local_success
     
@@ -1714,7 +1708,7 @@ class DatabaseAdapter:
         if tag_deleted and self._use_cloud():
             cloud_success = self.supabase.delete_tag(tag_id)
             if not cloud_success:
-                logging.warning(f"Failed to sync tag deletion to cloud, but deleted locally")
+                logging.warning("Failed to sync tag deletion to cloud, but deleted locally")
         
         return True
     
@@ -1731,7 +1725,7 @@ class DatabaseAdapter:
         if self._use_cloud():
             cloud_success = self.supabase.delete_tag(tag_id)
             if not cloud_success:
-                logging.warning(f"Failed to sync tag deletion to cloud, but deleted locally")
+                logging.warning("Failed to sync tag deletion to cloud, but deleted locally")
         
         return True
 

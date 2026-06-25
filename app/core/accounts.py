@@ -37,7 +37,7 @@ import logging
 import os
 import threading
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 _REGISTRY_FILE = "accounts.json"
 
