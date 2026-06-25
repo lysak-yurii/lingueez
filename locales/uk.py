@@ -1494,6 +1494,13 @@ TRANSLATIONS: dict[str, str] = {
         "Я погоджуюся з <a href=\"{terms}\">Умовами надання послуг</a> та <a href=\"{privacy}\">Політикою конфіденційності</a>.",
     "Please accept the Terms of Service and Privacy Policy to continue.":
         "Щоб продовжити, прийміть Умови надання послуг та Політику конфіденційності.",
+    "Updated Terms & Privacy": "Оновлені Умови та Конфіденційність",
+    "We've updated our Terms of Service and Privacy Policy. Please review and accept them to keep using your account.":
+        "Ми оновили наші Умови надання послуг та Політику конфіденційності. Будь ласка, перегляньте та прийміть їх, щоб продовжувати користуватися своїм обліковим записом.",
+    "I agree to the updated <a href=\"{terms}\">Terms of Service</a> and <a href=\"{privacy}\">Privacy Policy</a>.":
+        "Я погоджуюся з оновленими <a href=\"{terms}\">Умовами надання послуг</a> та <a href=\"{privacy}\">Політикою конфіденційності</a>.",
+    "Sign out": "Вийти",
+    "I agree": "Я погоджуюся",
     "<a href=\"{privacy}\">Privacy Policy</a> · <a href=\"{terms}\">Terms</a>":
         "<a href=\"{privacy}\">Політика конфіденційності</a> · <a href=\"{terms}\">Умови</a>",
     "By continuing, you agree to the <a href=\"{terms}\">Terms of Service</a> and <a href=\"{privacy}\">Privacy Policy</a>.":

@@ -3615,6 +3615,7 @@ class MainWindow(QMainWindow):
                 self._maybe_prompt_restore_merge(
                     on_done=lambda _up, cb=cb: run_in_thread(
                         self._run_startup_sync, on_finished=cb))
+            QTimer.singleShot(0, self._maybe_require_policy_consent)
             return
 
         # 3. One-time import of local-only words into the first account ever signed
@@ -3674,6 +3675,33 @@ class MainWindow(QMainWindow):
             self._update_sync_status_ui("idle")
             if on_synced is not None:
                 on_synced()
+        QTimer.singleShot(0, self._maybe_require_policy_consent)
+
+    def _maybe_require_policy_consent(self):
+        """Re-consent gate: when a signed-in built-in account last accepted an older
+        Terms/Privacy version than the current POLICY_VERSION, block on an
+        acceptance dialog. Declining drops the account to local-only (kept
+        remembered). No-op for logged-out / offline-profile / custom-server users.
+        Idempotent — once accepted it never re-fires."""
+        from app.version import policy_needs_acceptance
+        if getattr(self, "_policy_gate_open", False):
+            return
+        if not self.auth.is_logged_in():
+            return
+        if not policy_needs_acceptance(str(self.settings.get("policy_accepted_version", ""))):
+            return
+        from PySide6.QtWidgets import QDialog
+        from app.ui.dialogs.account_dialog import PolicyConsentDialog
+        self._policy_gate_open = True
+        try:
+            if PolicyConsentDialog(self).exec() != QDialog.Accepted:
+                # Declined: drop to local-only, keeping the account remembered.
+                self.auth.sign_out_to_local()
+                self.switch_active_account(None)
+            else:
+                self.settings = load_settings()  # pick up the just-written version
+        finally:
+            self._policy_gate_open = False
 
     def _run_startup_sync(self):
         try:
