@@ -14,8 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       # KDE image matches runtime org.kde.Platform//6.8 (Python 3.12) used by the
-      # manifest + the PySide base app.
-      image: bilelmoussaoui/flatpak-github-actions:kde-6.8
+      # manifest + the PySide base app. The maintained images live on GHCR
+      # (the bilelmoussaoui Docker Hub repo stops at kde-6.7).
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.8
       options: --privileged
     steps:
       - uses: actions/checkout@v4
