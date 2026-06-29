@@ -847,15 +847,23 @@ class SettingsDialog(FramelessDialog):
             # control and explain why + how to fix it, rather than leaving a field
             # that looks functional but silently does nothing.
             self.hotkey_edit.setEnabled(False)
+            # Compose from small pieces so the options read as independent
+            # alternatives (an explicit "any one of these" + a bulleted list),
+            # not as a run-on list of prerequisites.
+            options = [
+                tr("Log in to an X11 session instead of Wayland"),
+                tr("Update to GNOME 48 or newer, or use KDE Plasma"),
+            ]
             if reason == CAP_WAYLAND_SANDBOXED:
-                why = tr("The global hotkey can't run inside the Flatpak sandbox on this "
-                         "desktop, which has no global-shortcuts portal. To use it: switch "
-                         "to an X11 session, update to GNOME 48 or newer (or use KDE Plasma), "
-                         "or install the AppImage build — it isn't sandboxed.")
+                intro = tr("The global Add-Word hotkey isn't available in the Flatpak "
+                           "sandbox here — this desktop has no global-shortcuts portal.")
+                options.append(
+                    tr("Install the AppImage version — it runs outside the sandbox"))
             else:  # CAP_WAYLAND_NO_PORTAL
-                why = tr("This Wayland desktop has no global-shortcuts portal, so the global "
-                         "hotkey can't be registered. Switch to an X11 session, or use a "
-                         "desktop with the portal (GNOME 48 or newer, or KDE Plasma).")
+                intro = tr("The global Add-Word hotkey isn't available here — this "
+                           "Wayland desktop has no global-shortcuts portal.")
+            why = (intro + "\n\n" + tr("To enable it, use any one of these:") + "\n"
+                   + "\n".join(f"   •  {opt}" for opt in options))
             warn = QLabel(why)
             warn.setObjectName("dimLabel")
             warn.setWordWrap(True)

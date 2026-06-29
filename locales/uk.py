@@ -886,24 +886,23 @@ TRANSLATIONS: dict[str, str] = {
         "Глобальна гаряча клавіша «Додати слово» недоступна в цьому "
         "середовищі. Перегляньте параметри в розділі «Система»."
     ),
-    "The global hotkey can't run inside the Flatpak sandbox on this "
-    "desktop, which has no global-shortcuts portal. To use it: switch "
-    "to an X11 session, update to GNOME 48 or newer (or use KDE Plasma), "
-    "or install the AppImage build — it isn't sandboxed.": (
-        "Глобальна гаряча клавіша не працює всередині пісочниці Flatpak на "
-        "цьому середовищі, де немає порталу глобальних скорочень. Щоб "
-        "скористатися нею: перемкніться на сеанс X11, оновіть GNOME до версії "
-        "48 або новішої (чи скористайтеся KDE Plasma), або встановіть збірку "
-        "AppImage — вона не в пісочниці."
+    "The global Add-Word hotkey isn't available in the Flatpak "
+    "sandbox here — this desktop has no global-shortcuts portal.": (
+        "Глобальна гаряча клавіша «Додати слово» недоступна в пісочниці "
+        "Flatpak — на цьому середовищі немає порталу глобальних скорочень."
     ),
-    "This Wayland desktop has no global-shortcuts portal, so the global "
-    "hotkey can't be registered. Switch to an X11 session, or use a "
-    "desktop with the portal (GNOME 48 or newer, or KDE Plasma).": (
-        "У цьому середовищі Wayland немає порталу глобальних скорочень, тож "
-        "глобальну гарячу клавішу неможливо зареєструвати. Перемкніться на "
-        "сеанс X11 або скористайтеся середовищем із порталом (GNOME 48 або "
-        "новіший чи KDE Plasma)."
+    "The global Add-Word hotkey isn't available here — this "
+    "Wayland desktop has no global-shortcuts portal.": (
+        "Глобальна гаряча клавіша «Додати слово» недоступна — на цьому "
+        "середовищі Wayland немає порталу глобальних скорочень."
     ),
+    "To enable it, use any one of these:": "Щоб увімкнути її, скористайтеся одним зі способів:",
+    "Log in to an X11 session instead of Wayland":
+        "увійдіть у сеанс X11 замість Wayland",
+    "Update to GNOME 48 or newer, or use KDE Plasma":
+        "оновіть GNOME до версії 48 або новішої (чи скористайтеся KDE Plasma)",
+    "Install the AppImage version — it runs outside the sandbox":
+        "встановіть версію AppImage — вона працює поза пісочницею",
     "Download the AppImage": "Завантажити AppImage",
     "Add font…": "Додати шрифт…",
     "TrueType fonts (*.ttf)": "Шрифти TrueType (*.ttf)",
