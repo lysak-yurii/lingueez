@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Flathub requires AppStream metadata. Validate locally with:
+     flatpak run org.freedesktop.appstream-glib validate app.lingueez.Lingueez.metainfo.xml -->
+<component type="desktop-application">
+  <id>app.lingueez.Lingueez</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+  <name>Lingueez</name>
+  <summary>Study and build vocabulary across languages</summary>
+
+  <description>
+    <p>
+      Lingueez is a desktop app for studying vocabulary across languages. Add words
+      from anywhere, translate and listen to them, track your learning progress, and
+      review with built-in read-aloud.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">app.lingueez.Lingueez.desktop</launchable>
+
+  <url type="homepage">https://lingueez.app</url>
+  <url type="bugtracker">https://github.com/lysak-yurii/lingueez/issues</url>
+  <url type="vcs-browser">https://github.com/lysak-yurii/lingueez</url>
+
+  <developer id="app.lingueez">
+    <name>Yurii Lysak</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+
+  <!-- TODO: Flathub requires at least one screenshot at an absolute URL. -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>Lingueez main window</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/main.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="2.0.2" date="2026-06-29" />
+  </releases>
+</component>

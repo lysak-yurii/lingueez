@@ -1,0 +1,71 @@
+# Flatpak manifest for Lingueez (build-from-source, Flathub-style).
+#
+# This is an initial scaffold: the Python dependencies are vendored into
+# python3-deps.json (generated, see packaging/flatpak/README.md) and the ffmpeg
+# checksum must be pinned. The first branch CI build will surface what needs
+# tuning — treat the deps/ffmpeg modules as the iteration points.
+id: app.lingueez.Lingueez
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: lingueez
+
+finish-args:
+  # Network: Supabase sync/auth, translation/TTS, RSS, web article fetch.
+  - --share=network
+  # Shared memory — Qt needs it (and for the X11 fallback).
+  - --share=ipc
+  # Display: prefer Wayland, fall back to X11 (also enables the pynput X11 hotkey
+  # agent on X11 sessions).
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Audio (read-aloud playback via pydub/pygame).
+  - --socket=pulseaudio
+  # GPU acceleration for Qt rendering.
+  - --device=dri
+  # System tray (StatusNotifierItem).
+  - --talk-name=org.kde.StatusNotifierWatcher
+  # File open/save go through the FileChooser portal (no broad fs access needed);
+  # Background (autostart) and GlobalShortcuts portals are reachable by default.
+
+modules:
+  # 1) Python dependencies (PySide6, pandas, numpy, supabase, gTTS, …). Pinned,
+  #    offline-installable sources. Regenerate after a requirements.txt change:
+  #      python3 flatpak-pip-generator --requirements-file=requirements.txt \
+  #              --output packaging/flatpak/python3-deps
+  #    (The CI workflow generates this automatically for branch test builds.)
+  - python3-deps.json
+
+  # 2) ffmpeg + ffprobe CLI binaries (pydub shells out to them, for read-aloud /
+  #    audio export). Pinned to a dated, immutable BtbN static build so it's
+  #    reproducible. To refresh: pick a newer autobuild-* release, download its
+  #    linux64-gpl asset, and update url + sha256 (sha256sum the .tar.xz).
+  - name: ffmpeg-static
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 ffmpeg /app/bin/ffmpeg
+      - install -Dm755 ffprobe /app/bin/ffprobe
+    sources:
+      - type: archive
+        url: https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-06-28-13-24/ffmpeg-N-125331-g87bd15dc3c-linux64-gpl.tar.xz
+        sha256: 84dc23350cad569ecc879c6f5400267163e9f9d98f1eec70eb5e7dd5645a865c
+        strip-components: 2
+        only-arches: [x86_64]
+
+  # 3) The app itself: install the source tree, launcher, desktop + metadata + icon.
+  - name: lingueez
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lingueez
+      - cp -r app locales main.py /app/lingueez/
+      - cp -r assets /app/lingueez/assets
+      - install -Dm755 packaging/flatpak/lingueez.sh /app/bin/lingueez
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.desktop
+          /app/share/applications/app.lingueez.Lingueez.desktop
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.metainfo.xml
+          /app/share/metainfo/app.lingueez.Lingueez.metainfo.xml
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.png
+          /app/share/icons/hicolor/512x512/apps/app.lingueez.Lingueez.png
+    sources:
+      - type: dir
+        path: ../..

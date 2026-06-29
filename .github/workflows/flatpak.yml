@@ -1,0 +1,36 @@
+name: Flatpak (test build)
+
+# Branch-only: builds a downloadable .flatpak bundle so the sandboxed build can be
+# tested before merging. This is NOT a release — it uploads an artifact, nothing is
+# published. Runs on the flatpak-support branch and on manual dispatch.
+on:
+  push:
+    branches: [flatpak-support]
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    name: Build Flatpak bundle
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-24.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate pinned Python dependencies
+        # Flathub builds offline, so vendor every pip dep (PySide6, pandas, numpy,
+        # supabase, …) as pinned sources the manifest installs without network.
+        run: |
+          pip3 install --quiet requirements-parser
+          curl -L -o flatpak-pip-generator \
+            https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/pip/flatpak-pip-generator
+          python3 flatpak-pip-generator --requirements-file=requirements.txt \
+                  --output packaging/flatpak/python3-deps
+
+      - name: Build and bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: lingueez.flatpak
+          manifest-path: packaging/flatpak/app.lingueez.Lingueez.yml
+          cache-key: flatpak-builder-${{ github.sha }}
