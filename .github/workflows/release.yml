@@ -138,16 +138,33 @@ jobs:
           exec "$HERE/usr/bin/Lingueez" "$@"
           EOF
           chmod +x "$APPDIR/AppRun"
+      - name: Install zsync (AppImage delta updates)
+        # appimagetool only writes the .zsync sidecar when zsyncmake is on PATH;
+        # the continuous build doesn't always bundle it, so install it explicitly.
+        run: sudo apt-get update && sudo apt-get install -y zsync
       - name: Build AppImage
+        # -u embeds gh-releases-zsync update information in the .upd_info ELF
+        # section so AppImageUpdate / AppImageLauncher / AM can do delta updates,
+        # and makes appimagetool emit the matching .zsync. 'latest' tracks the
+        # newest stable release; the repo field is the canonical lowercase name,
+        # while the filename glob keeps the Lingueez-* artifact casing.
         run: |
           curl -L -o appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
-          ./appimagetool --appimage-extract-and-run AppDir \
+          ./appimagetool --appimage-extract-and-run \
+            -u "gh-releases-zsync|lysak-yurii|lingueez|latest|Lingueez-*-x86_64.AppImage.zsync" \
+            AppDir \
             "Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage"
+      - name: Verify zsync generated
+        # Fail loudly rather than ship a half-updatable AppImage if zsyncmake was
+        # silently skipped (the .upd_info would resolve to a missing .zsync).
+        run: test -f "Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage.zsync"
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage
+          path: |
+            Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage
+            Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage.zsync
 
   release:
     needs: [validate, build-windows, build-linux]

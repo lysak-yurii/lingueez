@@ -20,7 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 APP_VERSION = "2.0.0"
-BUILD_NUMBER = "2026062901"
+BUILD_NUMBER = "2026062902"
 APP_NAME = "Lingueez"
 APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 
@@ -28,8 +28,8 @@ APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 # app/ui/legal_links.py when the primary is unreachable.
 PRIVACY_URL = "https://lingueez.app/legal/privacy-policy"
 TERMS_URL = "https://lingueez.app/legal/terms-of-service"
-PRIVACY_URL_FALLBACK = "https://github.com/lysak-yurii/Lingueez/blob/main/docs/legal/privacy-policy.md"
-TERMS_URL_FALLBACK = "https://github.com/lysak-yurii/Lingueez/blob/main/docs/legal/terms-of-service.md"
+PRIVACY_URL_FALLBACK = "https://github.com/lysak-yurii/lingueez/blob/main/docs/legal/privacy-policy.md"
+TERMS_URL_FALLBACK = "https://github.com/lysak-yurii/lingueez/blob/main/docs/legal/terms-of-service.md"
 
 # Website + contact (shown in the About dialog). The Website link only appears when
 # the domain is actually reachable.

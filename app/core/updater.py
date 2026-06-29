@@ -40,7 +40,7 @@ import requests
 from app.version import APP_VERSION
 
 GITHUB_OWNER = "lysak-yurii"
-GITHUB_REPO = "Lingueez"
+GITHUB_REPO = "lingueez"
 GITHUB_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}"
 LATEST_URL = (
     f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
