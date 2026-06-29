@@ -34,12 +34,25 @@ finish-args:
   # Background (autostart) and GlobalShortcuts portals are reachable by default.
 
 modules:
-  # 1) Python dependencies (PySide6, pandas, numpy, supabase, gTTS, …). Pinned,
-  #    offline-installable sources. Regenerate after a requirements.txt change:
-  #      python3 flatpak-pip-generator --requirements-file=requirements.txt \
-  #              --output packaging/flatpak/python3-deps
-  #    (The CI workflow generates this automatically for branch test builds.)
-  - python3-deps.json
+  # 1) Python dependencies (everything except PySide6, which the base app provides).
+  #    TEST-BUILD approach: pip-install from PyPI with network on, so wheels for the
+  #    many native deps (numpy/pandas/grpcio + the Rust ones: jiter, pydantic-core,
+  #    cryptography) are fetched correctly without offline build backends.
+  #    NOT Flathub-compliant (Flathub forbids build-time network). Before submitting,
+  #    replace this with offline-vendored sources — regenerate with:
+  #      flatpak-pip-generator.py --runtime=org.kde.Platform//6.8 \
+  #        --artifact-policy=platform --requirements-file=<reqs-without-PySide6>
+  - name: python3-deps
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - grep -ivE '^\s*pyside6' requirements.txt > reqs.txt
+      - pip3 install --prefix=${FLATPAK_DEST} --no-warn-script-location -r reqs.txt
+    sources:
+      - type: file
+        path: ../../requirements.txt
 
   # 2) ffmpeg + ffprobe CLI binaries (pydub shells out to them, for read-aloud /
   #    audio export). Pinned to a dated, immutable BtbN static build so it's

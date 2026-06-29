@@ -9,9 +9,6 @@ Flathub. It builds the app **from source** (the Flathub-preferred way).
 - `app.lingueez.Lingueez.desktop` — desktop entry.
 - `app.lingueez.Lingueez.metainfo.xml` — AppStream metadata (required by Flathub).
 - `lingueez.sh` — in-sandbox launcher (`flatpak run` → this → `main.py`).
-- `python3-deps.json` — **committed**; pinned Python deps (everything *except*
-  PySide6, which comes from the base app).
-
 The runtime is `org.kde.Platform//6.8` (Python 3.12) plus the
 `io.qt.PySide.BaseApp//6.8`, which provides PySide6/shiboken6 — `flatpak-pip-generator`
 explicitly refuses to vendor PySide6 and points to this base app.
@@ -24,21 +21,25 @@ flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flath
 flatpak install --user flathub org.kde.Platform//6.8 org.kde.Sdk//6.8 io.qt.PySide.BaseApp//6.8
 ```
 
-## 1. Python dependencies (committed)
+## 1. Python dependencies
 
-`python3-deps.json` is committed, so a normal build needs no generation step. Only
-regenerate it when `requirements.txt` changes — and exclude PySide6, which the base
-app provides:
+**Test builds (current manifest):** the `python3-deps` module `pip install`s
+`requirements.txt` (minus PySide6) from PyPI with build-time network on. This lets
+pip pick correct wheels for the many native deps (numpy/pandas/grpcio and the Rust
+ones — jiter, pydantic-core, cryptography) without offline build backends. Simple
+and reliable, but **not Flathub-compliant** (Flathub forbids network during build).
+
+**Before the Flathub submission**, replace that module with offline-vendored sources.
+`flatpak-pip-generator` defaults to sdists, which fail for the Rust/native packages,
+so generate with platform-wheel selection (needs flatpak + the runtime installed):
 
 ```bash
 curl -L -o flatpak-pip-generator.py \
   https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/pip/flatpak-pip-generator.py
-grep -v PySide6 ../../requirements.txt > /tmp/reqs.txt
-python3 flatpak-pip-generator.py --requirements-file=/tmp/reqs.txt --output python3-deps
+grep -ivE '^\s*pyside6' ../../requirements.txt > /tmp/reqs.txt
+python3 flatpak-pip-generator.py --runtime=org.kde.Platform//6.8 \
+        --artifact-policy=platform --requirements-file=/tmp/reqs.txt --output python3-deps
 ```
-
-Run it with **Python 3.12** (matching `org.kde.Platform//6.8`) so the pinned wheels
-are the right ABI.
 
 ## 2. ffmpeg (already pinned)
 
