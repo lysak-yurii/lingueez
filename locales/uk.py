@@ -881,11 +881,30 @@ TRANSLATIONS: dict[str, str] = {
         "й з’являється в системних налаштуваннях клавіатури."
     ),
     "Add Word hotkey": "Гаряча клавіша «Додати слово»",
-    "The global hotkey needs an X11 session or a newer desktop "
-    "on Wayland.": (
-        "Глобальна гаряча клавіша потребує сеансу X11 або новішого "
-        "середовища у Wayland."
+    "The global Add-Word hotkey isn't available in this "
+    "environment. See Settings ▸ System for options.": (
+        "Глобальна гаряча клавіша «Додати слово» недоступна в цьому "
+        "середовищі. Перегляньте параметри в розділі «Система»."
     ),
+    "The global hotkey can't run inside the Flatpak sandbox on this "
+    "desktop, which has no global-shortcuts portal. To use it: switch "
+    "to an X11 session, update to GNOME 48 or newer (or use KDE Plasma), "
+    "or install the AppImage build — it isn't sandboxed.": (
+        "Глобальна гаряча клавіша не працює всередині пісочниці Flatpak на "
+        "цьому середовищі, де немає порталу глобальних скорочень. Щоб "
+        "скористатися нею: перемкніться на сеанс X11, оновіть GNOME до версії "
+        "48 або новішої (чи скористайтеся KDE Plasma), або встановіть збірку "
+        "AppImage — вона не в пісочниці."
+    ),
+    "This Wayland desktop has no global-shortcuts portal, so the global "
+    "hotkey can't be registered. Switch to an X11 session, or use a "
+    "desktop with the portal (GNOME 48 or newer, or KDE Plasma).": (
+        "У цьому середовищі Wayland немає порталу глобальних скорочень, тож "
+        "глобальну гарячу клавішу неможливо зареєструвати. Перемкніться на "
+        "сеанс X11 або скористайтеся середовищем із порталом (GNOME 48 або "
+        "новіший чи KDE Plasma)."
+    ),
+    "Download the AppImage": "Завантажити AppImage",
     "Add font…": "Додати шрифт…",
     "TrueType fonts (*.ttf)": "Шрифти TrueType (*.ttf)",
     "Could not copy the font file:\n{error}": "Не вдалося скопіювати файл шрифту:\n{error}",
