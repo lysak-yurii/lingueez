@@ -4368,9 +4368,18 @@ class MainWindow(QMainWindow):
         from app.core.updater import GITHUB_URL
         from app.core.diagnostics import build_diagnostics_zip, system_info
 
+        # In the Flatpak sandbox /tmp is private to the app, so a diagnostics file
+        # written there is invisible to the user and to the browser uploading it.
+        # Write it to Downloads (granted via --filesystem=xdg-download) so the path
+        # shown in the issue body actually resolves on the host.
+        dest_dir = None
+        if _is_flatpak():
+            from PySide6.QtCore import QStandardPaths
+            dest_dir = QStandardPaths.writableLocation(
+                QStandardPaths.DownloadLocation) or None
         zip_path = None
         try:
-            zip_path = build_diagnostics_zip()
+            zip_path = build_diagnostics_zip(dest_dir=dest_dir)
         except Exception as exc:
             logging.warning(f"Could not build diagnostics bundle: {exc}")
 

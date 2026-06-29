@@ -30,6 +30,9 @@ finish-args:
   - --device=dri
   # System tray (StatusNotifierItem).
   - --talk-name=org.kde.StatusNotifierWatcher
+  # Diagnostics bundle for "Report an issue" is written to Downloads so the user
+  # can actually find/attach it (the sandbox /tmp is private and invisible).
+  - --filesystem=xdg-download
   # File open/save go through the FileChooser portal (no broad fs access needed);
   # Background (autostart) and GlobalShortcuts portals are reachable by default.
 
@@ -49,7 +52,11 @@ modules:
         - --share=network
     build-commands:
       - grep -ivE '^\s*pyside6' requirements.txt > reqs.txt
-      - pip3 install --prefix=${FLATPAK_DEST} --no-warn-script-location -r reqs.txt
+      # --upgrade is essential: the base app ships an older numpy that "satisfies"
+      # numpy>=1.23 but is ABI-mismatched with the freshly-installed pandas, which
+      # segfaults (e.g. in pandas.date_range on the Stats page). Upgrading pins a
+      # matched numpy/pandas pair into /app.
+      - pip3 install --prefix=${FLATPAK_DEST} --no-warn-script-location --upgrade -r reqs.txt
     sources:
       - type: file
         path: ../../requirements.txt
