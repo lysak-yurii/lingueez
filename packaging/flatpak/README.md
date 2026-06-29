@@ -9,6 +9,8 @@ Flathub. It builds the app **from source** (the Flathub-preferred way).
 - `app.lingueez.Lingueez.desktop` — desktop entry.
 - `app.lingueez.Lingueez.metainfo.xml` — AppStream metadata (required by Flathub).
 - `lingueez.sh` — in-sandbox launcher (`flatpak run` → this → `main.py`).
+- `python3-deps.json` — **committed**, offline-vendored Python deps (pinned wheels).
+
 The runtime is `org.kde.Platform//6.8` (Python 3.12) plus the
 `io.qt.PySide.BaseApp//6.8`, which provides PySide6/shiboken6 — `flatpak-pip-generator`
 explicitly refuses to vendor PySide6 and points to this base app.
@@ -21,25 +23,30 @@ flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flath
 flatpak install --user flathub org.kde.Platform//6.8 org.kde.Sdk//6.8 io.qt.PySide.BaseApp//6.8
 ```
 
-## 1. Python dependencies
+## 1. Python dependencies (offline-vendored — Flathub-compliant)
 
-**Test builds (current manifest):** the `python3-deps` module `pip install`s
-`requirements.txt` (minus PySide6) from PyPI with build-time network on. This lets
-pip pick correct wheels for the many native deps (numpy/pandas/grpcio and the Rust
-ones — jiter, pydantic-core, cryptography) without offline build backends. Simple
-and reliable, but **not Flathub-compliant** (Flathub forbids network during build).
+`python3-deps.json` pins every dep (except PySide6) as an **offline source**, so the
+build needs no network. Native/Rust packages (numpy, pandas, grpcio, jiter,
+pydantic-core, cryptography, …) are pinned as prebuilt **cp312 manylinux wheels**;
+only `evdev` (plain C) and `sgmllib3k` (pure Python) build from sdist. Every install
+command carries `--ignore-installed` so the pinned numpy overrides the older one the
+base app ships — otherwise pandas segfaults (`pandas.date_range`, Stats page).
 
-**Before the Flathub submission**, replace that module with offline-vendored sources.
-`flatpak-pip-generator` defaults to sdists, which fail for the Rust/native packages,
-so generate with platform-wheel selection (needs flatpak + the runtime installed):
+To regenerate after a `requirements.txt` change:
 
 ```bash
 curl -L -o flatpak-pip-generator.py \
   https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/pip/flatpak-pip-generator.py
 grep -ivE '^\s*pyside6' ../../requirements.txt > /tmp/reqs.txt
-python3 flatpak-pip-generator.py --runtime=org.kde.Platform//6.8 \
-        --artifact-policy=platform --requirements-file=/tmp/reqs.txt --output python3-deps
+python3 flatpak-pip-generator.py --requirements-file=/tmp/reqs.txt --output python3-deps
 ```
+
+That defaults to sdists for native packages; convert each native/Rust sdist to its
+cp312 (or abi3) x86_64 manylinux wheel from PyPI, and add `--ignore-installed` to
+every install command. (Alternatively, generate with `--runtime=org.kde.Platform//6.8
+--artifact-policy=platform`, which selects platform wheels directly but needs flatpak
++ the runtime installed locally.) x86_64 only for now — add aarch64 wheels for a
+multi-arch Flathub build.
 
 ## 2. ffmpeg (already pinned)
 

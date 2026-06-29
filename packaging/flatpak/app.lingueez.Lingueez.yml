@@ -38,28 +38,14 @@ finish-args:
 
 modules:
   # 1) Python dependencies (everything except PySide6, which the base app provides).
-  #    TEST-BUILD approach: pip-install from PyPI with network on, so wheels for the
-  #    many native deps (numpy/pandas/grpcio + the Rust ones: jiter, pydantic-core,
-  #    cryptography) are fetched correctly without offline build backends.
-  #    NOT Flathub-compliant (Flathub forbids build-time network). Before submitting,
-  #    replace this with offline-vendored sources — regenerate with:
-  #      flatpak-pip-generator.py --runtime=org.kde.Platform//6.8 \
-  #        --artifact-policy=platform --requirements-file=<reqs-without-PySide6>
-  - name: python3-deps
-    buildsystem: simple
-    build-options:
-      build-args:
-        - --share=network
-    build-commands:
-      - grep -ivE '^\s*pyside6' requirements.txt > reqs.txt
-      # --upgrade is essential: the base app ships an older numpy that "satisfies"
-      # numpy>=1.23 but is ABI-mismatched with the freshly-installed pandas, which
-      # segfaults (e.g. in pandas.date_range on the Stats page). Upgrading pins a
-      # matched numpy/pandas pair into /app.
-      - pip3 install --prefix=${FLATPAK_DEST} --no-warn-script-location --upgrade -r reqs.txt
-    sources:
-      - type: file
-        path: ../../requirements.txt
+  #    Offline-vendored, pinned sources — Flathub-compliant (no build-time network).
+  #    Native/Rust packages (numpy, pandas, grpcio, jiter, pydantic-core, cryptography,
+  #    …) are pinned as prebuilt cp312 wheels; only evdev (C) and sgmllib3k (pure
+  #    Python) build from sdist. The install commands carry --ignore-installed so the
+  #    pinned numpy overrides the older one the base app ships — otherwise pandas
+  #    segfaults (pandas.date_range on the Stats page). Regenerate when
+  #    requirements.txt changes (see packaging/flatpak/README.md).
+  - python3-deps.json
 
   # 2) ffmpeg + ffprobe CLI binaries (pydub shells out to them, for read-aloud /
   #    audio export). Pinned to a dated, immutable BtbN static build so it's
