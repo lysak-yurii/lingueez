@@ -820,21 +820,61 @@ class SettingsDialog(FramelessDialog):
         except AttributeError:  # Qt < 6.4/6.5
             pass
         form.addRow(tr("Add Word hotkey (global)"), self.hotkey_edit)
-        hotkey_note = QLabel(tr("Click the field and press the desired key combination — it opens "
-                                "'Add Word' with the clipboard content from anywhere. "
-                                "Leave empty to disable."))
-        hotkey_note.setObjectName("dimLabel")
-        hotkey_note.setWordWrap(True)
-        form.addRow(hotkey_note)
-        # On Wayland the global hotkey is registered with the desktop itself
-        # (it shows up under the system's keyboard shortcuts), so flag that.
-        if (os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland"
-                or os.environ.get("WAYLAND_DISPLAY")):
-            wayland_note = QLabel(tr("On Wayland this shortcut is registered with your "
-                                     "desktop and appears in the system keyboard settings."))
-            wayland_note.setObjectName("dimLabel")
-            wayland_note.setWordWrap(True)
-            form.addRow(wayland_note)
+
+        from app.system.hotkey_env import (
+            CAP_WAYLAND_SANDBOXED,
+            hotkey_capability,
+            is_wayland,
+        )
+        available, reason = hotkey_capability()
+        if available:
+            hotkey_note = QLabel(tr("Click the field and press the desired key combination — it opens "
+                                    "'Add Word' with the clipboard content from anywhere. "
+                                    "Leave empty to disable."))
+            hotkey_note.setObjectName("dimLabel")
+            hotkey_note.setWordWrap(True)
+            form.addRow(hotkey_note)
+            # On Wayland the global hotkey is registered with the desktop itself
+            # (it shows up under the system's keyboard shortcuts), so flag that.
+            if is_wayland():
+                wayland_note = QLabel(tr("On Wayland this shortcut is registered with your "
+                                         "desktop and appears in the system keyboard settings."))
+                wayland_note.setObjectName("dimLabel")
+                wayland_note.setWordWrap(True)
+                form.addRow(wayland_note)
+        else:
+            # The hotkey can't be registered in this environment — disable the
+            # control and explain why + how to fix it, rather than leaving a field
+            # that looks functional but silently does nothing.
+            self.hotkey_edit.setEnabled(False)
+            # Compose from small pieces so the options read as independent
+            # alternatives (an explicit "any one of these" + a bulleted list),
+            # not as a run-on list of prerequisites. Only list remedies that
+            # actually work today — the GlobalShortcuts portal isn't implemented yet,
+            # so "switch to a portal desktop" is NOT offered.
+            options = [tr("Log in to an X11 session instead of Wayland")]
+            if reason == CAP_WAYLAND_SANDBOXED:
+                intro = tr("The global Add-Word hotkey isn't available in the "
+                           "Flatpak sandbox on Wayland.")
+                options.append(
+                    tr("Install the AppImage version — it runs outside the sandbox"))
+            else:  # CAP_WAYLAND_NO_PORTAL
+                intro = tr("The global Add-Word hotkey isn't supported on this "
+                           "Wayland desktop yet.")
+                options.append(
+                    tr("Use a GNOME session — the global hotkey works there"))
+            why = (intro + "\n\n" + tr("To enable it, use any one of these:") + "\n"
+                   + "\n".join(f"   •  {opt}" for opt in options))
+            warn = QLabel(why)
+            warn.setObjectName("dimLabel")
+            warn.setWordWrap(True)
+            form.addRow(warn)
+            if reason == CAP_WAYLAND_SANDBOXED:
+                from app.core import updater
+                get_appimage = QPushButton(tr("Download the AppImage"))
+                get_appimage.clicked.connect(
+                    lambda: QDesktopServices.openUrl(QUrl(f"{updater.GITHUB_URL}/releases")))
+                form.addRow(get_appimage)
 
         form.addRow(self._check("auto_check_updates", True,
                                 tr("Check for updates on startup")))

@@ -41,24 +41,30 @@ def _setup_paths():
 
     Dev: run from the project directory (unchanged).
 
-    Frozen: read-only resources (assets/, ffmpeg/) are bundled with the
-    executable, but user data (dictionary.db, settings.cfg, backups/, .env, logs)
-    must live in a writable per-user directory — the bundle dir can be read-only
-    (AppImage) or a temporary extract (one-file builds). So seed the bundled
-    resources into that data dir on first run / version change, then chdir there
-    so every relative path the app uses resolves correctly.
+    Frozen, or a read-only source install (e.g. Flatpak's /app): read-only
+    resources (assets/, ffmpeg/) ship with the app, but user data (dictionary.db,
+    settings.cfg, backups/, .env, logs) must live in a writable per-user directory.
+    So seed the bundled resources into that data dir on first run / version change,
+    then chdir there so every relative path the app uses resolves correctly.
     """
     if not getattr(sys, 'frozen', False):
         base = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(base)
         if base not in sys.path:
             sys.path.insert(0, base)
-        return
+        if os.access(base, os.W_OK):
+            os.chdir(base)            # dev: writable source tree → run in place
+            return
+        # Read-only install (Flatpak mounts the app under a read-only /app), so
+        # writing relative to the source would fail. Fall through to seed the
+        # bundled resources into a writable per-user dir, treating the source dir
+        # as the bundle — the same flow the frozen build uses below.
+        bundle = base
+    else:
+        bundle = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
 
     import shutil
     from app.version import APP_ID, BUILD_NUMBER
 
-    bundle = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
     data_dir = _user_data_dir(APP_ID)
     os.makedirs(data_dir, exist_ok=True)
 

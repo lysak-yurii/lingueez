@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Lingueez
+GenericName=Vocabulary Trainer
+Comment=Study and build vocabulary across languages
+Exec=lingueez
+Icon=app.lingueez.Lingueez
+Terminal=false
+Categories=Education;Languages;
+Keywords=vocabulary;language;dictionary;flashcards;translation;
+StartupWMClass=Lingueez

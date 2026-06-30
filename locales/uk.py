@@ -881,11 +881,29 @@ TRANSLATIONS: dict[str, str] = {
         "й з’являється в системних налаштуваннях клавіатури."
     ),
     "Add Word hotkey": "Гаряча клавіша «Додати слово»",
-    "The global hotkey needs an X11 session or a newer desktop "
-    "on Wayland.": (
-        "Глобальна гаряча клавіша потребує сеансу X11 або новішого "
-        "середовища у Wayland."
+    "The global Add-Word hotkey isn't available in this "
+    "environment. See Settings ▸ System for options.": (
+        "Глобальна гаряча клавіша «Додати слово» недоступна в цьому "
+        "середовищі. Перегляньте параметри в розділі «Система»."
     ),
+    "The global Add-Word hotkey isn't available in the "
+    "Flatpak sandbox on Wayland.": (
+        "Глобальна гаряча клавіша «Додати слово» недоступна в пісочниці "
+        "Flatpak у середовищі Wayland."
+    ),
+    "The global Add-Word hotkey isn't supported on this "
+    "Wayland desktop yet.": (
+        "Глобальна гаряча клавіша «Додати слово» поки що не підтримується "
+        "в цьому середовищі Wayland."
+    ),
+    "To enable it, use any one of these:": "Щоб увімкнути її, скористайтеся одним зі способів:",
+    "Log in to an X11 session instead of Wayland":
+        "увійдіть у сеанс X11 замість Wayland",
+    "Use a GNOME session — the global hotkey works there":
+        "скористайтеся сеансом GNOME — там глобальна гаряча клавіша працює",
+    "Install the AppImage version — it runs outside the sandbox":
+        "встановіть версію AppImage — вона працює поза пісочницею",
+    "Download the AppImage": "Завантажити AppImage",
     "Add font…": "Додати шрифт…",
     "TrueType fonts (*.ttf)": "Шрифти TrueType (*.ttf)",
     "Could not copy the font file:\n{error}": "Не вдалося скопіювати файл шрифту:\n{error}",

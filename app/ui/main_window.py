@@ -142,40 +142,16 @@ def _hotkey_to_gnome(seq):
     return "".join(mods) + key
 
 
-def _is_wayland():
-    return (os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland"
-            or bool(os.environ.get("WAYLAND_DISPLAY")))
-
-
-def _desktop_is_gnome():
-    return "gnome" in os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
-
-
-_portal_shortcuts_cache = None
-
-
-def _global_shortcuts_portal_available():
-    """Whether the desktop exposes org.freedesktop.portal.GlobalShortcuts.
-
-    False on GNOME 46 (the portal lands in GNOME 48), so we fall through to the
-    gsettings path. Cached — the answer can't change within a session. Uses QtDBus
-    so it works regardless of session bus tooling."""
-    global _portal_shortcuts_cache
-    if _portal_shortcuts_cache is not None:
-        return _portal_shortcuts_cache
-    available = False
-    try:
-        from PySide6.QtDBus import QDBusConnection, QDBusInterface
-        iface = QDBusInterface("org.freedesktop.portal.Desktop",
-                               "/org/freedesktop/portal/desktop",
-                               "org.freedesktop.DBus.Properties",
-                               QDBusConnection.sessionBus())
-        reply = iface.call("Get", "org.freedesktop.portal.GlobalShortcuts", "version")
-        available = reply.errorName() == ""  # no error => interface present
-    except Exception as exc:
-        logging.debug(f"GlobalShortcuts portal probe failed: {exc}")
-    _portal_shortcuts_cache = available
-    return available
+# Session/desktop capability detection lives in app/system/hotkey_env so the
+# Settings dialog can share it without importing this UI module. Aliased to the
+# historic private names used throughout this file.
+from app.system.hotkey_env import (  # noqa: E402
+    desktop_is_gnome as _desktop_is_gnome,
+    global_shortcuts_portal_available as _global_shortcuts_portal_available,
+    hotkey_capability,
+    is_flatpak as _is_flatpak,
+    is_wayland as _is_wayland,
+)
 
 
 # Local-socket name the running instance listens on; a second launch with
@@ -1669,15 +1645,25 @@ class MainWindow(QMainWindow):
         if not hotkey:
             return
 
+        # Single capability gate (shared with the Settings UI): if no global-hotkey
+        # mechanism exists here — e.g. the Flatpak sandbox on pre-portal Wayland —
+        # show the graceful notice instead of silently registering nothing.
+        available, _reason = hotkey_capability()
+        if not available:
+            self._warn_hotkey_unavailable()
+            return
+
         if not _is_wayland():
             # X11: the pynput record-extension agent works (unchanged path).
             self._start_hotkey_agent()
         elif _global_shortcuts_portal_available() and self._apply_portal_hotkey(hotkey):
-            pass                                  # future-proof: GNOME 48+/KDE
-        elif _desktop_is_gnome():
+            pass                                  # GNOME 48+/KDE
+        elif _desktop_is_gnome() and not _is_flatpak():
+            # Native/AppImage on GNOME Wayland: register with the desktop itself.
             self._apply_gnome_gsettings_hotkey(hotkey)
         else:
-            self._warn_wayland_hotkey_unsupported()
+            # Defensive: capability said OK but no concrete path matched.
+            self._warn_hotkey_unavailable()
 
     # ---- Wayland: GNOME custom keybinding via gsettings -----------------
     # Wayland forbids apps from globally grabbing keys (pynput sees nothing), so
@@ -1774,16 +1760,18 @@ class MainWindow(QMainWindow):
         Activated(QtDBus) flow here when targeting portal-capable desktops."""
         return False  # TODO: QtDBus GlobalShortcuts implementation
 
-    def _warn_wayland_hotkey_unsupported(self):
+    def _warn_hotkey_unavailable(self):
+        """One-time toast when the global hotkey can't be registered in this
+        environment, pointing to Settings → System where the full explanation and
+        the actionable remedies live (see SettingsDialog._system_tab)."""
         if self._wayland_warned:
             return
         self._wayland_warned = True
-        logging.warning("Global hotkey not supported on this Wayland desktop "
-                        "(no GlobalShortcuts portal, not GNOME). Use X11 for the "
-                        "global Add-Word hotkey.")
+        _available, reason = hotkey_capability()
+        logging.warning(f"Global hotkey unavailable ({reason}); see Settings → System.")
         show_toast(self, tr("Add Word hotkey"),
-                   tr("The global hotkey needs an X11 session or a newer desktop "
-                      "on Wayland."), "info")
+                   tr("The global Add-Word hotkey isn't available in this "
+                      "environment. See Settings ▸ System for options."), "info")
 
     def _update_tray_hotkey_label(self):
         action = getattr(self, "tray_add_action", None)
@@ -4380,9 +4368,18 @@ class MainWindow(QMainWindow):
         from app.core.updater import GITHUB_URL
         from app.core.diagnostics import build_diagnostics_zip, system_info
 
+        # In the Flatpak sandbox /tmp is private to the app, so a diagnostics file
+        # written there is invisible to the user and to the browser uploading it.
+        # Write it to Downloads (granted via --filesystem=xdg-download) so the path
+        # shown in the issue body actually resolves on the host.
+        dest_dir = None
+        if _is_flatpak():
+            from PySide6.QtCore import QStandardPaths
+            dest_dir = QStandardPaths.writableLocation(
+                QStandardPaths.DownloadLocation) or None
         zip_path = None
         try:
-            zip_path = build_diagnostics_zip()
+            zip_path = build_diagnostics_zip(dest_dir=dest_dir)
         except Exception as exc:
             logging.warning(f"Could not build diagnostics bundle: {exc}")
 

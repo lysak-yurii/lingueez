@@ -1,0 +1,72 @@
+# Flatpak manifest for Lingueez (build-from-source, Flathub-style).
+#
+# This is an initial scaffold: the Python dependencies are vendored into
+# python3-deps.json (generated, see packaging/flatpak/README.md) and the ffmpeg
+# checksum must be pinned. The first branch CI build will surface what needs
+# tuning — treat the deps/ffmpeg modules as the iteration points.
+id: app.lingueez.Lingueez
+runtime: org.kde.Platform
+runtime-version: '6.9'
+sdk: org.kde.Sdk
+# PySide6/shiboken6 can't be pip-vendored (flatpak-pip-generator refuses and points
+# here); they come from the PySide base app, which rides on org.kde.Platform//6.9.
+# 6.9 keeps Python 3.12 (matching the pinned cp312 wheels); 6.10 moved to 3.13, which
+# would require regenerating python3-deps.json for cp313.
+base: io.qt.PySide.BaseApp
+base-version: '6.9'
+command: lingueez
+
+finish-args:
+  # Network: Supabase sync/auth, translation/TTS, RSS, web article fetch.
+  - --share=network
+  # Shared memory — Qt needs it (and for the X11 fallback).
+  - --share=ipc
+  # Display: prefer Wayland, fall back to X11 (also enables the pynput X11 hotkey
+  # agent on X11 sessions).
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Audio (read-aloud playback via pydub/pygame).
+  - --socket=pulseaudio
+  # GPU acceleration for Qt rendering.
+  - --device=dri
+  # System tray (StatusNotifierItem).
+  - --talk-name=org.kde.StatusNotifierWatcher
+  # Diagnostics bundle for "Report an issue" is written to Downloads so the user
+  # can actually find/attach it (the sandbox /tmp is private and invisible).
+  - --filesystem=xdg-download
+  # File open/save go through the FileChooser portal (no broad fs access needed);
+  # Background (autostart) and GlobalShortcuts portals are reachable by default.
+
+modules:
+  # 1) Python dependencies (everything except PySide6, which the base app provides).
+  #    Offline-vendored, pinned sources — Flathub-compliant (no build-time network).
+  #    Native/Rust packages (numpy, pandas, grpcio, jiter, pydantic-core, cryptography,
+  #    …) are pinned as prebuilt cp312 wheels; only evdev (C) and sgmllib3k (pure
+  #    Python) build from sdist. The install commands carry --ignore-installed so the
+  #    pinned numpy overrides the older one the base app ships — otherwise pandas
+  #    segfaults (pandas.date_range on the Stats page). Regenerate when
+  #    requirements.txt changes (see packaging/flatpak/README.md).
+  - python3-deps.json
+
+  # ffmpeg/ffprobe (pydub shells out to them for read-aloud + audio export) are NOT
+  # bundled: org.kde.Platform already ships /usr/bin/ffmpeg 7.x with mp3 decode and
+  # libmp3lame encode (plus aac/flac/opus/vorbis). pydub finds it on PATH, so there's
+  # no ffmpeg blob to vendor — leaner and Flathub-ideal.
+
+  # The app itself: install the source tree, launcher, desktop + metadata + icon.
+  - name: lingueez
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lingueez
+      - cp -r app locales main.py /app/lingueez/
+      - cp -r assets /app/lingueez/assets
+      - install -Dm755 packaging/flatpak/lingueez.sh /app/bin/lingueez
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.desktop
+          /app/share/applications/app.lingueez.Lingueez.desktop
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.metainfo.xml
+          /app/share/metainfo/app.lingueez.Lingueez.metainfo.xml
+      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.png
+          /app/share/icons/hicolor/512x512/apps/app.lingueez.Lingueez.png
+    sources:
+      - type: dir
+        path: ../..
