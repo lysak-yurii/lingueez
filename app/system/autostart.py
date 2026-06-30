@@ -27,8 +27,14 @@ import logging
 import os
 import sys
 
+from app.system.hotkey_env import is_flatpak
+
 _APP_NAME = "Lingueez"
 _DISPLAY_NAME = "Lingueez"
+# Flatpak can't write the host's ~/.config/autostart, so it uses the Background
+# portal; since that portal exposes no getter, mirror the chosen state in this
+# marker (written in the writable data dir, which is the cwd at runtime).
+_FLATPAK_AUTOSTART_MARKER = ".autostart_enabled"
 
 
 def _get_app_command_and_workdir():
@@ -46,6 +52,8 @@ def _get_app_command_and_workdir():
 def set_autostart(enabled: bool):
     if sys.platform == 'win32':
         _set_autostart_windows(enabled)
+    elif is_flatpak():
+        _set_autostart_portal(enabled)
     else:
         _set_autostart_linux(enabled)
 
@@ -53,6 +61,8 @@ def set_autostart(enabled: bool):
 def get_autostart_enabled() -> bool:
     if sys.platform == 'win32':
         return _get_autostart_windows()
+    if is_flatpak():
+        return _get_autostart_portal()
     return _get_autostart_linux()
 
 
@@ -64,6 +74,8 @@ def sync_autostart_path():
     No-op when autostart is disabled or the path already matches. Rewrites the
     entry (registry value / .desktop) with the current command otherwise.
     """
+    if is_flatpak():
+        return  # the portal owns the entry; the flatpak command never goes stale
     if not get_autostart_enabled():
         return
     exec_cmd, _ = _get_app_command_and_workdir()
@@ -135,6 +147,46 @@ def _set_autostart_linux(enabled: bool):
 
 def _get_autostart_linux() -> bool:
     return os.path.exists(os.path.expanduser(f"~/.config/autostart/{_APP_NAME}.desktop"))
+
+
+def _set_autostart_portal(enabled: bool):
+    """Request autostart from the Background portal (the sandbox-safe path).
+
+    Best-effort and fire-and-forget: the portal may prompt the user and replies
+    asynchronously, but the toggle already captured their intent, so we only
+    surface immediate D-Bus errors. ``commandline`` is the in-sandbox argv; it
+    must match the Flatpak manifest's ``command``."""
+    try:
+        from PySide6.QtDBus import QDBusConnection, QDBusInterface
+        iface = QDBusInterface("org.freedesktop.portal.Desktop",
+                               "/org/freedesktop/portal/desktop",
+                               "org.freedesktop.portal.Background",
+                               QDBusConnection.sessionBus())
+        options = {
+            "reason": "Start Lingueez automatically on login.",
+            "autostart": enabled,
+            "background": enabled,
+            "commandline": [_APP_NAME.lower(), "--minimized"],
+        }
+        reply = iface.call("RequestBackground", "", options)
+        if reply.errorName():
+            logging.warning(f"Background portal autostart request failed: {reply.errorName()}")
+            return
+    except Exception as exc:
+        logging.warning(f"Could not set autostart via portal: {exc}")
+        return
+    # Mirror the chosen state locally — the portal exposes no way to query it.
+    try:
+        if enabled:
+            open(_FLATPAK_AUTOSTART_MARKER, "w").close()
+        elif os.path.exists(_FLATPAK_AUTOSTART_MARKER):
+            os.remove(_FLATPAK_AUTOSTART_MARKER)
+    except OSError as exc:
+        logging.warning(f"Could not record autostart state: {exc}")
+
+
+def _get_autostart_portal() -> bool:
+    return os.path.exists(_FLATPAK_AUTOSTART_MARKER)
 
 
 def _set_autostart_windows(enabled: bool):
