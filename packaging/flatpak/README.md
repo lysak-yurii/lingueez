@@ -11,8 +11,8 @@ Flathub. It builds the app **from source** (the Flathub-preferred way).
 - `lingueez.sh` — in-sandbox launcher (`flatpak run` → this → `main.py`).
 - `python3-deps.json` — **committed**, offline-vendored Python deps (pinned wheels).
 
-The runtime is `org.kde.Platform//6.8` (Python 3.12) plus the
-`io.qt.PySide.BaseApp//6.8`, which provides PySide6/shiboken6 — `flatpak-pip-generator`
+The runtime is `org.kde.Platform//6.9` (Python 3.12) plus the
+`io.qt.PySide.BaseApp//6.9`, which provides PySide6/shiboken6 — `flatpak-pip-generator`
 explicitly refuses to vendor PySide6 and points to this base app.
 
 ## One-time tooling
@@ -20,7 +20,7 @@ explicitly refuses to vendor PySide6 and points to this base app.
 ```bash
 sudo apt install flatpak flatpak-builder
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak install --user flathub org.kde.Platform//6.8 org.kde.Sdk//6.8 io.qt.PySide.BaseApp//6.8
+flatpak install --user flathub org.kde.Platform//6.9 org.kde.Sdk//6.9 io.qt.PySide.BaseApp//6.9
 ```
 
 ## 1. Python dependencies (offline-vendored — Flathub-compliant)
@@ -43,19 +43,16 @@ python3 flatpak-pip-generator.py --requirements-file=/tmp/reqs.txt --output pyth
 
 That defaults to sdists for native packages; convert each native/Rust sdist to its
 cp312 (or abi3) x86_64 manylinux wheel from PyPI, and add `--ignore-installed` to
-every install command. (Alternatively, generate with `--runtime=org.kde.Platform//6.8
+every install command. (Alternatively, generate with `--runtime=org.kde.Platform//6.9
 --artifact-policy=platform`, which selects platform wheels directly but needs flatpak
 + the runtime installed locally.) x86_64 only for now — add aarch64 wheels for a
 multi-arch Flathub build.
 
-## 2. ffmpeg (already pinned)
+## 2. ffmpeg (not bundled)
 
-The `ffmpeg-static` module is pinned to a dated, immutable BtbN static build
-(`autobuild-*`) with a real `sha256`, so it's reproducible — pydub finds the
-`ffmpeg`/`ffprobe` binaries at `/app/bin` (on PATH) for read-aloud/audio export.
-To refresh: pick a newer `autobuild-*` release, download its `linux64-gpl` asset,
-`sha256sum` it, and update the `url` + `sha256` in the manifest. (For a stricter
-Flathub submission you may later prefer a `shared-modules` source-built ffmpeg.)
+ffmpeg/ffprobe are **not vendored** — `org.kde.Platform` already ships
+`/usr/bin/ffmpeg` 7.x with mp3 decode + `libmp3lame` encode (plus aac/flac/opus/
+vorbis). pydub finds it on PATH, so read-aloud and audio export work with no blob.
 
 ## 3. Build & install locally
 
@@ -72,16 +69,15 @@ flatpak build-bundle repo lingueez.flatpak app.lingueez.Lingueez
 # install elsewhere: flatpak install --user ./lingueez.flatpak
 ```
 
-The branch CI workflow (`.github/workflows/flatpak.yml`) does steps 1, 3 and 4 and
-uploads the `.flatpak` bundle as an artifact.
+The `.github/workflows/test-build.yml` workflow builds the bundle (and the Windows +
+AppImage artifacts) on the `flatpak-support` branch.
 
-## Notes / known iteration points
+## Notes / remaining Flathub tasks
 
-- **PySide6 vendoring** via flatpak-pip-generator is the most likely thing to need
-  tuning on the first build.
-- **ffmpeg** sha256 must be pinned (see step 2).
 - **Global hotkey on Wayland** needs the GlobalShortcuts portal (GNOME 48+/KDE); on
   pre-48 GNOME the app shows a graceful in-app notice (see `app/system/hotkey_env.py`).
-- For the actual **Flathub submission**, commit `python3-deps.json`, point the
-  `lingueez` module's source at a tagged release archive instead of `type: dir`, and
-  open a PR to `flathub/flathub`.
+- **Runtime**: on `org.kde.Platform//6.9` (Python 3.12, non-EOL). 6.10 moved to
+  Python 3.13, which would need `python3-deps.json` regenerated for cp313.
+- **metainfo**: replace the placeholder screenshot URL with a real one and validate.
+- For the actual **Flathub submission**, point the `lingueez` module's source at a
+  tagged release archive instead of `type: dir`, and open a PR to `flathub/flathub`.

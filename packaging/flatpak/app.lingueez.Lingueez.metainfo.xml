@@ -28,11 +28,18 @@
 
   <content_rating type="oars-1.1" />
 
-  <!-- TODO: Flathub requires at least one screenshot at an absolute URL. -->
   <screenshots>
     <screenshot type="default">
-      <caption>Lingueez main window</caption>
-      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/main.png</image>
+      <caption>Dashboard</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/dashboard.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Learning statistics</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/statistics.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Reading texts</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/texts.png</image>
     </screenshot>
   </screenshots>
 

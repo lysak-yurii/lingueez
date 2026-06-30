@@ -6,13 +6,14 @@
 # tuning — treat the deps/ffmpeg modules as the iteration points.
 id: app.lingueez.Lingueez
 runtime: org.kde.Platform
-runtime-version: '6.8'
+runtime-version: '6.9'
 sdk: org.kde.Sdk
 # PySide6/shiboken6 can't be pip-vendored (flatpak-pip-generator refuses and points
-# here); they come from the PySide base app, which rides on org.kde.Platform//6.8
-# (Python 3.12 — matching the pinned cp312 wheels in python3-deps.json).
+# here); they come from the PySide base app, which rides on org.kde.Platform//6.9.
+# 6.9 keeps Python 3.12 (matching the pinned cp312 wheels); 6.10 moved to 3.13, which
+# would require regenerating python3-deps.json for cp313.
 base: io.qt.PySide.BaseApp
-base-version: '6.8'
+base-version: '6.9'
 command: lingueez
 
 finish-args:
@@ -47,23 +48,12 @@ modules:
   #    requirements.txt changes (see packaging/flatpak/README.md).
   - python3-deps.json
 
-  # 2) ffmpeg + ffprobe CLI binaries (pydub shells out to them, for read-aloud /
-  #    audio export). Pinned to a dated, immutable BtbN static build so it's
-  #    reproducible. To refresh: pick a newer autobuild-* release, download its
-  #    linux64-gpl asset, and update url + sha256 (sha256sum the .tar.xz).
-  - name: ffmpeg-static
-    buildsystem: simple
-    build-commands:
-      - install -Dm755 ffmpeg /app/bin/ffmpeg
-      - install -Dm755 ffprobe /app/bin/ffprobe
-    sources:
-      - type: archive
-        url: https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-06-28-13-24/ffmpeg-N-125331-g87bd15dc3c-linux64-gpl.tar.xz
-        sha256: 84dc23350cad569ecc879c6f5400267163e9f9d98f1eec70eb5e7dd5645a865c
-        strip-components: 2
-        only-arches: [x86_64]
+  # ffmpeg/ffprobe (pydub shells out to them for read-aloud + audio export) are NOT
+  # bundled: org.kde.Platform already ships /usr/bin/ffmpeg 7.x with mp3 decode and
+  # libmp3lame encode (plus aac/flac/opus/vorbis). pydub finds it on PATH, so there's
+  # no ffmpeg blob to vendor — leaner and Flathub-ideal.
 
-  # 3) The app itself: install the source tree, launcher, desktop + metadata + icon.
+  # The app itself: install the source tree, launcher, desktop + metadata + icon.
   - name: lingueez
     buildsystem: simple
     build-commands:

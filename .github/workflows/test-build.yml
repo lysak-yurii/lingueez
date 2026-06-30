@@ -131,16 +131,16 @@ jobs:
   build-flatpak:
     runs-on: ubuntu-latest
     container:
-      # KDE image matches runtime org.kde.Platform//6.8 (Python 3.12) used by the
+      # KDE image matches runtime org.kde.Platform//6.9 (Python 3.12) used by the
       # manifest + the PySide base app.
-      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.8
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.9
       options: --privileged
     steps:
       - uses: actions/checkout@v4
       - name: Install the PySide base app
         run: |
           flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install -y --noninteractive flathub io.qt.PySide.BaseApp//6.8
+          flatpak install -y --noninteractive flathub io.qt.PySide.BaseApp//6.9
       - name: Build and bundle
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
