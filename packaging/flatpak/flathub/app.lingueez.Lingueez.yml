@@ -1,14 +1,3 @@
-# Flathub submission manifest for Lingueez.
-# Docs: https://docs.flathub.org/docs/for-app-authors/submission
-#
-# IDENTICAL to ../app.lingueez.Lingueez.yml EXCEPT the `lingueez` source: here it's a
-# pinned git tag (reproducible — required by Flathub) instead of `type: dir`. Keep the
-# two in sync if you change runtime/permissions/modules.
-#
-# To submit: in a flathub/flathub fork on a branch named exactly app.lingueez.Lingueez,
-# place THIS file + a copy of ../python3-deps.json at the repo root, fill tag+commit
-# below (git rev-list -n1 <tag>), and open a PR. After merge, verify lingueez.app
-# ownership in the Flathub dashboard.
 id: app.lingueez.Lingueez
 runtime: org.kde.Platform
 runtime-version: '6.9'
@@ -18,33 +7,25 @@ base-version: '6.9'
 command: lingueez
 
 finish-args:
-  # Network: Supabase sync/auth, translation/TTS, RSS, web article fetch.
+  # Account sync/auth, translation, text-to-speech, RSS, web article fetch.
   - --share=network
-  # Shared memory — Qt needs it (and for the X11 fallback).
   - --share=ipc
-  # Display: prefer Wayland, fall back to X11 (also enables the pynput X11 hotkey
-  # agent on X11 sessions).
   - --socket=wayland
   - --socket=fallback-x11
-  # Audio (read-aloud playback via pydub/pygame).
+  # Audio for read-aloud playback.
   - --socket=pulseaudio
-  # GPU acceleration for Qt rendering.
   - --device=dri
   # System tray (StatusNotifierItem).
   - --talk-name=org.kde.StatusNotifierWatcher
-  # Diagnostics bundle for "Report an issue" is written to Downloads so the user can
-  # actually find/attach it (the sandbox /tmp is private and invisible).
+  # "Report an issue" writes a diagnostics bundle to Downloads.
   - --filesystem=xdg-download
 
 modules:
-  # Offline-vendored Python deps (everything except PySide6, which the base app
-  # provides). Copy ../python3-deps.json next to this manifest in the Flathub repo.
+  # Python dependencies (PySide6 is provided by the base app).
   - python3-deps.json
 
-  # ffmpeg is NOT bundled — org.kde.Platform ships /usr/bin/ffmpeg 7.x (mp3 decode +
-  # libmp3lame encode), which pydub finds on PATH.
+  # ffmpeg is provided by the runtime (/usr/bin/ffmpeg, with libmp3lame); not bundled.
 
-  # The app itself, from a pinned release tag.
   - name: lingueez
     buildsystem: simple
     build-commands:
@@ -58,10 +39,10 @@ modules:
           /app/share/metainfo/app.lingueez.Lingueez.metainfo.xml
       - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.png
           /app/share/icons/hicolor/512x512/apps/app.lingueez.Lingueez.png
+      - install -Dm644 LICENSE.txt /app/share/licenses/app.lingueez.Lingueez/LICENSE.txt
+      - install -Dm644 NOTICE /app/share/licenses/app.lingueez.Lingueez/NOTICE
     sources:
       - type: git
         url: https://github.com/lysak-yurii/lingueez.git
-        # The commit is the one the annotated tag resolves to (git rev-list -n1 v2.0.3),
-        # not the tag object. Update both on each release.
         tag: v2.0.3
         commit: d100b4ef380e8057268bea3a3e70917fcd1e04f3
