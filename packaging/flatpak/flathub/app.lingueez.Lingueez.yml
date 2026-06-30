@@ -61,7 +61,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/lysak-yurii/lingueez.git
-        # Fill BOTH from your release tag (Flathub requires the exact commit):
-        #   git rev-list -n1 v2.0.3
+        # The commit is the one the annotated tag resolves to (git rev-list -n1 v2.0.3),
+        # not the tag object. Update both on each release.
         tag: v2.0.3
-        commit: REPLACE_WITH_FULL_40_CHAR_COMMIT_SHA
+        commit: d100b4ef380e8057268bea3a3e70917fcd1e04f3
