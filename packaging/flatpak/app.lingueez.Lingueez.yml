@@ -51,22 +51,10 @@ modules:
   # libmp3lame encode (plus aac/flac/opus/vorbis). pydub finds it on PATH, so there's
   # no ffmpeg blob to vendor — leaner and Flathub-ideal.
 
-  # The app itself: install the source tree, launcher, desktop + metadata + icon.
+  # The app itself. meson.build (repo root) installs the source tree, launcher,
+  # desktop, metainfo, icon and licenses.
   - name: lingueez
-    buildsystem: simple
-    build-commands:
-      - install -d /app/lingueez
-      - cp -r app locales main.py /app/lingueez/
-      - cp -r assets /app/lingueez/assets
-      - install -Dm755 packaging/flatpak/lingueez.sh /app/bin/lingueez
-      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.desktop
-          /app/share/applications/app.lingueez.Lingueez.desktop
-      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.metainfo.xml
-          /app/share/metainfo/app.lingueez.Lingueez.metainfo.xml
-      - install -Dm644 packaging/flatpak/app.lingueez.Lingueez.png
-          /app/share/icons/hicolor/512x512/apps/app.lingueez.Lingueez.png
-      - install -Dm644 LICENSE.txt /app/share/licenses/app.lingueez.Lingueez/LICENSE.txt
-      - install -Dm644 NOTICE /app/share/licenses/app.lingueez.Lingueez/NOTICE
+    buildsystem: meson
     sources:
       - type: dir
         path: ../..
