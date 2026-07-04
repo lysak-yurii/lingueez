@@ -1518,20 +1518,40 @@ class FlashcardsPage(QWidget):
 
     def _speak(self, text, language):
         """Say `text`, superseding any pronunciation still in flight."""
-        text = str(text or "").strip()
-        if not text or language not in audio.lang_codes:
+        self._speak_seq([(text, language)])
+
+    def _speak_seq(self, pairs):
+        """Say several (text, language) items back to back, superseding any
+        pronunciation still in flight. Later items prefetch while the first
+        plays, so the sequence runs without a synthesis gap."""
+        pairs = [(str(t or "").strip(), lang) for t, lang in pairs]
+        pairs = [(t, lang) for t, lang in pairs
+                 if t and lang in audio.lang_codes]
+        if not pairs:
             return
         self._cancel_speech()
         cancel = threading.Event()
         self._speak_cancel = cancel
-        run_in_thread(
-            audio.speak_word, text, language, cancel_event=cancel,
-            on_error=lambda msg: logging.warning(
-                f"Flashcard pronunciation failed: {msg}"))
+        for text, language in pairs[1:]:
+            run_in_thread(audio.prefetch_word, text, language,
+                          cancel_event=cancel)
+
+        def run():
+            for text, language in pairs:
+                if cancel.is_set():
+                    return
+                audio.speak_word(text, language, cancel_event=cancel)
+
+        run_in_thread(run, on_error=lambda msg: logging.warning(
+            f"Flashcard pronunciation failed: {msg}"))
 
     def _pronounce_record(self, record):
-        """Speaker button on a deck-preview card — say the word on demand."""
-        self._speak(record.get("Word1"), record.get("Language1"))
+        """Speaker button on a deck-preview card — say the word, then its
+        translation."""
+        self._speak_seq([
+            (record.get("Word1"), record.get("Language1")),
+            (record.get("Word2"), record.get("Language2")),
+        ])
 
     def _pronounce_side(self, side):
         """Speak the given side of the current card."""
