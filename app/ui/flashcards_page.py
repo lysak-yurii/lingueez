@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import logging
 import random
+import re
 import threading
 from collections import Counter
 from datetime import datetime
@@ -46,7 +47,9 @@ from PySide6.QtCore import (
     QEasingCurve, QPointF, QRect, QRectF, QSize, Qt, QTimer,
     QVariantAnimation, Signal,
 )
-from PySide6.QtGui import QColor, QFont, QKeySequence, QPainter, QPen, QShortcut
+from PySide6.QtGui import (
+    QColor, QFont, QIcon, QKeySequence, QPainter, QPen, QShortcut,
+)
 from PySide6.QtWidgets import (
     QButtonGroup, QFrame, QHBoxLayout, QLabel, QLayout, QPushButton,
     QScrollArea, QSizePolicy, QSpinBox, QStackedLayout, QVBoxLayout, QWidget,
@@ -58,6 +61,7 @@ from app.core import srs
 from app.i18n import tr
 from app.ui import icons
 from app.ui.animations import AnimatedStackedWidget, fade_swap, flip_swap
+from app.ui.dialogs.definition import _runs_to_html, parse_markup
 from app.ui.charts import FlowLayout, status_color_key
 from app.ui.workers import run_in_thread
 
@@ -279,12 +283,48 @@ class _SlimBar(QWidget):
         p.end()
 
 
-def _snippet(text, limit=110):
-    """Collapse whitespace and cap the definition preview length."""
-    text = " ".join(str(text or "").split())
+_LEAD_LABEL_RE = re.compile(r"^definition[^:]{0,40}:\s*", re.IGNORECASE)
+
+
+def _snippet(text, word="", limit=110):
+    """Flatten definition markup to plain prose and cap the preview length.
+
+    Definitions are stored in the mini-markup from
+    :mod:`app.ui.dialogs.definition`; the tile shows them stripped, and the
+    AI's boilerplate lead (the repeated headword and a "Definition:" label)
+    is dropped so the snippet starts with actual content."""
+    parts = []
+    for kind, payload in parse_markup(str(text or "")):
+        if kind == "heading":
+            continue  # section labels ("Examples") are noise in a snippet
+        for runs in (payload if kind == "list" else [payload]):
+            parts.append("".join(t for t, _bold, _italic in runs))
+    text = " ".join(" ".join(parts).split())
+    word = str(word or "").strip()
+    if word and text.lower().startswith(word.lower()):
+        text = text[len(word):].lstrip(" :—–-")
+    text = _LEAD_LABEL_RE.sub("", text)
     if len(text) > limit:
         text = text[:limit - 1].rstrip() + "…"
     return text
+
+
+def _definition_html(text, colors):
+    """Render the definition markup for the card back: centered blocks with
+    bold section leads and '•' list lines (a QLabel centers rich text only
+    when each block asks for it)."""
+    out = []
+    for kind, payload in parse_markup(str(text or "")):
+        if kind == "heading":
+            out.append(f'<p align="center" style="color:{colors["text"]};">'
+                       f"<b>{_runs_to_html(payload)}</b></p>")
+        elif kind == "list":
+            out.append("".join(
+                f'<p align="center" style="margin:0;">•&nbsp;'
+                f"{_runs_to_html(runs)}</p>" for runs in payload))
+        else:
+            out.append(f'<p align="center">{_runs_to_html(payload)}</p>')
+    return "".join(out)
 
 
 class _CardGridLayout(QLayout):
@@ -346,38 +386,41 @@ class _CardGridLayout(QLayout):
         cols = max(1, (width + self._h) // (self._min_w + self._h))
         item_w = (width - (cols - 1) * self._h) // cols
         last_w = width - (cols - 1) * (item_w + self._h)  # absorbs rounding
-        x, y, col, row_h = eff.x(), eff.y(), 0, 0
-        for item in self._items:
-            w = last_w if col == cols - 1 else item_w
-            h = item.sizeHint().height()
+        y = eff.y()
+        for start in range(0, len(self._items), cols):
+            row = self._items[start:start + cols]
+            # every tile stretches to the row's tallest, so rows stay flush
+            # even when compact (definition-less) and full tiles mix
+            row_h = max(item.sizeHint().height() for item in row)
             if not test_only:
-                item.setGeometry(QRect(x, y, w, h))
-            row_h = max(row_h, h)
-            col += 1
-            if col == cols:
-                x, col = eff.x(), 0
-                y += row_h + self._v
-                row_h = 0
-            else:
-                x += w + self._h
-        bottom = y + row_h if col else y - self._v
+                x = eff.x()
+                for col, item in enumerate(row):
+                    w = last_w if col == cols - 1 else item_w
+                    item.setGeometry(QRect(x, y, w, row_h))
+                    x += w + self._h
+            y += row_h + self._v
+        bottom = y - self._v if self._items else y
         return bottom - rect.y() + m.bottom()
 
 
 class _PreviewCard(QWidget):
     """Compact deck-preview tile: word, translation, definition snippet, the
     word's status and its SM-2 due badge — plus a speaker button to hear the
-    word without starting a session."""
+    word without starting a session. Tiles without a definition prefer a
+    shorter height; a language-pair tag appears when the deck mixes pairs."""
 
-    HEIGHT = 138  # width comes from the responsive grid columns
+    HEIGHT = 138          # width comes from the responsive grid columns
+    HEIGHT_COMPACT = 92   # no definition — nothing to reserve space for
 
     def __init__(self, record, definition, due_text, due_key, colors,
-                 speak_cb, parent=None):
+                 speak_cb, lang_tag="", parent=None):
         super().__init__(parent)
         self._record = record
         self._colors = colors
         self._due_key = due_key
-        self.setFixedHeight(self.HEIGHT)
+        self._hover = False
+        snippet = _snippet(definition, record.get("Word1"))
+        self._pref_h = self.HEIGHT if snippet else self.HEIGHT_COMPACT
 
         v = QVBoxLayout(self)
         v.setContentsMargins(16, 12, 16, 12)
@@ -396,7 +439,7 @@ class _PreviewCard(QWidget):
         v.addLayout(head)
         self.translation = QLabel(str(record.get("Word2") or ""))
         v.addWidget(self.translation)
-        self.body = QLabel(_snippet(definition))
+        self.body = QLabel(snippet)
         self.body.setWordWrap(True)
         self.body.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         v.addWidget(self.body, 1)
@@ -404,12 +447,28 @@ class _PreviewCard(QWidget):
         foot.setSpacing(6)
         self.status = QLabel()
         self.status.setTextFormat(Qt.RichText)
+        self.lang = QLabel(lang_tag)
+        self.lang.setVisible(bool(lang_tag))
         self.due = QLabel(due_text)
         foot.addWidget(self.status)
         foot.addStretch(1)
+        foot.addWidget(self.lang)
         foot.addWidget(self.due)
         v.addLayout(foot)
         self._apply_styles()
+
+    def sizeHint(self):  # noqa: N802 — the grid stretches rows to their max
+        return QSize(250, self._pref_h)
+
+    def enterEvent(self, event):  # noqa: N802
+        self._hover = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):  # noqa: N802
+        self._hover = False
+        self.update()
+        super().leaveEvent(event)
 
     def refresh_theme(self, colors):
         self._colors = colors
@@ -440,6 +499,9 @@ class _PreviewCard(QWidget):
             "border-radius:8px;font-size:8pt;font-weight:600;")
         # a "New" badge next to a "New" status chip is just noise
         self.due.setVisible(not (self._due_key == "new" and status == "New"))
+        self.lang.setStyleSheet(
+            f"color:{c['text_dim']};background:transparent;"
+            "font-size:8pt;font-weight:600;letter-spacing:1px;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 14))
 
     def paintEvent(self, _event):  # noqa: N802
@@ -447,7 +509,9 @@ class _PreviewCard(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         p.setBrush(QColor(self._colors["surface"]))
-        p.setPen(QPen(QColor(self._colors["border"]), 1))
+        border = (self._colors["accent"] if self._hover
+                  else self._colors["border"])
+        p.setPen(QPen(QColor(border), 1))
         p.drawRoundedRect(rect, 12, 12)
         p.end()
 
@@ -650,7 +714,9 @@ class FlashcardWidget(QWidget):
             self.word.setStyleSheet(
                 f"color:{c['accent_text'] if 'accent_text' in c else c['text']};"
                 "background:transparent;font-size:21pt;font-weight:700;")
-            self.body.setText(self._definition)
+            self.body.setTextFormat(Qt.RichText)  # definitions carry markup
+            self.body.setText(_definition_html(self._definition, c)
+                              if self._definition else "")
             self.hint.setText("")
         self.divider.setVisible(self._side == 1 and bool(self.body.text()))
         self.body.setVisible(bool(self.body.text()))
@@ -721,7 +787,9 @@ class FlashcardsPage(QWidget):
 
         self._preview_gen = 0       # drops stale async preview results
         self._preview_cards = []
-        self._preview_more = None
+        self._preview_pending = []  # deck records not yet built as tiles
+        self._preview_loading = False
+        self._preview_mixed = False  # deck spans several language pairs
         self._preview_defs = {}     # word_id → definition, seeds the session cache
         self._preview_timer = QTimer(self)
         self._preview_timer.setSingleShot(True)
@@ -826,16 +894,20 @@ class FlashcardsPage(QWidget):
         size_lay.addWidget(self.size_spin)
         deck_flow.addWidget(size_widget)
 
-        self.shuffle_btn = QPushButton(tr("Shuffle"), objectName="chipButton")
+        # session options are toggles, not deck choices — #toggleChip goes
+        # tonal when checked so they can't be mistaken for the selected deck
+        self.shuffle_btn = QPushButton(tr("Shuffle"), objectName="toggleChip")
         self.shuffle_btn.setCheckable(True)
         self.shuffle_btn.setChecked(shuffle_on)
         self.shuffle_btn.setCursor(Qt.PointingHandCursor)
+        self.shuffle_btn.setIconSize(QSize(14, 14))
         self.shuffle_btn.toggled.connect(self._persist_deck_prefs)
         self.pronounce_btn = QPushButton(tr("Auto-pronounce"),
-                                         objectName="chipButton")
+                                         objectName="toggleChip")
         self.pronounce_btn.setCheckable(True)
         self.pronounce_btn.setChecked(pronounce_on)
         self.pronounce_btn.setCursor(Qt.PointingHandCursor)
+        self.pronounce_btn.setIconSize(QSize(14, 14))
         self.pronounce_btn.setToolTip(
             tr("Speak each card as it appears and when it flips"))
         self.pronounce_btn.toggled.connect(self._persist_deck_prefs)
@@ -881,6 +953,8 @@ class FlashcardsPage(QWidget):
                                              min_item_width=250,
                                              h_spacing=14, v_spacing=14)
         self.preview_scroll.setWidget(self._preview_content)
+        self.preview_scroll.verticalScrollBar().valueChanged.connect(
+            self._on_preview_scrolled)
         pk.addWidget(self.preview_scroll, 1)
         self.preview_empty = QLabel(tr("No words to practice."),
                                     alignment=Qt.AlignCenter)
@@ -1130,7 +1204,10 @@ class FlashcardsPage(QWidget):
 
     # ------------------------------------------------------------- preview
 
-    PREVIEW_MAX = 60  # widget count cap; a footer notes what's beyond it
+    # Tiles are real widgets, so a 200-card deck is built in batches: the
+    # first batch renders instantly and scrolling near the bottom streams
+    # in the next one instead of capping the preview.
+    PREVIEW_BATCH = 60
 
     def _on_deck_chip_toggled(self, _btn, on):
         if on:
@@ -1154,28 +1231,45 @@ class FlashcardsPage(QWidget):
         gen = self._preview_gen
         records = self._fetch_deck(self._checked_deck_kind(),
                                    self.size_spin.value())
-        ids = [str(r.get("ID")) for r in records[:self.PREVIEW_MAX]
-               if r.get("ID") is not None]
+        batch = records[:self.PREVIEW_BATCH]
+
+        def done(result):
+            if gen == self._preview_gen:
+                rows, srs_map = result
+                self._populate_preview(records, batch, rows, srs_map)
+
+        self._fetch_preview_rows(batch, done)
+
+    def _fetch_preview_rows(self, records, on_done):
+        """Fetch word rows + SM-2 schedules for `records` off the GUI thread."""
+        ids = [str(r.get("ID")) for r in records if r.get("ID") is not None]
 
         def fetch():
             return (self.db_adapter.get_words_by_ids(ids),
                     dbq.srs_get_many(ids))
 
-        def done(result):
-            if gen == self._preview_gen:
-                rows, srs_map = result
-                self._populate_preview(records, rows, srs_map)
+        def err(msg):
+            self._preview_loading = False
+            logging.error(f"Deck preview fetch failed: {msg}")
 
-        run_in_thread(fetch, on_result=done,
-                      on_error=lambda msg: logging.error(
-                          f"Deck preview fetch failed: {msg}"))
+        run_in_thread(fetch, on_result=on_done, on_error=err)
 
-    def _populate_preview(self, records, rows, srs_map):
+    def _populate_preview(self, records, batch, rows, srs_map):
         self._clear_preview()
-        rows_by_id = {str(r.get("ID")): r for r in rows}
         self._preview_defs = {}
-        shown = records[:self.PREVIEW_MAX]
-        for rec in shown:
+        self._preview_pending = records[len(batch):]
+        self._preview_mixed = len({(r.get("Language1"), r.get("Language2"))
+                                   for r in records}) > 1
+        self._append_preview_cards(batch, rows, srs_map)
+        n = len(records)
+        self.preview_count.setText(tr("{n} cards").format(n=n) if n else "")
+        self.preview_scroll.setVisible(bool(batch))
+        self.preview_empty.setVisible(not batch)
+        self._maybe_backfill()
+
+    def _append_preview_cards(self, records, rows, srs_map):
+        rows_by_id = {str(r.get("ID")): r for r in rows}
+        for rec in records:
             wid = str(rec.get("ID"))
             row = rows_by_id.get(wid, {})
             parts = [str(row.get("Definition") or "").strip(),
@@ -1184,24 +1278,54 @@ class FlashcardsPage(QWidget):
             self._preview_defs[rec.get("ID")] = definition
             due_text, due_key = self._due_badge(srs_map.get(wid))
             card = _PreviewCard(rec, definition, due_text, due_key,
-                                self._colors, self._pronounce_record)
+                                self._colors, self._pronounce_record,
+                                lang_tag=self._lang_tag(rec))
             self._preview_flow.addWidget(card)
             self._preview_cards.append(card)
-        if len(records) > len(shown):
-            more = QLabel(tr("…and {n} more").format(n=len(records) - len(shown)))
-            self._preview_flow.addWidget(more)
-            self._preview_more = more
-            self._style_preview_more()
-        n = len(records)
-        self.preview_count.setText(tr("{n} cards").format(n=n) if n else "")
-        self.preview_scroll.setVisible(bool(shown))
-        self.preview_empty.setVisible(not shown)
 
-    def _style_preview_more(self):
-        if self._preview_more is not None:
-            self._preview_more.setStyleSheet(
-                f"color:{self._colors['text_dim']};background:transparent;"
-                "font-size:9.5pt;")
+    def _lang_tag(self, rec):
+        """'DE → UK' footer tag; only decks mixing language pairs need it."""
+        if not self._preview_mixed:
+            return ""
+        a = audio.lang_codes.get(str(rec.get("Language1") or ""), "")
+        b = audio.lang_codes.get(str(rec.get("Language2") or ""), "")
+        return f"{a.upper()} → {b.upper()}" if a and b else ""
+
+    def _extend_preview(self):
+        """Stream the next batch of pending tiles into the grid."""
+        if self._preview_loading or not self._preview_pending:
+            return
+        self._preview_loading = True
+        gen = self._preview_gen
+        batch = self._preview_pending[:self.PREVIEW_BATCH]
+
+        def done(result):
+            self._preview_loading = False
+            if gen != self._preview_gen:
+                return
+            self._preview_pending = self._preview_pending[len(batch):]
+            rows, srs_map = result
+            self._append_preview_cards(batch, rows, srs_map)
+            self._maybe_backfill()
+
+        self._fetch_preview_rows(batch, done)
+
+    def _maybe_backfill(self):
+        # a tall window can swallow a whole batch without ever scrolling —
+        # keep streaming until the grid overflows or the deck is exhausted.
+        # Deferred a turn so the freshly added tiles are laid out and the
+        # scroll range is real before it is judged.
+        def check():
+            if (self._preview_pending
+                    and self.preview_scroll.verticalScrollBar().maximum() == 0):
+                self._extend_preview()
+
+        QTimer.singleShot(0, check)
+
+    def _on_preview_scrolled(self, value):
+        bar = self.preview_scroll.verticalScrollBar()
+        if self._preview_pending and value >= bar.maximum() - 600:
+            self._extend_preview()
 
     def _clear_preview(self):
         while self._preview_flow.count():
@@ -1210,7 +1334,8 @@ class FlashcardsPage(QWidget):
             if widget is not None:
                 widget.deleteLater()
         self._preview_cards = []
-        self._preview_more = None
+        self._preview_pending = []
+        self._preview_loading = False
 
     def _due_badge(self, srs_row):
         """(text, semantic key) for a card's SM-2 schedule badge."""
@@ -1646,7 +1771,6 @@ class FlashcardsPage(QWidget):
             "QScrollArea > QWidget > QWidget{background:transparent;}")
         for card in self._preview_cards:
             card.refresh_theme(c)
-        self._style_preview_more()
         self.progress_label.setStyleSheet(dim + "font-weight:600;")
         self.correct_label.setStyleSheet(
             f"color:{c['success']};background:transparent;font-weight:600;")
@@ -1665,6 +1789,17 @@ class FlashcardsPage(QWidget):
         self.pause_btn.setIcon(icons.icon(
             "play" if self._autoplay_paused else "pause", c["text"], 18))
         self.play_btn.setIcon(icons.icon("play", c["text"], 14))
+
+        def toggle_icon(name):
+            ic = QIcon()
+            ic.addPixmap(icons.pixmap(name, c["text_dim"], 14),
+                         QIcon.Normal, QIcon.Off)
+            ic.addPixmap(icons.pixmap(name, c["accent_text"], 14),
+                         QIcon.Normal, QIcon.On)
+            return ic
+
+        self.shuffle_btn.setIcon(toggle_icon("shuffle"))
+        self.pronounce_btn.setIcon(toggle_icon("volume"))
 
         def grade_style(tint):
             return (f"QPushButton {{ background:{_soft(tint, 34)};"

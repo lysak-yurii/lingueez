@@ -67,6 +67,11 @@ ICONS = {
             '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     "volume": '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>'
               '<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+    "shuffle": '<polyline points="16 3 21 3 21 8"/>'
+               '<line x1="4" y1="20" x2="21" y2="3"/>'
+               '<polyline points="21 16 21 21 16 21"/>'
+               '<line x1="15" y1="15" x2="21" y2="21"/>'
+               '<line x1="4" y1="4" x2="9" y2="9"/>',
     "stop": '<rect x="5" y="5" width="14" height="14" rx="2" fill="{color}" stroke="none"/>',
     "book-open": '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>'
                  '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',

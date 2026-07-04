@@ -270,6 +270,19 @@ QPushButton#chipButton[active="true"] {{
     background: {c['selection']};
     color: {c['accent']};
 }}
+/* option toggles: tonal when on, so they don't read as a selected deck chip */
+QPushButton#toggleChip {{
+    border-radius: 14px;
+    padding: 5px 14px;
+}}
+QPushButton#toggleChip:checked {{
+    background: {c['accent_soft']};
+    color: {c['accent_text']};
+    border-color: {c['accent_soft_pressed']};
+}}
+QPushButton#toggleChip:checked:hover {{
+    background: {c['accent_soft_hover']};
+}}
 
 /* ---------- table ---------- */
 QTableView {{
