@@ -61,7 +61,9 @@ from app.core import srs
 from app.i18n import tr
 from app.ui import icons
 from app.ui.animations import AnimatedStackedWidget, fade_swap, flip_swap
-from app.ui.dialogs.definition import _runs_to_html, parse_markup
+from app.ui.dialogs.definition import (
+    DefinitionDialog, _runs_to_html, parse_markup,
+)
 from app.ui.charts import FlowLayout, status_color_key
 from app.ui.workers import run_in_thread
 
@@ -407,7 +409,12 @@ class _PreviewCard(QWidget):
     """Compact deck-preview tile: word, translation, definition snippet, the
     word's status and its SM-2 due badge — plus a speaker button to hear the
     word without starting a session. Tiles without a definition prefer a
-    shorter height; a language-pair tag appears when the deck mixes pairs."""
+    shorter height; a language-pair tag appears when the deck mixes pairs.
+
+    The tile itself is clickable: it opens the shared definition dialog,
+    where the full text can be read, edited or AI-generated."""
+
+    clicked = Signal()
 
     HEIGHT = 138          # width comes from the responsive grid columns
     HEIGHT_COMPACT = 92   # no definition — nothing to reserve space for
@@ -419,6 +426,9 @@ class _PreviewCard(QWidget):
         self._colors = colors
         self._due_key = due_key
         self._hover = False
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip(tr("Definition — {word}").format(
+            word=str(record.get("Word1") or "")))
         snippet = _snippet(definition, record.get("Word1"))
         self._pref_h = self.HEIGHT if snippet else self.HEIGHT_COMPACT
 
@@ -460,6 +470,16 @@ class _PreviewCard(QWidget):
     def sizeHint(self):  # noqa: N802 — the grid stretches rows to their max
         return QSize(250, self._pref_h)
 
+    def set_definition(self, definition):
+        """Refresh the snippet after the definition dialog changed it; a
+        compact tile grows to full height once it has content to show."""
+        snippet = _snippet(definition, self._record.get("Word1"))
+        self.body.setText(snippet)
+        pref = self.HEIGHT if snippet else self.HEIGHT_COMPACT
+        if pref != self._pref_h:
+            self._pref_h = pref
+            self.updateGeometry()
+
     def enterEvent(self, event):  # noqa: N802
         self._hover = True
         self.update()
@@ -469,6 +489,12 @@ class _PreviewCard(QWidget):
         self._hover = False
         self.update()
         super().leaveEvent(event)
+
+    def mouseReleaseEvent(self, event):  # noqa: N802
+        if event.button() == Qt.LeftButton and self.rect().contains(
+                event.position().toPoint()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
 
     def refresh_theme(self, colors):
         self._colors = colors
@@ -791,6 +817,7 @@ class FlashcardsPage(QWidget):
         self._preview_loading = False
         self._preview_mixed = False  # deck spans several language pairs
         self._preview_defs = {}     # word_id → definition, seeds the session cache
+        self._def_dialogs = {}      # word_id → open DefinitionDialog (dedup)
         self._preview_timer = QTimer(self)
         self._preview_timer.setSingleShot(True)
         self._preview_timer.setInterval(300)  # debounce chip/size churn
@@ -1267,21 +1294,62 @@ class FlashcardsPage(QWidget):
         self.preview_empty.setVisible(not batch)
         self._maybe_backfill()
 
+    @staticmethod
+    def _compose_definition(row):
+        """Join a word row's two definition fields the way the cards show
+        them: the word's own, then the translation's."""
+        parts = [str(row.get("Definition") or "").strip(),
+                 str(row.get("Definition2") or "").strip()]
+        return "\n\n".join(p for p in parts if p)
+
     def _append_preview_cards(self, records, rows, srs_map):
         rows_by_id = {str(r.get("ID")): r for r in rows}
         for rec in records:
             wid = str(rec.get("ID"))
-            row = rows_by_id.get(wid, {})
-            parts = [str(row.get("Definition") or "").strip(),
-                     str(row.get("Definition2") or "").strip()]
-            definition = "\n\n".join(p for p in parts if p)
+            definition = self._compose_definition(rows_by_id.get(wid, {}))
             self._preview_defs[rec.get("ID")] = definition
             due_text, due_key = self._due_badge(srs_map.get(wid))
             card = _PreviewCard(rec, definition, due_text, due_key,
                                 self._colors, self._pronounce_record,
                                 lang_tag=self._lang_tag(rec))
+            card.clicked.connect(
+                lambda r=rec, c=card: self._open_definition(r, c))
             self._preview_flow.addWidget(card)
             self._preview_cards.append(card)
+
+    def _open_definition(self, record, card):
+        """Open the shared definition dialog for a preview tile — read the
+        full text, edit it, or generate one for a word that has none."""
+        wid = record.get("ID")
+        existing = self._def_dialogs.get(wid)
+        try:
+            if existing is not None and existing.isVisible():
+                existing.raise_()
+                existing.activateWindow()
+                return
+        except RuntimeError:
+            pass  # WA_DeleteOnClose: the C++ widget is already gone
+        dialog = DefinitionDialog(self.window(), record, self.db_adapter)
+        dialog.definition_changed.connect(
+            lambda r=record, c=card: self._on_definition_edited(r, c))
+        self._def_dialogs[wid] = dialog
+        dialog.show()
+
+    def _on_definition_edited(self, record, card):
+        """Reflect a dialog edit in place: tile snippet, tile height and the
+        definition caches a session would read — without rebuilding the grid
+        (which would lose the scroll position)."""
+        wid = record.get("ID")
+        try:
+            row = self.db_adapter.get_word(wid) or {}
+        except Exception as exc:
+            logging.error(f"Definition refresh failed: {exc}")
+            return
+        definition = self._compose_definition(row)
+        self._preview_defs[wid] = definition
+        self._definitions[wid] = definition
+        if card in self._preview_cards:  # the grid may have been rebuilt
+            card.set_definition(definition)
 
     def _lang_tag(self, rec):
         """'DE → UK' footer tag; only decks mixing language pairs need it."""
@@ -1430,10 +1498,8 @@ class FlashcardsPage(QWidget):
         if wid not in self._definitions:
             text = ""
             try:
-                row = self.db_adapter.get_word(wid) or {}
-                parts = [str(row.get("Definition") or "").strip(),
-                         str(row.get("Definition2") or "").strip()]
-                text = "\n\n".join(part for part in parts if part)
+                text = self._compose_definition(self.db_adapter.get_word(wid)
+                                                or {})
             except Exception as exc:
                 logging.error(f"Definition lookup failed: {exc}")
             self._definitions[wid] = text
