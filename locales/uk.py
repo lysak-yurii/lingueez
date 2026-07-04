@@ -1579,6 +1579,9 @@ TRANSLATIONS: dict[str, str] = {
     "…and {n} more": "…і ще {n}",
     "Due": "Пора повторити",
     "In {n} d": "Через {n} д",
+    "{n} d": "{n} д",
+    "{n} mo": "{n} міс",
+    "{n} y": "{n} р",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

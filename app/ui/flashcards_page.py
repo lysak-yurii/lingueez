@@ -39,6 +39,7 @@ from __future__ import annotations
 import logging
 import random
 import threading
+from collections import Counter
 from datetime import datetime
 
 from PySide6.QtCore import (
@@ -68,6 +69,14 @@ FLIP_MS_AUTOPLAY = 160
 def _soft(color_hex, alpha=36):
     c = QColor(color_hex)
     return f"rgba({c.red()}, {c.green()}, {c.blue()}, {alpha})"
+
+
+def _mix(a, b, t):
+    """Blend QColor/hex `a` toward `b` by t ∈ [0, 1]."""
+    a, b = QColor(a), QColor(b)
+    return QColor(round(a.red() + (b.red() - a.red()) * t),
+                  round(a.green() + (b.green() - a.green()) * t),
+                  round(a.blue() + (b.blue() - a.blue()) * t))
 
 
 class _Panel(QWidget):
@@ -201,19 +210,28 @@ class _DeckLogo(QWidget):
 
 
 class _SlimBar(QWidget):
-    """Thin rounded progress bar under the session header."""
+    """Thin progress bar under the session header.
+
+    In a manual session it draws one segment per card, colored by the grade
+    the card received (the session's history at a glance); when segments
+    would get too thin — or in autoplay, where the deck plays through
+    continuously — it falls back to a plain fill."""
+
+    GRADE_COLOR_KEYS = {"easy": "success", "good": "warning", "hard": "danger"}
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
         self._colors = colors
         self._current = 0
         self._total = 0
-        self.setFixedHeight(5)
+        self._grades = None  # index → grade key, or None for a plain fill
+        self.setFixedHeight(6)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-    def set_progress(self, current, total):
+    def set_progress(self, current, total, grades=None):
         self._current = int(current)
         self._total = int(total)
+        self._grades = dict(grades) if grades is not None else None
         self.update()
 
     def refresh_theme(self, colors):
@@ -221,20 +239,43 @@ class _SlimBar(QWidget):
         self.update()
 
     def paintEvent(self, _event):  # noqa: N802
+        c = self._colors
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         r = QRectF(self.rect())
         radius = r.height() / 2
         p.setPen(Qt.NoPen)
-        track = QColor(self._colors["text_dim"])
+        track = QColor(c["text_dim"])
         track.setAlpha(38)
-        p.setBrush(track)
-        p.drawRoundedRect(r, radius, radius)
-        if self._total > 0:
-            w = max(r.height(), r.width() * (self._current / self._total))
-            p.setBrush(QColor(self._colors["accent"]))
-            p.drawRoundedRect(QRectF(r.left(), r.top(), w, r.height()),
-                              radius, radius)
+        gap = 2.0
+        seg_w = ((r.width() - gap * (self._total - 1)) / self._total
+                 if self._total > 0 else 0.0)
+        if self._grades is None or seg_w < 3.0:
+            p.setBrush(track)
+            p.drawRoundedRect(r, radius, radius)
+            if self._total > 0:
+                w = max(r.height(), r.width() * (self._current / self._total))
+                p.setBrush(QColor(c["accent"]))
+                p.drawRoundedRect(QRectF(r.left(), r.top(), w, r.height()),
+                                  radius, radius)
+            p.end()
+            return
+        seg_radius = min(radius, seg_w / 2)
+        for i in range(self._total):
+            grade = self._grades.get(i)
+            if grade in self.GRADE_COLOR_KEYS:
+                color = QColor(c[self.GRADE_COLOR_KEYS[grade]])
+            elif i == self._current - 1:
+                color = QColor(c["accent"])
+            elif i < self._current - 1:
+                color = QColor(c["text_dim"])  # seen but not graded
+                color.setAlpha(90)
+            else:
+                color = QColor(track)
+            p.setBrush(color)
+            p.drawRoundedRect(
+                QRectF(r.left() + i * (seg_w + gap), r.top(), seg_w,
+                       r.height()), seg_radius, seg_radius)
         p.end()
 
 
@@ -411,6 +452,72 @@ class _PreviewCard(QWidget):
         p.end()
 
 
+def _interval_text(days):
+    """Compact schedule delta for the grade-button previews ("3 d", "2 mo")."""
+    days = int(days)
+    if days < 31:
+        return tr("{n} d").format(n=days)
+    if days < 365:
+        return tr("{n} mo").format(n=max(1, round(days / 30.44)))
+    return tr("{n} y").format(n=max(1, round(days / 365)))
+
+
+class _CardStack(QWidget):
+    """The flashcard sitting on a painted stack of under-sheets.
+
+    The sheets peek out below the card and the stack thins as the deck runs
+    down — the cards remaining, drawn instead of written. The flip animation
+    overlays only the card widget, so the turning card leaves the stack
+    resting in place."""
+
+    STEP = 7      # vertical reveal per sheet
+    INSET = 11    # horizontal shrink per sheet
+    MAX_SHEETS = 3
+
+    def __init__(self, card, colors, parent=None):
+        super().__init__(parent)
+        self._colors = colors
+        self._card = card
+        self._depth = 0
+        lay = QVBoxLayout(self)
+        # reserve the full stack height so the card doesn't shift as it thins
+        lay.setContentsMargins(0, 0, 0, self.STEP * self.MAX_SHEETS + 2)
+        lay.setSpacing(0)
+        lay.addWidget(card)
+        self.setMaximumWidth(640)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def set_depth(self, remaining):
+        depth = max(0, min(self.MAX_SHEETS, int(remaining)))
+        if depth != self._depth:
+            self._depth = depth
+            self.update()
+
+    def refresh_theme(self, colors):
+        self._colors = colors
+        self.update()
+
+    def paintEvent(self, _event):  # noqa: N802
+        if not self._depth:
+            return
+        c = self._colors
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        seam = _mix(c["border"], c["text_dim"], 0.35)
+        card_rect = QRectF(self._card.geometry())
+        for i in range(self._depth, 0, -1):  # deepest sheet first
+            # deeper sheets recede toward the page background
+            p.setBrush(_mix(c["surface"], c["bg"], 0.16 * i))
+            edge = QColor(seam)
+            edge.setAlpha(max(110, 230 - 45 * i))
+            p.setPen(QPen(edge, 1))
+            p.drawRoundedRect(
+                card_rect.adjusted(self.INSET * i + 0.5, self.STEP * i + 0.5,
+                                   -self.INSET * i - 0.5, self.STEP * i - 0.5),
+                14, 14)
+        p.end()
+
+
 class FlashcardWidget(QWidget):
     """The card itself: word on the front, translation + definition on the back."""
 
@@ -431,7 +538,7 @@ class FlashcardWidget(QWidget):
         self.setCursor(Qt.PointingHandCursor)
 
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(32, 24, 32, 30)
+        lay.setContentsMargins(32, 24, 32, 24)
         lay.setSpacing(12)
 
         head = QHBoxLayout()
@@ -524,6 +631,11 @@ class FlashcardWidget(QWidget):
         status = str(rec.get("Status") or "").strip()
         self.status_chip.setText(tr(status) if status else "")
         self.status_chip.setVisible(bool(status))
+        # the answer side announces itself: caption + divider go accent
+        self.caption.setStyleSheet(
+            f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
+            "background:transparent;"
+            "font-size:8.5pt;font-weight:600;letter-spacing:2px;")
         if self._side == 0:
             self.caption.setText(str(rec.get("Language1") or "").upper())
             self.word.setText(str(rec.get("Word1") or ""))
@@ -546,9 +658,6 @@ class FlashcardWidget(QWidget):
 
     def _apply_styles(self):
         c = self._colors
-        self.caption.setStyleSheet(
-            f"color:{c['text_dim']};background:transparent;"
-            "font-size:8.5pt;font-weight:600;letter-spacing:2px;")
         self.status_chip.setStyleSheet(
             f"color:{c['text_dim']};background:{_soft(c['accent'], 26)};"
             "font-size:8.5pt;font-weight:600;"
@@ -558,8 +667,8 @@ class FlashcardWidget(QWidget):
         self.hint.setStyleSheet(
             f"color:{_soft(c['text_dim'], 150)};background:transparent;"
             "font-size:9pt;")
-        self.divider.setStyleSheet(
-            f"background:{c['border']};border:none;")
+        self.divider.setStyleSheet(  # only ever visible on the answer side
+            f"background:{_soft(c['accent_text'], 130)};border:none;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 16))
 
     def paintEvent(self, _event):  # noqa: N802
@@ -569,18 +678,6 @@ class FlashcardWidget(QWidget):
         p.setBrush(QColor(self._colors["surface"]))
         p.setPen(QPen(QColor(self._colors["border"]), 1))
         p.drawRoundedRect(rect, 18, 18)
-        # front/back indicator dots
-        p.setPen(Qt.NoPen)
-        cy = self.height() - 13
-        cx = self.width() / 2
-        for i, x in enumerate((cx - 7, cx + 7)):
-            if i == self._side:
-                p.setBrush(QColor(self._colors["accent"]))
-            else:
-                dot = QColor(self._colors["text_dim"])
-                dot.setAlpha(70)
-                p.setBrush(dot)
-            p.drawEllipse(QRectF(x - 3, cy - 3, 6, 6))
         p.end()
 
     def mouseReleaseEvent(self, event):  # noqa: N802
@@ -614,6 +711,7 @@ class FlashcardsPage(QWidget):
         self._index = 0
         self._correct = 0
         self._graded = set()
+        self._grade_history = {}  # card index → grade key, feeds the trail
         self._definitions = {}
         self._deck_kind = "due"
         self._autoplay = False
@@ -817,7 +915,8 @@ class FlashcardsPage(QWidget):
         self.card = FlashcardWidget(self._colors)
         self.card.clicked.connect(self._card_clicked)
         self.card.speak_clicked.connect(self._speak_current_clicked)
-        card_row.addWidget(self.card, 4)
+        self.card_stack = _CardStack(self.card, self._colors)
+        card_row.addWidget(self.card_stack, 4)
         card_row.addStretch(1)
         sv.addLayout(card_row)
         sv.addStretch(1)
@@ -853,24 +952,38 @@ class FlashcardsPage(QWidget):
                                    self.next_btn, self.stop_btn)
         sv.addLayout(transport)
 
+        # flip / grade row; each grade column carries its projected SM-2
+        # interval underneath, so the buttons say what they will do
         bottom = QHBoxLayout()
         bottom.setSpacing(10)
         bottom.addStretch(1)
         self.flip_btn = QPushButton(tr("Show answer"), objectName="primaryButton")
         self.flip_btn.setCursor(Qt.PointingHandCursor)
         self.flip_btn.clicked.connect(self.flip)
+        self.flip_pad = QLabel("")  # keeps row height stable across the flip
+        self.flip_pad.setFixedHeight(15)
+        flip_col = QVBoxLayout()
+        flip_col.setSpacing(3)
+        flip_col.addWidget(self.flip_btn)
+        flip_col.addWidget(self.flip_pad)
+        bottom.addLayout(flip_col)
         self.hard_btn = QPushButton(tr("Hard") + "  ·  1")
         self.good_btn = QPushButton(tr("Good") + "  ·  2")
         self.easy_btn = QPushButton(tr("Easy") + "  ·  3")
+        self._grade_interval_labels = {}
         for btn, grade in ((self.hard_btn, "hard"), (self.good_btn, "good"),
                            (self.easy_btn, "easy")):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setMinimumWidth(104)
             btn.clicked.connect(lambda _=False, g=grade: self._grade(g))
-        bottom.addWidget(self.flip_btn)
-        bottom.addWidget(self.hard_btn)
-        bottom.addWidget(self.good_btn)
-        bottom.addWidget(self.easy_btn)
+            interval = QLabel("", alignment=Qt.AlignCenter)
+            interval.setFixedHeight(15)
+            self._grade_interval_labels[grade] = interval
+            col = QVBoxLayout()
+            col.setSpacing(3)
+            col.addWidget(btn)
+            col.addWidget(interval)
+            bottom.addLayout(col)
         bottom.addStretch(1)
         sv.addLayout(bottom)
         self._stack.addWidget(session)
@@ -892,8 +1005,13 @@ class FlashcardsPage(QWidget):
         self.complete_title = QLabel(tr("Session complete!"),
                                      alignment=Qt.AlignCenter)
         self.complete_sub = QLabel("", alignment=Qt.AlignCenter)
+        self.complete_breakdown = QLabel("", alignment=Qt.AlignCenter)
+        self.complete_breakdown.setTextFormat(Qt.RichText)
+        self.complete_breakdown.setVisible(False)
         cv.addWidget(self.complete_title)
         cv.addWidget(self.complete_sub)
+        cv.addSpacing(4)
+        cv.addWidget(self.complete_breakdown)
         cv.addSpacing(14)
         done = QHBoxLayout()
         done.setSpacing(10)
@@ -1140,6 +1258,7 @@ class FlashcardsPage(QWidget):
         self._index = 0
         self._correct = 0
         self._graded = set()
+        self._grade_history = {}
         # seed from the deck preview so cards flip without a DB round-trip
         self._definitions = dict(self._preview_defs)
         self._autoplay = autoplay
@@ -1158,6 +1277,9 @@ class FlashcardsPage(QWidget):
         if animate and self.card.isVisible():
             fade_swap(self.card, 160)
         self.card.set_card(rec, hint_text=tr("Space or click to flip"))
+        self.card_stack.set_depth(len(self._deck) - self._index - 1)
+        for label in self._grade_interval_labels.values():
+            label.setText("")
         self._refresh_session_header()
         self._update_controls()
         if not self._autoplay:  # in autoplay the word player provides the audio
@@ -1172,7 +1294,9 @@ class FlashcardsPage(QWidget):
         self.correct_label.setText(
             tr("{n} correct").format(n=self._correct))
         self.correct_label.setVisible(not self._autoplay)
-        self.slim_bar.set_progress(self._index + 1, total)
+        self.slim_bar.set_progress(
+            self._index + 1, total,
+            None if self._autoplay else self._grade_history)
 
     def _definition_for(self, record):
         wid = record.get("ID")
@@ -1264,9 +1388,32 @@ class FlashcardsPage(QWidget):
         target = 1 - self.card.side
         if target == 1:
             self.card.set_definition(self._definition_for(self._deck[self._index]))
+            self._refresh_grade_previews()
         self.card.flip()
         self._update_controls(side=target)
         self._auto_pronounce(target)
+
+    def _refresh_grade_previews(self):
+        """Show each grade button's real consequence — the interval SM-2
+        would schedule for the current card — in the label underneath it."""
+        labels = self._grade_interval_labels
+        rec = self._deck[self._index] if self._deck else {}
+        wid = rec.get("ID")
+        if wid is None or wid in self._graded:
+            for label in labels.values():
+                label.setText("")
+            return
+        try:
+            state = dbq.srs_get(wid)
+        except Exception as exc:
+            logging.error(f"Grade preview lookup failed: {exc}")
+            state = None
+        for grade, label in labels.items():
+            try:
+                days = srs.apply_grade(state, grade)["interval_days"]
+                label.setText(_interval_text(days))
+            except Exception:
+                label.setText("")
 
     def _card_clicked(self):
         if self._autoplay and not self._autoplay_paused:
@@ -1300,6 +1447,9 @@ class FlashcardsPage(QWidget):
             logging.error(f"Recording flashcard grade failed: {exc}")
             return
         self._graded.add(wid)
+        self._grade_history[self._index] = grade
+        for label in self._grade_interval_labels.values():
+            label.setText("")  # the projection is spent once graded
         if grade in ("easy", "good"):
             self._correct += 1
         mapped = srs.status_from_progress(
@@ -1351,6 +1501,16 @@ class FlashcardsPage(QWidget):
             summary = tr("Correct: {n} of {total}").format(
                 n=self._correct, total=total)
         self.complete_sub.setText(summary)
+        c = self._colors
+        counts = Counter(self._grade_history.values())
+        parts = [
+            f'<span style="color:{c[key]};">●</span> {tr(name)}: {counts[g]}'
+            for g, key, name in (("easy", "success", "Easy"),
+                                 ("good", "warning", "Good"),
+                                 ("hard", "danger", "Hard"))
+            if counts.get(g)]
+        self.complete_breakdown.setText("&nbsp;&nbsp;&nbsp;".join(parts))
+        self.complete_breakdown.setVisible(bool(parts))
         self.complete_icon.setPixmap(
             icons.pixmap("check", self._colors["success"], 40))
         self.continue_btn.setVisible(self._deck_kind == "due"
@@ -1409,6 +1569,8 @@ class FlashcardsPage(QWidget):
         self._autoplay_paused = bool(paused)
         if not paused:
             self._cancel_speech()  # don't talk over the resuming player
+        elif self.card.side == 1:
+            self._refresh_grade_previews()  # grading just became available
         self._update_controls()
 
     def exit_autoplay(self):
@@ -1441,11 +1603,14 @@ class FlashcardsPage(QWidget):
                 tr("Resume") if self._autoplay_paused else tr("Pause"))
         manual_review = not listening
         self.flip_btn.setVisible(manual_review and side == 0)
+        self.flip_pad.setVisible(manual_review and side == 0)
         graded = (bool(self._deck)
                   and self._deck[self._index].get("ID") in self._graded)
         for btn in (self.hard_btn, self.good_btn, self.easy_btn):
             btn.setVisible(manual_review and side == 1)
             btn.setEnabled(not graded)
+        for label in self._grade_interval_labels.values():
+            label.setVisible(manual_review and side == 1)
         self.end_btn.setVisible(True)
 
     # -------------------------------------------------------------- theme
@@ -1453,6 +1618,7 @@ class FlashcardsPage(QWidget):
     def refresh_theme(self, colors):
         self._colors = colors
         self.card.refresh_theme(colors)
+        self.card_stack.refresh_theme(colors)
         self.slim_bar.refresh_theme(colors)
         self.picker_panel.refresh_theme(colors)
         self.complete_panel.refresh_theme(colors)
@@ -1485,6 +1651,9 @@ class FlashcardsPage(QWidget):
         self.correct_label.setStyleSheet(
             f"color:{c['success']};background:transparent;font-weight:600;")
         self.autoplay_caption.setStyleSheet(dim + "font-size:9.5pt;")
+        for label in self._grade_interval_labels.values():
+            label.setStyleSheet(dim + "font-size:8.5pt;")
+        self.complete_breakdown.setStyleSheet(dim + "font-size:10pt;")
         self.complete_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
             "font-size:16pt;font-weight:700;")
