@@ -11,8 +11,9 @@
 A desktop app for building, studying, and remembering vocabulary across languages.
 
 Add words and they translate automatically; listen to them on repeat and watch each
-one climb from *New* to *Mastered* as you do; read whole texts with side-by-side
-translations and synced audio; and keep everything in sync across devices.
+one climb from *New* to *Mastered* as you do; review them with spaced-repetition
+flashcards; read whole texts with side-by-side translations and synced audio; and
+keep everything in sync across devices.
 
 ![Lingueez vocabulary view](screenshots/dashboard.png)
 
@@ -22,6 +23,9 @@ translations and synced audio; and keep everything in sync across devices.
   two definition fields.
 - **Learning progression** — words advance *New → Reviewing → Learning → Mastered*
   as you listen, with configurable listen thresholds.
+- **Flashcards** — spaced-repetition review (SM-2): build a deck from due cards, a
+  filter, or selected words; grade yourself *Hard / Good / Easy* with scheduled-interval
+  previews — or play the deck as audio and let the cards flip in sync with the voice.
 - **Search & filters** — live search across words, translations, and tags; filter by
   language, status, tag, or favorites.
 - **Translation** — Google Translate, with optional DeepL integration.
