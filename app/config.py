@@ -44,6 +44,7 @@ DEFAULTS = {
     # "tour_completed" is the legacy first-launch (Words) flag, kept for migration.
     "tour_completed": "False",
     "tour_words_seen": "False",
+    "tour_flashcards_seen": "False",
     "tour_texts_seen": "False",
     "tour_stats_seen": "False",
     # First-run welcome (sync pitch). Set once it has been shown, so it never

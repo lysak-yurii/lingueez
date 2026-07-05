@@ -1370,6 +1370,43 @@ TRANSLATIONS: dict[str, str] = {
     "background, and Edit lets you tweak the text.":
         "Режим фокусування ховає список, режим паперу змінює тло, "
         "а редагування дозволяє змінити текст.",
+    # --- Flashcards tour ---
+    "Choose your deck": "Оберіть колоду",
+    "Pick what goes into the deck — cards due for review, "
+    "words from your current filter, the newest additions, "
+    "or a hand-picked selection.":
+        "Виберіть, що потрапить до колоди — картки, які час повторити, "
+        "слова з поточного фільтра, найновіші додані або вибрані вручну.",
+    "Shape the session": "Налаштуйте сесію",
+    "Set how many cards to review, shuffle their order, and "
+    "have each card pronounced as it appears and flips.":
+        "Задайте кількість карток у сесії, перемішайте їхній порядок і "
+        "ввімкніть озвучення — кожна картка лунатиме, щойно з'явиться "
+        "або перевернеться.",
+    "Preview the deck": "Огляньте колоду",
+    "The exact cards your session will hold. Click a tile to "
+    "read or edit its definition, or the speaker to hear the "
+    "word.":
+        "Це саме ті картки, з яких складеться сесія. Натисніть на плитку, "
+        "щоб прочитати чи змінити визначення, або на кнопку озвучення, "
+        "щоб почути слово.",
+    "Review and grade": "Повторюйте та оцінюйте",
+    "Flip each card and grade how well you knew it — Hard, "
+    "Good or Easy. Spaced repetition decides when each card "
+    "returns: easy words wait longer, hard ones come back "
+    "sooner. Space flips, 1–3 grade.":
+        "Перевертайте картки й оцінюйте, наскільки добре пам'ятаєте "
+        "слово, — «Важко», «Добре» або «Легко». Інтервальні повторення "
+        "визначать, коли картка з'явиться знову: легкі слова чекатимуть "
+        "довше, важкі повернуться швидше. Пробіл перевертає картку, "
+        "а клавіші 1–3 ставлять оцінку.",
+    "Or just listen": "Або просто слухайте",
+    "Play deck turns the session into audio — cards advance "
+    "and flip in sync with the voice. Pause anytime to grade "
+    "a card yourself.":
+        "«Відтворити колоду» перетворює сесію на аудіо — картки змінюються "
+        "й перевертаються в такт голосу. Призупиніть у будь-який момент, "
+        "щоб оцінити картку самостійно.",
     # --- Statistics tour ---
     "Your vocabulary at a glance — totals, mastered words, "
     "languages and your current streak.":
