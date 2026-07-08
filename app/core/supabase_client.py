@@ -21,7 +21,7 @@
 
 import os
 from supabase import create_client, Client
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import logging
 from dotenv import load_dotenv
 import time
@@ -35,6 +35,11 @@ load_dotenv()
 # it is safe to distribute. Advanced users can override both via .env / env vars
 # (SUPABASE_URL / SUPABASE_KEY) to point at their own project.
 DEFAULT_SUPABASE_URL = "https://dtyrmkynrideeknsdlrn.supabase.co"
+
+# word_progress.user_id on a personal ("bring your own Supabase") server, which
+# has no auth: the column is NOT NULL without a default, so every Lingueez app
+# (desktop, mobile, web) stamps this same fixed anonymous id.
+PROGRESS_ANON_USER_ID = "00000000-0000-0000-0000-000000000000"
 DEFAULT_SUPABASE_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0eXJta3lucmlkZWVrbnNkbHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njc1MTQsImV4cCI6MjA5NzQ0MzUxNH0.dds5SyMBN9u-0TUumB2nSCx68FJfpm3n63fLq1n9o10"
 
 
@@ -1425,6 +1430,97 @@ class SupabaseClient:
     def get_auth(self):
         """Return the underlying gotrue auth client, or None if not configured."""
         return self.client.auth if self.client is not None else None
+
+    # Learning progress (word_progress) operations -------------------------
+    # Cross-device SRS + listen-count state, keyed (user_id, word_id) on the
+    # shared word UUIDs. Columns are snake_case on both sides, so no
+    # _map_to_supabase_format round-trip is needed.
+
+    def _progress_user_id(self) -> Optional[str]:
+        """user_id to stamp on word_progress rows in custom-server mode.
+
+        The built-in project fills user_id via `default auth.uid()` + RLS, so
+        there we send nothing. A personal server has no auth: its word_progress
+        table declares user_id NOT NULL without a default, so all Lingueez apps
+        agree on one fixed anonymous id."""
+        return PROGRESS_ANON_USER_ID if is_custom_server() else None
+
+    def get_word_progress_changes(self, timestamp: Optional[str] = None) -> List[Dict[str, Any]]:
+        """word_progress rows changed since `timestamp` (all rows when None)."""
+        if not self.client:
+            return []
+        try:
+            from app.core.db import parse_progress_ts
+            since = parse_progress_ts(timestamp) if timestamp else None
+            all_rows = []
+            page_size = 1000
+            offset = 0
+            while True:
+                response = (self.client.table('word_progress').select('*')
+                            .range(offset, offset + page_size - 1).execute())
+                if not response.data:
+                    break
+                all_rows.extend(response.data)
+                if len(response.data) < page_size:
+                    break
+                offset += page_size
+            if since is not None:
+                all_rows = [r for r in all_rows
+                            if (parse_progress_ts(r.get('updated_at')) or since) > since]
+            return all_rows
+        except Exception as e:
+            logging.error(f"Error fetching word_progress from Supabase: {e}")
+            return []
+
+    def get_all_word_progress(self) -> List[Dict[str, Any]]:
+        """All of this user's word_progress rows."""
+        return self.get_word_progress_changes(None)
+
+    def upsert_word_progress_bulk(self, rows: List[Dict[str, Any]]) -> Tuple[List[str], List[str]]:
+        """Upsert progress rows; returns ``(pushed_word_ids, failed_word_ids)``.
+
+        Falls back to per-row upserts when a chunk fails so one bad row (e.g. a
+        word that hasn't reached the cloud yet — FK violation) doesn't strand
+        the rest; failed rows stay dirty locally and retry next sync."""
+        if not self.client or not rows:
+            return [], [str(r.get('word_id')) for r in rows or []]
+        from app.core.db import parse_progress_ts
+        payload_user_id = self._progress_user_id()
+
+        def to_payload(row):
+            payload = {k: row.get(k) for k in
+                       ('word_id', 'ease_factor', 'interval_days', 'next_review',
+                        'last_reviewed', 'review_count', 'correct_count',
+                        'listen_count', 'updated_at')}
+            # Local SQLite stamps are UTC without an offset; normalize so
+            # Postgres timestamptz doesn't reinterpret them in server time.
+            for ts_key in ('next_review', 'last_reviewed', 'updated_at'):
+                dt = parse_progress_ts(payload.get(ts_key))
+                payload[ts_key] = dt.isoformat() if dt else None
+            if payload_user_id:
+                payload['user_id'] = payload_user_id
+            return payload
+
+        pushed, failed = [], []
+        chunk_size = 200
+        for start in range(0, len(rows), chunk_size):
+            chunk = rows[start:start + chunk_size]
+            payloads = [to_payload(r) for r in chunk]
+            try:
+                self.client.table('word_progress').upsert(
+                    payloads, on_conflict='user_id,word_id').execute()
+                pushed.extend(str(r['word_id']) for r in chunk)
+            except Exception as chunk_exc:
+                logging.warning(f"word_progress chunk upsert failed, retrying per row: {chunk_exc}")
+                for row, payload in zip(chunk, payloads, strict=False):
+                    try:
+                        self.client.table('word_progress').upsert(
+                            [payload], on_conflict='user_id,word_id').execute()
+                        pushed.append(str(row['word_id']))
+                    except Exception as row_exc:
+                        logging.warning(f"word_progress upsert failed for {row.get('word_id')}: {row_exc}")
+                        failed.append(str(row['word_id']))
+        return pushed, failed
 
 
 # ---------------------------------------------------------------------------

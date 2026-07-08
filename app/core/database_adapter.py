@@ -23,7 +23,7 @@ import sqlite3
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any
 from app.core.supabase_client import get_supabase
-from app.core.db import new_id
+from app.core.db import new_id, rekey_progress
 from app.core.errors import DuplicateWordError
 import logging
 import os
@@ -1089,7 +1089,8 @@ class DatabaseAdapter:
         return self._get_word_sqlite(word_id)
     
     def _rekey_word_sqlite(self, old_id: str, new_id: str) -> None:
-        """Re-point a local word (and its tag links / review history) to a new id.
+        """Re-point a local word (and its tag links / review history / learning
+        progress) to a new id.
 
         Used only when a push hits a cross-device content collision and the cloud
         already holds this word pair under a different UUID: the local row adopts
@@ -1113,6 +1114,7 @@ class DatabaseAdapter:
                                    (new_id, old_id))
                 cursor.execute("UPDATE review_events SET word_id = ? WHERE word_id = ?",
                                (new_id, old_id))
+                rekey_progress(cursor, old_id, new_id)
             logging.info(f"Re-keyed local word {old_id} -> {new_id} (cloud collision)")
         except Exception as e:
             logging.error(f"Error re-keying word {old_id} -> {new_id}: {e}")

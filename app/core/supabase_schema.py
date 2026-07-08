@@ -127,11 +127,12 @@ create policy own_rows on tags      for all using (auth.uid() = user_id) with ch
 drop policy if exists own_rows on word_tags;
 create policy own_rows on word_tags for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- ---- Learning / stats tables (used by the Lingueez WEB app) -----------
--- The desktop app doesn't use these (it keeps learning data on-device); they
--- live here so the Lingueez web app, pointed at this project, can store
--- sessions, spaced-repetition progress, quiz results, AI tutor chats, per-word
--- AI context and settings. Same per-user model + RLS as the dictionary tables.
+-- ---- Learning / stats tables --------------------------------------------
+-- `word_progress` is shared by ALL Lingueez apps (web, desktop, mobile): it is
+-- the cross-device source of truth for spaced-repetition state and cumulative
+-- listen counts. The remaining tables (sessions, quiz results, AI chats,
+-- context, settings) are used by the web app only. Same per-user model + RLS
+-- as the dictionary tables.
 create table if not exists word_progress (
     user_id       uuid not null default auth.uid() references auth.users(id) on delete cascade,
     word_id       uuid not null references words(id) on delete cascade,
@@ -140,12 +141,15 @@ create table if not exists word_progress (
     difficulty    integer default 3,
     review_count  integer default 0,
     correct_count integer default 0,
+    listen_count  integer not null default 0,
     ease_factor   real    default 2.5,
     interval_days integer default 1,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now(),
     primary key (user_id, word_id)
 );
+-- Upgrade path for projects created before listen counts were synced.
+alter table word_progress add column if not exists listen_count integer not null default 0;
 create index if not exists idx_word_progress_user_next_review on word_progress(user_id, next_review);
 
 create table if not exists learning_sessions (
@@ -430,14 +434,15 @@ create policy allow_all on word_tags for all to anon, authenticated using (true)
 
 grant all on table words, texts, tags, word_tags to anon, authenticated;
 
--- ---- Learning / stats tables (used by the Lingueez WEB app) -----------
--- The desktop and phone apps DON'T use these — they keep learning data on the
--- device. They're included so the Lingueez web app, pointed at this same
--- project, can store sessions, spaced-repetition progress, quiz results, AI
--- tutor chats, per-word AI context and settings. Without them, starting any web
--- activity fails with "Failed to create session". `user_id` holds the web
--- account id (a plain column — a personal project has no auth), and `word_id`
--- references your words so progress is cleaned up when a word is deleted.
+-- ---- Learning / stats tables --------------------------------------------
+-- `word_progress` is shared by ALL Lingueez apps (web, desktop, mobile): it is
+-- the cross-device source of truth for spaced-repetition state and cumulative
+-- listen counts. The remaining tables (sessions, quiz results, AI chats,
+-- context, settings) are used by the web app only. Without them, starting any
+-- web activity fails with "Failed to create session". `user_id` holds the
+-- account id (a plain column — a personal project has no auth; desktop and
+-- mobile send a fixed anonymous id), and `word_id` references your words so
+-- progress is cleaned up when a word is deleted.
 create table if not exists word_progress (
     user_id       uuid not null,
     word_id       uuid not null references words(id) on delete cascade,
@@ -446,12 +451,15 @@ create table if not exists word_progress (
     difficulty    integer default 3,
     review_count  integer default 0,
     correct_count integer default 0,
+    listen_count  integer not null default 0,
     ease_factor   real    default 2.5,
     interval_days integer default 1,
     created_at    timestamptz default now(),
     updated_at    timestamptz default now(),
     primary key (user_id, word_id)
 );
+-- Upgrade path for projects created before listen counts were synced.
+alter table word_progress add column if not exists listen_count integer not null default 0;
 create index if not exists idx_word_progress_user_next_review on word_progress(user_id, next_review);
 
 create table if not exists learning_sessions (

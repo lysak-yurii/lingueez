@@ -33,7 +33,7 @@ import os
 import shutil
 import sqlite3
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 DB_PATH = 'dictionary.db'
 
@@ -134,11 +134,16 @@ def reset_sync_state(db_path: str) -> None:
 
 
 def _ensure_column(cursor, table, column, decl):
-    """Additive migration: add a column to pre-existing databases."""
+    """Additive migration: add a column to pre-existing databases.
+
+    Returns True when the column was just added (lets callers run a one-time
+    backfill), False when it already existed."""
     cols = {row[1] for row in cursor.execute(f"PRAGMA table_info({table})")}
     if column not in cols:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
         logging.info("Added column %s.%s", table, column)
+        return True
+    return False
 
 
 # --------------------------------------------------------------------------- #
@@ -262,20 +267,40 @@ def initialize_database(db_path=None):
         )
     ''')
 
-    # Local-only SM-2 spaced-repetition state for flashcard review (never
-    # synced to the cloud). One row per graded word; the resulting Status
-    # promotion goes through the normal synced words update instead.
+    # SM-2 spaced-repetition state plus the cumulative listen counter. This is
+    # the local mirror of the cloud `word_progress` table: rows with
+    # synced_at IS NULL are dirty and get pushed by SyncManager; pulled cloud
+    # rows are merged in (counters by max, scheduling by newer updated_at).
+    # `review_events` below stays local-only — its per-word total is folded
+    # into listen_count instead.
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS srs_progress (
             word_id       TEXT PRIMARY KEY,
             ease_factor   REAL NOT NULL DEFAULT 2.5,
             interval_days INTEGER NOT NULL DEFAULT 0,
             next_review   DATETIME,
+            last_reviewed DATETIME,
             review_count  INTEGER NOT NULL DEFAULT 0,
             correct_count INTEGER NOT NULL DEFAULT 0,
-            updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+            listen_count  INTEGER NOT NULL DEFAULT 0,
+            updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+            synced_at     DATETIME
         )
     ''')
+    _ensure_column(cursor, 'srs_progress', 'last_reviewed', 'DATETIME')
+    _ensure_column(cursor, 'srs_progress', 'synced_at', 'DATETIME')
+    if _ensure_column(cursor, 'srs_progress', 'listen_count',
+                      'INTEGER NOT NULL DEFAULT 0'):
+        # One-time backfill: seed the counter from the local listen history so
+        # the first sync uploads it (synced_at stays NULL = dirty).
+        cursor.execute('''
+            INSERT INTO srs_progress (word_id, listen_count, updated_at)
+                SELECT word_id, COUNT(*), CURRENT_TIMESTAMP
+                FROM review_events GROUP BY word_id
+            ON CONFLICT(word_id) DO UPDATE SET
+                listen_count = excluded.listen_count,
+                synced_at = NULL
+        ''')
 
     # Local trash ("Bin"). Deleting a word/text hard-deletes its row but first
     # stashes the full payload (and tags, for words) here, so it can be restored
@@ -617,7 +642,11 @@ def get_definition_counts(db_path=None):
 # --------------------------------------------------------------------------- #
 
 def log_review(word_id, played_at_iso=None, db_path=None):
-    """Append one review event for a word (one completed listen)."""
+    """Append one review event for a word (one completed listen).
+
+    Also bumps the word's cumulative ``srs_progress.listen_count`` (the value
+    that syncs across devices) and marks the row dirty for the next push. Only
+    the counter columns are touched, so SM-2 scheduling state is preserved."""
     db_path = db_path or get_active_db_path()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -626,6 +655,14 @@ def log_review(word_id, played_at_iso=None, db_path=None):
                        (str(word_id), played_at_iso))
     else:
         cursor.execute('INSERT INTO review_events (word_id) VALUES (?)', (str(word_id),))
+    cursor.execute('''
+        INSERT INTO srs_progress (word_id, listen_count, updated_at, synced_at)
+        VALUES (?, 1, CURRENT_TIMESTAMP, NULL)
+        ON CONFLICT(word_id) DO UPDATE SET
+            listen_count = listen_count + 1,
+            updated_at = CURRENT_TIMESTAMP,
+            synced_at = NULL
+    ''', (str(word_id),))
     conn.commit()
     conn.close()
 
@@ -687,20 +724,189 @@ def srs_upsert(word_id, fields, db_path=None):
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO srs_progress
-            (word_id, ease_factor, interval_days, next_review,
-             review_count, correct_count, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            (word_id, ease_factor, interval_days, next_review, last_reviewed,
+             review_count, correct_count, updated_at, synced_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, CURRENT_TIMESTAMP, NULL)
         ON CONFLICT(word_id) DO UPDATE SET
             ease_factor = excluded.ease_factor,
             interval_days = excluded.interval_days,
             next_review = excluded.next_review,
+            last_reviewed = CURRENT_TIMESTAMP,
             review_count = excluded.review_count,
             correct_count = excluded.correct_count,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = CURRENT_TIMESTAMP,
+            synced_at = NULL
     ''', (str(word_id), fields['ease_factor'], fields['interval_days'],
           fields['next_review'], fields['review_count'], fields['correct_count']))
     conn.commit()
     conn.close()
+
+
+def get_listen_count(word_id, db_path=None):
+    """Cumulative listens for a word across all devices.
+
+    Reads ``srs_progress.listen_count``, which is the cloud-merged baseline
+    plus any listens logged locally since the last sync — unlike
+    :func:`get_play_count`, which only counts this device's history."""
+    db_path = db_path or get_active_db_path()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('SELECT listen_count FROM srs_progress WHERE word_id = ?',
+                   (str(word_id),))
+    row = cursor.fetchone()
+    conn.close()
+    return int(row[0]) if row and row[0] is not None else 0
+
+
+# --------------------------------------------------------------------------- #
+# Progress sync support: merge rule, dirty tracking and word re-keying.
+# --------------------------------------------------------------------------- #
+
+# Monotonic counters merge by max; SM-2 scheduling fields travel as one group
+# from the side with the newer updated_at (mixing fields from two rows could
+# combine, say, one device's ease with the other's interval).
+PROGRESS_COUNTERS = ('review_count', 'correct_count', 'listen_count')
+PROGRESS_SCHEDULING = ('ease_factor', 'interval_days', 'next_review',
+                       'last_reviewed', 'difficulty')
+
+
+def parse_progress_ts(value):
+    """Parse a progress timestamp to an aware UTC datetime, or None.
+
+    Accepts SQLite ``CURRENT_TIMESTAMP`` strings (UTC, space-separated) and
+    Postgres ISO timestamps with offset."""
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        try:
+            dt = datetime.fromisoformat(str(value).replace(' ', 'T').replace('Z', '+00:00'))
+        except ValueError:
+            return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def merge_progress_rows(a, b):
+    """Merge two progress rows for the same word (the PROGRESS-MERGE rule).
+
+    Counters take the max of both sides; scheduling fields come wholesale from
+    the side with the newer ``updated_at`` (ties and unparsable stamps prefer
+    ``b`` — callers pass the preferred side, e.g. the cloud row, as ``b``).
+    Either side may be None."""
+    if a is None:
+        return dict(b) if b else None
+    if b is None:
+        return dict(a)
+    ta, tb = parse_progress_ts(a.get('updated_at')), parse_progress_ts(b.get('updated_at'))
+    newer = a if (ta is not None and (tb is None or ta > tb)) else b
+    merged = dict(newer)
+    for key in PROGRESS_COUNTERS:
+        merged[key] = max(int(a.get(key) or 0), int(b.get(key) or 0))
+    created = [r.get('created_at') for r in (a, b) if parse_progress_ts(r.get('created_at'))]
+    if created:
+        merged['created_at'] = min(created, key=parse_progress_ts)
+    return merged
+
+
+def srs_get_dirty(db_path=None):
+    """All progress rows not yet pushed to the cloud (``synced_at IS NULL``)."""
+    db_path = db_path or get_active_db_path()
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM srs_progress WHERE synced_at IS NULL')
+    rows = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return rows
+
+
+def srs_mark_synced(word_ids, db_path=None):
+    """Stamp rows as pushed so they drop out of the dirty set."""
+    word_ids = [str(w) for w in word_ids]
+    if not word_ids:
+        return
+    db_path = db_path or get_active_db_path()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    for start in range(0, len(word_ids), 500):
+        chunk = word_ids[start:start + 500]
+        marks = ','.join('?' * len(chunk))
+        cursor.execute(
+            f'UPDATE srs_progress SET synced_at = CURRENT_TIMESTAMP '
+            f'WHERE word_id IN ({marks})', chunk)
+    conn.commit()
+    conn.close()
+
+
+def srs_write_row(row, synced, db_path=None):
+    """Write a full (merged) progress row, e.g. the result of a cloud pull.
+
+    ``synced=True`` stamps the row clean; ``False`` leaves it dirty so the next
+    push uploads the merged result."""
+    db_path = db_path or get_active_db_path()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO srs_progress
+            (word_id, ease_factor, interval_days, next_review, last_reviewed,
+             review_count, correct_count, listen_count, updated_at, synced_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
+                CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE NULL END)
+        ON CONFLICT(word_id) DO UPDATE SET
+            ease_factor = excluded.ease_factor,
+            interval_days = excluded.interval_days,
+            next_review = excluded.next_review,
+            last_reviewed = excluded.last_reviewed,
+            review_count = excluded.review_count,
+            correct_count = excluded.correct_count,
+            listen_count = excluded.listen_count,
+            updated_at = excluded.updated_at,
+            synced_at = excluded.synced_at
+    ''', (str(row['word_id']), float(row.get('ease_factor') or 2.5),
+          int(row.get('interval_days') or 0), row.get('next_review'),
+          row.get('last_reviewed'), int(row.get('review_count') or 0),
+          int(row.get('correct_count') or 0), int(row.get('listen_count') or 0),
+          row.get('updated_at'), 1 if synced else 0))
+    conn.commit()
+    conn.close()
+
+
+def rekey_progress(cursor, old_id, new_id):
+    """Point a word's progress row at its new ID after a sync re-key.
+
+    When both IDs already have progress (the word pair existed on two devices
+    and each accrued state), the rows are PROGRESS-MERGEd into ``new_id`` and
+    left dirty so the merged result gets pushed."""
+    old_id, new_id = str(old_id), str(new_id)
+    cursor.execute('SELECT * FROM srs_progress WHERE word_id IN (?, ?)',
+                   (old_id, new_id))
+    names = [d[0] for d in cursor.description]
+    rows = {r[names.index('word_id')]: dict(zip(names, r, strict=False)) for r in cursor.fetchall()}
+    old_row, new_row = rows.get(old_id), rows.get(new_id)
+    if old_row is None:
+        return
+    if new_row is None:
+        cursor.execute(
+            'UPDATE srs_progress SET word_id = ?, synced_at = NULL WHERE word_id = ?',
+            (new_id, old_id))
+        return
+    merged = merge_progress_rows(old_row, new_row)
+    cursor.execute('DELETE FROM srs_progress WHERE word_id = ?', (old_id,))
+    cursor.execute('''
+        UPDATE srs_progress SET
+            ease_factor = ?, interval_days = ?, next_review = ?,
+            last_reviewed = ?, review_count = ?, correct_count = ?,
+            listen_count = ?, updated_at = ?, synced_at = NULL
+        WHERE word_id = ?
+    ''', (float(merged.get('ease_factor') or 2.5),
+          int(merged.get('interval_days') or 0), merged.get('next_review'),
+          merged.get('last_reviewed'), int(merged.get('review_count') or 0),
+          int(merged.get('correct_count') or 0),
+          int(merged.get('listen_count') or 0), merged.get('updated_at'),
+          new_id))
 
 
 def srs_due_word_ids(limit, now_iso=None, db_path=None):

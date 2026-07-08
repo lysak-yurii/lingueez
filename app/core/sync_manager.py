@@ -22,6 +22,7 @@
 from app.core.database_adapter import DatabaseAdapter
 from app.core.supabase_client import get_supabase, is_custom_server, custom_server_host
 from app.core.auth_manager import get_auth_manager
+from app.core import db as dbcore
 import sqlite3
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
@@ -498,7 +499,10 @@ class SyncManager:
                 
                 # 9a. Sync tags and word_tags
                 self._sync_tags_incremental(last_sync)
-                
+
+                # 9b. Sync learning progress (after words exist on both sides).
+                self._sync_word_progress()
+
                 # 10. Clean up old synced operations (local)
                 self.db_adapter._clear_synced_operations()
                 
@@ -852,6 +856,9 @@ class SyncManager:
             pending_deletions = self.db_adapter._get_pending_deletions()
             pending_operations = self.db_adapter._get_pending_operations()
             if not pending_deletions and not pending_operations:
+                # Still push any unsynced learning progress (listen counts /
+                # SRS grades don't go through the word queue).
+                self._push_dirty_word_progress()
                 return True
             pending_deletions, pending_operations = self._optimize_sync_queue(
                 pending_deletions, pending_operations)
@@ -859,6 +866,8 @@ class SyncManager:
                 self._sync_operation_queue(pending_operations)
             if pending_deletions:
                 self._sync_deletions(pending_deletions)
+            # Progress last: its rows FK-reference words just pushed above.
+            self._push_dirty_word_progress()
             self.db_adapter._clear_synced_operations()
             logging.info("Flushed %d operation(s) and %d deletion(s) before leaving account",
                          len(pending_operations), len(pending_deletions))
@@ -1150,6 +1159,89 @@ class SyncManager:
         except Exception as e:
             logging.warning(f"Error updating last sync time file: {e}")
     
+    # ------------------------------------------------------------------ #
+    # Learning progress (word_progress) sync: SRS scheduling + cumulative
+    # listen counts, shared across desktop / mobile / web. Always runs AFTER
+    # the word phases — word_progress.word_id has an FK to words(id), so a
+    # word must reach the cloud before its progress row can.
+    # ------------------------------------------------------------------ #
+
+    def _push_dirty_word_progress(self) -> int:
+        """Push locally-changed progress rows (synced_at IS NULL) to the cloud.
+
+        Best-effort: rows that fail (typically an FK on a word that hasn't
+        reached the cloud yet) stay dirty and retry on the next sync. Returns
+        the number of rows successfully pushed."""
+        try:
+            dirty = dbcore.srs_get_dirty(self.local_db)
+        except sqlite3.Error as exc:
+            logging.warning(f"Could not read dirty word_progress rows: {exc}")
+            return 0
+        if not dirty:
+            return 0
+        pushed, failed = self.supabase.upsert_word_progress_bulk(dirty)
+        if pushed:
+            dbcore.srs_mark_synced(pushed, self.local_db)
+        if failed:
+            logging.info(f"{len(failed)} word_progress row(s) deferred (retry next sync)")
+        return len(pushed)
+
+    def _sync_word_progress(self, full: bool = False):
+        """Pull-merge-push learning progress with the cloud word_progress table.
+
+        Counters (review/correct/listen counts) merge by max; SM-2 scheduling
+        fields travel as one group from the side with the newer updated_at
+        (dbcore.merge_progress_rows). The incremental watermark advances to the
+        max cloud updated_at seen — never this device's clock — so clock skew
+        can't skip rows."""
+        try:
+            last = None if full else self.db_adapter.get_sync_metadata('word_progress_last_sync')
+            cloud_rows = self.supabase.get_word_progress_changes(last)
+
+            if cloud_rows:
+                conn = sqlite3.connect(self.local_db)
+                cursor = conn.cursor()
+                cursor.execute("SELECT ID FROM words")
+                local_word_ids = {row[0] for row in cursor.fetchall()}
+                conn.close()
+
+                cloud_by_id = {str(r['word_id']): r for r in cloud_rows
+                               if r.get('word_id')}
+                local_rows = dbcore.srs_get_many(list(cloud_by_id), db_path=self.local_db)
+                skipped = 0
+                for word_id, cloud_row in cloud_by_id.items():
+                    if word_id not in local_word_ids:
+                        # Word hasn't been pulled yet (or was deleted locally);
+                        # the row is re-fetched once the word exists.
+                        skipped += 1
+                        continue
+                    local_row = local_rows.get(word_id)
+                    merged = dbcore.merge_progress_rows(local_row, cloud_row)
+                    merged['word_id'] = word_id
+                    # Clean only if the merge added nothing beyond the cloud
+                    # state; otherwise stay dirty so the push below uploads
+                    # the merged result.
+                    clean = all(
+                        int(merged.get(k) or 0) == int(cloud_row.get(k) or 0)
+                        for k in dbcore.PROGRESS_COUNTERS
+                    ) and dbcore.parse_progress_ts(merged.get('updated_at')) == \
+                        dbcore.parse_progress_ts(cloud_row.get('updated_at'))
+                    dbcore.srs_write_row(merged, synced=clean, db_path=self.local_db)
+                if skipped:
+                    logging.info(f"{skipped} cloud word_progress row(s) deferred (word not local yet)")
+
+                stamps = [dbcore.parse_progress_ts(r.get('updated_at')) for r in cloud_rows]
+                stamps = [s for s in stamps if s is not None]
+                if stamps:
+                    self.db_adapter.set_sync_metadata(
+                        'word_progress_last_sync', max(stamps).isoformat())
+
+            pushed = self._push_dirty_word_progress()
+            logging.info(f"word_progress sync: pulled {len(cloud_rows)}, pushed {pushed}")
+        except Exception as exc:
+            # Progress sync must never break the dictionary sync around it.
+            logging.warning(f"word_progress sync failed (will retry next sync): {exc}")
+
     def _should_run_cleanup(self) -> bool:
         """Check if cleanup should run (once per day)."""
         try:
@@ -1710,6 +1802,7 @@ class SyncManager:
                                (cloud_id, old_id))
                 cursor.execute("UPDATE review_events SET word_id = ? WHERE word_id = ?",
                                (cloud_id, old_id))
+                dbcore.rekey_progress(cursor, old_id, cloud_id)
                 logging.info(f"Re-keyed local word {old_id} -> {cloud_id} on pull (same word pair)")
                 cursor.execute("SELECT ID, created_at, edited_at FROM words WHERE ID = ?",
                                (cloud_id,))
@@ -2378,7 +2471,12 @@ class SyncManager:
                 logging.info("Both databases have data - performing merge sync")
                 self._merge_sync(all_local_words, all_local_texts, all_local_tags, all_local_word_tags,
                                all_cloud_words, all_cloud_texts, all_cloud_tags, all_cloud_word_tags)
-            
+
+            # Learning progress rides after the word phases (FK on words.id).
+            # full=True: a first sync / manual reconcile must consider every
+            # cloud row, and seeds the cloud from a device with local history.
+            self._sync_word_progress(full=True)
+
             # Update sync metadata
             logging.info("Step 5: Updating sync metadata...")
             self._update_last_sync_time()

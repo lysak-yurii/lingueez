@@ -2961,7 +2961,7 @@ class MainWindow(QMainWindow):
             dbq.log_review(wid, datetime.now().isoformat(timespec='seconds'))
 
             if self._promote_on_play:
-                count = dbq.get_play_count(wid)
+                count = dbq.get_listen_count(wid)
                 current = self._session_status.get(wid, rec.get('Status'))
                 target = progression.next_status(current, count, self._thresholds)
                 if target:
