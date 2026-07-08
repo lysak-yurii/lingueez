@@ -297,6 +297,52 @@ class SyncWordProgressTests(unittest.TestCase):
         self.sm.supabase.get_word_progress_changes.side_effect = Exception("network down")
         self.sm._sync_word_progress()  # must not propagate
 
+    # --- status promotion from merged cloud counts ---
+
+    def _word_state(self, word_id="w1"):
+        conn = sqlite3.connect(self.path)
+        row = conn.execute(
+            "SELECT Status, edited_at FROM words WHERE ID = ?", (word_id,)
+        ).fetchone()
+        conn.close()
+        return row
+
+    def _set_status(self, status, word_id="w1"):
+        conn = sqlite3.connect(self.path)
+        conn.execute("UPDATE words SET Status = ? WHERE ID = ?", (status, word_id))
+        conn.commit()
+        conn.close()
+
+    def test_synced_count_promotes_word_status(self):
+        self._set_status("New")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+        self.sm._sync_word_progress()
+        status, edited_at = self._word_state()
+        self.assertEqual(status, "Reviewing")
+        self.assertIsNotNone(edited_at)  # bumped so word sync pushes it
+
+    def test_synced_count_never_demotes(self):
+        self._set_status("Mastered")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+        self.sm._sync_word_progress()
+        self.assertEqual(self._word_state()[0], "Mastered")
+
+    def test_promotion_respects_disabled_setting(self):
+        self._set_status("New")
+        with open("settings.cfg", "w") as f:
+            f.write("playback_promote=false\n")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+        self.sm._sync_word_progress()
+        self.assertEqual(self._word_state()[0], "New")
+
+    def test_promotion_uses_configured_thresholds(self):
+        self._set_status("New")
+        with open("settings.cfg", "w") as f:
+            f.write("playback_reviewing_listens=10\n")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+        self.sm._sync_word_progress()
+        self.assertEqual(self._word_state()[0], "New")  # below the raised bar
+
 
 if __name__ == "__main__":
     unittest.main()

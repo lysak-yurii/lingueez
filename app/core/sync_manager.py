@@ -23,6 +23,7 @@ from app.core.database_adapter import DatabaseAdapter
 from app.core.supabase_client import get_supabase, is_custom_server, custom_server_host
 from app.core.auth_manager import get_auth_manager
 from app.core import db as dbcore
+from app.core import progression
 import sqlite3
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
@@ -1209,6 +1210,7 @@ class SyncManager:
                                if r.get('word_id')}
                 local_rows = dbcore.srs_get_many(list(cloud_by_id), db_path=self.local_db)
                 skipped = 0
+                merged_counts = []
                 for word_id, cloud_row in cloud_by_id.items():
                     if word_id not in local_word_ids:
                         # Word hasn't been pulled yet (or was deleted locally);
@@ -1227,8 +1229,10 @@ class SyncManager:
                     ) and dbcore.parse_progress_ts(merged.get('updated_at')) == \
                         dbcore.parse_progress_ts(cloud_row.get('updated_at'))
                     dbcore.srs_write_row(merged, synced=clean, db_path=self.local_db)
+                    merged_counts.append((word_id, int(merged.get('listen_count') or 0)))
                 if skipped:
                     logging.info(f"{skipped} cloud word_progress row(s) deferred (word not local yet)")
+                self._promote_from_listen_counts(merged_counts)
 
                 stamps = [dbcore.parse_progress_ts(r.get('updated_at')) for r in cloud_rows]
                 stamps = [s for s in stamps if s is not None]
@@ -1241,6 +1245,46 @@ class SyncManager:
         except Exception as exc:
             # Progress sync must never break the dictionary sync around it.
             logging.warning(f"word_progress sync failed (will retry next sync): {exc}")
+
+    def _promote_from_listen_counts(self, counts):
+        """Promote words.Status from cloud-merged cumulative listen counts.
+
+        Listens made on other devices must move the ladder here too, not just
+        local playback (main_window._on_word_completed). Plain SQLite write
+        that bumps edited_at, so the words watermark pushes the promotion on
+        the next incremental sync; db_adapter.update_word is avoided because
+        it re-enters cloud logic mid-pull.
+        """
+        if not counts:
+            return
+        from app.config import load_settings, get_bool, get_int
+        settings = load_settings()
+        if not get_bool(settings, "playback_promote", True):
+            return
+        thresholds = progression.normalize_thresholds(
+            get_int(settings, "playback_reviewing_listens", 3),
+            get_int(settings, "playback_learning_listens", 15),
+            get_int(settings, "playback_mastered_listens", 100))
+        conn = sqlite3.connect(self.local_db)
+        try:
+            cursor = conn.cursor()
+            promoted = 0
+            for word_id, listen_count in counts:
+                cursor.execute("SELECT Status FROM words WHERE ID = ?", (word_id,))
+                row = cursor.fetchone()
+                if row is None:
+                    continue
+                target = progression.next_status(row[0], listen_count, thresholds)
+                if target:
+                    cursor.execute(
+                        "UPDATE words SET Status = ?, edited_at = ? WHERE ID = ?",
+                        (target, datetime.now(timezone.utc).isoformat(), word_id))
+                    promoted += 1
+            conn.commit()
+            if promoted:
+                logging.info(f"Promoted {promoted} word(s) from synced listen counts")
+        finally:
+            conn.close()
 
     def _should_run_cleanup(self) -> bool:
         """Check if cleanup should run (once per day)."""
