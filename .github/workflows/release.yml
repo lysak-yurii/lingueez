@@ -92,6 +92,38 @@ jobs:
         with:
           name: windows
           path: installer_output/Lingueez-${{ needs.validate.outputs.version }}-Setup.exe
+      # --- Microsoft Store package (MSIX) ---------------------------------
+      # Reuses the SAME dist/Lingueez output as the installer above; the .exe
+      # steps are untouched. Produced UNSIGNED — the Store re-signs on upload,
+      # so no code-signing certificate is needed. Package identity is baked into
+      # packaging/msix/AppxManifest.xml (from Partner Center); only the version
+      # is templated here.
+      - name: Stage MSIX layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          LAYOUT=msix_layout
+          rm -rf "$LAYOUT"
+          mkdir -p "$LAYOUT"
+          cp -r dist/Lingueez/* "$LAYOUT"/
+          cp -r packaging/msix/Assets "$LAYOUT"/Assets
+          VERSION="${{ needs.validate.outputs.version }}.0"   # Store requires a 4-part x.y.z.0
+          sed -e "s#{{VERSION}}#${VERSION}#g" \
+              packaging/msix/AppxManifest.xml > "$LAYOUT/AppxManifest.xml"
+      - name: Build MSIX
+        shell: pwsh
+        run: |
+          $makeappx = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" |
+                       Sort-Object FullName -Descending | Select-Object -First 1).FullName
+          if (-not $makeappx) { throw "makeappx.exe not found in the Windows SDK" }
+          New-Item -ItemType Directory -Force -Path installer_output | Out-Null
+          $out = "installer_output\Lingueez-${{ needs.validate.outputs.version }}.msix"
+          & $makeappx pack /d msix_layout /p $out /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed ($LASTEXITCODE)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: installer_output/Lingueez-${{ needs.validate.outputs.version }}.msix
 
   build-linux:
     needs: [validate, test]
@@ -204,6 +236,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+      - name: Exclude the MSIX from Release assets
+        # The unsigned Store MSIX won't install outside the Microsoft Store, so it
+        # must not be a public Release download — it stays available as the
+        # build-windows CI artifact for manual upload to Partner Center.
+        run: rm -rf artifacts/windows-msix
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:

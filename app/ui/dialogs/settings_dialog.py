@@ -884,13 +884,18 @@ class SettingsDialog(FramelessDialog):
                     lambda: QDesktopServices.openUrl(QUrl(f"{updater.GITHUB_URL}/releases")))
                 form.addRow(get_appimage)
 
-        form.addRow(self._check("auto_check_updates", True,
-                                tr("Check for updates on startup")))
-        updates_note = QLabel(tr("Checks once a day for a newer version and lets you know; "
-                                 "nothing is ever downloaded or installed automatically."))
-        updates_note.setObjectName("dimLabel")
-        updates_note.setWordWrap(True)
-        form.addRow(updates_note)
+        # The Microsoft Store (MSIX) build gets its updates from the Store, so the
+        # in-app startup check is disabled there — hide its toggle rather than show
+        # a dead switch to Store users.
+        from app.system.package_env import is_msix
+        if not is_msix():
+            form.addRow(self._check("auto_check_updates", True,
+                                    tr("Check for updates on startup")))
+            updates_note = QLabel(tr("Checks once a day for a newer version and lets you know; "
+                                     "nothing is ever downloaded or installed automatically."))
+            updates_note.setObjectName("dimLabel")
+            updates_note.setWordWrap(True)
+            form.addRow(updates_note)
         return _scrollable(widget)
 
     # ----------------------------------------------------------- actions

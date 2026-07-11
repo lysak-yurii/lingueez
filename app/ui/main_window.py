@@ -153,6 +153,11 @@ from app.system.hotkey_env import (  # noqa: E402
     is_flatpak as _is_flatpak,
     is_wayland as _is_wayland,
 )
+# On the Microsoft Store (MSIX) build, updates are delivered by the Store and its
+# certification frowns on steering users to off-Store downloads, so the in-app
+# (GitHub-based) update affordances are hidden. Same binary as the .exe, so this
+# is a runtime check.
+from app.system.package_env import is_msix as _is_msix  # noqa: E402
 
 
 # Local-socket name the running instance listens on; a second launch with
@@ -4233,7 +4238,9 @@ class MainWindow(QMainWindow):
 
     def _maybe_check_for_updates(self):
         """Startup check: respect the user's preference and the daily throttle."""
-        if self._quitting or not get_bool(self.settings, "auto_check_updates", True):
+        if self._quitting or _is_msix():
+            return  # the Microsoft Store handles updates for the packaged build
+        if not get_bool(self.settings, "auto_check_updates", True):
             return
         from app.core import updater
         if updater.should_check_now():
@@ -4419,11 +4426,14 @@ class MainWindow(QMainWindow):
         dialog.content_layout.addLayout(btns)
 
         # --- Actions: check for updates / Close ---
+        # On the Store (MSIX) build there is no in-app update check — the Store
+        # delivers updates — so the button is omitted entirely there.
         row = QHBoxLayout()
-        check = QPushButton(tr("Check for updates"))
-        check.setCursor(Qt.PointingHandCursor)
-        check.clicked.connect(lambda: self._check_for_updates(manual=True))
-        row.addWidget(check)
+        if not _is_msix():
+            check = QPushButton(tr("Check for updates"))
+            check.setCursor(Qt.PointingHandCursor)
+            check.clicked.connect(lambda: self._check_for_updates(manual=True))
+            row.addWidget(check)
         row.addStretch(1)
         ok = QPushButton(tr("Close"), objectName="primaryButton")
         ok.setCursor(Qt.PointingHandCursor)

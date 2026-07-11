@@ -56,6 +56,36 @@ jobs:
         with:
           name: windows-installer
           path: installer_output/Lingueez-${{ needs.version.outputs.version }}-Setup.exe
+      # --- Microsoft Store package (MSIX) ---------------------------------
+      # Same dist/Lingueez output as the installer above; .exe steps untouched.
+      # Built UNSIGNED; package identity is baked into the manifest and only the
+      # version is templated (see packaging/msix/README.md).
+      - name: Stage MSIX layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          LAYOUT=msix_layout
+          rm -rf "$LAYOUT"
+          mkdir -p "$LAYOUT"
+          cp -r dist/Lingueez/* "$LAYOUT"/
+          cp -r packaging/msix/Assets "$LAYOUT"/Assets
+          VERSION="${{ needs.version.outputs.version }}.0"   # Store requires a 4-part x.y.z.0
+          sed -e "s#{{VERSION}}#${VERSION}#g" \
+              packaging/msix/AppxManifest.xml > "$LAYOUT/AppxManifest.xml"
+      - name: Build MSIX
+        shell: pwsh
+        run: |
+          $makeappx = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" |
+                       Sort-Object FullName -Descending | Select-Object -First 1).FullName
+          if (-not $makeappx) { throw "makeappx.exe not found in the Windows SDK" }
+          New-Item -ItemType Directory -Force -Path installer_output | Out-Null
+          $out = "installer_output\Lingueez-${{ needs.version.outputs.version }}.msix"
+          & $makeappx pack /d msix_layout /p $out /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed ($LASTEXITCODE)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: installer_output/Lingueez-${{ needs.version.outputs.version }}.msix
 
   build-linux:
     needs: version
