@@ -1159,6 +1159,27 @@ TRANSLATIONS: dict[str, str] = {
         "Ліцензовано згідно з GNU Affero General Public License v3.0. Це зазначення авторства має бути збережено (AGPL §7).",
     "Found a bug or have an idea?": "Знайшли помилку або маєте ідею?",
     "Report an issue": "Повідомити про проблему",
+    "What would you like to report?": "Про що ви хочете повідомити?",
+    "A bug or technical problem": "Помилку або технічну проблему",
+    "Creates a report with app diagnostics to send to the developers.":
+        "Створює звіт із діагностикою застосунку для відправлення розробникам.",
+    "Inappropriate AI-generated content": "Неприйнятний контент, згенерований ШІ",
+    "Report a definition, text, or translation the AI produced.":
+        "Повідомити про визначення, текст чи переклад, створені ШІ.",
+    "Report: inappropriate AI-generated content":
+        "Скарга: неприйнятний контент, згенерований ШІ",
+    "Please describe the AI-generated content you're reporting.\n\n"
+    "Where it appeared (definition / generated text / word translation):\n"
+    "The word or text in question:\n"
+    "Why it is inappropriate:\n\n"
+    "---\n":
+        "Будь ласка, опишіть згенерований ШІ контент, про який ви повідомляєте.\n\n"
+        "Де він з'явився (визначення / згенерований текст / переклад слова):\n"
+        "Слово або текст, про які йдеться:\n"
+        "Чому він неприйнятний:\n\n"
+        "---\n",
+    "To report inappropriate AI-generated content, please email us at {email}.":
+        "Щоб повідомити про неприйнятний контент, згенерований ШІ, напишіть нам на {email}.",
 
     # Support dialog
     "Support": "Підтримати",

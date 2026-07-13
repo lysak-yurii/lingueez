@@ -4448,6 +4448,38 @@ class MainWindow(QMainWindow):
         SupportDialog(self).exec()
 
     def _report_an_issue(self):
+        """Ask what kind of issue to report, then dispatch.
+
+        A technical bug goes through the GitHub flow (diagnostics + new-issue
+        form); inappropriate AI-generated content goes to the report inbox by email.
+        """
+        from app.ui.dialogs.report_dialog import ReportIssueDialog
+
+        dlg = ReportIssueDialog(self)
+        dlg.exec()
+        if dlg.choice == "bug":
+            self._report_bug()
+        elif dlg.choice == "ai":
+            self._report_ai_content()
+
+    def _report_ai_content(self):
+        """Open a prefilled email to support reporting inappropriate AI output.
+
+        Uses a ``mailto:`` so it needs no backend; if the OS has no mail handler
+        (openUrl returns False) we fall back to a dialog showing the address, so
+        there is always a working way to report.
+        """
+        from PySide6.QtCore import QUrl
+        from app.core.diagnostics import build_ai_report_mailto
+        from app.version import REPORT_EMAIL
+
+        if not QDesktopServices.openUrl(QUrl(build_ai_report_mailto())):
+            QMessageBox.information(
+                self, tr("Report an issue"),
+                tr("To report inappropriate AI-generated content, please email "
+                   "us at {email}.").format(email=REPORT_EMAIL))
+
+    def _report_bug(self):
         """Bundle diagnostics and open a prefilled GitHub issue.
 
         The raw Log viewer is advanced-only, so this is the primary support path

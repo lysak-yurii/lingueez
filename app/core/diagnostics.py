@@ -48,6 +48,30 @@ def system_info():
     )
 
 
+def build_ai_report_mailto():
+    """Build a ``mailto:`` URL for reporting inappropriate AI-generated content.
+
+    Kept Qt-free (returns a plain string) so it's unit-testable; the UI just hands
+    the result to ``QDesktopServices.openUrl``. Pre-fills a short template plus the
+    ``system_info()`` environment block, addressed to the report inbox.
+    """
+    from urllib.parse import urlencode
+
+    from app.i18n import tr
+    from app.version import REPORT_EMAIL
+
+    subject = tr("Report: inappropriate AI-generated content")
+    body = tr(
+        "Please describe the AI-generated content you're reporting.\n\n"
+        "Where it appeared (definition / generated text / word translation):\n"
+        "The word or text in question:\n"
+        "Why it is inappropriate:\n\n"
+        "---\n"
+    ) + system_info() + "\n"
+    query = urlencode({"subject": subject, "body": body})
+    return f"mailto:{REPORT_EMAIL}?{query}"
+
+
 def build_diagnostics_zip(dest_dir=None):
     """Zip the logs + environment info and return the path to the archive.
 

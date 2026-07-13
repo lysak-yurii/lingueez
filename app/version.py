@@ -19,8 +19,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-APP_VERSION = "2.0.4"
-BUILD_NUMBER = "2026071104"
+APP_VERSION = "2.0.5"
+BUILD_NUMBER = "2026071302"
 APP_NAME = "Lingueez"
 APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 
@@ -35,6 +35,8 @@ TERMS_URL_FALLBACK = "https://github.com/lysak-yurii/lingueez/blob/main/docs/leg
 # the domain is actually reachable.
 WEBSITE_URL = "https://lingueez.app"
 CONTACT_EMAIL = "support@lingueez.app"
+# Dedicated channel for reporting inappropriate AI-generated content.
+REPORT_EMAIL = "report@lingueez.app"
 
 # Optional financial support. These are hosted pages opened in the user's browser —
 # the app never embeds a payment form.
