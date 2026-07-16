@@ -1,0 +1,243 @@
+---
+layout: marketing
+permalink: /download/
+title: Download Lingueez — Windows, Linux, browser and e-reader
+description: Get Lingueez free from the Microsoft Store, as a Windows installer, or as a Linux AppImage or Flatpak. Or use it straight from your browser, or on your KOReader e-reader.
+image: https://lingueez.app/assets/dashboard.png
+canonical: https://lingueez.app/download/
+nav_active: download
+head_extra: |
+  <style>
+    /* Download page: one card per platform. */
+    .dl-top{padding-top:52px;}
+    .dl-top .section-head{max-width:46ch;}
+    .dl-top h1{font-size:clamp(1.9rem,3.6vw,2.6rem); margin:.4rem 0 .5rem;}
+
+    /* Own breakpoint: site.css's .grid media queries load earlier, so a bare
+       .dl-grid rule would silently win over them and never collapse. */
+    .dl-grid{grid-template-columns:repeat(2,1fr);}
+    @media (max-width:760px){ .dl-grid{grid-template-columns:1fr;} }
+
+    .dl-grid .card{display:flex; flex-direction:column; padding:26px;}
+    .dl-grid .card:hover{transform:none; border-color:var(--border);}
+    .dl-head{display:flex; align-items:center; gap:12px;}
+    .dl-head .ic{margin-bottom:0; flex:none;}
+    .dl-head h3{margin:0; font-size:1.15rem;}
+    .dl-req{color:var(--dim); font-size:.85rem; margin:.5rem 0 0;}
+
+    .dl-actions{padding-top:20px; display:flex; flex-direction:column;
+      align-items:flex-start; gap:12px;}
+    .dl-note{color:var(--dim); font-size:.88rem; margin:0;}
+    .dl-note code{background:var(--bg); padding:.13em .42em; border-radius:6px; font-size:.88em;
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--text);}
+
+    /* Each install format sits in its own panel, so it reads as one discrete choice and
+       its terminal one-liner clearly belongs to it. The recommended one gets a quiet tint. */
+    .method{width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+      background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:15px 16px;}
+    .method.rec{border-color:color-mix(in srgb,var(--green) 34%, var(--border));
+      background:color-mix(in srgb,var(--green) 6%, var(--surface2));}
+    .method-row{display:flex; align-items:baseline; gap:11px; flex-wrap:wrap; width:100%;}
+    .method-btn{font-size:.92rem; padding:.58em 1.05em;}
+    .rec-tag{display:inline-flex; align-items:center; gap:.34em; font-size:.72rem; font-weight:700;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--green);}
+    .rec-tag svg{width:12px; height:12px;}
+
+    .dl-meta{color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums;}
+    .dl-meta:empty{display:none;}
+
+    .cmd{display:flex; align-items:stretch; gap:6px; width:100%;}
+    .cmd code{flex:1; min-width:0; background:var(--bg); border:1px solid var(--border);
+      border-radius:8px; padding:.5em .65em; color:var(--text); font-size:.8rem;
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      overflow-x:auto; white-space:nowrap;}
+    .cmd button{flex:none; width:34px; background:transparent; border:1px solid var(--border);
+      border-radius:8px; color:var(--dim); cursor:pointer; display:grid; place-items:center;
+      transition:color .15s ease, border-color .15s ease;}
+    .cmd button:hover{color:var(--text); border-color:#384455;}
+    .cmd button svg{width:15px; height:15px;}
+    .cmd button .tick{display:none;}
+    .cmd button.done{color:var(--green); border-color:color-mix(in srgb,var(--green) 45%, transparent);}
+    .cmd button.done .tick{display:block;}
+    .cmd button.done .clip{display:none;}
+
+    .dl-foot{text-align:center; color:var(--dim); font-size:.92rem; margin:34px 0 0;}
+  </style>
+---
+
+<!-- DOWNLOADS -->
+<section class="dl-top">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow"><span lang="en">Free · Open source · No account required</span><span lang="uk">Безкоштовно · Відкритий код · Без реєстрації</span></p>
+      <h1 lang="en">Download Lingueez</h1>
+      <h1 lang="uk">Завантажити Lingueez</h1>
+      <p><span lang="en">Your vocabulary lives on your own machine. Pick the way that suits you best.</span><span lang="uk">Ваш словник зберігається на вашому пристрої. Оберіть спосіб, який вам зручніший.</span></p>
+    </div>
+
+    <div class="grid dl-grid reveal">
+
+      <!-- WINDOWS -->
+      <div class="card">
+        <div class="dl-head">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></div>
+          <h3>Windows</h3>
+        </div>
+        <p class="dl-req"><span lang="en">Windows 10 or newer · 64-bit</span><span lang="uk">Windows 10 або новіша · 64-біт</span></p>
+
+        <div class="dl-actions">
+          <!-- Microsoft Store — recommended -->
+          <div class="method rec">
+            <span class="rec-tag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span lang="en">Recommended</span><span lang="uk">Рекомендовано</span>
+            </span>
+            <a class="btn btn-primary method-btn" href="https://apps.microsoft.com/detail/9pkdjkgvzt6v">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Microsoft Store</a>
+            <p class="dl-note"><span lang="en">Installs and stays up to date automatically.</span><span lang="uk">Встановлюється й оновлюється автоматично.</span></p>
+            <div class="cmd">
+              <code>winget install 9PKDJKGVZT6V</code>
+              <button type="button" data-copy="winget install 9PKDJKGVZT6V" aria-label="Copy command">
+                <svg class="clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+            <p class="dl-note"><span lang="en">Same package from the terminal.</span><span lang="uk">Той самий пакунок із терміналу.</span></p>
+          </div>
+
+          <!-- Standalone installer -->
+          <div class="method">
+            <div class="method-row">
+              <a class="btn btn-ghost method-btn" data-asset="-Setup.exe" href="https://github.com/lysak-yurii/lingueez/releases/latest">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span lang="en">Installer (.exe)</span><span lang="uk">Інсталятор (.exe)</span></a>
+              <span class="dl-meta" data-meta="-Setup.exe"></span>
+            </div>
+            <p class="dl-note"><span lang="en">Updates manually. Windows may warn that the publisher is unknown.</span><span lang="uk">Оновлюється вручну. Windows може попередити, що видавця не розпізнано.</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINUX -->
+      <div class="card">
+        <div class="dl-head">
+          <!-- Tux silhouette, flattened to one colour from Super Tiny Icons (MIT-licensed). -->
+          <div class="ic"><svg viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><g transform="matrix(2.3 0 0 2.3 236 261)"><path d="M-32-25c-3 7-24 29-22 51 8 92 36 30 78 53 0 0 75-42 15-110-17-24-2-43-13-59s-30-17-44-2 6 37-14 67"/><path d="M42 21s9-18-8-31c16 17 6 32 6 32h-3C36-13 27 6 14-56 29-73 0-88 0-60h-9c1-24-20-12-8 5-1 37-23 52-23 78-7-18 6-32 6-32s-18 15-7 37 31 17 17 27c22 15 56 5 55-27 1-8 22-5 24-3s-3-4-13-4m-56-78c-7-2-5-11-2-11s8 7 2 11m19 1c-5-7-1-14 4-13s5 13-4 13"/><path d="M-41 31l21 30c11 7 5 35-25 21-17-5-31-4-33-13s4-10 3-14c-4-22 14-11 19-22s5-16 15-2M71 45c-4-6 0-17-14-16-6 12-23 24-24 0-10 0-3 24-7 35-9 27 17 29 28 16l26-18c2-3 5-6-9-17m-92-92c-3-6 11-14 16-14s12 4 19 6 4 9 2 10S3-35-5-35s-10-8-16-12"/></g></svg></div>
+          <h3>Linux</h3>
+        </div>
+        <p class="dl-req"><span lang="en">x86_64 · Any modern distribution</span><span lang="uk">x86_64 · Будь-який сучасний дистрибутив</span></p>
+
+        <div class="dl-actions">
+          <!-- AppImage — recommended -->
+          <div class="method rec">
+            <span class="rec-tag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span lang="en">Recommended</span><span lang="uk">Рекомендовано</span>
+            </span>
+            <div class="method-row">
+              <a class="btn btn-primary method-btn" data-asset=".AppImage" href="https://github.com/lysak-yurii/lingueez/releases/latest">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span lang="en">AppImage</span><span lang="uk">AppImage</span></a>
+              <span class="dl-meta" data-meta=".AppImage"></span>
+            </div>
+            <p class="dl-note"><span lang="en">One file — mark it executable and run it. Updates itself in place.</span><span lang="uk">Один файл — зробіть його виконуваним і запустіть. Оновлюється самостійно.</span></p>
+            <div class="cmd">
+              <code>am -i lingueez</code>
+              <button type="button" data-copy="am -i lingueez" aria-label="Copy command">
+                <svg class="clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+            <p class="dl-note"><span lang="en">Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.</span><span lang="uk">Той самий AppImage під керуванням <a href="https://github.com/ivan-hc/AM">AM</a> — або <code>appman -i lingueez</code> без root.</span></p>
+          </div>
+
+          <!-- Flatpak -->
+          <div class="method">
+            <div class="method-row">
+              <a class="btn btn-ghost method-btn" data-asset=".flatpak" href="https://github.com/lysak-yurii/lingueez/releases/latest">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span lang="en">Flatpak bundle</span><span lang="uk">Пакунок Flatpak</span></a>
+              <span class="dl-meta" data-meta=".flatpak"></span>
+            </div>
+            <p class="dl-note"><span lang="en">Sandboxed. Install with <code>flatpak install</code> — updates manually.</span><span lang="uk">Ізольований пакунок. Встановіть через <code>flatpak install</code> — оновлення вручну.</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BROWSER -->
+      <div class="card">
+        <div class="dl-head">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg></div>
+          <h3><span lang="en">Browser</span><span lang="uk">Браузер</span></h3>
+        </div>
+        <p class="dl-req"><span lang="en">Any device · Nothing to install</span><span lang="uk">Будь-який пристрій · Нічого встановлювати</span></p>
+
+        <div class="dl-actions">
+          <a class="btn btn-ghost" href="https://web.lingueez.app/">
+            <span lang="en">Open the web app</span><span lang="uk">Відкрити вебзастосунок</span></a>
+          <p class="dl-note"><span lang="en">Your vocabulary, in any browser. Needs an account so it can sync.</span><span lang="uk">Ваш словник у будь-якому браузері. Потрібен обліковий запис для синхронізації.</span></p>
+        </div>
+      </div>
+
+      <!-- E-READER -->
+      <div class="card">
+        <div class="dl-head">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v18H5.5A1.5 1.5 0 0 1 4 19.5z"/><line x1="8" y1="3" x2="8" y2="21"/></svg></div>
+          <h3><span lang="en">E-reader</span><span lang="uk">Е-читач</span></h3>
+        </div>
+        <p class="dl-req"><span lang="en">KOReader · Kobo, Kindle, PocketBook and more</span><span lang="uk">KOReader · Kobo, Kindle, PocketBook та інші</span></p>
+
+        <div class="dl-actions">
+          <a class="btn btn-ghost" href="/koreader/">
+            <span lang="en">Get the KOReader plugin</span><span lang="uk">Отримати плагін KOReader</span></a>
+          <p class="dl-note"><span lang="en">Long-press a word while you read and it lands in your vocabulary.</span><span lang="uk">Затисніть слово під час читання — і воно потрапить до вашого словника.</span></p>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="dl-foot">
+      <a href="https://github.com/lysak-yurii/lingueez/releases"><span lang="en">All releases and changelogs on GitHub</span><span lang="uk">Усі випуски та журнали змін на GitHub</span> →</a>
+    </p>
+  </div>
+</section>
+
+<script>
+(function(){
+  var REPO='lysak-yurii/lingueez';
+
+  /* Asset filenames embed the version, so links ship pointing at /releases/latest and
+     get upgraded to the exact file here. Any failure leaves the working href alone. */
+  fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(rel){
+      if(!rel || !rel.assets || !rel.assets.length) return;
+      document.querySelectorAll('[data-asset]').forEach(function(link){
+        var suffix=link.getAttribute('data-asset');
+        var hit=null;
+        rel.assets.forEach(function(a){
+          if(!hit && a.name.length>suffix.length && a.name.slice(-suffix.length)===suffix) hit=a;
+        });
+        if(!hit) return;
+        link.href=hit.browser_download_url;
+        var meta=document.querySelector('.dl-meta[data-meta="'+suffix+'"]');
+        if(meta) meta.textContent=(rel.tag_name||'')+' · '+Math.round(hit.size/1048576)+' MB';
+      });
+    })
+    .catch(function(){});
+
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var done=function(){
+        btn.classList.add('done');
+        setTimeout(function(){ btn.classList.remove('done'); }, 1600);
+      };
+      var text=btn.getAttribute('data-copy');
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, function(){});
+      }
+    });
+  });
+})();
+</script>

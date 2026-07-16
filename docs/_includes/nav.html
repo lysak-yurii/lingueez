@@ -1,4 +1,4 @@
-{%- comment -%} Marketing nav. Param: active ("features"|"koreader") for aria-current. {%- endcomment -%}
+{%- comment -%} Marketing nav. Param: active ("features"|"koreader"|"download") for aria-current. {%- endcomment -%}
 <nav class="nav">
   <div class="wrap">
     <a class="brand" href="/"><img src="/assets/icon.png" alt=""> Lingueez</a>
@@ -12,7 +12,7 @@
       </div>
       <a class="btn btn-ghost" href="/#web">
         <span lang="en">Log in</span><span lang="uk">Увійти</span></a>
-      <a class="btn btn-primary" href="https://github.com/lysak-yurii/lingueez/releases">
+      <a class="btn btn-primary" href="/download/"{% if include.active == "download" %} aria-current="page"{% endif %}>
         <span lang="en">Download</span><span lang="uk">Завантажити</span></a>
     </div>
     <div class="lang" role="group" aria-label="Language">

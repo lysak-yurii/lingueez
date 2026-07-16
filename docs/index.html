@@ -103,8 +103,10 @@ head_extra: |
       <p class="lede" lang="en">Save words as you discover them, get instant translations, practice with audio, and track your progress from first encounter to mastery. Read real-world content with synchronized translations and audio—all in one place.</p>
       <p class="lede" lang="uk">Зберігайте нові слова, отримуйте миттєві переклади, закріплюйте лексику за допомогою аудіо та відстежуйте свій прогрес від першого знайомства до повного засвоєння. Читайте реальні тексти із синхронним перекладом та озвученням — усе в одному застосунку.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/lysak-yurii/lingueez/releases">
-          <span lang="en">Download</span><span lang="uk">Завантажити</span></a>
+        <a class="btn btn-primary" href="/download/">
+          <span data-os="any"><span lang="en">Download</span><span lang="uk">Завантажити</span></span>
+          <span data-os="win" hidden><span lang="en">Download for Windows</span><span lang="uk">Завантажити для Windows</span></span>
+          <span data-os="linux" hidden><span lang="en">Download for Linux</span><span lang="uk">Завантажити для Linux</span></span></a>
         <a class="btn btn-ghost" href="https://web.lingueez.app/">
           <span lang="en">Open web app</span><span lang="uk">Відкрити у браузері</span></a>
         <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez">
@@ -299,11 +301,24 @@ head_extra: |
   <div class="wrap reveal">
     <h2><span lang="en">Start building a stronger vocabulary today</span><span lang="uk">Почніть розширювати свій словниковий запас вже сьогодні</span></h2>
     <div class="cta-row" style="justify-content:center;">
-      <a class="btn btn-primary" href="https://github.com/lysak-yurii/lingueez/releases"><span lang="en">Download</span><span lang="uk">Завантажити</span></a>
+      <a class="btn btn-primary" href="/download/"><span lang="en">Download</span><span lang="uk">Завантажити</span></a>
       <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez"><span lang="en">View on GitHub</span><span lang="uk">Переглянути на GitHub</span></a>
     </div>
   </div>
 </section>
+
+<!-- Hero CTA: name the visitor's platform when we can recognise it. The href is always
+     /download/, so a wrong or absent guess only ever costs the generic "Download" label. -->
+<script>
+(function(){
+  var p=(navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var os=/win/i.test(p) ? 'win' : (/linux|x11/i.test(p) && !/android/i.test(navigator.userAgent) ? 'linux' : '');
+  if(!os) return;
+  var pick=document.querySelector('[data-os="'+os+'"]');
+  var generic=document.querySelector('[data-os="any"]');
+  if(pick && generic){ pick.hidden=false; generic.hidden=true; }
+})();
+</script>
 
 <!-- supabase-js + inline sign-in: authenticate here, land in the web app already signed in -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
