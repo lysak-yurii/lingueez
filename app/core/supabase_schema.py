@@ -34,7 +34,7 @@ may hold the same word pair / tag name. Registration is **open** (anyone can sig
 up); abuse is held off by email verification + Supabase's built-in rate limits,
 not by an allowlist.
 
-Email verification is by **6-digit code**, not a confirmation link, because this
+Email verification is by **code**, not a confirmation link, because this
 is a desktop app with no web page to land on. Two dashboard settings make that
 work (operational, not in this SQL):
   • Authentication → Providers → Email → keep "Confirm email" ON, and configure a
@@ -233,7 +233,7 @@ create policy own_rows on user_settings     for all using (auth.uid() = user_id)
 
 -- ---- Open registration --------------------------------------------------
 -- Anyone may sign up; there is no invite allowlist. New accounts are verified by
--- a 6-digit email code (configure SMTP + the "Confirm signup" email template to
+-- an email code (configure SMTP + the "Confirm signup" email template to
 -- use {{ .Token }} — see the module docstring). If this project was created with
 -- the old invite-only trigger, the migration appendix below removes it.
 

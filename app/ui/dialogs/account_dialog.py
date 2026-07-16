@@ -21,7 +21,7 @@
 
 """Sign in / sign up dialog (email+password and Google), built on FramelessDialog.
 
-Open registration with email verification by **6-digit code** (not a confirmation
+Open registration with email verification by **code** (not a confirmation
 link), which is the desktop-friendly pattern: after sign-up Supabase emails a code,
 the dialog switches to a verify step, and the typed code is exchanged for a session.
 
@@ -49,9 +49,9 @@ class AccountDialog(FramelessDialog):
     authenticated = Signal()
 
     # Password reset emails the user a recovery code, so it needs an SMTP sender
-    # (and the "Reset password" template set to {{ .Token }}). With no SMTP wired
-    # up we hide "Forgot password?"; flip this to True once email actually sends.
-    _PASSWORD_RESET_ENABLED = False
+    # (and the "Reset password" template set to {{ .Token }}). SMTP is now wired
+    # up and the template sends the token, so the flow is enabled.
+    _PASSWORD_RESET_ENABLED = True
 
     def __init__(self, parent, auth=None, prefill_name=""):
         super().__init__(parent, title=tr("Sign in"))
@@ -62,7 +62,7 @@ class AccountDialog(FramelessDialog):
         # the create-account form (pre-filled) since that's the intent — the user can
         # still toggle to "I already have an account".
         self._mode = "sign_up" if prefill_name else "sign_in"
-        self._verify_email = None  # email awaiting its 6-digit code
+        self._verify_email = None  # email awaiting its code
 
         layout = self.content_layout
 
@@ -95,9 +95,9 @@ class AccountDialog(FramelessDialog):
         self.confirm_password.setVisible(False)
         layout.addWidget(self.confirm_password)
 
-        # Verify step only: the 6-digit code from the sign-up email.
+        # Verify step only: the code from the sign-up email.
         self.code = QLineEdit()
-        self.code.setPlaceholderText(tr("6-digit code"))
+        self.code.setPlaceholderText(tr("Verification code"))
         self.code.returnPressed.connect(self._submit)
         self.code.setVisible(False)
         layout.addWidget(self.code)
@@ -318,7 +318,7 @@ class AccountDialog(FramelessDialog):
     def _verify(self):
         code = self.code.text().strip()
         if not code:
-            self._set_status(tr("Enter the 6-digit code from the email."))
+            self._set_status(tr("Enter the code from the email."))
             return
         self._set_busy(True)
         run_in_thread(self.auth.verify_signup_otp, self._verify_email, code,
@@ -390,7 +390,7 @@ class AccountDialog(FramelessDialog):
             self._apply_mode()
             self.code.setFocus()
             self._set_status(
-                msg or tr("Enter the 6-digit code we emailed you."), "info")
+                msg or tr("Enter the code we emailed you."), "info")
 
     def _on_reset_requested(self, result):
         self._set_busy(False)

@@ -199,12 +199,12 @@ class AuthManager:
         identities = getattr(user, "identities", None) if user else None
         if identities is not None and len(identities) == 0:
             return False, tr("That email is already registered. Try signing in instead.")
-        #  • Confirmation is ON: Supabase emailed a 6-digit code. We're still logged
+        #  • Confirmation is ON: Supabase emailed a code. We're still logged
         #    out, so the dialog moves to its verify step and calls verify_signup_otp().
-        return True, tr("We emailed you a 6-digit code. Enter it to finish signing up.")
+        return True, tr("We emailed you a code. Enter it to finish signing up.")
 
     def verify_signup_otp(self, email: str, token: str) -> Result:
-        """Confirm a brand-new account with the 6-digit code from the signup email
+        """Confirm a brand-new account with the code from the signup email
         (the desktop-friendly alternative to clicking a confirmation link)."""
         auth = self.sb.get_auth()
         if auth is None:
@@ -224,7 +224,7 @@ class AuthManager:
         return True, None
 
     def reset_password(self, email: str) -> Result:
-        """Email a 6-digit password-reset code (link-free, desktop-friendly).
+        """Email a password-reset code (link-free, desktop-friendly).
         Requires the project's "Reset password" template to use {{ .Token }}."""
         auth = self.sb.get_auth()
         if auth is None:
@@ -233,10 +233,10 @@ class AuthManager:
             auth.reset_password_for_email(email.strip())
         except Exception as exc:
             return False, self._friendly(exc)
-        return True, tr("If that account exists, a 6-digit reset code is on its way.")
+        return True, tr("If that account exists, a reset code is on its way.")
 
     def verify_recovery_otp(self, email: str, token: str, new_password: str) -> Result:
-        """Finish a password reset: exchange the 6-digit recovery code for a
+        """Finish a password reset: exchange the recovery code for a
         session, then set the new password. Leaves the user signed in."""
         auth = self.sb.get_auth()
         if auth is None:
@@ -543,7 +543,7 @@ class AuthManager:
         if "unable to validate email address" in low or "invalid format" in low:
             return tr("That doesn't look like a valid email address.")
         if "email not confirmed" in low:
-            return tr("Your email isn't confirmed yet. Enter the 6-digit code we emailed you.")
+            return tr("Your email isn't confirmed yet. Enter the code we emailed you.")
         if "already registered" in low or "already been registered" in low:
             return tr("That email is already registered. Try signing in instead.")
         if "rate limit" in low or "too many requests" in low or "for security purposes" in low:
