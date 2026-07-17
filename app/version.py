@@ -20,7 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 APP_VERSION = "2.0.5"
-BUILD_NUMBER = "2026071606"
+BUILD_NUMBER = "2026071701"
 APP_NAME = "Lingueez"
 APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 
