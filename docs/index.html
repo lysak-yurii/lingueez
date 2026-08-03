@@ -106,7 +106,8 @@ head_extra: |
         <a class="btn btn-primary" href="/download/">
           <span data-os="any"><span lang="en">Download</span><span lang="uk">Завантажити</span></span>
           <span data-os="win" hidden><span lang="en">Download for Windows</span><span lang="uk">Завантажити для Windows</span></span>
-          <span data-os="linux" hidden><span lang="en">Download for Linux</span><span lang="uk">Завантажити для Linux</span></span></a>
+          <span data-os="linux" hidden><span lang="en">Download for Linux</span><span lang="uk">Завантажити для Linux</span></span>
+          <span data-os="android" hidden><span lang="en">Download for Android</span><span lang="uk">Завантажити для Android</span></span></a>
         <a class="btn btn-ghost" href="https://web.lingueez.app/">
           <span lang="en">Open web app</span><span lang="uk">Відкрити у браузері</span></a>
         <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez">
@@ -329,8 +330,9 @@ head_extra: |
      /download/, so a wrong or absent guess only ever costs the generic "Download" label. -->
 <script>
 (function(){
+  var ua=navigator.userAgent||'';
   var p=(navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
-  var os=/win/i.test(p) ? 'win' : (/linux|x11/i.test(p) && !/android/i.test(navigator.userAgent) ? 'linux' : '');
+  var os=/android/i.test(ua) ? 'android' : (/win/i.test(p) ? 'win' : (/linux|x11/i.test(p) ? 'linux' : ''));
   if(!os) return;
   var pick=document.querySelector('[data-os="'+os+'"]');
   var generic=document.querySelector('[data-os="any"]');
