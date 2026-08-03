@@ -23,8 +23,18 @@
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt
 from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel
 
+from app.ui import theme
+
 _ICONS = {"info": "ℹ", "success": "✔", "error": "✖", "warning": "⚠"}
-_COLORS = {"info": "#4f8cff", "success": "#3fb950", "error": "#e5534b", "warning": "#d29922"}
+# Palette keys, not hex: these used to be copies of the dark values and stayed
+# dark-themed (and low-contrast) on the light theme.
+_COLOR_KEYS = {"info": "accent", "success": "success",
+               "error": "danger", "warning": "warning"}
+
+
+def _toast_color(toast_type):
+    colors = theme.current_colors()
+    return colors[_COLOR_KEYS.get(toast_type, "accent")]
 
 
 class Toast(QFrame):
@@ -40,8 +50,9 @@ class Toast(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(14, 10, 14, 10)
         icon = QLabel(_ICONS.get(toast_type, "ℹ"))
-        icon.setStyleSheet(f"color: {_COLORS.get(toast_type, '#4f8cff')};"
-                           f"font-size: 14pt; background: transparent;")
+        icon.setStyleSheet(f"color: {_toast_color(toast_type)};"
+                           f"font-size: {theme.font_pt('headline')}pt;"
+                           f"background: transparent;")
         layout.addWidget(icon)
 
         text = QLabel(f"<b>{title}</b><br>{message}" if title else message)

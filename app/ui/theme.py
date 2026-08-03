@@ -19,7 +19,17 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-"""Modern Qt theme: dark / light palettes + application-wide QSS."""
+"""Modern Qt theme: dark / light palettes, design tokens + application-wide QSS.
+
+Token groups, in the order a change should be reasoned about:
+
+* ``DARK`` / ``LIGHT`` — semantic surface + text colors.
+* ``STATUS_DARK`` / ``STATUS_LIGHT`` — the learning-ladder ramp. Kept apart from
+  the palette on purpose: ``accent`` means "you can click this" and must never
+  also mean "this word is new", or neither reads.
+* ``TYPE`` — point-size offsets, so sizes set in code still follow the
+  widget_scaling setting.
+"""
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
@@ -72,6 +82,56 @@ LIGHT = {
 }
 
 
+# --------------------------------------------------------------------------- #
+# status ramp
+# --------------------------------------------------------------------------- #
+# The four ladder rungs (progression.LADDER) form an *ordered* scale, so they
+# get an ordered ramp: blue -> violet -> amber -> green. "New" keeps the blue it
+# has always had; the fix here was Reviewing, which used to be the *same* amber
+# as Learning and so was indistinguishable from it.
+#
+# "To Learn" and "Ignored" sit outside the ladder, so they take hues that are
+# clear of the ramp rather than a rung's colour: dusty rose for the marker the
+# user applies, plain grey for the one that parks a word outside study.
+#
+# ``ink``  — pill text and chart slice.
+# ``fill`` — alpha (0-255) of ``ink`` used as the pill background.
+STATUS_DARK = {
+    "new":       {"ink": "#7aa3ea", "fill": 30},
+    "reviewing": {"ink": "#9b7fd4", "fill": 34},
+    "learning":  {"ink": "#d9a441", "fill": 32},
+    "mastered":  {"ink": "#54b06e", "fill": 32},
+    "to learn":  {"ink": "#c2887f", "fill": 30},
+    "ignored":   {"ink": "#8b98a5", "fill": 22},
+}
+
+STATUS_LIGHT = {
+    "new":       {"ink": "#3f5378", "fill": 26},
+    "reviewing": {"ink": "#6b46b0", "fill": 26},
+    "learning":  {"ink": "#8a6414", "fill": 30},
+    "mastered":  {"ink": "#256b3f", "fill": 26},
+    "to learn":  {"ink": "#a15f56", "fill": 26},
+    "ignored":   {"ink": "#7b8894", "fill": 22},
+}
+
+STATUS_FALLBACK = {"ink": "#8b98a5", "fill": 26}
+
+
+# --------------------------------------------------------------------------- #
+# geometry + type scales
+# --------------------------------------------------------------------------- #
+# Point-size offsets from the scaling-derived base size, so sizes set in code
+# still track the widget_scaling setting instead of being frozen at one value.
+TYPE = {"caption": -1, "body": 0, "body_lg": 1, "title": 3,
+        "headline": 5, "display": 11, "hero": 14}
+
+SIDEBAR_W_COLLAPSED = 58
+# The expanded rail is measured from its longest translated label at runtime;
+# this is only the ceiling, so one very long word can't eat the page.
+SIDEBAR_W_EXPANDED_MAX = 260
+SIDEBAR_ITEM_MARGIN = 8  # must match the horizontal margin in #Sidebar QPushButton
+
+
 TABLE_DENSITY = {
     "Compact":     {"scale": 0.9, "row_ratio": 2.9},
     "Normal":      {"scale": 1.0, "row_ratio": 3.2},
@@ -81,11 +141,32 @@ TABLE_DENSITY = {
 TABLE_DENSITY_DEFAULT = "Comfortable"
 
 _current_colors = None
+_current_status = None
+_current_base_pt = 10
 
 
 def current_colors():
     """Colors of the theme most recently applied via apply_theme()."""
     return _current_colors or DARK
+
+
+def status_colors():
+    """Status ramp for the theme most recently applied via apply_theme()."""
+    return _current_status or STATUS_DARK
+
+
+def status_style(status):
+    """Ramp entry for one status label, case/space-insensitive.
+
+    Unknown statuses (users can type their own) fall back to a quiet grey
+    rather than borrowing a rung's color and implying a progress level.
+    """
+    return status_colors().get((status or "").strip().lower(), STATUS_FALLBACK)
+
+
+def font_pt(key="body", base=None):
+    """A step on the type scale, in points, tracking the widget_scaling setting."""
+    return max(6, (base if base is not None else _current_base_pt) + TYPE[key])
 
 
 def resolve_mode(mode):
@@ -106,6 +187,10 @@ def resolve_mode(mode):
 
 def palette_colors(mode):
     return DARK if resolve_mode(mode) == "dark" else LIGHT
+
+
+def palette_status(mode):
+    return STATUS_DARK if resolve_mode(mode) == "dark" else STATUS_LIGHT
 
 
 def build_qss(c, base_font_size=10, icon_paths=None):

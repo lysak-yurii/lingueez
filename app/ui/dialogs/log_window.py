@@ -33,16 +33,25 @@ from PySide6.QtWidgets import (
 )
 
 from app.i18n import tr
+from app.ui import theme
 from app.ui.dialogs.base import FramelessDialog
 
-LEVEL_COLORS = {
+# Palette keys, not hex: these used to be copies of the dark values and stayed
+# dark-themed on the light theme. None = inherit the normal text color.
+LEVEL_COLOR_KEYS = {
     'info': None,
-    'warning': "#d29922",
-    'error': "#e5534b",
-    'success': "#3fb950",
-    'new': "#4f8cff",
-    'rejected': "#e5534b",
+    'warning': "warning",
+    'error': "danger",
+    'success': "success",
+    'new': "accent",
+    'rejected': "danger",
 }
+
+
+def level_color(level):
+    """Live theme color for a log level, or None to inherit."""
+    key = LEVEL_COLOR_KEYS.get(level)
+    return theme.current_colors()[key] if key else None
 
 # Severity rank for the level filter — keeps the categorical levels above
 # orderable so the filter can show "this level and worse".
@@ -203,7 +212,7 @@ class LogWindow(FramelessDialog):
         cursor = self.text.textCursor()
         cursor.movePosition(QTextCursor.End)
         fmt = QTextCharFormat()
-        color = LEVEL_COLORS.get(level)
+        color = level_color(level)
         if color:
             fmt.setForeground(QColor(color))
         cursor.insertText(message + "\n", fmt)

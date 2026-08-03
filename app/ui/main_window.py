@@ -76,7 +76,10 @@ from app.ui.workers import run_in_thread
 from app.version import APP_ID, APP_NAME, APP_VERSION, BUILD_NUMBER
 
 GEOMETRY_FILE = "window_geometry.json"
-PREDEFINED_STATUSES = ["New", "To Learn", "Learning", "Mastered", "Ignored"]
+# Read from the ladder's own module so the picker always offers every status the
+# app can put a word into. It previously omitted "Reviewing", which read-aloud
+# promotes words *to* — leaving that state unreachable by hand.
+PREDEFINED_STATUSES = list(progression.ALL_STATUSES)
 DEFAULT_HOTKEY = "Ctrl+Shift+V"
 PAGE_WORDS, PAGE_FLASHCARDS, PAGE_TEXTS, PAGE_STATS = 0, 1, 2, 3
 

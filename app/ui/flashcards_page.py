@@ -59,12 +59,13 @@ from app.core import audio
 from app.core import db as dbq
 from app.core import srs
 from app.i18n import tr
-from app.ui import icons
+from app.ui import icons, theme
 from app.ui.animations import AnimatedStackedWidget, fade_swap, flip_swap
 from app.ui.dialogs.definition import (
     DefinitionDialog, _runs_to_html, parse_markup,
 )
-from app.ui.charts import FlowLayout, status_color_key
+from app.ui.charts import FlowLayout, status_color
+from app.ui.widgets import ProgressionMeter
 from app.ui.workers import run_in_thread
 
 DECK_KINDS = ("due", "filtered", "newest", "selected")
@@ -455,6 +456,10 @@ class _PreviewCard(QWidget):
         v.addWidget(self.body, 1)
         foot = QHBoxLayout()
         foot.setSpacing(6)
+        # The ladder meter carries the status, so the tile shows one status
+        # system instead of the dot-plus-badge pair it used to.
+        self.meter = ProgressionMeter(str(record.get("Status") or "").strip())
+        foot.addWidget(self.meter)
         self.status = QLabel()
         self.status.setTextFormat(Qt.RichText)
         self.lang = QLabel(lang_tag)
@@ -505,29 +510,31 @@ class _PreviewCard(QWidget):
         c = self._colors
         self.word.setStyleSheet(
             f"color:{c['text']};background:transparent;"
-            "font-size:11.5pt;font-weight:700;")
+            f"font-size:{theme.font_pt('body_lg')}pt;font-weight:700;")
         self.translation.setStyleSheet(
-            f"color:{c['accent_text']};background:transparent;font-size:10pt;")
+            f"color:{c['text']};background:transparent;"
+            f"font-size:{theme.font_pt('body')}pt;")
         self.body.setStyleSheet(
-            f"color:{c['text_dim']};background:transparent;font-size:8.5pt;")
+            f"color:{c['text_dim']};background:transparent;"
+            f"font-size:{theme.font_pt('caption')}pt;")
         status = str(self._record.get("Status") or "").strip()
+        self.meter.set_status(status)
         if status:
-            dot = c.get(status_color_key(status, 0), c["text_dim"])
             self.status.setText(
-                f'<span style="color:{dot};">●</span> '
-                f'<span style="color:{c["text_dim"]};">{tr(status)}</span>')
+                f'<span style="color:{status_color(status)};">{tr(status)}</span>')
         self.status.setVisible(bool(status))
-        self.status.setStyleSheet("background:transparent;font-size:8.5pt;")
+        self.status.setStyleSheet(f"background:transparent;font-size:{theme.font_pt('caption')}pt;")
         tint = {"due": c["warning"], "new": c["accent_text"]}.get(
             self._due_key, c["text_dim"])
         self.due.setStyleSheet(
             f"color:{tint};background:{_soft(tint, 26)};padding:2px 8px;"
-            "border-radius:8px;font-size:8pt;font-weight:600;")
+            f"border-radius:8px;font-size:{theme.font_pt('caption')}pt;"
+            "font-weight:600;")
         # a "New" badge next to a "New" status chip is just noise
         self.due.setVisible(not (self._due_key == "new" and status == "New"))
         self.lang.setStyleSheet(
             f"color:{c['text_dim']};background:transparent;"
-            "font-size:8pt;font-weight:600;letter-spacing:1px;")
+            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;letter-spacing:1px;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 14))
 
     def paintEvent(self, _event):  # noqa: N802
@@ -721,25 +728,28 @@ class FlashcardWidget(QWidget):
         status = str(rec.get("Status") or "").strip()
         self.status_chip.setText(tr(status) if status else "")
         self.status_chip.setVisible(bool(status))
+        self._style_status_chip()  # the ramp color changes with the card
         # the answer side announces itself: caption + divider go accent
         self.caption.setStyleSheet(
             f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
             "background:transparent;"
-            "font-size:8.5pt;font-weight:600;letter-spacing:2px;")
+            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;letter-spacing:2px;")
+        # Both sides set the word in the content face at full text color: the
+        # sides are told apart by what appears (translation, definition), not
+        # by tinting the word accent-blue, which has to keep meaning "click me".
+        word_css = (f"color:{c['text']};background:transparent;font-weight:700;")
         if self._side == 0:
             self.caption.setText(str(rec.get("Language1") or "").upper())
             self.word.setText(str(rec.get("Word1") or ""))
             self.word.setStyleSheet(
-                f"color:{c['text']};background:transparent;"
-                "font-size:24pt;font-weight:700;")
+                word_css + f"font-size:{theme.font_pt('hero')}pt;")
             self.body.setText("")
             self.hint.setText(self._hint_text)
         else:
             self.caption.setText(str(rec.get("Language2") or "").upper())
             self.word.setText(str(rec.get("Word2") or ""))
             self.word.setStyleSheet(
-                f"color:{c['accent_text'] if 'accent_text' in c else c['text']};"
-                "background:transparent;font-size:21pt;font-weight:700;")
+                word_css + f"font-size:{theme.font_pt('display')}pt;")
             self.body.setTextFormat(Qt.RichText)  # definitions carry markup
             self.body.setText(_definition_html(self._definition, c)
                               if self._definition else "")
@@ -748,17 +758,25 @@ class FlashcardWidget(QWidget):
         self.body.setVisible(bool(self.body.text()))
         self.hint.setVisible(bool(self.hint.text()))
 
+    def _style_status_chip(self):
+        """Paint the chip from the status ramp, so a word looks the same here
+        as it does in the table, on its deck tile and in the donut."""
+        st = theme.status_style(str(self._record.get("Status") or ""))
+        self.status_chip.setStyleSheet(
+            f"color:{st['ink']};background:{_soft(st['ink'], st['fill'])};"
+            "border:none;"
+            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;"
+            "padding:3px 10px;border-radius:9px;")
+
     def _apply_styles(self):
         c = self._colors
-        self.status_chip.setStyleSheet(
-            f"color:{c['text_dim']};background:{_soft(c['accent'], 26)};"
-            "font-size:8.5pt;font-weight:600;"
-            "padding:3px 10px;border-radius:9px;")
+        self._style_status_chip()
         self.body.setStyleSheet(
-            f"color:{c['text_dim']};background:transparent;font-size:11pt;")
+            f"color:{c['text_dim']};background:transparent;"
+            f"font-size:{theme.font_pt('body_lg')}pt;")
         self.hint.setStyleSheet(
             f"color:{_soft(c['text_dim'], 150)};background:transparent;"
-            "font-size:9pt;")
+            f"font-size:{theme.font_pt('caption')}pt;")
         self.divider.setStyleSheet(  # only ever visible on the answer side
             f"background:{_soft(c['accent_text'], 130)};border:none;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 16))
@@ -1017,6 +1035,11 @@ class FlashcardsPage(QWidget):
         self.card.clicked.connect(self._card_clicked)
         self.card.speak_clicked.connect(self._speak_current_clicked)
         self.card_stack = _CardStack(self.card, self._colors)
+        # Bounded, not free-expanding: the stretches above and below centre the
+        # card, but without a ceiling it grew to the full height of the page and
+        # left a word or two floating in a very large empty box.
+        self.card_stack.setMinimumHeight(230)
+        self.card_stack.setMaximumHeight(380)
         card_row.addWidget(self.card_stack, 4)
         card_row.addStretch(1)
         sv.addLayout(card_row)
@@ -1843,15 +1866,15 @@ class FlashcardsPage(QWidget):
         dim = f"color:{c['text_dim']};background:transparent;"
         self.picker_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
-            "font-size:13.5pt;font-weight:700;")
-        self.picker_sub.setStyleSheet(dim + "font-size:9.5pt;")
-        self.picker_info.setStyleSheet(dim + "font-size:10pt;")
-        self.size_label.setStyleSheet(dim + "font-size:10pt;")
+            f"font-size:{theme.font_pt('title')}pt;font-weight:700;")
+        self.picker_sub.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
+        self.picker_info.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
+        self.size_label.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         self.preview_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
-            "font-size:11pt;font-weight:700;")
-        self.preview_count.setStyleSheet(dim + "font-size:10pt;")
-        self.preview_empty.setStyleSheet(dim + "font-size:10.5pt;")
+            f"font-size:{theme.font_pt('body_lg')}pt;font-weight:700;")
+        self.preview_count.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
+        self.preview_empty.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         self.preview_scroll.setStyleSheet(
             "QScrollArea{background:transparent;}"
             "QScrollArea > QWidget > QWidget{background:transparent;}")
@@ -1860,14 +1883,14 @@ class FlashcardsPage(QWidget):
         self.progress_label.setStyleSheet(dim + "font-weight:600;")
         self.correct_label.setStyleSheet(
             f"color:{c['success']};background:transparent;font-weight:600;")
-        self.autoplay_caption.setStyleSheet(dim + "font-size:9.5pt;")
+        self.autoplay_caption.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         for label in self._grade_interval_labels.values():
-            label.setStyleSheet(dim + "font-size:8.5pt;")
-        self.complete_breakdown.setStyleSheet(dim + "font-size:10pt;")
+            label.setStyleSheet(dim + f"font-size:{theme.font_pt('caption')}pt;")
+        self.complete_breakdown.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         self.complete_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
-            "font-size:16pt;font-weight:700;")
-        self.complete_sub.setStyleSheet(dim + "font-size:11pt;")
+            f"font-size:{theme.font_pt('headline')}pt;font-weight:700;")
+        self.complete_sub.setStyleSheet(dim + f"font-size:{theme.font_pt('body_lg')}pt;")
         self.end_btn.setIcon(icons.icon("x", c["text_dim"], 16))
         self.prev_btn.setIcon(icons.icon("skip-back", c["text"], 18))
         self.next_btn.setIcon(icons.icon("skip-forward", c["text"], 18))
@@ -1888,12 +1911,18 @@ class FlashcardsPage(QWidget):
         self.pronounce_btn.setIcon(toggle_icon("volume"))
 
         def grade_style(tint):
-            return (f"QPushButton {{ background:{_soft(tint, 34)};"
-                    f"color:{c['text']}; border:1px solid {_soft(tint, 90)};"
-                    "border-radius:9px; padding:8px 20px; font-weight:600; }"
-                    f"QPushButton:hover {{ background:{_soft(tint, 60)}; }}"
+            # These are the only decision in the session, so they carry real
+            # fill and a solid edge; at the old alphas Hard was dark red on
+            # near-black and the three grades barely separated from each other.
+            return (f"QPushButton {{ background:{_soft(tint, 58)};"
+                    f"color:{c['text']}; border:1px solid {_soft(tint, 150)};"
+                    "border-radius:9px;"
+                    "padding:9px 22px; font-weight:600; }"
+                    f"QPushButton:hover {{ background:{_soft(tint, 92)};"
+                    f" border-color:{tint}; }}"
                     f"QPushButton:disabled {{ color:{c['text_dim']};"
-                    f"background:{_soft(tint, 16)}; }}")
+                    f"background:{_soft(tint, 16)};"
+                    f" border-color:{_soft(tint, 50)}; }}")
 
         self.hard_btn.setStyleSheet(grade_style(c["danger"]))
         self.good_btn.setStyleSheet(grade_style(c["warning"]))

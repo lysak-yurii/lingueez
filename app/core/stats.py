@@ -37,12 +37,13 @@ from datetime import date, timedelta
 
 import pandas as pd
 
+from app.core.progression import ALL_STATUSES
 from app.i18n import lang_label, month_abbr
 
-# Canonical status ordering for the donut. The DB may hold statuses outside
-# this list (older imports, custom values); those are appended afterwards so
-# nothing is ever silently dropped.
-STATUS_ORDER = ["New", "To Learn", "Reviewing", "Learning", "Mastered", "Ignored"]
+# Canonical status ordering for the donut, from the one place that defines it.
+# The DB may hold statuses outside this list (older imports, custom values);
+# those are appended afterwards so nothing is ever silently dropped.
+STATUS_ORDER = list(ALL_STATUSES)
 
 # Labels (lower-cased) that count as "done" vs "untouched" for the headline
 # KPI; everything else is treated as actively in progress.

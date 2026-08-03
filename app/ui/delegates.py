@@ -30,19 +30,8 @@ from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPixmap
 from PySide6.QtWidgets import QStyledItemDelegate, QStyle, QStyleOptionViewItem
 
 from app.i18n import tr
+from app.ui import theme
 from app.ui.word_model import ROLE_FAV_STRIPE
-
-# status -> (base color, background alpha); desaturated hues so the
-# pills read as quiet metadata instead of pulling the eye off the words
-PILL_COLORS = {
-    "new":       ("#5e7db4", 26),
-    "to learn":  ("#8d7cc0", 26),
-    "learning":  ("#b2924f", 26),
-    "reviewing": ("#b2924f", 26),
-    "mastered":  ("#55966c", 26),
-    "ignored":   ("#8b98a5", 22),
-}
-DEFAULT_PILL = ("#8b98a5", 22)
 
 
 class RowTintDelegate(QStyledItemDelegate):
@@ -109,28 +98,28 @@ class StatusPillDelegate(QStyledItemDelegate):
             elif option.features & QStyleOptionViewItem.Alternate:
                 painter.fillRect(rect, option.palette.alternateBase())
 
-        dark = option.palette.window().color().lightness() < 128
+        style = theme.status_style(text)
         dpr = painter.device().devicePixelRatioF() if painter.device() else 1.0
-        key = (text, dark, option.font.key(), dpr)
+        # keyed on the resolved style, so a theme switch invalidates by itself
+        key = (label, style["ink"], style["fill"], option.font.key(), dpr)
         pm = self._cache.get(key)
         if pm is None:
-            pm = self._render_pill(text, label, dark, option.font, dpr)
+            pm = self._render_pill(label, style, option.font, dpr)
             self._cache[key] = pm
 
         w = pm.width() / dpr
         h = pm.height() / dpr
+        pos = QPointF(rect.x() + 6, rect.y() + (rect.height() - h) / 2)
         if w > rect.width() - 10:
             painter.save()
             painter.setClipRect(rect.adjusted(0, 0, -4, 0))
-            painter.drawPixmap(
-                QPointF(rect.x() + 6, rect.y() + (rect.height() - h) / 2), pm)
+            painter.drawPixmap(pos, pm)
             painter.restore()
         else:
-            painter.drawPixmap(
-                QPointF(rect.x() + 6, rect.y() + (rect.height() - h) / 2), pm)
+            painter.drawPixmap(pos, pm)
 
     @staticmethod
-    def _render_pill(text, label, dark, base_font, dpr):
+    def _render_pill(label, style, base_font, dpr):
         font = QFont(base_font)
         font.setPointSizeF(max(7.0, base_font.pointSizeF() - 1))
         font.setWeight(QFont.Normal)
@@ -138,25 +127,21 @@ class StatusPillDelegate(QStyledItemDelegate):
         w = metrics.horizontalAdvance(label) + 20
         h = metrics.height() + 6
 
-        base_hex, alpha = PILL_COLORS.get(text.strip().lower(), DEFAULT_PILL)
-        bg = QColor(base_hex)
-        # readable pill text on both themes
-        if dark:
-            bg.setAlpha(alpha + 16)
-            fg = QColor(base_hex).lighter(130)
-        else:
-            bg.setAlpha(alpha + 30)
-            fg = QColor(base_hex).darker(150)
+        # theme.status_style already returns a value tuned for the active mode,
+        # so there is nothing to lighten or darken here
+        ink = QColor(style["ink"])
 
         pm = QPixmap(int(w * dpr), int(h * dpr))
         pm.setDevicePixelRatio(dpr)
         pm.fill(Qt.transparent)
         p = QPainter(pm)
         p.setRenderHint(QPainter.Antialiasing)
+        fill = QColor(ink)
+        fill.setAlpha(style["fill"])
         p.setPen(Qt.NoPen)
-        p.setBrush(bg)
+        p.setBrush(fill)
         p.drawRoundedRect(QRectF(0, 0, w, h), h / 2, h / 2)
-        p.setPen(fg)
+        p.setPen(ink)
         p.setFont(font)
         p.drawText(QRectF(0, 0, w, h), Qt.AlignCenter, label)
         p.end()
