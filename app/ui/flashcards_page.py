@@ -1432,11 +1432,9 @@ class FlashcardsPage(QWidget):
         """(text, semantic key) for a card's SM-2 schedule badge."""
         if not srs_row or not srs_row.get("review_count"):
             return tr("New"), "new"
-        try:
-            due = datetime.fromisoformat(str(srs_row.get("next_review") or ""))
-        except ValueError:
+        seconds = srs.seconds_until_due(srs_row.get("next_review"))
+        if seconds is None:
             return tr("New"), "new"
-        seconds = (due - datetime.now()).total_seconds()
         if seconds <= 0:
             return tr("Due"), "due"
         return tr("In {n} d").format(n=max(1, int(seconds + 86399) // 86400)), "later"

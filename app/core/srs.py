@@ -96,6 +96,28 @@ def apply_grade(card, grade: str, now: datetime | None = None) -> dict:
     }
 
 
+def seconds_until_due(next_review, now: datetime | None = None) -> float | None:
+    """Seconds from ``now`` until a ``next_review`` stamp, or None if unusable.
+
+    The stamp comes in two shapes: naive local time, written by
+    :func:`apply_grade` here, and UTC with an offset, written by the web and
+    mobile apps and pulled in by sync. Callers must not subtract one from the
+    other blindly — mixing the two raises TypeError, which is how a single
+    cloud-graded word could blank a whole screen.
+    """
+    try:
+        due = datetime.fromisoformat(
+            str(next_review or "").replace(" ", "T").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    now = now or datetime.now()
+    if due.tzinfo is None and now.tzinfo is not None:
+        now = now.astimezone().replace(tzinfo=None)
+    elif due.tzinfo is not None and now.tzinfo is None:
+        now = now.astimezone()  # a naive `now` is local time
+    return (due - now).total_seconds()
+
+
 def status_from_progress(review_count: int, ease: float, correct_count: int) -> str:
     """The familiarity status a card's scheduling state maps to (web-app rules)."""
     if int(review_count or 0) == 0:

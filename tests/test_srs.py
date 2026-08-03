@@ -12,7 +12,7 @@ import sys
 import tempfile
 import unittest
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -286,6 +286,34 @@ class BatchWordFetchTests(unittest.TestCase):
         self.assertEqual([r["Word1"] for r in rows], ["gamma", "alpha"])
         self.assertEqual(rows[1]["Definition"], "def alpha")
         self.assertEqual(self.adapter.get_words_by_ids([]), [])
+
+
+class SecondsUntilDueTests(unittest.TestCase):
+    """next_review reaches us in two shapes: naive local time written by
+    apply_grade, and UTC-with-offset pulled from the cloud (the web and mobile
+    apps write those). Both have to be comparable to one `now`."""
+
+    def test_naive_stamp_in_the_future(self):
+        self.assertAlmostEqual(srs.seconds_until_due(_iso(2), now=NOW), 2 * 86400, delta=1)
+
+    def test_naive_stamp_in_the_past(self):
+        self.assertAlmostEqual(srs.seconds_until_due(_iso(-3), now=NOW), -3 * 86400, delta=1)
+
+    def test_offset_stamp_is_comparable_to_a_naive_now(self):
+        # a cloud row: same instant as NOW in UTC, expressed with an offset
+        utc = NOW.astimezone(timezone.utc) + timedelta(days=1)
+        self.assertAlmostEqual(
+            srs.seconds_until_due(utc.isoformat(timespec="seconds"), now=NOW), 86400, delta=1
+        )
+
+    def test_zulu_stamp(self):
+        utc = NOW.astimezone(timezone.utc) + timedelta(days=1)
+        stamp = utc.isoformat(timespec="seconds").replace("+00:00", "Z")
+        self.assertAlmostEqual(srs.seconds_until_due(stamp, now=NOW), 86400, delta=1)
+
+    def test_unparsable_and_empty_stamps(self):
+        for value in (None, "", "not a date", 0):
+            self.assertIsNone(srs.seconds_until_due(value, now=NOW))
 
 
 if __name__ == "__main__":
