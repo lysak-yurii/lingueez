@@ -285,7 +285,7 @@ class StatsPage(QWidget):
         donut_items = []
         for i, (label, count) in enumerate(s.status_counts.items()):
             # display the localized status; keep color keyed on the English value
-            donut_items.append((tr(label), count, charts.status_color_key(label, i)))
+            donut_items.append((tr(label), count, charts.status_color(label, i)))
         self.donut.set_data(donut_items)
 
         self._refresh_area()

@@ -61,7 +61,13 @@ from app.i18n import month_abbr, ntr, tr, weekday_abbr_by_index
 # small color helpers
 # --------------------------------------------------------------------------- #
 def _c(key: str) -> QColor:
-    """A theme color by semantic key, resolved live (theme-reactive)."""
+    """A theme color by semantic key, resolved live (theme-reactive).
+
+    Also accepts a literal ``#rrggbb``, so callers can mix palette keys with
+    colors that come from a scale outside the palette — the status ramp does.
+    """
+    if isinstance(key, str) and key.startswith("#"):
+        return QColor(key)
     return QColor(theme.current_colors().get(key, "#888888"))
 
 
@@ -81,26 +87,24 @@ def _alpha(color: QColor, a: int) -> QColor:
     return c
 
 
-# The default cyclic palette used for status slices / generic series. Keys are
-# resolved against the live theme so everything recolors on a theme switch.
+# The default cyclic palette for generic (non-status) series. Keys are resolved
+# against the live theme so everything recolors on a theme switch.
 SERIES_KEYS = ["accent", "success", "warning", "danger", "text_dim", "accent_text"]
 
 
-def status_color_key(label: str, index: int) -> str:
-    """Pick a semantic color key for a status label, with sensible defaults
-    for the well-known statuses and a cyclic fallback for the rest."""
-    key = label.strip().lower()
-    mapping = {
-        "new": "text_dim",
-        "to learn": "warning",
-        "reviewing": "accent",
-        "learning": "accent_text",
-        "mastered": "success",
-        "ignored": "border",
-    }
-    if key in mapping:
-        return mapping[key]
-    return SERIES_KEYS[index % len(SERIES_KEYS)]
+def status_color(label: str, index: int = 0) -> str:
+    """The ramp color for a status label, as ``#rrggbb``.
+
+    Statuses are coloured from theme's status ramp, never from the palette, so
+    a word shows the same color in the table, on a card and in a chart. Labels
+    the ramp doesn't know (custom statuses from old imports) fall back to the
+    cyclic series palette.
+    """
+    key = (label or "").strip().lower()
+    if key in theme.status_colors():
+        return theme.status_style(key)["ink"]
+    return theme.current_colors().get(SERIES_KEYS[index % len(SERIES_KEYS)],
+                                      "#888888")
 
 
 # --------------------------------------------------------------------------- #

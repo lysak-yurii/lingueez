@@ -37,6 +37,17 @@ from __future__ import annotations
 LADDER = ["New", "Reviewing", "Learning", "Mastered"]
 _RANK = {name: i for i, name in enumerate(LADDER)}
 
+# Every status the app offers, in canonical order. This is the single source of
+# truth: the status picker, the stats donut ordering and the color ramp all read
+# it, so a word can never be promoted into a state the UI refuses to offer back.
+ALL_STATUSES = ["New", "To Learn", "Reviewing", "Learning", "Mastered", "Ignored"]
+
+
+def rank(status):
+    """Zero-based position on the ladder, or ``None`` for anything off it."""
+    return _RANK.get((status or "").strip().title())
+
+
 DEFAULT_REVIEWING_LISTENS = 3
 DEFAULT_LEARNING_LISTENS = 15
 DEFAULT_MASTERED_LISTENS = 100

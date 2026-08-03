@@ -45,7 +45,7 @@ from app.core.importer import (
 )
 from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
-from app.ui.dialogs.log_window import LEVEL_COLORS
+from app.ui.dialogs.log_window import level_color
 from app.ui.workers import run_in_thread
 
 logger = logging.getLogger(__name__)
@@ -240,7 +240,7 @@ class ImportReviewDialog(FramelessDialog):
         time_fmt.setForeground(QColor(self.colors['text_dim']))
         cursor.insertText(time.strftime("%H:%M:%S  "), time_fmt)
         fmt = QTextCharFormat()
-        color = LEVEL_COLORS.get(level)
+        color = level_color(level)
         if color:
             fmt.setForeground(QColor(color))
         cursor.insertText(message + "\n", fmt)
@@ -336,7 +336,7 @@ class ImportReviewDialog(FramelessDialog):
             row_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.table.setItem(row_idx, COL_ROW, row_item)
 
-            warn = QColor(LEVEL_COLORS['warning'])
+            warn = QColor(level_color('warning'))
             for col, key, ok_key in ((COL_WORD1, 'Word1', None),
                                      (COL_LANG1, 'Language1', 'lang1_ok'),
                                      (COL_WORD2, 'Word2', None),
@@ -352,7 +352,7 @@ class ImportReviewDialog(FramelessDialog):
 
             action_item = QTableWidgetItem(_action_labels()[payload['action']])
             level = ACTION_LEVEL[payload['action']]
-            action_item.setForeground(QColor(LEVEL_COLORS[level]) if level else dim)
+            action_item.setForeground(QColor(level_color(level)) if level else dim)
             if actionable:
                 font = action_item.font()
                 font.setBold(True)
@@ -536,8 +536,8 @@ class ImportReviewDialog(FramelessDialog):
         # match by file row number — payload dicts lose Python identity on
         # the round-trip through QTableWidgetItem.data()
         failed_rows = {p['row'] for p in summary['failed']}
-        ok_color = QColor(LEVEL_COLORS['success'])
-        fail_color = QColor(LEVEL_COLORS['error'])
+        ok_color = QColor(level_color('success'))
+        fail_color = QColor(level_color('error'))
         # suspend sorting so editing the Action column can't reorder rows
         # mid-loop when the user sorted by that column
         self.table.setSortingEnabled(False)

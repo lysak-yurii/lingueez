@@ -21,18 +21,69 @@
 
 """Small reusable widgets."""
 from PySide6.QtCore import (
-    QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer,
-    Signal,
+    QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QRectF, QSize, Qt,
+    QTimer, Signal,
 )
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QGridLayout, QHBoxLayout,
     QLabel, QLayout, QLineEdit, QMenu, QPushButton, QSizePolicy, QStyle,
     QStyleOptionComboBox, QToolButton, QWidget,
 )
 
+from app.core import progression
 from app.i18n import tr
-from app.ui import icons
+from app.ui import icons, theme
+
+
+# --------------------------------------------------------------------------- #
+# progression meter
+# --------------------------------------------------------------------------- #
+SEG_W, SEG_H, SEG_GAP = 7, 3, 3
+METER_W = len(progression.LADDER) * SEG_W + (len(progression.LADDER) - 1) * SEG_GAP
+
+
+def paint_progression(painter, rect, status):
+    """Draw the four-rung ladder meter for ``status`` inside ``rect``.
+
+    One segment per rung: those up to and including the word's current rung are
+    inked in that rung's ramp color, the rest stay as quiet track. Statuses off
+    the ladder have no position to show, so the whole track is drawn empty
+    rather than borrowing a rung's color and implying progress.
+    """
+    reached = progression.rank(status)
+    ink = QColor(theme.status_style(status)["ink"])
+    track = QColor(theme.current_colors()["border"])
+
+    painter.save()
+    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setPen(Qt.NoPen)
+    y = rect.y() + (rect.height() - SEG_H) / 2.0
+    for i in range(len(progression.LADDER)):
+        x = rect.x() + i * (SEG_W + SEG_GAP)
+        painter.setBrush(ink if (reached is not None and i <= reached) else track)
+        painter.drawRoundedRect(QRectF(x, y, SEG_W, SEG_H),
+                                SEG_H / 2.0, SEG_H / 2.0)
+    painter.restore()
+
+
+class ProgressionMeter(QWidget):
+    """Widget wrapper around :func:`paint_progression` for card layouts."""
+
+    def __init__(self, status="", parent=None):
+        super().__init__(parent)
+        self._status = status
+        self.setFixedSize(METER_W, max(SEG_H, 10))
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+    def set_status(self, status):
+        if status != self._status:
+            self._status = status
+            self.setToolTip(tr(status) if status else "")
+            self.update()
+
+    def paintEvent(self, event):  # noqa: N802
+        paint_progression(QPainter(self), self.rect(), self._status)
 
 
 def style_as_link(button):
