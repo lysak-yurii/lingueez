@@ -498,6 +498,59 @@ class MainWindow(QMainWindow):
                 return
         self._themed_icons.append((target, name, color_key, size))
 
+    # ---------------------------------------------------------------- sidebar
+    def _measure_expanded_width(self):
+        """Width the rail needs to fit its longest label, once.
+
+        Measured rather than hardcoded: the labels are translated, so a fixed
+        number is either padded out in English or clipped in a language with
+        longer words. Call only while the labels are actually set, so the
+        buttons report a sizeHint that includes them.
+        """
+        widest = max((btn.sizeHint().width() for btn, _, _ in self._nav_buttons),
+                     default=0)
+        margin = 2 * theme.SIDEBAR_ITEM_MARGIN  # the QSS margin on each button
+        return max(theme.SIDEBAR_W_COLLAPSED,
+                   min(widest + margin, theme.SIDEBAR_W_EXPANDED_MAX))
+
+    def _sidebar_width(self):
+        if not self._nav_expanded:
+            return theme.SIDEBAR_W_COLLAPSED
+        return self._nav_expanded_w or theme.SIDEBAR_W_COLLAPSED
+
+    def _apply_nav_expanded(self):
+        """Show or hide the nav labels and resize the rail to match."""
+        expanded = self._nav_expanded
+        # drives the text-align/padding switch in the stylesheet
+        self.sidebar.setProperty("expanded", "true" if expanded else "false")
+        self.sidebar.style().unpolish(self.sidebar)
+        self.sidebar.style().polish(self.sidebar)
+        # Re-polishing the rail alone leaves the buttons on their cached style,
+        # so the #Sidebar[expanded] rule never reaches them and the icon stays
+        # centred. Each button has to be re-polished itself.
+        for child in self.sidebar.findChildren(QPushButton):
+            child.style().unpolish(child)
+            child.style().polish(child)
+        for btn, label, tooltip in self._nav_buttons:
+            btn.setText(f"  {label}" if expanded else "")
+            # once the label is on screen, only keep a tooltip that adds detail
+            btn.setToolTip("" if expanded and tooltip == label else tooltip)
+        # Labels and padding are in place, so the buttons can now be measured.
+        self._nav_expanded_w = self._measure_expanded_width() if expanded else 0
+        self.sidebar.setFixedWidth(self._sidebar_width())
+        self._set_icon(self.nav_toggle,
+                       "chevron-left" if expanded else "chevron-right",
+                       "text_dim", 18)
+        self.nav_toggle.setToolTip(
+            tr("Collapse sidebar") if expanded else tr("Expand sidebar"))
+
+    def _toggle_sidebar(self):
+        self._nav_expanded = not self._nav_expanded
+        self.settings["sidebar_expanded"] = str(self._nav_expanded)
+        save_settings(self.settings)
+        self._apply_nav_expanded()
+        self._apply_responsive_columns()  # the rail's width changed the content area
+
     def _refresh_icons(self):
         """Re-tint all registered icons after a theme change."""
         for target, name, color_key, size in self._themed_icons:
@@ -618,7 +671,10 @@ class MainWindow(QMainWindow):
 
         # ---------- sidebar ----------
         sidebar = self.sidebar = QWidget(objectName="Sidebar")
-        sidebar.setFixedWidth(58)
+        self._nav_expanded = get_bool(self.settings, "sidebar_expanded", False)
+        self._nav_buttons = []   # (button, label, tooltip); labels show when expanded
+        self._nav_expanded_w = 0  # measured on first expand, from the labels
+        sidebar.setFixedWidth(self._sidebar_width())
         sb = QVBoxLayout(sidebar)
         sb.setContentsMargins(0, 10, 0, 10)
         sb.setSpacing(2)
@@ -634,17 +690,21 @@ class MainWindow(QMainWindow):
         sb.addWidget(self.menu_btn)
         sb.addSpacing(12)
 
-        def nav_button(icon_name, tooltip, slot, checkable=False, checked=False):
+        def nav_button(icon_name, label, slot, checkable=False, checked=False,
+                       tooltip=None):
+            """``label`` names the destination in the expanded rail; ``tooltip``
+            may add the detail that would be too long to sit in the rail."""
             btn = QPushButton()
             self._set_icon(btn, icon_name, "text" if checked else "text_dim")
             btn.setIconSize(QSize(21, 21))
-            btn.setToolTip(tooltip)
+            btn.setToolTip(tooltip or label)
             btn.setCursor(Qt.PointingHandCursor)
             if checkable or checked:
                 btn.setCheckable(True)
                 btn.setChecked(checked)
             btn.clicked.connect(slot)
             sb.addWidget(btn)
+            self._nav_buttons.append((btn, label, tooltip or label))
             return btn
 
         self.nav_words = nav_button("book-open", tr("Words"),
@@ -661,11 +721,21 @@ class MainWindow(QMainWindow):
                                     checkable=True)
         # The Bin is always available — its trash store is local-first (bin_items),
         # so deleted items can be restored with or without cloud sync.
-        self.nav_bin = nav_button("trash", tr("Bin (deleted items)"), self.open_bin)
+        self.nav_bin = nav_button("trash", tr("Bin"), self.open_bin,
+                                  tooltip=tr("Bin (deleted items)"))
         sb.addStretch(1)
         self.nav_settings = nav_button("sliders", tr("Settings"), self.open_settings)
+        # Six icon-only destinations are hard to learn; the rail expands to name
+        # them and remembers the choice. Its own control, so the hamburger keeps
+        # doing exactly one job (opening the app menu).
+        self.nav_toggle = QPushButton()
+        self.nav_toggle.setIconSize(QSize(18, 18))
+        self.nav_toggle.setCursor(Qt.PointingHandCursor)
+        self.nav_toggle.clicked.connect(self._toggle_sidebar)
+        sb.addWidget(self.nav_toggle)
 
         outer.addWidget(sidebar)
+        self._apply_nav_expanded()
 
         # ---------- content column ----------
         content = QWidget()
@@ -1127,7 +1197,7 @@ class MainWindow(QMainWindow):
             index = self.stack.currentIndex()
         on_words = index == PAGE_WORDS
         m = self._measure_header_metrics()
-        content_w = self.width() - 58  # minus the fixed icon sidebar
+        content_w = self.width() - self._sidebar_width()  # minus the nav rail
         if m is None:
             search_collapsed, buttons_collapsed = self._header_compact, self._buttons_collapsed
         else:
@@ -1445,7 +1515,7 @@ class MainWindow(QMainWindow):
         else:
             sp = self._tb_top.spacing()
             M = 32  # 16px left/right row margins
-            content_w = self.width() - 58  # minus the fixed icon sidebar
+            content_w = self.width() - self._sidebar_width()  # minus the nav rail
             chips_full = self._filters_width(m)
             action_full = self._action_full_width(has_sel)
             # Live, not cached: the player's width tracks the current word, so a

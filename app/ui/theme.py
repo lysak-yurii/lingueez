@@ -559,6 +559,12 @@ QGroupBox::title {{
 }}
 #Sidebar QPushButton:hover {{ background: {c['surface_alt']}; }}
 #Sidebar QPushButton:checked {{ background: {c['selection']}; }}
+/* Expanded rail: the icon keeps the column it occupies when collapsed and the
+   label runs out to the right of it, instead of the pair being centred. */
+#Sidebar[expanded="true"] QPushButton {{
+    text-align: left;
+    padding: 9px 9px 9px 12px;
+}}
 #TopBar {{
     background: {c['bg_alt']};
     border-bottom: 1px solid {c['border']};
