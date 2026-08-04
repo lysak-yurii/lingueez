@@ -75,9 +75,27 @@ jobs:
       - name: Build MSIX
         shell: pwsh
         run: |
-          $makeappx = (Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" |
+          $sdk = "C:\Program Files (x86)\Windows Kits\10\bin"
+          $makeappx = (Get-ChildItem "$sdk\*\x64\makeappx.exe" |
                        Sort-Object FullName -Descending | Select-Object -First 1).FullName
           if (-not $makeappx) { throw "makeappx.exe not found in the Windows SDK" }
+          $makepri = Join-Path (Split-Path $makeappx) "makepri.exe"
+          if (-not (Test-Path $makepri)) { throw "makepri.exe not found in the Windows SDK" }
+
+          # The Assets/ variants (scale-*, targetsize-*, altform-unplated) are
+          # only resolvable through resources.pri; without it the taskbar falls
+          # back to a plated icon. priconfig.xml stays outside the layout so it
+          # isn't packaged, and its <packaging> node is dropped to keep the
+          # resources in this package rather than split into resource packs.
+          & $makepri createconfig /cf priconfig.xml /dq en-US_uk-UA /o
+          if ($LASTEXITCODE -ne 0) { throw "makepri createconfig failed ($LASTEXITCODE)" }
+          [xml]$cfg = Get-Content priconfig.xml
+          $pk = $cfg.resources.packaging
+          if ($pk) { $cfg.resources.RemoveChild($pk) | Out-Null }
+          $cfg.Save((Resolve-Path priconfig.xml))
+          & $makepri new /pr msix_layout /cf priconfig.xml /of msix_layout\resources.pri /o
+          if ($LASTEXITCODE -ne 0) { throw "makepri new failed ($LASTEXITCODE)" }
+
           New-Item -ItemType Directory -Force -Path installer_output | Out-Null
           $out = "installer_output\Lingueez-${{ needs.version.outputs.version }}.msix"
           & $makeappx pack /d msix_layout /p $out /o

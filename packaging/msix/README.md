@@ -16,6 +16,25 @@ in the `build-windows` job of `.github/workflows/release.yml` (and
 - `generate_assets.py` — Pillow script that derives `Assets/` from
   `assets/icons/icon.png`. Rerun after changing the master icon.
 
+## Icon variants and resources.pri
+
+The manifest names logos unqualified (`Assets\Square44x44Logo.png`); Windows
+resolves each to a qualified file beside it — `.scale-200`, `.targetsize-32`,
+`_altform-unplated`. Two things must both hold or the taskbar icon renders
+*plated*: the logo shrunk inside a solid square filled from `BackgroundColor`
+(and where that is `transparent`, filled with the user's accent colour instead).
+
+1. `Assets/` must contain `Square44x44Logo.targetsize-<N>_altform-unplated.png`
+   (and `_altform-lightunplated` for light shells). `generate_assets.py` emits
+   these.
+2. The package must carry a `resources.pri`, or none of the qualified names are
+   found. `makeappx pack` does **not** produce one — the build runs `makepri`
+   first (see below).
+
+`generate_assets.py` skips variants larger than the master icon; a bigger
+`assets/icons/icon.png` (currently 549px) would fill in the remaining large
+tiles.
+
 ## Package identity
 
 `Identity` must match the reserved product in Partner Center (Product management →
@@ -53,6 +72,16 @@ Copy-Item dist\Lingueez\* $layout -Recurse
 Copy-Item packaging\msix\Assets $layout\Assets -Recurse
 (Get-Content packaging\msix\AppxManifest.xml) `
   -replace '\{\{VERSION\}\}', "$ver.0" | Set-Content $layout\AppxManifest.xml
+
+# Index the qualified assets. Keep priconfig.xml out of the layout, and drop its
+# <packaging> node so resources stay in this package instead of splitting into
+# resource packs the manifest doesn't declare.
+makepri createconfig /cf priconfig.xml /dq en-US_uk-UA /o
+[xml]$cfg = Get-Content priconfig.xml
+$cfg.resources.RemoveChild($cfg.resources.packaging) | Out-Null
+$cfg.Save((Resolve-Path priconfig.xml))
+makepri new /pr $layout /cf priconfig.xml /of $layout\resources.pri /o
+
 makeappx pack /d $layout /p "Lingueez-$ver.msix" /o
 ```
 
