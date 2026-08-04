@@ -2900,8 +2900,9 @@ class MainWindow(QMainWindow):
         records = self._prepare_playback_records(records)
         self._start_word_playback(records)
         # Follow the audio on the Flashcards page: cards advance and flip in
-        # sync with what's being read.
-        if get_bool(self.settings, "flashcards_autoswitch", True):
+        # sync with what's being read. A single word isn't a deck worth leaving
+        # the vocabulary for — it just plays where the user already is.
+        if len(records) > 1 and get_bool(self.settings, "flashcards_autoswitch", True):
             self.flashcards_page.enter_autoplay(records)
             self.switch_page(PAGE_FLASHCARDS)
 
