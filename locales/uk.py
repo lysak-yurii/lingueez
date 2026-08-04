@@ -397,6 +397,8 @@ TRANSLATIONS: dict[str, str] = {
     "Translate with DeepL (Enter)": "Перекласти через DeepL (Enter)",
     "Save Word": "Зберегти слово",
     "Enter a word to translate.": "Введіть слово для перекладу.",
+    "Fill with AI (lemma + best translation)": "Заповнити за допомогою AI (лема + найкращий переклад)",
+    "Enter a word to fill with AI.": "Введіть слово, щоб заповнити за допомогою AI.",
     "Source equals target — translated to {lang} instead.": "Мова джерела збігається з цільовою — перекладено на {lang}.",
     "Both word and translation are required.": "Потрібні обидва: слово та переклад.",
     "Please select the source language before saving.": "Будь ласка, виберіть мову джерела перед збереженням.",

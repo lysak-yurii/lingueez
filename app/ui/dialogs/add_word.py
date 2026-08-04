@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import load_settings, save_settings
+from app.core import ai
 from app.core.audio import speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
@@ -129,6 +130,13 @@ class AddWordDialog(FramelessDialog):
         self.translate_btn.setCursor(Qt.PointingHandCursor)
         self.translate_btn.clicked.connect(self.do_translate)
         buttons.addWidget(self.translate_btn)
+        self.ai_btn = QPushButton(objectName="iconButton")
+        self.ai_btn.setIcon(icons.icon("sparkles", colors["text_dim"], 16))
+        self.ai_btn.setIconSize(QSize(16, 16))
+        self.ai_btn.setToolTip(tr("Fill with AI (lemma + best translation)"))
+        self.ai_btn.setCursor(Qt.PointingHandCursor)
+        self.ai_btn.clicked.connect(self.do_ai_fill)
+        buttons.addWidget(self.ai_btn)
         buttons.addStretch(1)
         cancel = QPushButton(tr("Cancel"))
         cancel.setCursor(Qt.PointingHandCursor)
@@ -192,6 +200,11 @@ class AddWordDialog(FramelessDialog):
             return
         self.do_translate()
 
+    @staticmethod
+    def _fallback_target(source):
+        """Target to use when the source language is also the chosen target."""
+        return 'German' if source == 'English' else 'English'
+
     def _speak(self, word, language):
         if not word.strip():
             return
@@ -224,7 +237,7 @@ class AddWordDialog(FramelessDialog):
             # Same-language guard: switch target like the original app
             effective_source = detected or (None if source == "Detect language" else source)
             if effective_source == target:
-                new_target = 'German' if effective_source == 'English' else 'English'
+                new_target = self._fallback_target(effective_source)
                 translation, _ = translate(word, new_target, effective_source)
                 return translation, effective_source, new_target
             return translation, effective_source, target
@@ -242,6 +255,51 @@ class AddWordDialog(FramelessDialog):
 
         run_in_thread(work, on_result=done, on_error=self._info,
                       on_finished=lambda: self.translate_btn.setEnabled(True))
+
+    def do_ai_fill(self):
+        """Rewrite the entry in its dictionary (lemma) form with a translation
+        picked for that form — the same capture the reader's word popup makes,
+        except here the fields are filled and the user still presses Save."""
+        word = self.word1_edit.text().strip()
+        if not word:
+            self._info(tr("Enter a word to fill with AI."))
+            return
+        source = get_lang(self.lang1_combo)
+        target = get_lang(self.lang2_combo)
+        self.ai_btn.setEnabled(False)
+        self.translate_btn.setEnabled(False)
+        self._info(tr("Thinking…"))
+
+        def work():
+            effective_source = source
+            if effective_source == "Detect language":
+                # lemma_translate needs a named source language, so borrow the
+                # translator's detector rather than making the model guess.
+                _, detected = translate(word, target, None)
+                effective_source = detected or "English"
+            target_used = target
+            if effective_source == target_used:
+                target_used = self._fallback_target(effective_source)
+            lemma, translation = ai.lemma_translate(word, "", effective_source, target_used)
+            return lemma, translation, effective_source, target_used
+
+        def done(result):
+            lemma, translation, detected_source, target_used = result
+            self.word1_edit.setText(lemma)
+            self.word2_edit.setText(translation)
+            if get_lang(self.lang1_combo) == "Detect language":
+                self._set_lang(self.lang1_combo, detected_source)
+            if target_used != get_lang(self.lang2_combo):
+                self._set_lang(self.lang2_combo, target_used)
+                self._info(tr("Source equals target — translated to {lang} instead.").format(lang=lang_label(target_used)))
+            else:
+                self._info("")
+
+        def finished():
+            self.ai_btn.setEnabled(True)
+            self.translate_btn.setEnabled(True)
+
+        run_in_thread(work, on_result=done, on_error=self._info, on_finished=finished)
 
     def save_word(self):
         word1 = self.word1_edit.text().strip()
