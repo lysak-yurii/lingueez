@@ -1,4 +1,4 @@
-project('lingueez', version: '2.0.3', meson_version: '>= 0.59.0')
+project('lingueez', version: '2.0.6', meson_version: '>= 0.59.0')
 
 # Pure-Python app; no build step, install only.
 app_id = 'app.lingueez.Lingueez'

@@ -64,7 +64,7 @@ from the Windows SDK. To reproduce locally on Windows after `pyinstaller
 lingueez.spec`:
 
 ```powershell
-$ver = "2.0.4"
+$ver = "2.0.6"
 $layout = "msix_layout"
 Remove-Item -Recurse -Force $layout -ErrorAction Ignore
 New-Item -ItemType Directory $layout | Out-Null
@@ -98,8 +98,8 @@ $cert = New-SelfSignedCertificate -Type Custom -Subject $pub `
   -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
 Export-Certificate -Cert $cert -FilePath test.cer
 Import-Certificate -FilePath test.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
-signtool sign /fd SHA256 /a /sha1 $cert.Thumbprint "Lingueez-2.0.4.msix"
-Add-AppxPackage "Lingueez-2.0.4.msix"
+signtool sign /fd SHA256 /a /sha1 $cert.Thumbprint "Lingueez-2.0.6.msix"
+Add-AppxPackage "Lingueez-2.0.6.msix"
 ```
 
 ## Remaining submission tasks

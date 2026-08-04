@@ -82,6 +82,23 @@ GEOMETRY_FILE = "window_geometry.json"
 PREDEFINED_STATUSES = list(progression.ALL_STATUSES)
 DEFAULT_HOTKEY = "Ctrl+Shift+V"
 PAGE_WORDS, PAGE_FLASHCARDS, PAGE_TEXTS, PAGE_STATS = 0, 1, 2, 3
+# Words empty-state subtitle: 355 keeps this page's floor in line with the
+# Texts page (~403) so switching tabs never resizes the window.
+EMPTY_SUB_WIDTH = 355
+QWIDGETSIZE_MAX = (1 << 24) - 1  # PySide6 doesn't export Qt's "no maximum"
+
+
+def pin_wrapped_height(label):
+    """Fix a centered word-wrapped label to the height its text needs.
+
+    Centering makes the layout skip heightForWidth, so we set it ourselves.
+    The height is measured at the label's own width — measuring any wider
+    silently drops a line and clips the text. Clear the previous pin first,
+    or minimumHeight floors the measurement and the box never shrinks back.
+    """
+    label.setMinimumHeight(0)
+    label.setMaximumHeight(QWIDGETSIZE_MAX)
+    label.setFixedHeight(label.heightForWidth(label.width()))
 
 
 def _tray_icon_path() -> str:
@@ -2324,9 +2341,7 @@ class MainWindow(QMainWindow):
 
         self._empty_sub = QLabel(objectName="dimLabel", alignment=Qt.AlignCenter)
         self._empty_sub.setWordWrap(True)
-        # 355 keeps this page's floor in line with the Texts page (~403) so the
-        # window can shrink equally on both and switching tabs never resizes.
-        self._empty_sub.setFixedWidth(355)  # fixed so the wrapped height resolves
+        self._empty_sub.setFixedWidth(EMPTY_SUB_WIDTH)  # fixed so the wrapped height resolves
         outer.addWidget(self._empty_sub, 0, Qt.AlignHCenter)
         outer.addSpacing(18)
 
@@ -2419,8 +2434,7 @@ class MainWindow(QMainWindow):
             self._empty_title.setText(tr("No matching words"))
             self._empty_sub.setText(tr("Try a different search or filter."))
             self._empty_clear_btn.setText(tr("Clear filters"))
-        # pin the wrapped subtitle to its true height (centering skips heightForWidth)
-        self._empty_sub.setFixedHeight(self._empty_sub.heightForWidth(380))
+        pin_wrapped_height(self._empty_sub)
         for w in (self._empty_add_btn, self._empty_import_btn, self._empty_dot,
                   self._empty_tour_btn):
             w.setVisible(first_run)
