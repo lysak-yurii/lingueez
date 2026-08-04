@@ -48,7 +48,8 @@ class AddWordDialog(FramelessDialog):
     # already-existing entry instead of adding a duplicate.
     open_existing = Signal(str)
 
-    def __init__(self, parent, prefill=None, auto_translate=False, language1=None):
+    def __init__(self, parent, prefill=None, auto_translate=False, language1=None,
+                 language2=None):
         super().__init__(parent, title=tr("Add Word"))
         self.setMinimumWidth(540)
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -73,7 +74,7 @@ class AddWordDialog(FramelessDialog):
 
         self.lang1_combo = QComboBox()
         fill_lang_combo(self.lang1_combo, languages, head=["Detect language"])
-        set_lang(self.lang1_combo, "English")
+        set_lang(self.lang1_combo, language1 if language1 in languages else "English")
         self.lang1_combo.setFixedWidth(150)
         self.lang1_combo.setCursor(Qt.PointingHandCursor)
         grid.addWidget(self.lang1_combo, 0, 0)
@@ -98,7 +99,7 @@ class AddWordDialog(FramelessDialog):
 
         self.lang2_combo = QComboBox()
         fill_lang_combo(self.lang2_combo, languages)
-        last_target = settings.get("addword_target_language") or "German"
+        last_target = language2 or settings.get("addword_target_language") or "German"
         set_lang(self.lang2_combo, last_target if last_target in languages else "German")
         self.lang2_combo.setFixedWidth(150)
         self.lang2_combo.setCursor(Qt.PointingHandCursor)

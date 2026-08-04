@@ -2563,8 +2563,31 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------ actions
 
+    def _default_add_word_languages(self):
+        """The pair a hand-opened Add Word dialog should start on.
+
+        Taken from the most recently added word — words_to_dataframe sorts
+        newest first — so the dialog follows whatever the user is currently
+        collecting instead of a fixed English → German. An active Language /
+        Translation filter overrides its side: filtering the list to French is
+        a clearer statement of intent than the last word added."""
+        def name(value):
+            return value if isinstance(value, str) and value.strip() else None
+
+        lang1 = lang2 = None
+        if self.df is not None and not self.df.empty:
+            newest = self.df.iloc[0]
+            lang1, lang2 = name(newest['Language1']), name(newest['Language2'])
+        return (self.lang1_combo.currentData() or lang1,
+                self.lang2_combo.currentData() or lang2)
+
     def open_add_word(self, prefill=None, auto_translate=False, language1=None,
-                      from_hotkey=False, fill_from_clipboard=False):
+                      from_hotkey=False, fill_from_clipboard=False, language2=None):
+        # Opened by hand (toolbar +, tray menu, empty state): start on the
+        # vocabulary's own languages. Prefill paths — clipboard quick-add, the
+        # reader — carry their own source language and keep it.
+        if not prefill and not language1:
+            language1, language2 = self._default_add_word_languages()
         # Wayland focus workaround (pre-GlobalShortcuts-portal desktops, e.g.
         # GNOME 46/47). Such sessions give a global-shortcut launch no activation
         # token, so a freshly mapped dialog can't take focus while any window of
@@ -2582,20 +2605,21 @@ class MainWindow(QMainWindow):
             self.hide()
             self._sync_mini_player()
             QTimer.singleShot(300, lambda: self._spawn_add_word_dialog(
-                None, prefill, auto_translate, language1, fill_from_clipboard))
+                None, prefill, auto_translate, language1, fill_from_clipboard,
+                language2))
             return
         # Otherwise open the dialog without a parent when the main window isn't on
         # screen, so it doesn't drag the main window up behind it.
         main_on_screen = self.isVisible() and not self.isMinimized()
         parent = self if main_on_screen else None
         self._spawn_add_word_dialog(parent, prefill, auto_translate, language1,
-                                    fill_from_clipboard)
+                                    fill_from_clipboard, language2)
 
     def _spawn_add_word_dialog(self, parent, prefill, auto_translate, language1,
-                               fill_from_clipboard=False):
+                               fill_from_clipboard=False, language2=None):
         from app.ui.dialogs.add_word import AddWordDialog
         dialog = AddWordDialog(parent, prefill=prefill, auto_translate=auto_translate,
-                               language1=language1)
+                               language1=language1, language2=language2)
         dialog.word_saved.connect(self._after_db_change)
         dialog.open_existing.connect(self.select_word_by_id)
         if parent is None:
