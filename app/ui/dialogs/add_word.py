@@ -51,6 +51,9 @@ class AddWordDialog(FramelessDialog):
         super().__init__(parent, title=tr("Add Word"))
         self.setMinimumWidth(540)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        # Set while the dialog writes a combo itself, so those writes don't
+        # come back through the auto-translate handler (see _set_lang).
+        self._suppress_lang_signal = False
 
         settings = load_settings()
         # Cloud sync follows the login state (signed in ⇒ sync on).
@@ -142,6 +145,11 @@ class AddWordDialog(FramelessDialog):
         self.word2_edit.returnPressed.connect(self.save_word)
         self.word1_edit.setFocus()
 
+        # Picking a language re-translates on the spot — connected last so the
+        # combo defaults set up above don't fire it.
+        self.lang1_combo.currentIndexChanged.connect(self._on_language_changed)
+        self.lang2_combo.currentIndexChanged.connect(self._on_language_changed)
+
         if prefill:
             self.apply_prefill(prefill, language1=language1, auto_translate=auto_translate)
 
@@ -154,9 +162,9 @@ class AddWordDialog(FramelessDialog):
             return
         self.word1_edit.setText(text)
         if language1 and self.lang1_combo.findData(language1) >= 0:
-            set_lang(self.lang1_combo, language1)
+            self._set_lang(self.lang1_combo, language1)
         else:
-            set_lang(self.lang1_combo, "Detect language")
+            self._set_lang(self.lang1_combo, "Detect language")
         if len(text.split()) >= 100:
             self._info(tr("The text was truncated to the first 100 words."))
         if auto_translate:
@@ -167,6 +175,22 @@ class AddWordDialog(FramelessDialog):
     def _info(self, message):
         self.info_label.setText(message)
         self.info_label.setVisible(bool(message))
+
+    def _set_lang(self, combo, language):
+        """set_lang() that doesn't wake the auto-translate handler — the dialog
+        adjusts the combos itself (detected source, target fallback, swap) and
+        those writes must not translate on top of what it just produced."""
+        previous = self._suppress_lang_signal
+        self._suppress_lang_signal = True
+        try:
+            set_lang(combo, language)
+        finally:
+            self._suppress_lang_signal = previous
+
+    def _on_language_changed(self):
+        if self._suppress_lang_signal or not self.word1_edit.text().strip():
+            return
+        self.do_translate()
 
     def _speak(self, word, language):
         if not word.strip():
@@ -182,8 +206,8 @@ class AddWordDialog(FramelessDialog):
         self.word1_edit.setText(w2)
         self.word2_edit.setText(w1)
         if l1 != "Detect language":
-            set_lang(self.lang1_combo, l2)
-            set_lang(self.lang2_combo, l1)
+            self._set_lang(self.lang1_combo, l2)
+            self._set_lang(self.lang2_combo, l1)
 
     def do_translate(self):
         word = self.word1_edit.text().strip()
@@ -209,9 +233,9 @@ class AddWordDialog(FramelessDialog):
             translation, detected_source, target_used = result
             self.word2_edit.setText(translation)
             if detected_source and get_lang(self.lang1_combo) == "Detect language":
-                set_lang(self.lang1_combo, detected_source)
+                self._set_lang(self.lang1_combo, detected_source)
             if target_used != get_lang(self.lang2_combo):
-                set_lang(self.lang2_combo, target_used)
+                self._set_lang(self.lang2_combo, target_used)
                 self._info(tr("Source equals target — translated to {lang} instead.").format(lang=lang_label(target_used)))
             else:
                 self._info("")
