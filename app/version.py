@@ -20,7 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 APP_VERSION = "2.0.5"
-BUILD_NUMBER = "2026080307"
+BUILD_NUMBER = "2026080403"
 APP_NAME = "Lingueez"
 APP_ID = "Lingueez"  # WM_CLASS / desktop-file basename
 
@@ -37,6 +37,23 @@ WEBSITE_URL = "https://lingueez.app"
 CONTACT_EMAIL = "support@lingueez.app"
 # Dedicated channel for reporting inappropriate AI-generated content.
 REPORT_EMAIL = "report@lingueez.app"
+
+# The Android companion app (see app/ui/android_promo.py).
+ANDROID_PACKAGE = "app.lingueez.mobile"
+ANDROID_URL = f"https://play.google.com/store/apps/details?id={ANDROID_PACKAGE}"
+
+
+def android_url(surface):
+    """The Play listing tagged with the in-app surface the user came from.
+
+    Play passes the whole ``referrer`` value through to the Play Console's acquisition
+    reports, so tagging each surface separately answers which of them actually earns
+    installs — and therefore which are worth keeping. The value is a URL-encoded
+    query string of its own, hence the doubly-escaped separators.
+    """
+    return (f"{ANDROID_URL}&referrer=utm_source%3Ddesktop%26utm_medium%3Din-app"
+            f"%26utm_campaign%3D{surface}")
+
 
 # Optional financial support. These are hosted pages opened in the user's browser —
 # the app never embeds a payment form.

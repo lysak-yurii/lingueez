@@ -43,7 +43,7 @@ from app.system.autostart import get_autostart_enabled, set_autostart
 from app.ui.dialogs.account_dialog import AccountDialog
 from app.ui.dialogs.base import FramelessDialog, ask_text, confirm
 from app.ui.toast import show_toast
-from app.ui.widgets import ColorButton, ColumnPicker
+from app.ui.widgets import ColorButton, ColumnPicker, style_as_link
 from app.ui.workers import run_in_thread
 
 
@@ -651,6 +651,24 @@ class SettingsDialog(FramelessDialog):
             acct_row.addStretch(1)
             form.addRow(acct_row)
             self._refresh_account_ui()
+
+            # The account this section manages is the same one the phone app signs
+            # into, so this is where someone wondering "does this work elsewhere?"
+            # is actually standing. Quiet by design: one dim line, one link.
+            android_row = QHBoxLayout()
+            android_note = QLabel(tr("Use your Lingueez account seamlessly across "
+                                     "desktop and Android devices."))
+            android_note.setObjectName("dimLabel")
+            android_btn = QPushButton(tr("Get the app…"))
+            android_btn.setFlat(True)
+            style_as_link(android_btn)
+            android_btn.setStyleSheet(f"color:{self.colors['accent']}; border:none; "
+                                      "background:transparent; text-align:left;")
+            android_btn.clicked.connect(self._open_android_dialog)
+            android_row.addWidget(android_note)
+            android_row.addWidget(android_btn)
+            android_row.addStretch(1)
+            form.addRow(android_row)
 
         # --- Offline profiles (advanced, power-user) --------------------------
         # Separate, device-only libraries, each with its own database, that never
@@ -1371,6 +1389,10 @@ class SettingsDialog(FramelessDialog):
         self._refresh_account_ui()
         show_toast(self, tr("Account"),
                    tr("Removed {email} from this device.").format(email=email), "success")
+
+    def _open_android_dialog(self):
+        from app.ui.android_promo import open_android_dialog
+        open_android_dialog(self, surface="settings")
 
     def _open_account_dialog(self):
         # Accounts exist only on the built-in central project (always live), so just

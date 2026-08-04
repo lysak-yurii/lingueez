@@ -25,6 +25,7 @@ License v3.0.
 | feedparser | RSS parsing | BSD-2-Clause |
 | supabase | Cloud sync client | MIT |
 | python-dotenv | Environment configuration | BSD-3-Clause |
+| segno | QR codes (desktop→phone app handoff) | BSD-3-Clause |
 | keyring | Secure credential storage (OS keychain) | MIT |
 | cryptography | Encrypts the local session fallback | Apache-2.0 / BSD-3-Clause |
 | keyboard | Global hotkey (Windows) | MIT |

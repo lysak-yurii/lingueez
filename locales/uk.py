@@ -1639,6 +1639,30 @@ TRANSLATIONS: dict[str, str] = {
     "{n} d": "{n} д",
     "{n} mo": "{n} міс",
     "{n} y": "{n} р",
+
+    # ── Android companion app (android_promo.py) ────────────────────────────
+    "Lingueez for Android…": "Lingueez для Android…",
+    "Android app": "Застосунок для Android",
+    "Lingueez on Android": "Lingueez на Android",
+    "Take your vocabulary with you": "Ваші слова завжди з вами",
+    "Browse and add words, review with flashcards, and listen hands-free "
+    "with lock-screen playback controls. Sign in with your Lingueez "
+    "account and everything stays in sync.":
+        "Переглядайте й додавайте слова, повторюйте за допомогою флеш-карток і "
+        "слухайте, керуючи відтворенням прямо з екрана блокування. Увійдіть у свій "
+        "обліковий запис Lingueez — і все залишиться синхронізованим.",
+    "Point your phone's camera at the code":
+        "Наведіть камеру телефона на код",
+    "Get it on Google Play": "Завантажити в Google Play",
+    "Copy link": "Копіювати посилання",
+    "Link copied": "Посилання скопійовано",
+    "Lingueez is now on Android": "Lingueez тепер і на Android",
+    "Sign in with your Lingueez account — your vocabulary is already there.":
+        "Увійдіть у свій обліковий запис Lingueez — ваш словник уже там.",
+    "Dismiss": "Приховати",
+    "Use your Lingueez account seamlessly across desktop and Android devices.":
+        "Ваш акаунт Lingueez синхронізується із застосунком для Android",
+    "Get the app…": "Завантажити застосунок…",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

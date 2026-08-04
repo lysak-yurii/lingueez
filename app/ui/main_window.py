@@ -368,7 +368,7 @@ class MainWindow(QMainWindow):
         self.hotkey_pressed.connect(
             lambda: self.open_add_word_and_translate(from_hotkey=True))
         self.reload_requested.connect(self.load_data)
-        self.account_switch_requested.connect(self.switch_active_account)
+        self.account_switch_requested.connect(self._on_account_restored)
         self.stale_review_requested.connect(
             lambda orphans: self._review_stale_orphans(orphans=orphans))
         # Surface DeepL->Google fallbacks (raised on worker threads) as a toast.
@@ -570,6 +570,8 @@ class MainWindow(QMainWindow):
         self.window_controls.set_colors(self.colors)
         if self.sync_popover is not None:
             self.sync_popover.refresh_theme(self.colors)
+        if getattr(self, "_android_banner", None) is not None:
+            self._android_banner.refresh_theme(self.colors)
         self._rebuild_app_menu()
         self._apply_menu_button_icon()
         self._update_more_filters_active()  # keep the Filters chip tint in sync
@@ -658,6 +660,8 @@ class MainWindow(QMainWindow):
         if getattr(self, "_pending_update", None):
             menu.addAction(self._build_update_menu_item(menu, self._pending_update))
         menu.addAction(self._icon("help-circle"), tr("Show Tour"), self.start_tour)
+        menu.addAction(self._icon("smartphone"), tr("Lingueez for Android…"),
+                       self.show_android)
         menu.addAction(self._icon("heart"), tr("Support Lingueez"), self.show_support)
         menu.addAction(tr("About"), self.show_about)
         menu.addAction(self._icon("x"), tr("Quit"), self.quit_app)
@@ -849,6 +853,9 @@ class MainWindow(QMainWindow):
         QApplication.instance().installEventFilter(self._frameless_resizer)
 
         root.addWidget(header)
+        # Kept so a one-off strip can be slotted in directly under the title bar,
+        # above every page (see _maybe_show_android_promo).
+        self._content_root = root
 
         # ---------- top toolbar (filter chips + contextual actions) ----------
         # One row when everything fits; while reading at narrow widths the filter
@@ -3510,6 +3517,18 @@ class MainWindow(QMainWindow):
         else:
             self._update_sync_status_ui("idle")
 
+    def _on_account_restored(self, uid):
+        """Startup session restore, marshalled onto the GUI thread.
+
+        Deliberately does NOT pass ``offer_contribution``: the local-items prompt
+        must stay tied to explicit user action or it nags on every launch. The
+        Android strip is the exception — one click retires it for good, so a launch
+        is a safe place to offer it, and it is the only place users who signed in
+        long ago will ever be reached.
+        """
+        self.switch_active_account(uid)
+        QTimer.singleShot(0, self._maybe_show_android_promo)
+
     def _restore_session_and_sync(self):
         """Worker-thread startup task: re-establish the active account's stored
         session, then point the app at that account's local DB and sync. Stays on the
@@ -3859,6 +3878,12 @@ class MainWindow(QMainWindow):
             if on_synced is not None:
                 on_synced()
         QTimer.singleShot(0, self._maybe_require_policy_consent)
+        # Catch a brand-new sign-in or an account switch here; a restored session
+        # is covered by _on_account_restored instead. Either way the strip shows at
+        # most once, and is harmless if a consent or adoption modal is still up
+        # since it persists until dismissed.
+        if offer_contribution and not local:
+            QTimer.singleShot(0, self._maybe_show_android_promo)
 
     def _maybe_require_policy_consent(self):
         """Re-consent gate: when a signed-in built-in account last accepted an older
@@ -4455,7 +4480,8 @@ class MainWindow(QMainWindow):
             parts = [_anchor(PRIVACY_URL, tr("Privacy Policy")),
                      _anchor(TERMS_URL, tr("Terms")),
                      _anchor("mailto:" + CONTACT_EMAIL, tr("Contact")),
-                     _anchor("#support", tr("Support"))]
+                     _anchor("#support", tr("Support")),
+                     _anchor("#android", tr("Android app"))]
             if with_website:
                 parts.append(_anchor(WEBSITE_URL, tr("Website")))
             return f' <span style="color:{dim}">·</span> '.join(parts)
@@ -4464,6 +4490,9 @@ class MainWindow(QMainWindow):
             if href == "#support":
                 dialog.accept()  # close About, then open the Support dialog
                 self.show_support()
+            elif href == "#android":
+                dialog.accept()
+                self.show_android("about")
             elif href in (PRIVACY_URL, TERMS_URL):
                 open_legal(href)  # keep the GitHub failover
             else:
@@ -4519,6 +4548,28 @@ class MainWindow(QMainWindow):
     def show_support(self):
         from app.ui.dialogs.support_dialog import SupportDialog
         SupportDialog(self).exec()
+
+    def show_android(self, surface="menu"):
+        from app.ui.android_promo import open_android_dialog
+        open_android_dialog(self, surface=surface)
+
+    def _maybe_show_android_promo(self):
+        """Show the Android strip, from either a sign-in or a launch.
+
+        Both guards matter: the gate stops once the user has answered it, and the
+        second stops an account switch from stacking a strip on an existing one —
+        which also keeps it to one appearance per session.
+        """
+        from app.ui.android_promo import should_show_promo, show_promo_banner
+        if not should_show_promo(self.settings, self.auth):
+            return
+        if getattr(self, "_android_banner", None):
+            return
+        # Index 1 in the content column: directly beneath the title bar, above the
+        # filter toolbar and every page.
+        self._android_banner = show_promo_banner(
+            self, self._content_root, 1, self.settings, self.colors,
+            on_closed=lambda: setattr(self, "_android_banner", None))
 
     def _report_an_issue(self):
         """Ask what kind of issue to report, then dispatch.

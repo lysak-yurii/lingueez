@@ -63,6 +63,7 @@ hiddenimports = [
     "supabase", "gotrue", "postgrest", "realtime", "storage3",
     "google.genai", "openai", "feedparser", "trafilatura",
     "pydub", "gtts", "google.cloud.texttospeech",
+    "segno",   # imported lazily inside app/ui/android_promo.qr_pixmap
 ]
 # i18n loads locale modules dynamically (importlib.import_module("locales.uk")),
 # which static analysis can't see — collect them explicitly so the Ukrainian
