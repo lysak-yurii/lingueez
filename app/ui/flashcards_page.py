@@ -824,6 +824,8 @@ class FlashcardsPage(QWidget):
         self._grade_history = {}  # card index → grade key, feeds the trail
         self._definitions = {}
         self._deck_kind = "due"
+        self._drill = False    # session replaying the last one's Hard cards
+        self._hard_deck = []   # cards graded Hard in the session just finished
         self._autoplay = False
         self._autoplay_paused = False
         self._autoplay_listened = 0
@@ -1013,6 +1015,10 @@ class FlashcardsPage(QWidget):
         sv.setSpacing(10)
         top = QHBoxLayout()
         self.progress_label = QLabel("")
+        # a drill re-runs cards already seen this sitting — say so, or the
+        # deck length silently contradicting the picker reads as a bug
+        self.session_tag = QLabel(tr("Hard words"))
+        self.session_tag.setVisible(False)
         self.correct_label = QLabel("")
         self.end_btn = QPushButton(objectName="iconButton")
         self.end_btn.setToolTip(tr("End session"))
@@ -1020,6 +1026,8 @@ class FlashcardsPage(QWidget):
         self.end_btn.setIconSize(QSize(16, 16))
         self.end_btn.clicked.connect(self._end_session_clicked)
         top.addWidget(self.progress_label)
+        top.addSpacing(8)
+        top.addWidget(self.session_tag)
         top.addStretch(1)
         top.addWidget(self.correct_label)
         top.addSpacing(8)
@@ -1140,6 +1148,14 @@ class FlashcardsPage(QWidget):
         done = QHBoxLayout()
         done.setSpacing(10)
         done.addStretch(1)
+        # The cards just missed are the ones worth another pass; the button
+        # wears the Hard grade's own tint so the offer reads as a follow-up
+        # to the red count in the breakdown above it.
+        self.hard_again_btn = QPushButton(tr("Practice hard words"))
+        self.hard_again_btn.setCursor(Qt.PointingHandCursor)
+        self.hard_again_btn.setVisible(False)
+        self.hard_again_btn.clicked.connect(self._practice_hard_clicked)
+        done.addWidget(self.hard_again_btn)
         self.continue_btn = QPushButton(tr("Continue"), objectName="primaryButton")
         self.continue_btn.setCursor(Qt.PointingHandCursor)
         self.continue_btn.clicked.connect(self._continue_clicked)
@@ -1466,15 +1482,20 @@ class FlashcardsPage(QWidget):
         self._deck_kind = kind
         self.play_requested.emit(records)
 
-    def start_session(self, records, autoplay=False):
+    def start_session(self, records, autoplay=False, drill=False):
         self._cancel_speech()
+        previous_definitions = self._definitions
         self._deck = list(records)
         self._index = 0
         self._correct = 0
         self._graded = set()
         self._grade_history = {}
-        # seed from the deck preview so cards flip without a DB round-trip
+        # seed from the deck preview so cards flip without a DB round-trip;
+        # a drill also keeps what the session it follows already looked up
         self._definitions = dict(self._preview_defs)
+        if drill:
+            self._definitions.update(previous_definitions)
+        self._drill = bool(drill) and not autoplay
         self._autoplay = autoplay
         self._autoplay_paused = False
         self._autoplay_listened = 0
@@ -1508,6 +1529,7 @@ class FlashcardsPage(QWidget):
         self.correct_label.setText(
             tr("{n} correct").format(n=self._correct))
         self.correct_label.setVisible(not self._autoplay)
+        self.session_tag.setVisible(self._drill)
         self.slim_bar.set_progress(
             self._index + 1, total,
             None if self._autoplay else self._grade_history)
@@ -1745,9 +1767,33 @@ class FlashcardsPage(QWidget):
         self.complete_breakdown.setVisible(bool(parts))
         self.complete_icon.setPixmap(
             icons.pixmap("check", self._colors["success"], 40))
+        # the cards graded Hard, in the order they came up — the deck a
+        # follow-up drill runs, and the loop repeats while any stay Hard
+        self._hard_deck = [self._deck[i] for i in sorted(self._grade_history)
+                           if self._grade_history[i] == "hard"]
+        self.hard_again_btn.setText(
+            tr("Practice hard words") + f"  ·  {len(self._hard_deck)}")
+        self.hard_again_btn.setVisible(bool(self._hard_deck))
+        self.complete_title.setText(
+            tr("Hard words cleared!") if self._drill and not self._hard_deck
+            else tr("Session complete!"))
         self.continue_btn.setVisible(self._deck_kind == "due"
                                      and not self._autoplay_listened)
         self._stack.setCurrentIndex(self.STATE_COMPLETE)
+
+    def _practice_hard_clicked(self):
+        """Re-run just the Hard cards of the session that finished.
+
+        Grading in the drill goes through SM-2 exactly as it does anywhere
+        else, so a card recalled on the second pass earns its longer interval
+        instead of staying stuck at one day."""
+        records = list(self._hard_deck)
+        if not records:
+            self._show_picker()
+            return
+        if self.shuffle_btn.isChecked():
+            random.shuffle(records)
+        self.start_session(records, drill=True)
 
     def _continue_clicked(self):
         records = self._fetch_deck(self._deck_kind, self.size_spin.value())
@@ -1765,6 +1811,8 @@ class FlashcardsPage(QWidget):
     def _show_picker(self):
         self._cancel_speech()
         self._deck = []
+        self._hard_deck = []
+        self._drill = False
         self._autoplay = False
         self._autoplay_paused = False
         self._stack.setCurrentIndex(self.STATE_PICKER)
@@ -1879,6 +1927,10 @@ class FlashcardsPage(QWidget):
         for card in self._preview_cards:
             card.refresh_theme(c)
         self.progress_label.setStyleSheet(dim + "font-weight:600;")
+        self.session_tag.setStyleSheet(
+            f"color:{c['danger']};background:{_soft(c['danger'], 34)};"
+            "padding:2px 10px;border-radius:9px;"
+            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;")
         self.correct_label.setStyleSheet(
             f"color:{c['success']};background:transparent;font-weight:600;")
         self.autoplay_caption.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
@@ -1925,3 +1977,4 @@ class FlashcardsPage(QWidget):
         self.hard_btn.setStyleSheet(grade_style(c["danger"]))
         self.good_btn.setStyleSheet(grade_style(c["warning"]))
         self.easy_btn.setStyleSheet(grade_style(c["success"]))
+        self.hard_again_btn.setStyleSheet(grade_style(c["danger"]))

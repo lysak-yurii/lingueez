@@ -1628,6 +1628,9 @@ TRANSLATIONS: dict[str, str] = {
     "You listened to {n} of {total} cards.": "Ви прослухали {n} з {total} карток.",
     "Correct: {n} of {total}": "Правильно: {n} з {total}",
     "New session": "Нова сесія",
+    "Practice hard words": "Повторити важкі слова",
+    "Hard words": "Важкі слова",
+    "Hard words cleared!": "Важкі слова опрацьовано!",
     "Open Flashcards when Read Aloud starts":
         "Відкривати Флеш-картки під час запуску читання вголос",
     "Stop": "Зупинити",
