@@ -462,7 +462,10 @@ class _PreviewCard(QWidget):
         foot.addWidget(self.meter)
         self.status = QLabel()
         self.status.setTextFormat(Qt.RichText)
-        self.lang = QLabel(lang_tag)
+        # Parented explicitly: a parentless widget is a window, and hiding or
+        # showing one before the layout adopts it flashes a real (empty,
+        # title-bar-only) top-level window on Windows.
+        self.lang = QLabel(lang_tag, self)
         self.lang.setVisible(bool(lang_tag))
         self.due = QLabel(due_text)
         foot.addWidget(self.status)
