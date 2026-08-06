@@ -5,8 +5,9 @@
 """Unit tests for the Android cross-sell gate and its Play attribution URL.
 
 The gate decides who ever sees the one-time banner, so its failure modes are the
-ones that matter: nagging someone twice, or showing a phone-app pitch to someone
-whose data never leaves the machine.
+ones that matter: nagging someone twice, interrupting someone who has barely
+started a library, or telling a user their words are already on a phone when
+they are not.
 
 Run:  QT_QPA_PLATFORM=offscreen python -m unittest tests.test_android_promo
 """
@@ -37,45 +38,73 @@ class FakeAuth:
         return self._local
 
 
-def _builtin_server():
-    """Patch out the own-server check — the built-in project is the normal case."""
-    return mock.patch("app.core.supabase_client.is_custom_server", return_value=False)
-
-
 class ShouldShowPromoTests(unittest.TestCase):
-    def test_fresh_cloud_sign_in_qualifies(self):
-        with _builtin_server():
-            self.assertTrue(promo.should_show_promo({}, FakeAuth(logged_in=True)))
+    """The gate is now about the library, not the account."""
 
-    def test_signed_out_never_qualifies(self):
-        with _builtin_server():
-            self.assertFalse(promo.should_show_promo({}, FakeAuth()))
+    def test_a_library_worth_carrying_qualifies(self):
+        self.assertTrue(promo.should_show_promo({}, promo.MIN_WORDS + 1))
 
-    def test_offline_profile_never_qualifies(self):
-        # An offline profile has no cloud session to share with a phone.
-        with _builtin_server():
-            self.assertFalse(promo.should_show_promo({}, FakeAuth(logged_in=True, local=True)))
+    def test_a_handful_of_words_does_not(self):
+        # Someone still trying the app out should not be pitched a second client.
+        for count in (0, 1, promo.MIN_WORDS):
+            with self.subTest(words=count):
+                self.assertFalse(promo.should_show_promo({}, count))
 
-    def test_own_server_users_never_qualify(self):
-        with mock.patch("app.core.supabase_client.is_custom_server", return_value=True):
-            self.assertFalse(promo.should_show_promo({}, FakeAuth(logged_in=True)))
+    def test_the_account_kind_no_longer_decides(self):
+        # Offline profiles and own-server users study the same vocabulary, so they
+        # get the same invitation — what changes for them is the wording.
+        for auth in (FakeAuth(), FakeAuth(logged_in=True),
+                     FakeAuth(logged_in=True, local=True)):
+            with self.subTest(auth=vars(auth)):
+                self.assertTrue(promo.should_show_promo({}, 12))
 
-    def test_missing_auth_is_tolerated(self):
-        with _builtin_server():
-            self.assertFalse(promo.should_show_promo({}, None))
+    def test_a_missing_count_is_tolerated(self):
+        self.assertFalse(promo.should_show_promo({}, None))
 
     def test_dismissing_retires_it(self):
-        with _builtin_server():
-            self.assertFalse(
-                promo.should_show_promo({promo.DISMISSED_KEY: "True"}, FakeAuth(logged_in=True))
-            )
+        self.assertFalse(promo.should_show_promo({promo.DISMISSED_KEY: "True"}, 500))
 
     def test_flag_is_parsed_from_text(self):
         # settings.cfg stores everything as text; "False" must not read as truthy.
-        with _builtin_server():
-            self.assertTrue(
-                promo.should_show_promo({promo.DISMISSED_KEY: "False"}, FakeAuth(logged_in=True))
-            )
+        self.assertTrue(promo.should_show_promo({promo.DISMISSED_KEY: "False"}, 12))
+
+
+class ContinuityLineTests(unittest.TestCase):
+    """The claim has to match the user. Only a cloud account already has its words
+    on the server the phone reads; the phone app has no offline mode, so everyone
+    else must be told it takes an account rather than that they are already set."""
+
+    def _line(self, auth, long_form=False):
+        # Resolve against the real predicate first, then stand in for it — the
+        # line picks its claim from the no-argument call inside _continuity_line.
+        answer = promo.has_cloud_library(auth)
+        with mock.patch.object(promo, "has_cloud_library", return_value=answer):
+            return promo._continuity_line(long_form=long_form)
+
+    def test_a_cloud_account_is_told_its_words_are_already_there(self):
+        for long_form in (False, True):
+            line = self._line(FakeAuth(logged_in=True), long_form)
+            self.assertIn("already there", line)
+
+    def test_everyone_else_is_told_what_it_takes(self):
+        for auth in (FakeAuth(), FakeAuth(logged_in=True, local=True)):
+            for long_form in (False, True):
+                with self.subTest(auth=vars(auth), long_form=long_form):
+                    line = self._line(auth, long_form)
+                    self.assertNotIn("already there", line)
+                    self.assertIn("account", line)
+
+    def test_offline_profiles_have_no_cloud_library(self):
+        self.assertFalse(promo.has_cloud_library(FakeAuth(logged_in=True, local=True)))
+        self.assertFalse(promo.has_cloud_library(FakeAuth()))
+        self.assertTrue(promo.has_cloud_library(FakeAuth(logged_in=True)))
+
+    def test_an_unusable_auth_manager_does_not_break_the_strip(self):
+        class Exploding:
+            def is_logged_in(self):
+                raise RuntimeError("keyring is on fire")
+
+        self.assertFalse(promo.has_cloud_library(Exploding()))
 
 
 class RecordingTests(unittest.TestCase):
@@ -141,8 +170,7 @@ class BannerTests(unittest.TestCase):
             save.assert_not_called()
         self.assertEqual(settings, {})
         # So a user who ignored it the first time is still eligible next launch.
-        with _builtin_server():
-            self.assertTrue(promo.should_show_promo(settings, FakeAuth(logged_in=True)))
+        self.assertTrue(promo.should_show_promo(settings, 12))
 
     def test_dismissing_the_banner_retires_it(self):
         host, layout, colors = self._host()
@@ -150,8 +178,7 @@ class BannerTests(unittest.TestCase):
         with mock.patch.object(promo, "save_settings"):
             banner = promo.show_promo_banner(host, layout, 0, settings, colors)
             banner.dismiss()
-        with _builtin_server():
-            self.assertFalse(promo.should_show_promo(settings, FakeAuth(logged_in=True)))
+        self.assertFalse(promo.should_show_promo(settings, 12))
 
     def test_refresh_theme_retints_every_styled_child(self):
         # The banner paints from inline stylesheets, so a live theme switch only
@@ -177,6 +204,16 @@ class BannerTests(unittest.TestCase):
         for before, after in zip(light, dark, strict=True):
             self.assertNotEqual(before, after)
         self.assertIn(theme.DARK["accent_soft"], banner.styleSheet())
+
+    def test_main_window_feeds_the_gate_a_word_count(self):
+        # Guards the wiring, not the widget: the gate now takes a count, so a
+        # call site still passing an auth manager would silently always qualify.
+        import inspect
+        from app.ui.main_window import MainWindow
+
+        source = inspect.getsource(MainWindow._maybe_show_android_promo)
+        self.assertIn("word_count", source)
+        self.assertIn("should_show_promo(self.settings, word_count)", source)
 
     def test_main_window_refreshes_the_banner_on_theme_change(self):
         # Guards the wiring, not the widget: _refresh_icons must reach the banner.

@@ -25,10 +25,16 @@ Two surfaces, deliberately unequal:
 
   • ``AndroidDialog`` — the permanent home, reachable from the app menu, About and
     Settings → Sync. It never appears on its own; the user always asks for it.
-  • ``AndroidPromoBanner`` — a dismissible strip shown on sign-in or launch with a
-    cloud account, because that is when "your words are already on your phone" is
-    literally true. It returns each launch until the user answers it, and answering
-    it — opening the dialog or closing the strip — retires it permanently.
+  • ``AndroidPromoBanner`` — a dismissible strip shown once the user has a library
+    worth carrying (more than ``MIN_WORDS`` words), whatever kind of account they
+    are on. It returns each launch until the user answers it, and answering it —
+    opening the dialog or closing the strip — retires it permanently.
+
+What differs between those users is the wording, not the invitation: only someone
+signed into a cloud account can be told their words are *already* on the phone, so
+``_continuity_line`` picks the claim that is actually true for them. The phone app
+has no offline mode (``auth_gate.dart`` routes to the login screen), so everyone
+else is told plainly that it takes an account.
 
 Both centre on a QR code rather than a link: a Play Store URL on a desktop screen
 is a dead end, since the phone that would install the app cannot click it.
@@ -62,6 +68,11 @@ from app.version import android_url
 # or closing the strip. Being shown is not an answer: someone who never looked at it
 # has not declined anything, so display alone must not retire it.
 DISMISSED_KEY = "android_promo_dismissed"
+
+# How big a library has to be before the strip is worth showing. A handful of
+# words is someone still trying the app out; interrupting them to pitch a second
+# client is noise. Above it, there is something on the phone worth opening.
+MIN_WORDS = 3
 
 _QR_DARK = "#0e1116"
 _QR_LIGHT = "#ffffff"
@@ -335,23 +346,53 @@ class PhoneMock(QWidget):
 # --------------------------------------------------------------------------- #
 # gating
 # --------------------------------------------------------------------------- #
-def should_show_promo(settings, auth):
+def has_cloud_library(auth=None):
+    """Whether this user's words are already on the server the phone reads.
+
+    The one fact the copy turns on. False for offline profiles and for anyone not
+    signed in — their library lives on this machine only, so nothing is waiting
+    for them on a phone yet.
+    """
+    if auth is None:
+        from app.core.auth_manager import get_auth_manager
+        auth = get_auth_manager()
+    try:
+        return bool(auth.is_logged_in() and not auth.is_local_active())
+    except Exception:
+        return False
+
+
+def _continuity_line(long_form=False):
+    """The pitch, matched to what is true for this user rather than to the best case."""
+    if has_cloud_library():
+        if long_form:
+            return tr("Sign in with your Lingueez account and your vocabulary is "
+                      "already there — nothing to set up, nothing to move across.")
+        return tr("Sign in with your Lingueez account — "
+                  "your vocabulary is already there.")
+    # No cloud library yet, so promising one would be a lie. Name the step instead.
+    if long_form:
+        return tr("Sign in with a free Lingueez account on both and your vocabulary "
+                  "syncs to the phone — no files to copy across.")
+    return tr("Sign in with a free Lingueez account and your words sync to your phone.")
+
+
+def should_show_promo(settings, word_count):
     """Whether the banner may still be shown.
 
-    True only for someone the mobile app can actually serve: signed into a cloud
-    account on the built-in server. Offline profiles and own-server users get
-    nothing from an app that syncs through our backend, so they are never asked.
+    True for anyone with a library worth carrying who has not yet answered the
+    strip. It was once limited to cloud accounts, on the grounds that only they
+    could be told their words were already on the phone — but that was a fact
+    about the *wording*, not about who the app is for. Offline and own-server
+    users study the same vocabulary and the phone app serves them too, so they
+    get the invitation and an honest version of the claim.
 
     It keeps returning until the user answers it, so a strip that arrived mid-task
     is not silently spent. One click on the ✕ ends that for good.
     """
-    from app.core.supabase_client import is_custom_server
-
     if get_bool(settings, DISMISSED_KEY, False):
         return False
-    if is_custom_server():
-        return False
-    return bool(auth and auth.is_logged_in() and not auth.is_local_active())
+    return (word_count or 0) > MIN_WORDS
 
 
 def _record_dismissed(settings):
@@ -413,9 +454,7 @@ class AndroidDialog(FramelessDialog):
         right.addWidget(title)
 
         # The pitch is continuity, not novelty: nothing to set up, nothing to move.
-        body = QLabel(tr("Sign in with your Lingueez account and your vocabulary "
-                         "is already there — nothing to set up, nothing to move "
-                         "across."))
+        body = QLabel(_continuity_line(long_form=True))
         body.setWordWrap(True)
         body.setStyleSheet(f"color:{c['text_dim']}; font-size:12.5px;")
         right.addWidget(body)
@@ -526,8 +565,7 @@ class AndroidPromoBanner(QFrame):
         text_box.setSpacing(1)
         self._head = QLabel(tr("Lingueez is now on Android"))
         text_box.addWidget(self._head)
-        self._sub = QLabel(tr("Sign in with your Lingueez account — "
-                              "your vocabulary is already there."))
+        self._sub = QLabel(_continuity_line())
         self._sub.setWordWrap(True)
         text_box.addWidget(self._sub)
         row.addLayout(text_box, 1)

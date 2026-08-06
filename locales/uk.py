@@ -1655,6 +1655,14 @@ TRANSLATIONS: dict[str, str] = {
     "nothing to set up, nothing to move across.":
         "Увійдіть у свій обліковий запис Lingueez — і ваш словник уже там: "
         "нічого не треба налаштовувати чи переносити.",
+    "Sign in with a free Lingueez account on both and your vocabulary "
+    "syncs to the phone — no files to copy across.":
+        "Увійдіть у безкоштовний обліковий запис Lingueez на обох пристроях — і "
+        "ваш словник синхронізується з телефоном: нічого не треба переносити чи "
+        "налаштовувати.",
+    "Sign in with a free Lingueez account and your words sync to your phone.":
+        "Увійдіть у безкоштовний обліковий запис Lingueez — і ваші слова "
+        "синхронізуються з телефоном.",
     "Synced both ways": "Синхронізація в обидва боки",
     "Words you add on the phone are waiting on the computer, and the "
     "other way round.":

@@ -3920,8 +3920,10 @@ class MainWindow(QMainWindow):
         # Catch a brand-new sign-in or an account switch here; a restored session
         # is covered by _on_account_restored instead. Either way the strip shows at
         # most once, and is harmless if a consent or adoption modal is still up
-        # since it persists until dismissed.
-        if offer_contribution and not local:
+        # since it persists until dismissed. Offline profiles are included: the
+        # gate is about how many words you have, not what kind of account holds
+        # them, and the strip words itself to match (see _continuity_line).
+        if offer_contribution:
             QTimer.singleShot(0, self._maybe_show_android_promo)
 
     def _maybe_require_policy_consent(self):
@@ -4598,9 +4600,14 @@ class MainWindow(QMainWindow):
         Both guards matter: the gate stops once the user has answered it, and the
         second stops an account switch from stacking a strip on an existing one —
         which also keeps it to one appearance per session.
+
+        The gate reads the loaded library rather than counting rows itself: this
+        runs after ``load_data``, on every launch path, so ``df`` is already the
+        answer.
         """
         from app.ui.android_promo import should_show_promo, show_promo_banner
-        if not should_show_promo(self.settings, self.auth):
+        word_count = 0 if self.df is None else len(self.df)
+        if not should_show_promo(self.settings, word_count):
             return
         if getattr(self, "_android_banner", None):
             return
