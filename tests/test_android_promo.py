@@ -53,8 +53,7 @@ class ShouldShowPromoTests(unittest.TestCase):
     def test_the_account_kind_no_longer_decides(self):
         # Offline profiles and own-server users study the same vocabulary, so they
         # get the same invitation — what changes for them is the wording.
-        for auth in (FakeAuth(), FakeAuth(logged_in=True),
-                     FakeAuth(logged_in=True, local=True)):
+        for auth in (FakeAuth(), FakeAuth(logged_in=True), FakeAuth(logged_in=True, local=True)):
             with self.subTest(auth=vars(auth)):
                 self.assertTrue(promo.should_show_promo({}, 12))
 
@@ -316,8 +315,9 @@ class PhoneMockTests(unittest.TestCase):
 
         calls = []
         real = theme.status_style
-        with mock.patch.object(theme, "status_style",
-                               side_effect=lambda s: calls.append(s) or real(s)):
+        with mock.patch.object(
+            theme, "status_style", side_effect=lambda s: calls.append(s) or real(s)
+        ):
             self._render(theme.LIGHT, promo._MOCK_W, 420)
 
         self.assertTrue(calls, "the rows painted no status spine at all")
@@ -353,8 +353,10 @@ class AndroidDialogTests(unittest.TestCase):
         from app.ui import theme
 
         for palette in (theme.LIGHT, theme.DARK):
-            with (self.subTest(theme=palette["bg"]),
-                  mock.patch.object(theme, "current_colors", return_value=palette)):
+            with (
+                self.subTest(theme=palette["bg"]),
+                mock.patch.object(theme, "current_colors", return_value=palette),
+            ):
                 dialog = promo.AndroidDialog(surface="settings")
                 self.addCleanup(dialog.deleteLater)
                 self.assertEqual(dialog._url, version.android_url("settings"))
@@ -366,8 +368,7 @@ class AndroidDialogTests(unittest.TestCase):
         dialog = promo.AndroidDialog(surface="about")
         self.addCleanup(dialog.deleteLater)
         dialog._copy()
-        self.assertEqual(QApplication.clipboard().text(),
-                         version.android_url("about"))
+        self.assertEqual(QApplication.clipboard().text(), version.android_url("about"))
 
 
 if __name__ == "__main__":

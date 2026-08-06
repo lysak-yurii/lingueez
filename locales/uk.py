@@ -983,6 +983,9 @@ TRANSLATIONS: dict[str, str] = {
     ),
     "Failed to load the database:": "Не вдалося завантажити базу даних:",
     "{selected} of {total} selected": "{selected} із {total} вибрано",
+    # The nav rail's toggle tooltip, which swaps with the rail's own state.
+    "Collapse sidebar": "Згорнути бічну панель",
+    "Expand sidebar": "Розгорнути бічну панель",
 
     # ── backups.py (additions) ─────────────────────────────────────────────
     "Saved {when} · {summary}": "Збережено {when} · {summary}",
