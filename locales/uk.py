@@ -1650,12 +1650,25 @@ TRANSLATIONS: dict[str, str] = {
     "Android app": "Застосунок для Android",
     "Lingueez on Android": "Lingueez на Android",
     "Take your vocabulary with you": "Ваші слова завжди з вами",
-    "Browse and add words, review with flashcards, and listen hands-free "
-    "with lock-screen playback controls. Sign in with your Lingueez "
-    "account and everything stays in sync.":
-        "Переглядайте й додавайте слова, повторюйте за допомогою флеш-карток і "
-        "слухайте, керуючи відтворенням прямо з екрана блокування. Увійдіть у свій "
-        "обліковий запис Lingueez — і все залишиться синхронізованим.",
+    "Preview of Lingueez on a phone": "Як Lingueez виглядає на телефоні",
+    "Sign in with your Lingueez account and your vocabulary is already there — "
+    "nothing to set up, nothing to move across.":
+        "Увійдіть у свій обліковий запис Lingueez — і ваш словник уже там: "
+        "нічого не треба налаштовувати чи переносити.",
+    "Synced both ways": "Синхронізація в обидва боки",
+    "Words you add on the phone are waiting on the computer, and the "
+    "other way round.":
+        "Слова, додані на телефоні, чекають на комп’ютері — і навпаки.",
+    "Listen with the screen off": "Слухайте з вимкненим екраном",
+    "Lock-screen controls, so a review keeps running with the phone "
+    "in your pocket.":
+        "Керуйте відтворенням з екрана блокування — повторення триває, поки "
+        "телефон лежить у кишені.",
+    "Save a word from any app": "Зберігайте слова з будь-якого застосунку",
+    "Share text to Lingueez and it lands in your vocabulary, ready to "
+    "fill in later.":
+        "Поділіться текстом із Lingueez — і слово потрапить у ваш словник, щоб "
+        "заповнити його пізніше.",
     "Point your phone's camera at the code":
         "Наведіть камеру телефона на код",
     "Get it on Google Play": "Завантажити в Google Play",

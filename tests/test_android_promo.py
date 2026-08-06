@@ -226,5 +226,112 @@ class QrPixmapTests(unittest.TestCase):
         self.assertEqual(pm.width() % modules, 0)
 
 
+class PhoneMockTests(unittest.TestCase):
+    """The drawn preview. It has no state, so what matters is that it paints at
+    every size the dialog can give it and stays tied to the shared status ramp."""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+
+        cls._qapp = QApplication.instance() or QApplication(sys.argv[:1])
+
+    def _render(self, colors, width, height):
+        from PySide6.QtGui import QPixmap
+        from PySide6.QtWidgets import QWidget
+
+        # Parented so the widget lives inside a normal widget tree, and rendered
+        # into a pixmap so paintEvent actually runs offscreen.
+        host = QWidget()
+        mock = promo.PhoneMock(colors, host)
+        mock.resize(width, height)
+        pm = QPixmap(width, height)
+        pm.fill()
+        mock.render(pm)
+        return pm
+
+    def test_paints_at_every_size_in_both_themes(self):
+        from app.ui import theme
+
+        for colors in (theme.LIGHT, theme.DARK):
+            for height in (340, 420, 520):
+                with self.subTest(theme=colors["bg"], height=height):
+                    pm = self._render(colors, promo._MOCK_W, height)
+                    self.assertFalse(pm.isNull())
+
+    def test_takes_its_chrome_from_the_palette_it_is_handed(self):
+        from app.ui import theme
+
+        light = self._render(theme.LIGHT, promo._MOCK_W, 420).toImage()
+        dark = self._render(theme.DARK, promo._MOCK_W, 420).toImage()
+        self.assertNotEqual(light, dark)
+        # The phone body is the palette's surface, so a light theme must not be
+        # painting a hard-coded dark chrome (or vice versa). Sampled in the blank
+        # right-hand margin of the first row, clear of every glyph and hairline.
+        blank = (180, 108)
+        self.assertEqual(light.pixelColor(*blank).name(), theme.LIGHT["surface"])
+        self.assertEqual(dark.pixelColor(*blank).name(), theme.DARK["surface"])
+
+    def test_rows_use_the_shared_status_ramp(self):
+        # The desktop and the phone show one library, so the spine colours have to
+        # come from theme.status_style() rather than a copy that can drift.
+        from app.ui import theme
+
+        calls = []
+        real = theme.status_style
+        with mock.patch.object(theme, "status_style",
+                               side_effect=lambda s: calls.append(s) or real(s)):
+            self._render(theme.LIGHT, promo._MOCK_W, 420)
+
+        self.assertTrue(calls, "the rows painted no status spine at all")
+        self.assertLessEqual(set(calls), {s for s, _, _, _ in promo._MOCK_ROWS})
+        # An unknown status would quietly take the grey fallback and imply no
+        # progress level, which is exactly what the preview must not show.
+        for status in calls:
+            self.assertIsNot(real(status), theme.STATUS_FALLBACK, status)
+
+    def test_shares_the_phone_app_s_first_five_words(self):
+        # lingueez-mobile draws these same five, in this order, in its own mock of
+        # the desktop. Whoever sees both previews should see one library.
+        self.assertEqual(
+            [(term, translation) for _, term, translation, _ in promo._MOCK_ROWS[:5]],
+            [
+                ("neighborhood", "el barrio"),
+                ("le dépaysement", "change of scenery"),
+                ("наполегливість", "perseverance"),
+                ("die Umwelt", "довкілля"),
+                ("breakfast", "le petit-déjeuner"),
+            ],
+        )
+
+
+class AndroidDialogTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+
+        cls._qapp = QApplication.instance() or QApplication(sys.argv[:1])
+
+    def test_builds_under_both_palettes_and_keeps_the_attributed_url(self):
+        from app.ui import theme
+
+        for palette in (theme.LIGHT, theme.DARK):
+            with (self.subTest(theme=palette["bg"]),
+                  mock.patch.object(theme, "current_colors", return_value=palette)):
+                dialog = promo.AndroidDialog(surface="settings")
+                self.addCleanup(dialog.deleteLater)
+                self.assertEqual(dialog._url, version.android_url("settings"))
+                self.assertIsInstance(dialog._mock, promo.PhoneMock)
+
+    def test_copy_puts_the_attributed_url_on_the_clipboard(self):
+        from PySide6.QtWidgets import QApplication
+
+        dialog = promo.AndroidDialog(surface="about")
+        self.addCleanup(dialog.deleteLater)
+        dialog._copy()
+        self.assertEqual(QApplication.clipboard().text(),
+                         version.android_url("about"))
+
+
 if __name__ == "__main__":
     unittest.main()
