@@ -39,6 +39,7 @@ License v3.0.
 | Component | Purpose | License |
 | --- | --- | --- |
 | FFmpeg | MP3 export (optional, used via pydub) | LGPL-2.1 / GPL-2.0+ depending on build |
+| Inno Setup translations | Windows installer wizard text, seven `.isl` files vendored under `packaging/inno/languages/` | Inno Setup License (permits redistribution) |
 
 ## Notes
 
