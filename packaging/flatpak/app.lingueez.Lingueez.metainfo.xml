@@ -44,6 +44,13 @@
   </screenshots>
 
   <releases>
+    <release version="2.0.7" date="2026-08-07">
+      <description>
+        <p>The interface is now available in 32 languages, and the Windows installer speaks them too.</p>
+        <p>Adding a word can fill the lemma and its translation with AI, and opens on the languages you used last.</p>
+        <p>Flashcards can end a session with a drill on the cards you graded Hard.</p>
+      </description>
+    </release>
     <release version="2.0.6" date="2026-08-04" />
     <release version="2.0.3" date="2026-06-30">
       <description>
