@@ -31,11 +31,12 @@ from PySide6.QtWidgets import (
 
 from app.config import load_settings, save_settings
 from app.core import ai
-from app.core.audio import speak_word
+from app.core.audio import is_language_supported, speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
 from app.core.errors import DuplicateWordError
-from app.core.translator import DEEPL_LANGUAGE_CODES, translate
+from app.core.languages import TRANSLATION_CODES
+from app.core.translator import translate
 from app.i18n import fill_lang_combo, get_lang, lang_label, set_lang, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
@@ -63,7 +64,7 @@ class AddWordDialog(FramelessDialog):
         self.db_adapter = DatabaseAdapter(use_cloud=get_auth_manager().is_logged_in())
         colors = self.colors
 
-        languages = sorted(DEEPL_LANGUAGE_CODES.keys())
+        languages = sorted(TRANSLATION_CODES)
         layout = self.content_layout
         layout.setContentsMargins(16, 14, 16, 12)
         layout.setSpacing(10)
@@ -84,7 +85,7 @@ class AddWordDialog(FramelessDialog):
         self.word1_edit.setClearButtonEnabled(True)
         speak1 = self.word1_edit.addAction(
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
-        speak1.setToolTip(tr("Pronounce"))
+        self.speak1_action = speak1
         speak1.triggered.connect(lambda: self._speak(self.word1_edit.text(),
                                                      get_lang(self.lang1_combo)))
         grid.addWidget(self.word1_edit, 0, 1)
@@ -110,7 +111,7 @@ class AddWordDialog(FramelessDialog):
         self.word2_edit.setClearButtonEnabled(True)
         speak2 = self.word2_edit.addAction(
             icons.icon("volume", colors["text_dim"], 16), QLineEdit.TrailingPosition)
-        speak2.setToolTip(tr("Pronounce"))
+        self.speak2_action = speak2
         speak2.triggered.connect(lambda: self._speak(self.word2_edit.text(),
                                                      get_lang(self.lang2_combo)))
         grid.addWidget(self.word2_edit, 1, 1)
@@ -158,6 +159,11 @@ class AddWordDialog(FramelessDialog):
         # combo defaults set up above don't fire it.
         self.lang1_combo.currentIndexChanged.connect(self._on_language_changed)
         self.lang2_combo.currentIndexChanged.connect(self._on_language_changed)
+        # Separate from _on_language_changed, which bails out when there's
+        # nothing to re-translate — the button state has to follow regardless.
+        self.lang1_combo.currentIndexChanged.connect(self._sync_speak_actions)
+        self.lang2_combo.currentIndexChanged.connect(self._sync_speak_actions)
+        self._sync_speak_actions()
 
         if prefill:
             self.apply_prefill(prefill, language1=language1, auto_translate=auto_translate)
@@ -205,6 +211,25 @@ class AddWordDialog(FramelessDialog):
     def _fallback_target(source):
         """Target to use when the source language is also the chosen target."""
         return 'German' if source == 'English' else 'English'
+
+    def _sync_speak_actions(self):
+        """Grey out a pronounce button when its language has no voice.
+
+        Plenty of languages the app can translate have no text-to-speech voice
+        (Slovenian, Persian, Georgian, …), so the button would only ever raise.
+        Showing it disabled says why, rather than failing after the click.
+        """
+        for action, combo in ((self.speak1_action, self.lang1_combo),
+                              (self.speak2_action, self.lang2_combo)):
+            language = get_lang(combo)
+            if language == "Detect language":
+                language = "English"
+            speakable = is_language_supported(language)
+            action.setEnabled(speakable)
+            action.setToolTip(
+                tr("Pronounce") if speakable
+                else tr("Unsupported language: {language}").format(
+                    language=lang_label(language)))
 
     def _speak(self, word, language):
         if not word.strip():

@@ -37,19 +37,14 @@ import requests
 
 from app.config import load_settings
 
-# Language name -> DeepL code (same set as the original app)
-DEEPL_LANGUAGE_CODES = {
-    'German': 'DE', 'English': 'EN', 'Ukrainian': 'UK', 'Greek': 'EL',
-    'French': 'FR', 'Spanish': 'ES', 'Portuguese': 'PT', 'Italian': 'IT',
-    'Dutch': 'NL', 'Polish': 'PL', 'Russian': 'RU', 'Japanese': 'JA',
-    'Chinese': 'ZH', 'Bulgarian': 'BG', 'Croatian': 'HR', 'Czech': 'CS',
-    'Danish': 'DA', 'Estonian': 'ET', 'Finnish': 'FI', 'Hungarian': 'HU',
-    'Latvian': 'LV', 'Lithuanian': 'LT', 'Norwegian': 'NO', 'Romanian': 'RO',
-    'Slovak': 'SK', 'Slovenian': 'SL', 'Swedish': 'SV',
-}
+# Both maps come from app.core.languages, which keeps one per service. They used
+# to be one dict lowercased into another, which quietly capped free Google
+# Translate — the default provider, good for a hundred-odd languages — at
+# whatever DeepL happened to support.
+from app.core.languages import DEEPL_CODES as DEEPL_LANGUAGE_CODES
+from app.core.languages import TRANSLATION_CODES as GOOGLE_LANGUAGE_CODES
+from app.core.languages import canonical
 
-# Google Translate uses the same ISO 639-1 codes as DeepL, just lowercased.
-GOOGLE_LANGUAGE_CODES = {name: code.lower() for name, code in DEEPL_LANGUAGE_CODES.items()}
 # Reverse map for turning a detected Google code back into a language name.
 _GOOGLE_CODE_TO_NAME = {code: name for name, code in GOOGLE_LANGUAGE_CODES.items()}
 
@@ -197,7 +192,10 @@ def _translate_deepl(word, target_language, source_language, settings):
     if source_language and source_language != "Detect language":
         source_code = DEEPL_LANGUAGE_CODES.get(source_language)
         if source_code:
-            params["source_lang"] = source_code
+            # source_lang takes the base language only — DeepL accepts regional
+            # targets like ZH-HANS but rejects them as a source. Omitting it
+            # entirely is also fine (DeepL auto-detects), so this never blocks.
+            params["source_lang"] = source_code.split("-")[0]
 
     try:
         response = requests.post(api_url, data=params, headers=headers, timeout=30)
@@ -226,20 +224,28 @@ def translate(word, target_language, source_language=None):
     *source_language* of None or "Detect language" lets the provider
     auto-detect. Returns (translation, detected_source_language_name).
 
-    The active provider comes from settings (``translation_provider``); when it
-    is DeepL and the request fails, translation falls back to free Google.
-    Raises :class:`TranslationError` on failure.
+    The active provider comes from settings (``translation_provider``). DeepL is
+    used only when it is both selected and supports *target_language*; anything
+    else goes to free Google, as does a DeepL request that fails. Legacy stored
+    names ("Chinese") are resolved first. Raises :class:`TranslationError` if the
+    target is not a language the app knows at all.
     """
     if not word.strip():
         raise TranslationError("Please enter a word to translate.")
-    if target_language not in DEEPL_LANGUAGE_CODES:
+    target_language = canonical(target_language)
+    if source_language:
+        source_language = canonical(source_language)
+    if target_language not in GOOGLE_LANGUAGE_CODES:
         raise TranslationError(f"Unsupported target language: {target_language}")
 
     settings = load_settings()
     provider = str(settings.get("translation_provider", "google")).strip().lower()
     api_key = settings.get("api_key", "")
 
-    if provider == "deepl":
+    # DeepL covers far fewer languages than Google. Routing a target it never
+    # claimed to support straight to Google is normal operation, not a failure,
+    # so it happens silently — _notify_fallback() is only for DeepL breaking.
+    if provider == "deepl" and target_language in DEEPL_LANGUAGE_CODES:
         from app.i18n import tr
         if api_key and api_key != "YOUR_DEEPL_API_KEY_HERE":
             try:

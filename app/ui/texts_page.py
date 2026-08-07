@@ -44,10 +44,11 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import get_float, get_int, load_settings, save_settings
-from app.core.audio import lang_codes, speak_word
+from app.core.audio import is_language_supported, speak_word
+from app.core.languages import TRANSLATION_CODES
 from app.i18n import fill_lang_combo, get_lang, lang_label, lang_value, set_lang, tr
 from app.core.backup_management import backup_database
-from app.core.translator import DEEPL_LANGUAGE_CODES, translate
+from app.core.translator import translate
 from app.ui import icons
 from app.ui.animations import fade_swap
 from app.ui.dialogs.add_text import AddTextDialog
@@ -402,7 +403,7 @@ class TextsPage(QWidget):
         meta = FlowLayout(meta_host, hspacing=10, vspacing=6)
         self.language_combo = ContentComboBox()
         self.language_combo.setEditable(True)
-        fill_lang_combo(self.language_combo, sorted(lang_codes.keys()))
+        fill_lang_combo(self.language_combo, sorted(TRANSLATION_CODES))
         self.language_combo.editTextChanged.connect(self._mark_dirty)
         self.language_combo.editTextChanged.connect(self.language_combo.updateGeometry)
         meta.addWidget(self.language_combo)
@@ -770,7 +771,7 @@ class TextsPage(QWidget):
         default = self.lang_filter.currentData()  # canonical English, None = all
         if not default:
             default = load_settings().get("addtext_language") or "English"
-        languages = sorted(lang_codes.keys())
+        languages = sorted(TRANSLATION_CODES)
         labels = [lang_label(name) for name in languages]
         choice, ok = ask_item(
             self, tr("Import text files"), tr("Language of the imported text(s):"),
@@ -996,7 +997,7 @@ class TextsPage(QWidget):
         if self.current is None:
             return
         language = get_lang(self.language_combo)
-        if language not in lang_codes:
+        if not is_language_supported(language):
             show_toast(self.window(), tr("Reader"),
                        tr("Unsupported language: {language}").format(language=lang_label(language)),
                        "warning")
@@ -1268,12 +1269,12 @@ class TextsPage(QWidget):
     def _translate_target(self):
         # shared with the word popup, so both translate to the same language
         target = str(load_settings().get("reader_translate_target", "English"))
-        return target if target in DEEPL_LANGUAGE_CODES else "English"
+        return target if target in TRANSLATION_CODES else "English"
 
     def _pick_translation_language(self):
         menu = QMenu(self)
         current = self._translate_target()
-        for name in sorted(DEEPL_LANGUAGE_CODES):
+        for name in sorted(TRANSLATION_CODES):
             action = menu.addAction(lang_label(name))
             action.setData(name)  # store the canonical English name
             action.setCheckable(True)
@@ -1304,7 +1305,7 @@ class TextsPage(QWidget):
             return
         target = self._translate_target()
         source = get_lang(self.language_combo)
-        source = source if source in DEEPL_LANGUAGE_CODES else None
+        source = source if source in TRANSLATION_CODES else None
         if source == target:
             source = None  # let DeepL detect; avoids same-language no-ops
         key = (self.current.get('ID'), target)
@@ -1599,7 +1600,7 @@ class TextsPage(QWidget):
         menu.deleteLater()
 
     def _pronounce(self, word, language):
-        if language not in lang_codes:
+        if not is_language_supported(language):
             language = "English"
         self.reader.pause()  # don't talk over the reading voice
         run_in_thread(speak_word, word, language,

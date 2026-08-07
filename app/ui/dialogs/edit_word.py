@@ -92,14 +92,17 @@ class EditWordDialog(FramelessDialog):
         self.info_label.setVisible(bool(message))
 
     def accept(self):
-        from app.core.audio import is_language_supported
+        # Validated against languages the app can *translate*, not ones it can
+        # speak: many translatable languages have no TTS voice, and needing a
+        # voice to save a word would reject them.
+        from app.core.languages import is_known
         for combo, word_edit in (
             (self.lang1_combo, self.word1_edit),
             (self.lang2_combo, self.word2_edit),
         ):
             lang = get_lang(combo).strip()
             # Only enforce on the side that actually has a word to speak.
-            if word_edit.text().strip() and not is_language_supported(lang):
+            if word_edit.text().strip() and not is_known(lang):
                 self._info(tr("Unsupported language: {lang}. Pick one from the list.")
                            .format(lang=lang or tr("(empty)")))
                 combo.setFocus()

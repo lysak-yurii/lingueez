@@ -41,7 +41,8 @@ from app.core import ai
 from app.i18n import lang_label, tr
 from app.core.backup_management import backup_database
 from app.core.errors import DuplicateWordError
-from app.core.translator import DEEPL_LANGUAGE_CODES, translate
+from app.core.languages import TRANSLATION_CODES
+from app.core.translator import translate
 from app.ui import icons
 from app.ui.toast import show_toast
 from app.ui.workers import run_in_thread
@@ -139,7 +140,7 @@ class WordPopup(QFrame):
 
     def _target(self):
         target = str(load_settings().get("reader_translate_target", "English"))
-        return target if target in DEEPL_LANGUAGE_CODES else "English"
+        return target if target in TRANSLATION_CODES else "English"
 
     def _place(self, anchor_rect):
         self.layout().activate()  # child geometries needed for alignment
@@ -176,7 +177,7 @@ class WordPopup(QFrame):
     def _translate(self):
         request = self._request
         word, target = self._word, self._target()
-        source = self._language if self._language in DEEPL_LANGUAGE_CODES else None
+        source = self._language if self._language in TRANSLATION_CODES else None
         if source == target:
             source = None  # let DeepL detect; avoids same-language no-ops
 
@@ -201,7 +202,7 @@ class WordPopup(QFrame):
     def _pick_language(self):
         menu = QMenu(self)
         current = self._target()
-        for name in sorted(DEEPL_LANGUAGE_CODES):
+        for name in sorted(TRANSLATION_CODES):
             action = menu.addAction(lang_label(name))
             action.setData(name)  # store the canonical English name
             action.setCheckable(True)

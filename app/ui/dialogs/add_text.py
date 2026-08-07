@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 
 from app.config import load_settings, save_settings
 from app.core import ai, text_sources
-from app.core.audio import lang_codes
+from app.core.languages import TRANSLATION_CODES
 from app.core.backup_management import backup_database
 from app.i18n import fill_lang_combo, get_lang, set_lang, tr
 from app.ui import icons
@@ -109,7 +109,7 @@ class AddTextDialog(FramelessDialog):
         meta.setSpacing(10)
         self.language_combo = QComboBox()
         self.language_combo.setEditable(True)
-        fill_lang_combo(self.language_combo, sorted(lang_codes.keys()))
+        fill_lang_combo(self.language_combo, sorted(TRANSLATION_CODES))
         set_lang(self.language_combo, settings.get("addtext_language") or "English")
         self.language_combo.currentTextChanged.connect(self._language_changed)
         meta.addWidget(QLabel(tr("Language:")))

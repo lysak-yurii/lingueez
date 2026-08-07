@@ -58,7 +58,7 @@ from PySide6.QtWidgets import (
 from app.core import audio
 from app.core import db as dbq
 from app.core import srs
-from app.i18n import tr
+from app.i18n import lang_label, tr
 from app.ui import icons, theme
 from app.ui.animations import AnimatedStackedWidget, fade_swap, flip_swap
 from app.ui.dialogs.definition import (
@@ -443,7 +443,15 @@ class _PreviewCard(QWidget):
         self.speak_btn.setCursor(Qt.PointingHandCursor)
         self.speak_btn.setFocusPolicy(Qt.NoFocus)
         self.speak_btn.setIconSize(QSize(14, 14))
-        self.speak_btn.setToolTip(tr("Pronounce"))
+        # Nothing to play when neither side of the card has a voice — several
+        # translatable languages have no text-to-speech at all.
+        speakable = any(audio.is_language_supported(record.get(key) or "")
+                        for key in ("Language1", "Language2"))
+        self.speak_btn.setEnabled(speakable)
+        self.speak_btn.setToolTip(
+            tr("Pronounce") if speakable
+            else tr("Unsupported language: {language}").format(
+                language=lang_label(str(record.get("Language1") or ""))))
         self.speak_btn.clicked.connect(lambda: speak_cb(self._record))
         head.addWidget(self.word, 1)
         head.addWidget(self.speak_btn)
@@ -1572,7 +1580,7 @@ class FlashcardsPage(QWidget):
         plays, so the sequence runs without a synthesis gap."""
         pairs = [(str(t or "").strip(), lang) for t, lang in pairs]
         pairs = [(t, lang) for t, lang in pairs
-                 if t and lang in audio.lang_codes]
+                 if t and audio.is_language_supported(lang)]
         if not pairs:
             return
         self._cancel_speech()

@@ -37,7 +37,8 @@ import time
 import pygame
 from gtts import gTTS
 
-from app.config import load_settings, get_int
+from app.config import get_int, load_settings
+from app.core import languages
 from app.core.shell_utils import (
     NoConsolePopen, no_console_call, no_console_run, read_ffmpeg_path,
 )
@@ -65,44 +66,28 @@ try:
 except pygame.error as exc:  # no audio device (e.g. headless CI)
     logging.warning(f"pygame mixer init failed: {exc}")
 
-# Language name -> gTTS code
-lang_codes = {
-    'Detect language': 'en', 'English': 'en', 'German': 'de', 'Spanish': 'es',
-    'Ukrainian': 'uk', 'French': 'fr', 'Italian': 'it', 'Portuguese': 'pt',
-    'Russian': 'ru', 'Greek': 'el', 'Arabic': 'ar', 'Bengali': 'bn',
-    'Cantonese': 'zh-HK', 'Hindi': 'hi', 'Japanese': 'ja', 'Korean': 'ko',
-    'Mandarin': 'zh-CN', 'Polish': 'pl', 'Turkish': 'tr', 'Vietnamese': 'vi',
-    'Afrikaans': 'af', 'Albanian': 'sq', 'Amharic': 'am', 'Armenian': 'hy',
-    'Azerbaijani': 'az', 'Basque': 'eu', 'Belarusian': 'be', 'Bosnian': 'bs',
-    'Bulgarian': 'bg', 'Catalan': 'ca', 'Cebuano': 'ceb', 'Chichewa': 'ny',
-    'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da', 'Dutch': 'nl',
-    'Estonian': 'et', 'Filipino': 'fil', 'Finnish': 'fi', 'Galician': 'gl',
-    'Georgian': 'ka', 'Gujarati': 'gu', 'Haitian Creole': 'ht', 'Hausa': 'ha',
-    'Hawaiian': 'haw', 'Hebrew': 'he', 'Hmong': 'hmn', 'Hungarian': 'hu',
-    'Icelandic': 'is', 'Igbo': 'ig', 'Indonesian': 'id', 'Irish': 'ga',
-    'Javanese': 'jv', 'Kannada': 'kn', 'Kazakh': 'kk', 'Khmer': 'km',
-    'Kinyarwanda': 'rw', 'Kyrgyz': 'ky', 'Lao': 'lo', 'Latin': 'la',
-    'Latvian': 'lv', 'Lithuanian': 'lt', 'Luxembourgish': 'lb',
-    'Macedonian': 'mk', 'Malagasy': 'mg', 'Malay': 'ms', 'Malayalam': 'ml',
-    'Maltese': 'mt', 'Maori': 'mi', 'Marathi': 'mr', 'Mongolian': 'mn',
-    'Myanmar (Burmese)': 'my', 'Nepali': 'ne', 'Norwegian': 'no', 'Odia': 'or',
-    'Pashto': 'ps', 'Persian': 'fa', 'Punjabi': 'pa', 'Romanian': 'ro',
-    'Samoan': 'sm', 'Scots Gaelic': 'gd', 'Serbian': 'sr', 'Sesotho': 'st',
-    'Shona': 'sn', 'Sindhi': 'sd', 'Sinhala': 'si', 'Slovak': 'sk',
-    'Slovenian': 'sl', 'Somali': 'so', 'Sundanese': 'su', 'Swahili': 'sw',
-    'Swedish': 'sv', 'Tajik': 'tg', 'Tamil': 'ta', 'Tatar': 'tt',
-    'Telugu': 'te', 'Thai': 'th', 'Turkmen': 'tk', 'Urdu': 'ur',
-    'Uyghur': 'ug', 'Uzbek': 'uz', 'Welsh': 'cy', 'Xhosa': 'xh',
-    'Yiddish': 'yi', 'Yoruba': 'yo', 'Zulu': 'zu',
-}
+# Language name -> gTTS code. Lives in app.core.languages, which keeps a
+# separate map per service: gTTS speaks far fewer languages than Google
+# Translate handles, and spells several of the shared ones differently.
+lang_codes = languages.SPEECH_CODES
 
 all_temp_files = set()
 temp_files_lock = threading.Lock()
 
 
+def _speech_code(name):
+    """gTTS code for *name*, or None when it has no voice.
+
+    Resolves legacy stored names first, so a word saved as "Chinese" speaks as
+    Mandarin instead of failing. Many languages the app can translate have no
+    gTTS voice at all — callers must handle None rather than assume one exists.
+    """
+    return lang_codes.get(languages.canonical(name))
+
+
 def is_language_supported(name):
     """True if *name* (canonical English language name) can be synthesized."""
-    return name in lang_codes
+    return _speech_code(name) is not None
 
 
 def get_tts_settings():
@@ -266,7 +251,8 @@ def save_audio_file(words, file_path, languages, progress_callback=None, is_canc
                 for text, lang in [(word, lang_word), (translation, lang_translation)]:
                     if is_cancelled and is_cancelled.is_set():
                         return index, temp_files
-                    if lang not in lang_codes:
+                    lang_code = _speech_code(lang)
+                    if not lang_code:
                         message = f"Unsupported language: {lang} for {word_pair}"
                         if logger:
                             logger(message, level='warning')
@@ -282,7 +268,7 @@ def save_audio_file(words, file_path, languages, progress_callback=None, is_canc
                                 now = time.time()
                             next_available_time[0] = now + requests_per_sec
 
-                    filename = synthesize_speech(text, lang_codes[lang], cancellation_event=is_cancelled)
+                    filename = synthesize_speech(text, lang_code, cancellation_event=is_cancelled)
                     if is_cancelled and is_cancelled.is_set():
                         return index, temp_files
                     if filename:
@@ -394,12 +380,13 @@ def prefetch_word(word, language, cancel_event=None):
     when the word is already cached — prefetching is best-effort.
     """
     word = (word or "").strip()
-    if not word or language not in lang_codes:
+    lang_code = _speech_code(language)
+    if not word or not lang_code:
         return
-    key = (word, lang_codes[language])
+    key = (word, lang_code)
     if _pronounce_cache_get(key):
         return
-    filename = synthesize_speech(word, lang_codes[language],
+    filename = synthesize_speech(word, lang_code,
                                  cancellation_event=cancel_event)
     if not filename:
         return
@@ -419,15 +406,16 @@ def speak_word(word, language, cancel_event=None):
     """
     if not word.strip():
         raise ValueError("Please enter a word to speak.")
-    if language not in lang_codes:
+    lang_code = _speech_code(language)
+    if not lang_code:
         raise ValueError(f"Unsupported language: {language}")
     if cancel_event is not None and cancel_event.is_set():
         return
 
-    key = (word.strip(), lang_codes[language])
+    key = (word.strip(), lang_code)
     filename = _pronounce_cache_get(key)
     if not filename:
-        filename = synthesize_speech(word, lang_codes[language],
+        filename = synthesize_speech(word, lang_code,
                                      cancellation_event=cancel_event)
         if not filename:
             if cancel_event is not None and cancel_event.is_set():
