@@ -29,6 +29,8 @@ keep everything in sync across devices.
 - **Search & filters** — live search across words, translations, and tags; filter by
   language, status, tag, or favorites.
 - **Translation** — Google Translate, with optional DeepL integration.
+- **Languages** — 32 interface languages, 105 you can add words and texts in, and
+  65 with text-to-speech ([full list](LANGUAGES.md)).
 - **AI assistance** — OpenAI or Gemini for definitions and generated study texts.
 - **Audio** — read-aloud with adjustable pauses and repeats, MP3
   export, and a floating mini-player when the window is minimized.

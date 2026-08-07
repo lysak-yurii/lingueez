@@ -34,9 +34,11 @@ class VocabularyTests(unittest.TestCase):
                 self.assertIn(name, languages.TRANSLATION_CODES)
 
     def test_no_empty_names_or_codes(self):
-        for label, table in (("translation", languages.TRANSLATION_CODES),
-                             ("speech", languages.SPEECH_CODES),
-                             ("deepl", languages.DEEPL_CODES)):
+        for label, table in (
+            ("translation", languages.TRANSLATION_CODES),
+            ("speech", languages.SPEECH_CODES),
+            ("deepl", languages.DEEPL_CODES),
+        ):
             for name, code in table.items():
                 with self.subTest(map=label, language=name):
                     self.assertTrue(name.strip())
@@ -55,6 +57,7 @@ class SpeechCodeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from gtts.lang import tts_langs
+
         cls.supported = tts_langs()
 
     def test_every_speech_code_is_one_gtts_supports(self):
@@ -105,8 +108,7 @@ class RoutingTests(unittest.TestCase):
     """translate() picks a provider without a network call being needed."""
 
     def test_deepl_covers_the_languages_users_actually_asked_for(self):
-        for name in ("Turkish", "Korean", "Arabic", "Hebrew",
-                     "Indonesian", "Vietnamese", "Thai"):
+        for name in ("Turkish", "Korean", "Arabic", "Hebrew", "Indonesian", "Vietnamese", "Thai"):
             with self.subTest(language=name):
                 self.assertIn(name, languages.DEEPL_CODES)
 
@@ -115,6 +117,7 @@ class RoutingTests(unittest.TestCase):
 
     def test_unknown_target_is_rejected(self):
         from app.core.translator import TranslationError, translate
+
         with self.assertRaises(TranslationError):
             translate("book", "Klingon")
 

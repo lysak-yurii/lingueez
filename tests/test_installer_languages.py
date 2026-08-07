@@ -26,8 +26,7 @@ NO_WIZARD_TRANSLATION = {"hi": "Inno Setup ships no Hindi .isl"}
 
 def _shipped_locales():
     path = os.path.join(REPO, "locales")
-    return sorted(f[:-3] for f in os.listdir(path)
-                  if f.endswith(".py") and not f.startswith("__"))
+    return sorted(f[:-3] for f in os.listdir(path) if f.endswith(".py") and not f.startswith("__"))
 
 
 def _wizard_languages():
@@ -42,14 +41,15 @@ class InstallerLanguageTests(unittest.TestCase):
         # English has no locale module but is always the fallback wizard entry.
         expected = len(_shipped_locales()) - len(NO_WIZARD_TRANSLATION) + 1
         self.assertEqual(
-            len(_wizard_languages()), expected,
+            len(_wizard_languages()),
+            expected,
             "lingueez.iss [Languages] is out of step with locales/ — add a "
             "wizard language for the new locale, or list it in "
-            "NO_WIZARD_TRANSLATION with the reason.")
+            "NO_WIZARD_TRANSLATION with the reason.",
+        )
 
     def test_english_fallback_is_declared(self):
-        self.assertIn("compiler:Default.isl",
-                      [path for _name, path in _wizard_languages()])
+        self.assertIn("compiler:Default.isl", [path for _name, path in _wizard_languages()])
 
     def test_names_are_unique(self):
         names = [name for name, _path in _wizard_languages()]
@@ -62,8 +62,10 @@ class InstallerLanguageTests(unittest.TestCase):
             if path.startswith("compiler:"):
                 continue
             with self.subTest(language=name):
-                self.assertTrue(os.path.isfile(os.path.join(REPO, path.replace("\\", os.sep))),
-                                f"{name}: vendored message file missing: {path}")
+                self.assertTrue(
+                    os.path.isfile(os.path.join(REPO, path.replace("\\", os.sep))),
+                    f"{name}: vendored message file missing: {path}",
+                )
 
     def test_untranslatable_locales_are_still_shipped(self):
         # Guards the exception list against naming a locale that no longer exists.

@@ -150,12 +150,16 @@ class ShippedLocaleIntegrityTests(unittest.TestCase):
             table = importlib.import_module(f"locales.{code}").TRANSLATIONS
             for source, translated in table.items():
                 for label, pattern in (("placeholder", _PLACEHOLDER), ("markup", _MARKUP)):
-                    expected, actual = sorted(pattern.findall(source)), sorted(
-                        pattern.findall(translated))
+                    expected, actual = (
+                        sorted(pattern.findall(source)),
+                        sorted(pattern.findall(translated)),
+                    )
                     if expected != actual:
                         with self.subTest(locale=code, kind=label, source=source[:60]):
-                            self.fail(f"{code}: {label} {expected} became {actual} "
-                                      f"in {translated[:80]!r}")
+                            self.fail(
+                                f"{code}: {label} {expected} became {actual} "
+                                f"in {translated[:80]!r}"
+                            )
 
     def test_date_tables_are_complete(self):
         for code in self.codes:
