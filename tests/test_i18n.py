@@ -9,6 +9,7 @@ Run:  python -m unittest tests.test_i18n
 
 import importlib
 import os
+import re
 import sys
 import unittest
 
@@ -89,6 +90,83 @@ class UkLocaleIntegrityTests(unittest.TestCase):
         codes = [code for code, _ in i18n.available_languages()]
         self.assertIn("en", codes)
         self.assertIn("uk", codes)
+
+
+# Placeholders the UI feeds through str.format() / %-formatting, and inline
+# markup Qt renders as rich text. Both must survive translation intact: a
+# dropped "{n}" silently prints the wrong message, a dropped "</a>" breaks the
+# link. uk.py is the reference — it covers every key the UI looks up.
+_PLACEHOLDER = re.compile(r"\{[a-zA-Z_][a-zA-Z_0-9]*\}|\{\}|%[sdif]")
+_MARKUP = re.compile(r"</?[a-zA-Z][^>]*>")
+
+_DATE_TABLES = {"MONTHS": 12, "MONTHS_ABBR": 12, "WEEKDAYS": 7, "WEEKDAYS_ABBR": 7}
+
+
+class ShippedLocaleIntegrityTests(unittest.TestCase):
+    """Every shipped locale must match the reference locale's contract.
+
+    Machine-translated locale files fail in ways that stay invisible until the
+    relevant screen opens: a key drifts and the string falls back to English, a
+    "{count}" is absorbed into the translated text, the date tables are cut
+    short and weekday names come out English. This checks all of it at once.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.reference = importlib.import_module("locales.uk").TRANSLATIONS
+        cls.codes = [code for code, _ in i18n.available_languages() if code != "en"]
+
+    def test_at_least_the_reference_locale_ships(self):
+        self.assertIn("uk", self.codes)
+
+    def test_declares_a_native_language_name(self):
+        for code in self.codes:
+            with self.subTest(locale=code):
+                mod = importlib.import_module(f"locales.{code}")
+                self.assertTrue(getattr(mod, "LANGUAGE_NAME", "").strip())
+
+    def test_translations_is_a_non_empty_str_str_mapping(self):
+        for code in self.codes:
+            with self.subTest(locale=code):
+                table = importlib.import_module(f"locales.{code}").TRANSLATIONS
+                self.assertIsInstance(table, dict)
+                self.assertGreater(len(table), 0)
+                for key, value in table.items():
+                    self.assertIsInstance(key, str)
+                    self.assertIsInstance(value, str)
+                    self.assertTrue(value.strip(), f"empty translation for {key!r}")
+
+    def test_key_set_matches_the_reference_locale(self):
+        for code in self.codes:
+            with self.subTest(locale=code):
+                keys = set(importlib.import_module(f"locales.{code}").TRANSLATIONS)
+                missing = sorted(set(self.reference) - keys)
+                unknown = sorted(keys - set(self.reference))
+                self.assertEqual(missing, [], f"{code}: untranslated source strings")
+                self.assertEqual(unknown, [], f"{code}: keys no source string matches")
+
+    def test_placeholders_and_markup_survive_translation(self):
+        for code in self.codes:
+            table = importlib.import_module(f"locales.{code}").TRANSLATIONS
+            for source, translated in table.items():
+                for label, pattern in (("placeholder", _PLACEHOLDER), ("markup", _MARKUP)):
+                    expected, actual = sorted(pattern.findall(source)), sorted(
+                        pattern.findall(translated))
+                    if expected != actual:
+                        with self.subTest(locale=code, kind=label, source=source[:60]):
+                            self.fail(f"{code}: {label} {expected} became {actual} "
+                                      f"in {translated[:80]!r}")
+
+    def test_date_tables_are_complete(self):
+        for code in self.codes:
+            mod = importlib.import_module(f"locales.{code}")
+            for name, length in _DATE_TABLES.items():
+                with self.subTest(locale=code, table=name):
+                    # A missing table silently falls back to English names.
+                    table = getattr(mod, name, None)
+                    self.assertIsNotNone(table, f"{code} does not define {name}")
+                    self.assertEqual(len(table), length)
+                    self.assertTrue(all(str(x).strip() for x in table))
 
 
 if __name__ == "__main__":
