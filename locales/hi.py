@@ -692,7 +692,7 @@ TRANSLATIONS: dict[str, str] = {
     "Review activity": "समीक्षा गतिविधि",
     "Breakdown": "विवरण",
     "Total words": "कुल शब्द",
-    "Mastered": "महारत हासिल की (Mastered)",
+    "Mastered": "महारत हासिल",
     "In progress": "प्रगति पर है",
     "Languages": "भाषाएं",
     "Current streak": "वर्तमान स्ट्रिक",

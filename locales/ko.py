@@ -1059,7 +1059,7 @@ TRANSLATIONS: dict[str, str] = {
     " s": "초",
 
     # Word statuses (stored in English; only the displayed label is localized)
-    "New": "새로고침",
+    "New": "신규",
     "To Learn": "학습 예정",
     "Reviewing": "복습 중",
     "Ignored": "무시됨",
