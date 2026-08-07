@@ -249,12 +249,17 @@ def main():
     # them; parented to *app* so it outlives this scope.
     if language != "en":
         from PySide6.QtCore import QLibraryInfo, QTranslator
+
+        from app.i18n import qt_translation_code
         qt_translator = QTranslator(app)
-        if qt_translator.load(f"qtbase_{language}",
+        qt_code = qt_translation_code(language)
+        if qt_translator.load(f"qtbase_{qt_code}",
                               QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
             app.installTranslator(qt_translator)
         else:
-            logging.warning(f"No Qt translation bundled for language '{language}'.")
+            logging.warning(f"No Qt translation bundled for language '{language}' "
+                            f"(looked for qtbase_{qt_code}); standard dialog "
+                            f"buttons stay English.")
 
     from app.ui.main_window import MainWindow
 

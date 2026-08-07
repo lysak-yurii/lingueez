@@ -39,9 +39,23 @@ datas += collect_dir("assets")  # includes assets/fonts/
 # locales/*.py automatically, so future languages need no spec change.
 datas += [(src, dest) for src, dest in collect_dir("locales")
           if src.endswith(".py")]
-# Qt's own Ukrainian translation for the standard dialog buttons (OK/Cancel/…),
-# loaded at runtime via QLibraryInfo(TranslationsPath) in main.py.
-datas += collect_data_files("PySide6", includes=["Qt/translations/qtbase_uk.qm"])
+locale_codes = [os.path.splitext(os.path.basename(src))[0]
+                for src, _dest in collect_dir("locales")
+                if src.endswith(".py") and not os.path.basename(src).startswith("__")]
+# Qt's own translations for the standard dialog buttons (OK/Cancel/Yes/No),
+# file dialogs and text-field context menus, loaded at runtime via
+# QLibraryInfo(TranslationsPath) in main.py. Derived from the locales shipped
+# above rather than hardcoded, so a new locales/<code>.py brings its Qt strings
+# with it. Qt names a few of these differently from our codes, hence
+# qt_translation_code(); locales Qt has no translation for simply match nothing
+# here and keep English buttons (main.py logs it).
+sys.path.insert(0, os.path.abspath("."))
+from app.i18n import qt_translation_code  # noqa: E402
+
+datas += collect_data_files("PySide6", includes=[
+    f"Qt/translations/qtbase_{qt_translation_code(code)}.qm"
+    for code in sorted(locale_codes)
+])
 # License/attribution must travel with the binary (AGPL §7 + ffmpeg).
 datas += [("NOTICE", "."), ("THIRD-PARTY-LICENSES.md", "."), ("LICENSE.txt", ".")]
 

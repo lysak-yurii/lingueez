@@ -183,6 +183,20 @@ def available_languages():
     return langs
 
 
+# Qt ships its own translations (qtbase_*.qm) for the strings *it* draws rather
+# than we do: QMessageBox buttons, file dialogs, line-edit context menus. Their
+# basenames don't always match our locale codes, so map the ones that differ —
+# unlisted codes are used as-is. `pt` borrows Brazilian Portuguese: the standard
+# button labels are shared, and it beats leaving the dialogs in English. Locales
+# Qt has no translation for keep English buttons; main.py logs that.
+_QT_TRANSLATION_ALIASES = {"zh": "zh_CN", "pt": "pt_BR"}
+
+
+def qt_translation_code(lang: str) -> str:
+    """Basename suffix of the ``qtbase_*.qm`` to load for one of our locales."""
+    return _QT_TRANSLATION_ALIASES.get(lang, lang)
+
+
 def _build_canonical_index():
     import importlib
     names = _language_tokens() - {"Detect language", "All languages"}
