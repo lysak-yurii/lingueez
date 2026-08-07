@@ -18,11 +18,55 @@ import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ISS = os.path.join(REPO, "packaging", "inno", "lingueez.iss")
+RELEASE_WORKFLOW = os.path.join(REPO, ".github", "workflows", "release.yml")
 
 # Locales deliberately left without a wizard language, with the reason. Inno
 # Setup has no Hindi translation, official or unofficial (checked against
 # jrsoftware/issrc Files/Languages and .../Unofficial).
 NO_WIZARD_TRANSLATION = {"hi": "Inno Setup ships no Hindi .isl"}
+
+# The .isl files this Inno version ships in its own Languages\ folder, i.e. every
+# name a `compiler:Languages\<Name>.isl` reference may use. Referencing anything
+# else aborts ISCC ("Couldn't open include file"), which only surfaces on a
+# Windows runner — so it is pinned here instead of discovered during a release.
+#
+# Taken from https://github.com/jrsoftware/issrc/tree/is-6_7_1/Files/Languages.
+# Note it is *narrower* than the same folder on `main`: ChineseSimplified and
+# ChineseTraditional were promoted out of Unofficial/ after 6.7.1, so they are
+# vendored under languages/ instead. When INNO_VERSION is bumped, re-read that
+# folder at the matching tag and update this set.
+INNO_VERSION = "6.7.1"
+OFFICIAL_LANGUAGES = {
+    "Arabic",
+    "Armenian",
+    "BrazilianPortuguese",
+    "Bulgarian",
+    "Catalan",
+    "Corsican",
+    "Czech",
+    "Danish",
+    "Dutch",
+    "Finnish",
+    "French",
+    "German",
+    "Hebrew",
+    "Hungarian",
+    "Italian",
+    "Japanese",
+    "Korean",
+    "Norwegian",
+    "Polish",
+    "Portuguese",
+    "Russian",
+    "Slovak",
+    "Slovenian",
+    "Spanish",
+    "Swedish",
+    "Tamil",
+    "Thai",
+    "Turkish",
+    "Ukrainian",
+}
 
 
 def _shipped_locales():
@@ -74,6 +118,37 @@ class InstallerLanguageTests(unittest.TestCase):
                     os.path.isfile(os.path.join(os.path.dirname(ISS), rel)),
                     f"{name}: vendored message file missing: {path}",
                 )
+
+    def test_compiler_languages_exist_in_the_pinned_inno(self):
+        # The failure this guards produced a green local repo and a dead release
+        # build: ISCC aborts on the first compiler:Languages\ file its own
+        # installation does not have.
+        for name, path in _wizard_languages():
+            if not path.startswith("compiler:Languages"):
+                continue
+            with self.subTest(language=name):
+                lang = os.path.splitext(path.split("\\")[-1])[0]
+                self.assertIn(
+                    lang,
+                    OFFICIAL_LANGUAGES,
+                    f"{lang}.isl does not ship with Inno Setup {INNO_VERSION} — "
+                    "vendor it under packaging/inno/languages/ (from the "
+                    f"is-{INNO_VERSION.replace('.', '_')} tag) and reference it "
+                    "as {#SourcePath}languages\\<Name>.isl instead.",
+                )
+
+    def test_pinned_inno_version_matches_the_language_set(self):
+        # OFFICIAL_LANGUAGES is only valid for one Inno release; if CI installs a
+        # different one, the set above has to be re-read at the matching tag.
+        with open(RELEASE_WORKFLOW, encoding="utf-8") as fh:
+            text = fh.read()
+        self.assertIn(
+            f"innosetup --version={INNO_VERSION}",
+            text,
+            "release.yml pins a different Inno Setup version than the one "
+            "OFFICIAL_LANGUAGES was read from — update INNO_VERSION and re-read "
+            "Files/Languages at the matching is-<version> tag.",
+        )
 
     def test_untranslatable_locales_are_still_shipped(self):
         # Guards the exception list against naming a locale that no longer exists.

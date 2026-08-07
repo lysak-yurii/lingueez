@@ -2,8 +2,9 @@
 
 `lingueez.iss` gives the Windows installer a wizard language for every locale the
 app ships (`locales/<code>.py`). Inno Setup bundles most of them in its own
-`Languages\` folder, referenced as `compiler:Languages\<Name>.isl`. The seven
-here have no official Inno translation, so they are vendored from the
+`Languages\` folder, referenced as `compiler:Languages\<Name>.isl`. The eight
+here are not in the `Languages\` folder of the Inno version pinned in
+`.github/workflows/release.yml`, so they are vendored from the
 [`Unofficial`](https://github.com/jrsoftware/issrc/tree/main/Files/Languages/Unofficial)
 folder of `jrsoftware/issrc` and referenced by relative path instead.
 
@@ -16,6 +17,15 @@ folder of `jrsoftware/issrc` and referenced by relative path instead.
 | `ro` | `Romanian.isl` | 6.1.0+ | 23 of 281 messages missing |
 | `sr` | `SerbianCyrillic.isl` | 6.5.0+ | complete |
 | `vi` | `Vietnamese.isl` | 6.5.0+ | complete |
+| `zh` | `ChineseSimplified.isl` | 6.5.0+ | complete |
+
+Chinese is the one to watch: it *is* an official translation on `issrc` `main`,
+but it was promoted into `Files/Languages/` only after 6.7.1, so
+`compiler:Languages\ChineseSimplified.isl` does not resolve against the pinned
+compiler and the build fails outright. This copy is taken from the `is-6_7_1`
+tag's `Unofficial/` folder, so its message set matches that compiler exactly.
+When the pinned Inno version moves past the release that ships Chinese
+officially, this file can be dropped for `compiler:Languages\`.
 
 "Missing" means the file predates messages added in later Inno releases. This is
 not a build failure: ISCC emits `A message named "X" has not been defined for the
@@ -28,10 +38,14 @@ English.
 
 ## Updating
 
-These are plain text files; keep their original encoding (UTF-8 with BOM) and do
-not reformat them. Re-download from the `Unofficial` folder linked above, then
-compare the `[Messages]` key set against the `Default.isl` of the Inno version
-pinned in `.github/workflows/release.yml` to see what is still missing.
+These are plain text files; keep their original encoding and do not reformat
+them. Like the .isl files Inno itself ships, they are UTF-8 *without* a BOM and
+declare their `LanguageCodePage`; store them with CRLF endings, as upstream
+does. Re-download from the `Unofficial` folder linked above — pinning the URL to
+the `is-<version>` tag matching the pinned compiler — then compare the
+`[Messages]` key set against that version's `Default.isl` to see what is
+missing. A key the pinned `Default.isl` does *not* have is a compile error, not
+a warning, so never take a file from a newer Inno than the one CI installs.
 
 Upstream is licensed under the Inno Setup license, which permits redistribution;
 see `THIRD-PARTY-LICENSES.md`.
