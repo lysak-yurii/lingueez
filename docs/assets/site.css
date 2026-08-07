@@ -77,7 +77,7 @@ h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif; line-height:1.1; letter-s
 .lang b{background:var(--surface2); color:var(--text);}
 
 /* hero */
-.hero .wrap{display:grid; grid-template-columns:1.04fr 1fr; gap:54px; align-items:center;
+.hero .wrap{display:grid; grid-template-columns:1fr 1.14fr; gap:46px; align-items:center;
   padding-top:72px; padding-bottom:84px;}
 .hero h1{font-size:clamp(2.3rem,4.6vw,3.5rem); margin:.5rem 0 .2rem; font-weight:700;}
 .hero h1 .accent{color:var(--blue);}
@@ -89,6 +89,11 @@ h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif; line-height:1.1; letter-s
   filter:blur(8px);}
 .shot img{width:100%; border:1px solid var(--border); border-radius:var(--radius);
   box-shadow:0 30px 70px -28px rgba(0,0,0,.75), 0 2px 0 rgba(255,255,255,.03) inset;}
+/* device renders come with their own frame and transparent edges — no card treatment,
+   and a drop-shadow that follows the silhouette instead of a rectangle. */
+.shot.device picture{display:block;}
+.shot.device img{display:block; height:auto; border:0; border-radius:0;
+  box-shadow:none; filter:drop-shadow(0 30px 46px rgba(0,0,0,.55));}
 
 /* status pills */
 .pill{display:inline-flex; align-items:center; gap:.45em; padding:.28em .7em; border-radius:999px;
@@ -151,6 +156,11 @@ footer{border-top:1px solid var(--border); padding:46px 0 34px; color:var(--dim)
 .reveal.in{opacity:1; transform:none;}
 
 /* responsive */
+/* past the wrap width there is room outside it, so let the devices lean into the margin —
+   never further than that margin actually is, so the page can't scroll sideways. */
+@media (min-width:1200px){
+  .hero .shot.device{margin-right:calc(-1 * min(120px, (100vw - 1160px) / 2));}
+}
 @media (max-width:880px){
   .hero .wrap{grid-template-columns:1fr; gap:38px; padding-top:44px; padding-bottom:56px;}
   .lede{max-width:none;}
