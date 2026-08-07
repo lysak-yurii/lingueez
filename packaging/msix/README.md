@@ -64,7 +64,7 @@ from the Windows SDK. To reproduce locally on Windows after `pyinstaller
 lingueez.spec`:
 
 ```powershell
-$ver = "2.0.6"
+$ver = "2.0.7"
 $layout = "msix_layout"
 Remove-Item -Recurse -Force $layout -ErrorAction Ignore
 New-Item -ItemType Directory $layout | Out-Null
@@ -75,8 +75,13 @@ Copy-Item packaging\msix\Assets $layout\Assets -Recurse
 
 # Index the qualified assets. Keep priconfig.xml out of the layout, and drop its
 # <packaging> node so resources stay in this package instead of splitting into
-# resource packs the manifest doesn't declare.
-makepri createconfig /cf priconfig.xml /dq en-US_uk-UA /o
+# resource packs the manifest doesn't declare. The qualifier list is read off the
+# manifest's <Resources> block (as CI does) so the two can't drift — en-US first,
+# since makepri treats the leading qualifier as the default language.
+$dq = ([regex]::Matches(
+  (Get-Content packaging\msix\AppxManifest.xml -Raw),
+  '<Resource\s+Language="([^"]+)"') | ForEach-Object { $_.Groups[1].Value }) -join '_'
+makepri createconfig /cf priconfig.xml /dq $dq /o
 [xml]$cfg = Get-Content priconfig.xml
 $cfg.resources.RemoveChild($cfg.resources.packaging) | Out-Null
 $cfg.Save((Resolve-Path priconfig.xml))

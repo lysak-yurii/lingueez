@@ -37,9 +37,53 @@
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
   </Dependencies>
 
+  <!--
+    One entry per interface language the app ships (locales/<code>.py, plus
+    en-US for the untranslated source strings). This is what the Store lists as
+    the product's supported languages, and CI derives makepri's /dq qualifier
+    list from exactly these tags — so a new locale needs one line here and
+    nothing in the workflows. tests/test_msix_languages.py guards the pairing.
+
+    en-US must stay first: makepri treats the leading qualifier as the default,
+    which is the language Windows falls back to for an unmatched system locale.
+    Neutral tags (de, fr, …) match every region of that language through the
+    normal fallback chain; script/region is spelled out only where the
+    translation is specific to one — pt vs pt-BR, Cyrillic Serbian, Simplified
+    Chinese. en-US and uk-UA keep the region they were first published with.
+  -->
   <Resources>
     <Resource Language="en-US" />
+    <Resource Language="bg" />
+    <Resource Language="cs" />
+    <Resource Language="da" />
+    <Resource Language="de" />
+    <Resource Language="el" />
+    <Resource Language="es" />
+    <Resource Language="fi" />
+    <Resource Language="fr" />
+    <Resource Language="hi" />
+    <Resource Language="hr" />
+    <Resource Language="hu" />
+    <Resource Language="id" />
+    <Resource Language="it" />
+    <Resource Language="ja" />
+    <Resource Language="ko" />
+    <Resource Language="ms" />
+    <Resource Language="nb" />
+    <Resource Language="nl" />
+    <Resource Language="pl" />
+    <Resource Language="pt" />
+    <Resource Language="pt-BR" />
+    <Resource Language="ro" />
+    <Resource Language="ru" />
+    <Resource Language="sk" />
+    <Resource Language="sr-Cyrl" />
+    <Resource Language="sv" />
+    <Resource Language="th" />
+    <Resource Language="tr" />
     <Resource Language="uk-UA" />
+    <Resource Language="vi" />
+    <Resource Language="zh-Hans" />
   </Resources>
 
   <Applications>

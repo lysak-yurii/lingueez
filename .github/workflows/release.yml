@@ -114,6 +114,12 @@ jobs:
           VERSION="${{ needs.validate.outputs.version }}.0"   # Store requires a 4-part x.y.z.0
           sed -e "s#{{VERSION}}#${VERSION}#g" \
               packaging/msix/AppxManifest.xml > "$LAYOUT/AppxManifest.xml"
+          # makepri's qualifier list must cover every <Resource Language>, or the
+          # package declares languages resources.pri has no entry for. Read it
+          # back off the manifest so the two can't drift.
+          DQ=$(sed -n 's/.*<Resource Language="\([^"]*\)".*/\1/p' \
+                 packaging/msix/AppxManifest.xml | paste -sd_ -)
+          echo "MSIX_DQ=$DQ" >> "$GITHUB_ENV"
       - name: Build MSIX
         shell: pwsh
         run: |
@@ -129,7 +135,7 @@ jobs:
           # back to a plated icon. priconfig.xml stays outside the layout so it
           # isn't packaged, and its <packaging> node is dropped to keep the
           # resources in this package rather than split into resource packs.
-          & $makepri createconfig /cf priconfig.xml /dq en-US_uk-UA /o
+          & $makepri createconfig /cf priconfig.xml /dq $env:MSIX_DQ /o
           if ($LASTEXITCODE -ne 0) { throw "makepri createconfig failed ($LASTEXITCODE)" }
           [xml]$cfg = Get-Content priconfig.xml
           $pk = $cfg.resources.packaging
