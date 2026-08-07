@@ -116,7 +116,7 @@ TRANSLATIONS: dict[str, str] = {
     "{count} item(s) copied to clipboard.": "{count} položka(-iek) skopírovaných do schránky.",
     "Copy Word(s)": "Kopírovať slovo(-á)",
     "Copy Translation(s)": "Kopírovať preklad(-y)",
-    "Copy Both": "Kopírovaть oboje",
+    "Copy Both": "Kopírovať oboje",
     "Search in Word": "Hľadať v slove",
     "Search in Translation": "Hľadať v preklade",
     "Search in Tags": "Hľadať v značkách",

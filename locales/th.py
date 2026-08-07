@@ -1094,7 +1094,7 @@ TRANSLATIONS: dict[str, str] = {
     "Galician": "กาลิเซีย",
     "Georgian": "จอร์เจีย",
     "Gujarati": "คุชราต",
-    "Haitian Creole": "เฮติครีโ올",
+    "Haitian Creole": "เฮติครีโอล",
     "Hausa": "เฮาซา",
     "Hawaiian": "ฮาวาย",
     "Hebrew": "ฮีบรู",

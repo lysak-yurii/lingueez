@@ -1384,7 +1384,7 @@ TRANSLATIONS: dict[str, str] = {
     "Sign in with a free Lingueez account and your words sync to your phone.": "Log in met een gratis Lingueez-account en je woorden synchroniseren met je telefoon.",
     "Synced both ways": "In beide richtingen gesynchroniseerd",
     "Words you add on the phone are waiting on the computer, and the "
-    "other way round.": "Woorden die je op je telefoon toevoعی voegt wachten op de computer, en vice versa.",
+    "other way round.": "Woorden die je op je telefoon toevoegt wachten op de computer, en vice versa.",
     "Listen with the screen off": "Luisteren met het scherm uit",
     "Lock-screen controls, so a review keeps running with the phone "
     "in your pocket.": "Bediening via het vergrendelscherm, zodat het herhalen doorgaat met je telefoon in je zak.",
