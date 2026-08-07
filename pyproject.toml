@@ -5,7 +5,7 @@
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-extend-exclude = ["backups", "dist", "build", "ffmpeg", "locales/uk.py"]
+extend-exclude = ["backups", "dist", "build", "ffmpeg"]
 
 [tool.ruff.lint]
 # Deliberately bug-focused rather than stylistic, so the gate stays signal-rich
@@ -34,3 +34,9 @@ ignore = [
 # within the same loop iteration, so the late-binding pattern B023 warns about
 # cannot occur here.
 "app/core/importer.py" = ["B023"]
+# Locale modules mirror the key order of the English source strings, which
+# repeats a handful of short labels ("Add", "Usage", …) under different UI
+# sections. The repeats carry identical values, so the collapse is harmless.
+# Ignoring only F601 keeps E9/F/B live here — that gate catches the malformed
+# entries (unescaped quotes, `,` instead of `:`) machine-translated files hit.
+"locales/*" = ["F601"]
