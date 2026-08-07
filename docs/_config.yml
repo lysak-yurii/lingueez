@@ -14,7 +14,9 @@ defaults:
 include:
   - .well-known
 
-# Keep the internal GDPR runbooks and the maintainer README off the public site.
+# Keep the internal GDPR runbooks, the maintainer README and the translated
+# repo READMEs (i18n/ is read on GitHub, not served here) off the public site.
 exclude:
   - legal/gdpr
   - legal/README.md
+  - i18n

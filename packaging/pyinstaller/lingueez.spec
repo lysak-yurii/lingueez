@@ -8,11 +8,17 @@
 # *and writes* every file relative to it (dictionary.db, settings.cfg, backups/,
 # .env, …). Run the extracted folder from a writable location.
 #
-# Build:  pyinstaller lingueez.spec
+# Build:  pyinstaller packaging/pyinstaller/lingueez.spec
 import os
 import sys
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+# Every source path below is written relative to the repo root, so anchor on the
+# spec's own location (PyInstaller injects SPECPATH) instead of the invoking
+# directory. dist/ and build/ are unaffected: PyInstaller resolves those before
+# running the spec, so they still land beside wherever the build was started.
+os.chdir(os.path.abspath(os.path.join(SPECPATH, os.pardir, os.pardir)))  # noqa: F821
 
 block_cipher = None
 
@@ -101,7 +107,7 @@ if sys.platform != "win32":
         raise SystemExit(
             "lingueez.spec: pynput X11 backend (_xorg) was not collected — the "
             "global hotkey would be dead. Run PyInstaller under a display, e.g. "
-            "`xvfb-run -a pyinstaller lingueez.spec`."
+            "`xvfb-run -a pyinstaller packaging/pyinstaller/lingueez.spec`."
         )
 
 icon = os.path.join("assets", "icons",

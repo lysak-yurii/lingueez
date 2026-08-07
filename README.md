@@ -1,6 +1,6 @@
 <div align="center">
 
-**🇬🇧 English** &nbsp;·&nbsp; [🇺🇦 Українська](README.uk.md)
+**🇬🇧 English** &nbsp;·&nbsp; [🇺🇦 Українська](docs/i18n/README.uk.md)
 
 </div>
 
@@ -62,8 +62,8 @@ cloud sync and supports continued development:
 
 ## Contributing
 
-Contributions are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) — all
-contributors agree to the [`CLA`](CLA.md) before their changes can be merged.
+Contributions are welcome. Please read [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) — all
+contributors agree to the [`CLA`](.github/CLA.md) before their changes can be merged.
 
 ## License
 

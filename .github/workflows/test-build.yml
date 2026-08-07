@@ -44,9 +44,9 @@ jobs:
           cp "$BIN" ffmpeg/bin/ffmpeg.exe
           cp "$(dirname "$BIN")/ffprobe.exe" ffmpeg/bin/ffprobe.exe
       - name: Build
-        run: pyinstaller lingueez.spec
+        run: pyinstaller packaging/pyinstaller/lingueez.spec
       - name: Install Inno Setup
-        # Pinned: the [Languages] block in lingueez.iss references
+        # Pinned: the [Languages] block in packaging/inno/lingueez.iss references
         # compiler:Languages\Thai.isl, which is only official from 6.7.1,
         # and vendored .isl files under packaging/inno/languages/ are
         # written against this version's message set.
@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
-            "/DAppVersion=${{ needs.version.outputs.version }}" lingueez.iss
+            "/DAppVersion=${{ needs.version.outputs.version }}" packaging\inno\lingueez.iss
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installer
@@ -136,7 +136,7 @@ jobs:
         # can only collect it under a display (else the global hotkey ships dead).
         run: sudo apt-get update && sudo apt-get install -y xvfb
       - name: Build
-        run: xvfb-run -a pyinstaller lingueez.spec
+        run: xvfb-run -a pyinstaller packaging/pyinstaller/lingueez.spec
       - name: Assemble AppDir
         run: |
           APPDIR=AppDir

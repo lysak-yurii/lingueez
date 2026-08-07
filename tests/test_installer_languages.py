@@ -17,6 +17,7 @@ import re
 import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ISS = os.path.join(REPO, "packaging", "inno", "lingueez.iss")
 
 # Locales deliberately left without a wizard language, with the reason. Inno
 # Setup has no Hindi translation, official or unofficial (checked against
@@ -31,7 +32,7 @@ def _shipped_locales():
 
 def _wizard_languages():
     """(name, MessagesFile) for every [Languages] entry in lingueez.iss."""
-    text = open(os.path.join(REPO, "lingueez.iss"), encoding="utf-8").read()
+    text = open(ISS, encoding="utf-8").read()
     section = text.split("[Languages]", 1)[1].split("\n[", 1)[0]
     return re.findall(r'Name:\s*"([^"]+)";\s*MessagesFile:\s*"([^"]+)"', section)
 
@@ -57,13 +58,20 @@ class InstallerLanguageTests(unittest.TestCase):
 
     def test_vendored_message_files_exist(self):
         # compiler:* paths resolve inside the Inno install and can only be
-        # checked at compile time; relative ones must be in the repo.
+        # checked at compile time; the vendored ones must be in the repo.
+        # {#SourcePath} is Inno's preprocessor variable for the script's own
+        # directory — MessagesFile ignores SourceDir, so the .iss anchors on it.
         for name, path in _wizard_languages():
             if path.startswith("compiler:"):
                 continue
             with self.subTest(language=name):
                 self.assertTrue(
-                    os.path.isfile(os.path.join(REPO, path.replace("\\", os.sep))),
+                    path.startswith("{#SourcePath}"),
+                    f"{name}: vendored message file must be {{#SourcePath}}-relative: {path}",
+                )
+                rel = path[len("{#SourcePath}") :].replace("\\", os.sep)
+                self.assertTrue(
+                    os.path.isfile(os.path.join(os.path.dirname(ISS), rel)),
                     f"{name}: vendored message file missing: {path}",
                 )
 

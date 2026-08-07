@@ -75,8 +75,7 @@ def render():
         "",
         "Translation and speech come from different services with different coverage, "
         f"so {len(TRANSLATION_CODES) - len(SPEECH_CODES)} languages can be translated but not "
-        "spoken. The app greys out the pronounce button for those rather than failing "
-        "on a click.",
+        "spoken.",
         "",
         f"| {'Language'.ljust(width)} | Interface | Translate | Speech |",
         f"| {'-' * width} | :-------: | :-------: | :----: |",

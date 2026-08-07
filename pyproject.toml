@@ -1,5 +1,5 @@
 # Tooling configuration for Lingueez. The app itself is run from source
-# (see run.sh / main.py) and packaged with PyInstaller (lingueez.spec); this
+# (see run.sh / main.py) and packaged with PyInstaller (packaging/pyinstaller/lingueez.spec); this
 # file only configures the linter used in CI and locally.
 
 [tool.ruff]

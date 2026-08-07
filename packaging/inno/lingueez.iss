@@ -2,7 +2,8 @@
 ; (dist\Lingueez\) into a Windows installer with a Start Menu shortcut and an
 ; uninstaller. Built in CI by ISCC; pass the version with /DAppVersion=X.Y.Z.
 ;
-;   iscc /DAppVersion=2.0.1 lingueez.iss   ->  installer_output\Lingueez-2.0.1-Setup.exe
+;   iscc /DAppVersion=2.0.1 packaging\inno\lingueez.iss
+;       ->  installer_output\Lingueez-2.0.1-Setup.exe
 
 #define AppName "Lingueez"
 #define AppPublisher "Yurii Lysak"
@@ -23,6 +24,11 @@ PrivilegesRequired=lowest
 DefaultDirName={localappdata}\Programs\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
+; This script lives in packaging\inno\, but its source paths (dist\, assets\,
+; installer_output\) are all repo-root relative — SourceDir rebases them there.
+; The wizard MessagesFile entries below are NOT affected by SourceDir, hence
+; their {#SourcePath} prefix.
+SourceDir=..\..
 OutputDir=installer_output
 OutputBaseFilename=Lingueez-{#AppVersion}-Setup
 SetupIconFile=assets\icons\icon.ico
@@ -57,31 +63,31 @@ Name: "bulgarian"; MessagesFile: "compiler:Languages\Bulgarian.isl"
 Name: "czech"; MessagesFile: "compiler:Languages\Czech.isl"
 Name: "danish"; MessagesFile: "compiler:Languages\Danish.isl"
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
-Name: "greek"; MessagesFile: "packaging\inno\languages\Greek.isl"
+Name: "greek"; MessagesFile: "{#SourcePath}languages\Greek.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "finnish"; MessagesFile: "compiler:Languages\Finnish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
-Name: "croatian"; MessagesFile: "packaging\inno\languages\Croatian.isl"
+Name: "croatian"; MessagesFile: "{#SourcePath}languages\Croatian.isl"
 Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
-Name: "indonesian"; MessagesFile: "packaging\inno\languages\Indonesian.isl"
+Name: "indonesian"; MessagesFile: "{#SourcePath}languages\Indonesian.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
-Name: "malaysian"; MessagesFile: "packaging\inno\languages\Malaysian.isl"
+Name: "malaysian"; MessagesFile: "{#SourcePath}languages\Malaysian.isl"
 Name: "norwegian"; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: "dutch"; MessagesFile: "compiler:Languages\Dutch.isl"
 Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
-Name: "romanian"; MessagesFile: "packaging\inno\languages\Romanian.isl"
+Name: "romanian"; MessagesFile: "{#SourcePath}languages\Romanian.isl"
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "slovak"; MessagesFile: "compiler:Languages\Slovak.isl"
-Name: "serbiancyrillic"; MessagesFile: "packaging\inno\languages\SerbianCyrillic.isl"
+Name: "serbiancyrillic"; MessagesFile: "{#SourcePath}languages\SerbianCyrillic.isl"
 Name: "swedish"; MessagesFile: "compiler:Languages\Swedish.isl"
 Name: "thai"; MessagesFile: "compiler:Languages\Thai.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
-Name: "vietnamese"; MessagesFile: "packaging\inno\languages\Vietnamese.isl"
+Name: "vietnamese"; MessagesFile: "{#SourcePath}languages\Vietnamese.isl"
 Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 
 [Tasks]

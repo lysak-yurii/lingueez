@@ -22,6 +22,10 @@ import unittest
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
+# Translated READMEs live here, one README.<code>.md per language; the English
+# original stays at the repo root where GitHub renders it by default.
+TRANSLATIONS = os.path.join("docs", "i18n")
+
 from app.core.languages import SPEECH_CODES, TRANSLATION_CODES  # noqa: E402
 from tools.gen_languages_md import interface_languages, render  # noqa: E402
 
@@ -75,8 +79,18 @@ class ReadmeSummaryTests(unittest.TestCase):
     def test_english_readme_counts_match(self):
         self.assertEqual(self._numbers_in("README.md"), self.expected)
 
-    def test_ukrainian_readme_counts_match(self):
-        self.assertEqual(self._numbers_in("README.uk.md"), self.expected)
+    def test_translated_readme_counts_match(self):
+        # Discovered rather than listed, so a new docs/i18n/README.<code>.md is
+        # guarded the moment it lands — no edit here required.
+        names = sorted(
+            f
+            for f in os.listdir(os.path.join(REPO, TRANSLATIONS))
+            if f.startswith("README.") and f.endswith(".md")
+        )
+        self.assertTrue(names, f"no translated READMEs found in {TRANSLATIONS}")
+        for name in names:
+            with self.subTest(readme=name):
+                self.assertEqual(self._numbers_in(os.path.join(TRANSLATIONS, name)), self.expected)
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ packaging/flatpak/flathub/README.md
 
 # PyInstaller
 *.spec
-!lingueez.spec
+!packaging/pyinstaller/lingueez.spec
 import_test_scenarios.xlsx
 
 docs/legal/README.md
