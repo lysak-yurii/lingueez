@@ -2,11 +2,13 @@
 # PyInstaller build definition for Lingueez. Runs natively on each CI runner,
 # so `sys.platform` here reflects the OS being built for.
 #
-# Layout: a **onedir** build with `contents_directory='.'`, i.e. the executable
-# and its data (assets/, locales/, ffmpeg/) sit side by side — matching
-# the app's path logic, which chdir's to `dirname(sys.executable)` and reads
-# *and writes* every file relative to it (dictionary.db, settings.cfg, backups/,
-# .env, …). Run the extracted folder from a writable location.
+# Layout: a **onedir** build with PyInstaller's default contents directory, so
+# the data (assets/, locales/, ffmpeg/) lands in `_internal/` beside the
+# executable. That is what the app expects: main.py resolves the bundle through
+# `sys._MEIPASS`, which points at the contents directory, and seeds those
+# read-only resources into a writable per-user data dir it then chdir's to — so
+# user files (dictionary.db, settings.cfg, backups/, .env, …) never depend on
+# where the folder was extracted.
 #
 # Build:  pyinstaller packaging/pyinstaller/lingueez.spec
 import os
@@ -18,21 +20,35 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 # spec's own location (PyInstaller injects SPECPATH) instead of the invoking
 # directory. dist/ and build/ are unaffected: PyInstaller resolves those before
 # running the spec, so they still land beside wherever the build was started.
-os.chdir(os.path.abspath(os.path.join(SPECPATH, os.pardir, os.pardir)))  # noqa: F821
+REPO = os.path.abspath(os.path.join(SPECPATH, os.pardir, os.pardir))  # noqa: F821
+os.chdir(REPO)
+
+
+def repo_path(*parts):
+    """Absolute path to a repo file, for anything handed to PyInstaller.
+
+    chdir() above is not enough: PyInstaller resolves the relative paths in
+    `datas` and in Analysis(scripts) against the *spec file's* directory
+    (`format_binaries_and_datas(..., workingdir=spec_dir)`), not the working
+    directory — so a bare "main.py" is looked for next to this spec. Every such
+    path is made absolute here; target directories stay relative, since those
+    are positions inside the bundle.
+    """
+    return os.path.join(REPO, *parts)
 
 block_cipher = None
 
 
 def collect_dir(folder, includes=None):
-    """Return (src, dest_dir) tuples for every file under *folder*, preserving
+    """Return (abs_src, dest_dir) tuples for every file under *folder*, preserving
     the tree. *includes*, if given, keeps only basenames in that set."""
     items = []
-    for root, _dirs, files in os.walk(folder):
+    for root, _dirs, files in os.walk(repo_path(folder)):
+        dest = os.path.relpath(root, REPO)  # dest mirrors the relative tree
         for name in files:
             if includes is not None and name not in includes:
                 continue
-            src = os.path.join(root, name)
-            items.append((src, root))  # dest mirrors the relative tree
+            items.append((os.path.join(root, name), dest))
     return items
 
 
@@ -55,7 +71,7 @@ locale_codes = [os.path.splitext(os.path.basename(src))[0]
 # with it. Qt names a few of these differently from our codes, hence
 # qt_translation_code(); locales Qt has no translation for simply match nothing
 # here and keep English buttons (main.py logs it).
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, REPO)
 from app.i18n import qt_translation_code  # noqa: E402
 
 datas += collect_data_files("PySide6", includes=[
@@ -63,7 +79,8 @@ datas += collect_data_files("PySide6", includes=[
     for code in sorted(locale_codes)
 ])
 # License/attribution must travel with the binary (AGPL §7 + ffmpeg).
-datas += [("NOTICE", "."), ("THIRD-PARTY-LICENSES.md", "."), ("LICENSE.txt", ".")]
+datas += [(repo_path(n), ".")
+          for n in ("NOTICE", "THIRD-PARTY-LICENSES.md", "LICENSE.txt")]
 
 # ffmpeg: bundle ONLY the current OS's binaries into ffmpeg/bin/, the relative
 # path read_ffmpeg_path() (app/core/shell_utils.py) looks for. Drop the other
@@ -73,10 +90,10 @@ if sys.platform == "win32":
     ff = {"ffmpeg.exe", "ffprobe.exe"}
 else:
     ff = {"ffmpeg", "ffprobe"}
-datas += [(os.path.join("ffmpeg", "bin", n), os.path.join("ffmpeg", "bin"))
-          for n in ff if os.path.isfile(os.path.join("ffmpeg", "bin", n))]
-if os.path.isfile(os.path.join("ffmpeg", "LICENSE")):
-    datas += [(os.path.join("ffmpeg", "LICENSE"), "ffmpeg")]
+datas += [(repo_path("ffmpeg", "bin", n), os.path.join("ffmpeg", "bin"))
+          for n in ff if os.path.isfile(repo_path("ffmpeg", "bin", n))]
+if os.path.isfile(repo_path("ffmpeg", "LICENSE")):
+    datas += [(repo_path("ffmpeg", "LICENSE"), "ffmpeg")]
 
 # Packages PyInstaller's static analysis tends to under-collect.
 hiddenimports = [
@@ -110,11 +127,11 @@ if sys.platform != "win32":
             "`xvfb-run -a pyinstaller packaging/pyinstaller/lingueez.spec`."
         )
 
-icon = os.path.join("assets", "icons",
-                    "icon.ico" if sys.platform == "win32" else "icon.png")
+icon = repo_path("assets", "icons",
+                 "icon.ico" if sys.platform == "win32" else "icon.png")
 
 a = Analysis(
-    ["main.py"],
+    [repo_path("main.py")],
     pathex=[],
     binaries=[],
     datas=datas,
@@ -158,5 +175,9 @@ coll = COLLECT(
     upx=False,
     upx_exclude=[],
     name="Lingueez",
-    contents_directory=".",   # data beside the exe, matching the app's path logic
+    # NB: `contents_directory` is an EXE() argument — COLLECT only inherits it
+    # from the EXE it is passed (PyInstaller/building/api.py). Setting it here
+    # did nothing; every release so far shipped the default `_internal/` layout,
+    # which is what main.py's sys._MEIPASS lookup expects. Left as the default
+    # rather than "fixed" onto EXE, which would move every bundled file.
 )
