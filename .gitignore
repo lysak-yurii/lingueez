@@ -51,6 +51,8 @@ import_test_scenarios.xlsx
 
 docs/legal/README.md
 
+docs/store/
+
 # Jekyll (GitHub Pages site)
 docs/_site/
 docs/.jekyll-cache/

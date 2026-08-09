@@ -120,11 +120,16 @@ head_extra: |
       </p>
     </div>
     <div class="shot device">
-      <picture>
-        <source srcset="/assets/hero.webp" type="image/webp">
-        <img src="/assets/hero.png" width="1600" height="1059" fetchpriority="high" decoding="async"
-             alt="Lingueez on a laptop, showing the vocabulary list with words color-coded by learning status, next to the phone app on a practice card.">
-      </picture>
+      <!-- The maximised view loads hero.svg: it is vector, so it stays crisp at
+           any size, and it is only fetched once someone actually opens it. -->
+      <button type="button" class="zoom" data-zoom="/assets/hero.svg">
+        <picture>
+          <source srcset="/assets/hero.webp" type="image/webp">
+          <img src="/assets/hero.png" width="1600" height="851" fetchpriority="high" decoding="async"
+               alt="Lingueez on a laptop showing the vocabulary list with words color-coded by learning status, on an e-reader saving a word from a book, and on a phone reviewing a practice card.">
+        </picture>
+        <span class="sr-only"><span lang="en">Enlarge</span><span lang="uk">Збільшити</span></span>
+      </button>
     </div>
   </div>
 </header>
@@ -288,7 +293,7 @@ head_extra: |
           <a class="btn btn-primary" href="/koreader/"><span lang="en">Explore the e-reader plugin</span><span lang="uk">Докладніше про плагін для е-читача</span></a>
         </div>
       </div>
-      <img src="/assets/koreader/save-word.png" alt="Saving a word to Lingueez from a book on a KOReader e-reader." style="max-width:340px; margin:0 auto;">
+      <img class="eink" src="/assets/koreader/save-word.png" alt="Saving a word to Lingueez from a book on a KOReader e-reader." style="max-width:340px; margin:0 auto;">
     </div>
   </div>
 </section>
