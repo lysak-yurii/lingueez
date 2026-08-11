@@ -1,224 +1,728 @@
 /* ==========================================================================
    Lingueez — shared site styles
-   Design tokens + reusable components used across the home, KOReader, and
-   legal pages. Page-specific styles live in each page's own <style> block.
+
+   One token layer drives both themes. Colours come straight from the desktop
+   app (app/ui/theme.py: LIGHT, DARK, STATUS_LIGHT, STATUS_DARK) so the site
+   and the app cannot drift apart — if a colour changes there, change it here.
+
+   Layers, in cascade order. Page stylesheets (assets/page-*.css) declare
+   @layer page, so a page rule always wins over a component rule no matter how
+   the selectors weigh up or which file the browser happened to fetch first.
    ========================================================================== */
+@layer tokens, base, layout, components, responsive, page, utilities;
 
-:root{
-  --bg:#0d1117; --bg2:#0b0f14; --surface:#161d26; --surface2:#1b2430;
-  --border:#232c38; --text:#e6edf3; --dim:#94a3b3;
-  --blue:#4f8cff; --amber:#f0b429; --green:#3fb950; --grey:#8b98a5;
-  --maxw:1120px; --radius:14px;
+/* ==========================================================================
+   TOKENS
+   ========================================================================== */
+@layer tokens {
+  :root{
+    /* Both schemes are live, so light-dark() below resolves per the OS. The
+       theme toggle narrows this to one value; see the two rules underneath. */
+    color-scheme: light dark;
+
+    /* ── surfaces & text ───────────────────────────────────────────────── */
+    --bg:          light-dark(#f4f6f9, #101418);
+    --bg-alt:      light-dark(#ffffff, #161b22);
+    --surface:     light-dark(#ffffff, #1c232b);
+    --surface-alt: light-dark(#eef1f5, #222b35);
+    --border:      light-dark(#d4dae1, #2c3640);
+    --border-hi:   light-dark(#b9c3ce, #3b4756);
+    --text:        light-dark(#1c2733, #e6edf3);
+    /* One step off the app's text_dim (#5f6f7f / #8b98a5). The app never puts
+       dim text on a tinted panel; the site does (.method, .dl-meta), and at
+       those sizes the app's values land at 4.2-4.4:1. These clear 4.5. */
+    --text-dim:    light-dark(#54626f, #94a1ae);
+
+    /* ── accent ────────────────────────────────────────────────────────────
+       Three roles, because one blue cannot carry all of them accessibly.
+       --accent      borders, icon tint, focus ring
+       --accent-fill filled button background; light mode uses the app's
+                     deeper accent_pressed so white text clears 4.5:1
+       --accent-text accent-coloured *text* sitting on --bg                  */
+    --accent:            light-dark(#2f6fed, #4f8cff);
+    --accent-fill:       light-dark(#2459c4, #3a72e0);
+    --accent-fill-hover: light-dark(#2f6fed, #4f8cff);
+    --accent-text:       light-dark(#2257c5, #7fb0ff);
+    --accent-soft:       light-dark(#e2ebfc, #1f3050);
+    --on-accent:         #ffffff;
+
+    --danger:  light-dark(#d6453d, #e5534b);
+    --success: light-dark(#2da44e, #3fb950);
+    --warning: light-dark(#bf8700, #d29922);
+    /* Same split as --accent / --accent-text: the fill colour is too light to
+       set 12px type on in light mode (2.7:1), so text gets its own value. */
+    --success-text: light-dark(#0f6d2e, #3fb950);
+
+    /* ── status ramp ───────────────────────────────────────────────────────
+       The four rungs of the learning ladder, ordered blue → violet → amber →
+       green. Deliberately clear of --accent: accent means "you can click
+       this" and must never also mean "this word is new". */
+    --st-new: light-dark(#3f5378, #7aa3ea);
+    --st-rev: light-dark(#6b46b0, #9b7fd4);
+    --st-lrn: light-dark(#8a6414, #d9a441);
+    --st-mas: light-dark(#256b3f, #54b06e);
+    /* Tint of the ink used as the pill background. Light needs a much lighter
+       wash than dark: at 14% over white the amber rung drops to 4.1:1, and the
+       ramp itself is quoted from the app and must not be adjusted to fix that. */
+    --pill-bg: 6%;
+    --pill-bd: 42%;
+
+    /* ── elevation ─────────────────────────────────────────────────────────
+       Geometry is shared; only the shadow colour changes. Light needs a
+       tighter, weaker shadow (and leans on --border instead), dark needs a
+       deep diffuse one to separate surfaces at all. */
+    --e-1: 0 1px 2px light-dark(rgba(28,39,51,.06), rgba(0,0,0,.45));
+    --e-2: 0 12px 28px -14px light-dark(rgba(28,39,51,.20), rgba(0,0,0,.70));
+    --e-3: 0 30px 70px -28px light-dark(rgba(28,39,51,.26), rgba(0,0,0,.80));
+    /* device renders carry their own frames, so they get a silhouette shadow */
+    --e-device: light-dark(0 24px 40px rgba(28,39,51,.22), 0 30px 46px rgba(0,0,0,.55));
+
+    /* ── ambient glows ─────────────────────────────────────────────────── */
+    --glow-accent: light-dark(rgba(47,111,237,.07), rgba(79,140,255,.10));
+    --glow-warm:   light-dark(rgba(191,135,0,.05),  rgba(240,180,41,.07));
+    --scrim:       light-dark(rgba(244,246,249,.86), rgba(6,9,14,.90));
+    --nav-bg:      light-dark(rgba(255,255,255,.82), rgba(16,20,24,.82));
+    --nav-bg-solid:light-dark(rgba(255,255,255,.97), rgba(16,20,24,.97));
+
+    /* ── space ─────────────────────────────────────────────────────────── */
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px;
+    --s-6:32px; --s-7:48px; --s-8:64px; --s-9:96px; --s-10:128px;
+    --section-y: clamp(56px, 7vw, 96px);
+
+    /* ── type ──────────────────────────────────────────────────────────────
+       Named for the same roles as the app's TYPE dict, so "headline" means
+       the same thing in both codebases. */
+    --t-caption:  .8rem;
+    --t-body:     1rem;
+    --t-body-lg:  1.12rem;
+    --t-title:    1.05rem;
+    --t-headline: clamp(1.5rem, 2.6vw, 2rem);
+    --t-display:  clamp(1.7rem, 3.2vw, 2.35rem);
+    /* Capped at 3.05rem, not 3.5: the hero's text column is ~480px, and above
+       this the headline breaks after "Build a" and reads as two orphans. */
+    --t-hero:     clamp(2.2rem, 3.4vw, 3.05rem);
+
+    --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-display: "Space Grotesk", Inter, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+    /* ── radius ────────────────────────────────────────────────────────── */
+    --r-sm:8px; --r-md:10px; --r-lg:12px; --r-xl:16px; --r-2xl:20px; --r-pill:999px;
+
+    /* ── motion ────────────────────────────────────────────────────────── */
+    --dur-fast: 120ms;
+    --dur:      220ms;
+    --dur-slow: 420ms;
+    --dur-page: 700ms;
+    --ease-out:    cubic-bezier(.2,.8,.25,1);
+    --ease-spring: cubic-bezier(.34,1.3,.64,1);
+
+    --maxw: 1120px;
+  }
+
+  /* The toggle narrows color-scheme; every light-dark() token follows. */
+  :root[data-theme="light"]{ color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark;  }
+
+  /* --pill-bg is a number, and light-dark() only returns colours — so this one
+     token needs the theme condition spelled out the long way. */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --pill-bg: 14%; }
+  }
+  :root[data-theme="dark"]{ --pill-bg: 14%; }
 }
-*{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  line-height:1.6; -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(60rem 40rem at 75% -10%, rgba(79,140,255,.10), transparent 60%),
-    radial-gradient(50rem 30rem at -5% 8%, rgba(240,180,41,.07), transparent 55%);
-  background-repeat:no-repeat;
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+@layer base {
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); font-size:var(--t-body); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 75% -10%, var(--glow-accent), transparent 60%),
+      radial-gradient(50rem 30rem at -5% 8%, var(--glow-warm), transparent 55%);
+    background-repeat:no-repeat;
+  }
+  a{ color:var(--accent-text); text-decoration:none; }
+  a:hover{ text-decoration:underline; }
+  /* height:auto is not optional: every <img> carries intrinsic width/height
+     attributes (so the row reserves space and nothing shifts on load), and
+     without this the attribute height survives the max-width constraint and
+     the image renders stretched. */
+  img{ max-width:100%; height:auto; display:block; }
+  h1,h2,h3{ font-family:var(--font-display); line-height:1.1; letter-spacing:-.01em; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+  /* Inline bilingual spans: show only the active language. */
+  html[data-lang="en"] [lang="uk"],
+  html[data-lang="uk"] [lang="en"]{ display:none !important; }
 }
-/* Inline bilingual spans: show only the active language. */
-html[data-lang="en"] [lang="uk"], html[data-lang="uk"] [lang="en"]{display:none !important;}
-a{color:var(--blue); text-decoration:none;}
-a:hover{text-decoration:underline;}
-img{max-width:100%; display:block;}
-h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif; line-height:1.1; letter-spacing:-.01em;}
-.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
-.eyebrow{font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:600;}
 
-/* buttons */
-.btn{display:inline-flex; align-items:center; gap:.5em; font-weight:600; font-size:.98rem;
-  padding:.72em 1.25em; border-radius:11px; border:1px solid transparent; cursor:pointer;
-  transition:transform .15s ease, background .15s ease, border-color .15s ease;}
-.btn:hover{text-decoration:none; transform:translateY(-1px);}
-.btn-primary{background:var(--blue); color:#fff; box-shadow:0 6px 20px rgba(79,140,255,.28);}
-.btn-primary:hover{background:#5f97ff;}
-.btn-ghost{background:transparent; color:var(--text); border-color:var(--border);}
-.btn-ghost:hover{border-color:#384455; background:rgba(255,255,255,.03);}
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+@layer layout {
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 var(--s-5); }
+  section{ padding:var(--section-y) 0; }
+  .section-head{ text-align:center; max-width:42ch; margin:0 auto var(--s-6); }
+  .section-head h2{ font-size:var(--t-display); margin:0 0 var(--s-2); }
+  .section-head p{ color:var(--text-dim); margin:0; }
 
-/* nav */
-.nav{position:sticky; top:0; z-index:50; transition:background .2s ease, border-color .2s ease, backdrop-filter .2s ease;
-  border-bottom:1px solid transparent;}
-.nav.scrolled{background:rgba(13,17,23,.8); backdrop-filter:blur(12px); border-bottom-color:var(--border);}
-.nav .wrap{display:flex; align-items:center; gap:22px; height:64px;}
-.brand{display:flex; align-items:center; gap:10px; color:var(--text); font-weight:700;
-  font-family:"Space Grotesk",sans-serif; font-size:1.12rem;}
-.brand:hover{text-decoration:none;}
-.brand img{width:28px; height:28px;}
-.nav .spacer{flex:1;}
-.nav-links{display:flex; align-items:center; gap:22px;}
-.nav-links a{color:var(--dim); font-weight:500; font-size:.95rem;}
-.nav-links a:hover{color:var(--text); text-decoration:none;}
-.nav-links a[aria-current="page"]{color:var(--text);}
-.nav-menu{display:flex; align-items:center; gap:22px;}
-/* hamburger (mobile only) */
-.nav-toggle{display:none; flex-direction:column; justify-content:center; gap:5px;
-  width:42px; height:38px; padding:0 9px; background:transparent; border:1px solid var(--border);
-  border-radius:9px; cursor:pointer;}
-.nav-toggle span{display:block; height:2px; width:100%; background:var(--text); border-radius:2px;
-  transition:transform .2s ease, opacity .2s ease;}
-.nav.open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.nav.open .nav-toggle span:nth-child(2){opacity:0;}
-.nav.open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s-4); }
+  .show{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s-7);
+    align-items:center; }
+  .show + .show{ margin-top:var(--s-7); }
+  .show.flip .copy{ order:2; }
+  .show h2{ font-size:var(--t-headline); margin:0 0 var(--s-2); }
+  .show p{ color:var(--text-dim); margin:0; font-size:var(--t-body-lg); }
+  .show img{
+    border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--e-3);
+  }
 
-/* language toggle (button form — marketing pages) */
-.lang{display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden;}
-.lang button{background:transparent; color:var(--dim); border:0; padding:.34em .6em; font:inherit;
-  font-size:.82rem; font-weight:600; cursor:pointer;}
-.lang button[aria-pressed="true"]{background:var(--surface2); color:var(--text);}
-/* language toggle (link form — legal pages) */
-.lang a, .lang b{padding:.34em .6em; font-size:.82rem; font-weight:600; line-height:1;}
-.lang a{color:var(--dim);}
-.lang a:hover{color:var(--text); text-decoration:none; background:rgba(255,255,255,.04);}
-.lang b{background:var(--surface2); color:var(--text);}
-
-/* hero */
-.hero .wrap{display:grid; grid-template-columns:1fr 1.25fr; gap:32px; align-items:center;
-  padding-top:56px; padding-bottom:66px;}
-.hero h1{font-size:clamp(2.3rem,4.6vw,3.5rem); margin:.5rem 0 .2rem; font-weight:700;}
-.hero h1 .accent{color:var(--blue);}
-.lede{font-size:1.12rem; color:var(--dim); max-width:34ch; margin:1rem 0 1.7rem;}
-.shot{position:relative;}
-/* right inset stays 0: the hero shot leans toward the viewport edge, and a glow
-   spilling past it is enough to trigger a horizontal scrollbar. */
-.shot::before{content:""; position:absolute; inset:-12% 0 -16% -8%; z-index:-1;
-  background:radial-gradient(closest-side, rgba(79,140,255,.22), transparent 72%),
-             radial-gradient(closest-side, rgba(240,180,41,.14), transparent 70%);
-  filter:blur(8px);}
-.shot img{width:100%; border:1px solid var(--border); border-radius:var(--radius);
-  box-shadow:0 30px 70px -28px rgba(0,0,0,.75), 0 2px 0 rgba(255,255,255,.03) inset;}
-/* device renders come with their own frame and transparent edges — no card treatment,
-   and a drop-shadow that follows the silhouette instead of a rectangle. */
-.shot.device picture{display:block;}
-.shot.device img{display:block; height:auto; border:0; border-radius:0;
-  box-shadow:none; filter:drop-shadow(0 30px 46px rgba(0,0,0,.55));}
-
-/* zoom trigger + lightbox
-   Any image can opt in: wrap it in <button class="zoom" data-zoom="/full/size.svg">
-   and site.js takes care of the rest. */
-.sr-only{position:absolute; width:1px; height:1px; margin:-1px; padding:0;
-  overflow:hidden; white-space:nowrap; border:0; clip-path:inset(50%);}
-/* The lift sits on the button, not the image: the home page floats .shot img on
-   a keyframe animation, and an animated transform would win over a hover one. */
-.zoom{display:block; width:100%; padding:0; border:0; background:none;
-  color:inherit; font:inherit; cursor:zoom-in; transition:transform .25s ease;}
-.zoom:hover{transform:translateY(-3px);}
-
-.lightbox{position:fixed; inset:0; z-index:120; display:grid; place-items:center;
-  padding:clamp(14px,3.5vw,44px); cursor:zoom-out;
-  background:rgba(6,9,14,.9); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
-  opacity:0; transition:opacity .18s ease;}
-.lightbox.in{opacity:1;}
-/* No radius or box-shadow here: zoom sources are transparent device renders that
-   carry their own shadows, and a box-shadow would trace the element rectangle. */
-.lightbox img{width:auto; height:auto; max-width:100%; max-height:100%; cursor:default;}
-.lightbox-close{position:absolute; top:16px; right:18px; width:42px; height:42px;
-  display:grid; place-items:center; padding:0; cursor:pointer; border-radius:50%;
-  background:var(--surface2); color:var(--text); border:1px solid var(--border);}
-.lightbox-close:hover{background:var(--surface);}
-
-/* e-ink screenshots are repainted near-black (tools/site/darken_eink.py), so they
-   need an edge of their own or they dissolve into the page background. */
-.eink{border:1px solid var(--border); border-radius:18px;}
-
-/* status pills */
-.pill{display:inline-flex; align-items:center; gap:.45em; padding:.28em .7em; border-radius:999px;
-  font-size:.82rem; font-weight:600; border:1px solid;}
-.pill .dot{width:.5em; height:.5em; border-radius:50%; background:currentColor;}
-.pill.new{color:var(--grey); border-color:color-mix(in srgb,var(--grey) 45%, transparent); background:color-mix(in srgb,var(--grey) 12%, transparent);}
-.pill.rev{color:var(--blue); border-color:color-mix(in srgb,var(--blue) 45%, transparent); background:color-mix(in srgb,var(--blue) 12%, transparent);}
-.pill.lrn{color:var(--amber); border-color:color-mix(in srgb,var(--amber) 45%, transparent); background:color-mix(in srgb,var(--amber) 12%, transparent);}
-.pill.mas{color:var(--green); border-color:color-mix(in srgb,var(--green) 45%, transparent); background:color-mix(in srgb,var(--green) 12%, transparent);}
-
-/* sections */
-section{padding:60px 0;}
-.section-head{text-align:center; max-width:42ch; margin:0 auto 40px;}
-.section-head h2{font-size:clamp(1.6rem,3vw,2.1rem); margin:0 0 .4rem;}
-.section-head p{color:var(--dim); margin:0;}
-
-/* features grid */
-.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:22px; transition:border-color .15s ease, transform .15s ease;}
-.card:hover{border-color:#33414f; transform:translateY(-2px);}
-.card .ic{width:38px; height:38px; border-radius:10px; display:grid; place-items:center;
-  background:color-mix(in srgb,var(--blue) 14%, transparent); color:var(--blue); margin-bottom:14px;}
-.card .ic svg{width:20px; height:20px;}
-.card h3{font-size:1.05rem; margin:0 0 .3rem;}
-.card p{margin:0; color:var(--dim); font-size:.94rem;}
-
-/* showcase rows */
-.show{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;}
-.show + .show{margin-top:30px;}
-.show.flip .copy{order:2;}
-.show h2{font-size:clamp(1.5rem,2.6vw,2rem); margin:0 0 .5rem;}
-.show p{color:var(--dim); margin:0; font-size:1.04rem;}
-.show img{border:1px solid var(--border); border-radius:var(--radius);
-  box-shadow:0 24px 60px -30px rgba(0,0,0,.7);}
-
-/* cta band */
-.ctaband{text-align:center; background:
-    radial-gradient(40rem 18rem at 50% 0%, rgba(79,140,255,.14), transparent 60%);}
-.ctaband h2{font-size:clamp(1.8rem,3.4vw,2.4rem); margin:0 0 1.2rem;}
-
-.cta-row{display:flex; flex-wrap:wrap; gap:12px;}
-.trust{margin-top:1.4rem; color:var(--dim); font-size:.86rem; display:flex; gap:.5em; flex-wrap:wrap;}
-.trust b{color:var(--text); font-weight:600;}
-
-/* footer */
-footer{border-top:1px solid var(--border); padding:46px 0 34px; color:var(--dim);}
-.foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:30px;}
-.foot-grid h4{font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text);
-  margin:0 0 .7rem; font-family:Inter,sans-serif; font-weight:600;}
-.foot-grid a{display:block; color:var(--dim); font-size:.92rem; padding:.18em 0;}
-.foot-grid a:hover{color:var(--text); text-decoration:none;}
-.foot-grid .brand{display:flex; align-items:center; padding:0;}
-.foot-bottom{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;
-  margin-top:34px; padding-top:22px; border-top:1px solid var(--border); font-size:.86rem;}
-.attrib{color:var(--dim);}
-
-/* reveal animation */
-.reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease;}
-.reveal.in{opacity:1; transform:none;}
-
-/* responsive */
-/* Let the devices lean into the margin outside the wrap, from the two-column
-   breakpoint up. The 1160px (vs --maxw 1120) leaves room for a scrollbar, since
-   100vw counts it and the layout viewport does not. */
-@media (min-width:881px){
-  .hero .shot.device{margin-right:calc(-1 * min(120px, max(0px, (100vw - 1160px) / 2)));}
+  .cta-row{ display:flex; flex-wrap:wrap; gap:var(--s-3); }
 }
-@media (max-width:880px){
-  .hero .wrap{grid-template-columns:1fr; gap:38px; padding-top:44px; padding-bottom:56px;}
-  .lede{max-width:none;}
-  .grid{grid-template-columns:repeat(2,1fr);}
-  .show{grid-template-columns:1fr; gap:24px;}
-  .show.flip .copy{order:0;}
-  .nav-desktop{display:none;}
-  /* collapse the nav into a hamburger dropdown */
-  .nav-toggle{display:flex;}
-  .nav-menu{position:absolute; top:64px; left:0; right:0; display:none; flex-direction:column;
-    align-items:stretch; gap:14px; padding:16px 24px 22px; background:rgba(13,17,23,.97);
-    backdrop-filter:blur(12px); border-bottom:1px solid var(--border);
-    box-shadow:0 20px 40px -20px rgba(0,0,0,.6);}
-  .nav.open .nav-menu{display:flex;}
-  .nav-menu .nav-links{flex-direction:column; align-items:stretch; gap:2px;}
-  .nav-menu .nav-links a{padding:9px 2px; font-size:1rem;}
-  .nav-menu .btn{width:100%; justify-content:center; margin-top:2px;}
-  .foot-grid{grid-template-columns:1fr 1fr;}
+
+/* ==========================================================================
+   COMPONENTS
+   ========================================================================== */
+@layer components {
+
+  /* ── type helpers ─────────────────────────────────────────────────────── */
+  .eyebrow{
+    font-size:var(--t-caption); letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-dim); font-weight:600;
+  }
+
+  /* ── buttons ──────────────────────────────────────────────────────────── */
+  .btn{
+    display:inline-flex; align-items:center; gap:.5em; font-weight:600; font-size:.98rem;
+    padding:.72em 1.25em; border-radius:var(--r-md); border:1px solid transparent;
+    cursor:pointer;
+    transition:transform var(--dur-fast) var(--ease-out),
+               background var(--dur-fast) var(--ease-out),
+               border-color var(--dur-fast) var(--ease-out);
+  }
+  .btn:hover{ text-decoration:none; transform:translateY(-1px); }
+  .btn-primary{
+    background:var(--accent-fill); color:var(--on-accent);
+    box-shadow:0 6px 20px light-dark(rgba(36,89,196,.24), rgba(79,140,255,.28));
+  }
+  .btn-primary:hover{ background:var(--accent-fill-hover); }
+  .btn-ghost{ background:transparent; color:var(--text); border-color:var(--border); }
+  .btn-ghost:hover{
+    border-color:var(--border-hi);
+    background:light-dark(rgba(28,39,51,.04), rgba(255,255,255,.03));
+  }
+  .btn[aria-busy="true"]{ opacity:.65; pointer-events:none; }
+
+  /* ── nav ──────────────────────────────────────────────────────────────── */
+  .nav{
+    position:sticky; top:0; z-index:50; border-bottom:1px solid transparent;
+    transition:background var(--dur) var(--ease-out),
+               border-color var(--dur) var(--ease-out);
+  }
+  .nav.scrolled{
+    background:var(--nav-bg); backdrop-filter:blur(12px);
+    border-bottom-color:var(--border);
+  }
+  .nav .wrap{ display:flex; align-items:center; gap:var(--s-5); height:64px; }
+  .nav .spacer{ flex:1; }
+  .brand{
+    display:flex; align-items:center; gap:var(--s-2); color:var(--text); font-weight:700;
+    font-family:var(--font-display); font-size:1.12rem;
+  }
+  .brand:hover{ text-decoration:none; }
+  .brand img{ width:28px; height:28px; }
+  .nav-links{ display:flex; align-items:center; gap:var(--s-5); }
+  .nav-links a{ color:var(--text-dim); font-weight:500; font-size:.95rem; }
+  .nav-links a:hover{ color:var(--text); text-decoration:none; }
+  .nav-links a[aria-current="page"]{ color:var(--text); }
+  .nav-menu{ display:flex; align-items:center; gap:var(--s-5); }
+
+  .nav-toggle{
+    display:none; flex-direction:column; justify-content:center; gap:5px;
+    width:42px; height:38px; padding:0 9px; background:transparent;
+    border:1px solid var(--border); border-radius:var(--r-sm); cursor:pointer;
+  }
+  .nav-toggle span{
+    display:block; height:2px; width:100%; background:var(--text); border-radius:2px;
+    transition:transform var(--dur) var(--ease-out), opacity var(--dur) var(--ease-out);
+  }
+  .nav.open .nav-toggle span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .nav.open .nav-toggle span:nth-child(2){ opacity:0; }
+  .nav.open .nav-toggle span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  /* ── segmented controls: language, theme ──────────────────────────────── */
+  .lang, .theme{
+    display:inline-flex; border:1px solid var(--border); border-radius:var(--r-sm);
+    overflow:hidden; flex:none;
+  }
+  .lang button, .theme button{
+    background:transparent; color:var(--text-dim); border:0; padding:.34em .6em;
+    font:inherit; font-size:.82rem; font-weight:600; cursor:pointer;
+    display:grid; place-items:center;
+    transition:background var(--dur-fast) var(--ease-out),
+               color var(--dur-fast) var(--ease-out);
+  }
+  .lang button:hover, .theme button:hover{ color:var(--text); }
+  .lang button[aria-pressed="true"]{ background:var(--surface-alt); color:var(--text); }
+  /* link form — legal pages */
+  .lang a, .lang b{ padding:.34em .6em; font-size:.82rem; font-weight:600; line-height:1; }
+  .lang a{ color:var(--text-dim); }
+  .lang a:hover{
+    color:var(--text); text-decoration:none;
+    background:light-dark(rgba(28,39,51,.05), rgba(255,255,255,.04));
+  }
+  .lang b{ background:var(--surface-alt); color:var(--text); }
+
+  /* The theme button shows the icon for the mode it will switch *to*. Only
+     one of the three icons is ever displayed; site.js sets data-mode. */
+  .theme button{ padding:.34em .55em; }
+  .theme svg{ width:15px; height:15px; display:block; }
+  .theme [data-icon]{ display:none; }
+  .theme[data-mode="system"] [data-icon="system"],
+  .theme[data-mode="light"]  [data-icon="light"],
+  .theme[data-mode="dark"]   [data-icon="dark"]{ display:block; }
+
+  /* ── hero ─────────────────────────────────────────────────────────────── */
+  .hero .wrap{
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);
+    gap:var(--s-6); align-items:center;
+    padding-top:var(--s-7); padding-bottom:var(--s-8);
+  }
+  .hero h1{ font-size:var(--t-hero); margin:var(--s-2) 0 var(--s-1); font-weight:700; }
+  .hero h1 .accent{ color:var(--accent-text); }
+  .lede{
+    font-size:var(--t-body-lg); color:var(--text-dim); max-width:34ch;
+    margin:var(--s-4) 0 var(--s-5);
+  }
+  .trust{
+    margin-top:var(--s-4); color:var(--text-dim); font-size:.86rem;
+    display:flex; gap:.5em; flex-wrap:wrap;
+  }
+  .trust b{ color:var(--text); font-weight:600; }
+
+  .shot{ position:relative; }
+  /* Right inset stays 0: the hero shot leans toward the viewport edge, and a
+     glow spilling past it is enough to trigger a horizontal scrollbar. */
+  .shot::before{
+    content:""; position:absolute; inset:-12% 0 -16% -8%; z-index:-1;
+    background:radial-gradient(closest-side, var(--glow-accent), transparent 72%),
+               radial-gradient(closest-side, var(--glow-warm), transparent 70%);
+    filter:blur(8px);
+  }
+  .shot img{
+    width:100%; border:1px solid var(--border); border-radius:var(--r-lg);
+    box-shadow:var(--e-3);
+  }
+  /* Device renders come with their own frame and transparent edges — no card
+     treatment, and a shadow that follows the silhouette not a rectangle. */
+  .shot.device picture{ display:block; }
+  .shot.device img{
+    display:block; height:auto; border:0; border-radius:0; box-shadow:none;
+    filter:drop-shadow(var(--e-device));
+  }
+
+  /* ── zoom trigger + lightbox ───────────────────────────────────────────
+     Any image can opt in: wrap it in <button class="zoom" data-zoom="/full.svg">
+     and site.js takes care of the rest. */
+  .zoom{
+    display:block; width:100%; padding:0; border:0; background:none;
+    color:inherit; font:inherit; cursor:pointer;
+    transition:transform var(--dur) var(--ease-out);
+  }
+  .zoom:hover{ transform:translateY(-3px); }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:120;
+    /* Anywhere off the screenshot dismisses, so the whole sheet is a
+       pointer — the same affordance as the devices in the hero. */
+    cursor:pointer;
+    /* Two rows, not one: the image takes what is left after the caption, so a
+       gallery's label and dashes are never painted over the screenshot. With
+       no caption the second row collapses to nothing. */
+    /* minmax(0,…), not 1fr: a plain 1fr has an auto minimum, so a tall
+       screenshot grows the row instead of being scaled down into it, and the
+       caption ends up painted over the image. */
+    display:grid; grid-template-rows:minmax(0,1fr) auto; place-items:center;
+    row-gap:var(--s-4);
+    padding:clamp(14px,3.5vw,44px);
+    background:var(--scrim); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+    opacity:0; transition:opacity var(--dur-fast) var(--ease-out);
+  }
+  .lightbox.in{ opacity:1; }
+  /* No radius or box-shadow: zoom sources are transparent device renders that
+     carry their own shadows, and a box-shadow would trace the element rect. */
+  .lightbox-frame{
+    /* flex, not grid: as a grid item the image's max-height:100% resolves
+       against its own auto-sized row, which grows to fit it — circular, so it
+       never scales down. A flex container has a definite height to measure. */
+    display:flex; align-items:center; justify-content:center;
+    min-height:0; min-width:0; max-width:100%;
+    /* Stretch, not centre: the image's max-height:100% only resolves against a
+       parent with a definite height, and only the stretched row gives it one. */
+    align-self:stretch; justify-self:center; width:100%;
+  }
+  .lightbox img{ width:auto; height:auto; max-width:100%; max-height:100%; cursor:default; }
+
+  /* Gallery controls. Present only when the opener passed a screen set. */
+  .lightbox-step{
+    position:absolute; top:50%; transform:translateY(-50%);
+    display:grid; place-items:center; width:44px; height:44px; padding:0;
+    border:1px solid var(--border); border-radius:50%;
+    background:var(--surface); color:var(--text); cursor:pointer;
+    transition:background var(--dur-fast) var(--ease-out),
+               border-color var(--dur-fast) var(--ease-out);
+  }
+  .lightbox-step:hover{ background:var(--surface-alt); border-color:var(--border-hi); }
+  .lightbox-step.prev{ left:clamp(8px,2vw,28px); }
+  .lightbox-step.next{ right:clamp(8px,2vw,28px); }
+  .lightbox-caption{
+    margin:0;
+    display:flex; align-items:center; justify-content:center; gap:var(--s-4);
+    flex-wrap:wrap; color:var(--text); font-size:.94rem; cursor:default;
+  }
+  .lightbox-dots{ display:inline-flex; align-items:center; gap:5px; }
+  .lightbox-close{
+    position:absolute; top:16px; right:18px; width:42px; height:42px;
+    display:grid; place-items:center; padding:0; cursor:pointer; border-radius:50%;
+    background:var(--surface-alt); color:var(--text); border:1px solid var(--border);
+  }
+  .lightbox-close:hover{ background:var(--surface); }
+
+  /* ── sign-in modal ─────────────────────────────────────────────────────
+     A native <dialog>: showModal() brings the focus trap, Escape, the inert
+     background and ::backdrop with it, all of which are easy to get subtly
+     wrong by hand. The dialog element is the backdrop's click target, so the
+     card is a separate child — see signin.js.
+
+     <dialog> arrives with a UA border, padding and `width:fit-content`; the
+     reset here is what stops it looking like a browser artefact. */
+  .modal{
+    border:0; padding:0; background:none; color:inherit;
+    max-width:min(420px, calc(100vw - 2 * var(--s-4)));
+    max-height:calc(100dvh - 2 * var(--s-5));
+    overflow:visible;
+  }
+  .modal::backdrop{
+    background:light-dark(rgba(28,39,51,.42), rgba(0,0,0,.66));
+    backdrop-filter:blur(3px);
+  }
+  .modal-card{
+    position:relative;
+    background:linear-gradient(180deg, var(--surface), var(--surface-alt));
+    border:1px solid var(--border); border-radius:var(--r-2xl);
+    box-shadow:var(--e-3);
+    padding:var(--s-6) var(--s-5) var(--s-5);
+    max-height:calc(100dvh - 2 * var(--s-5));
+    overflow-y:auto;
+  }
+  .modal-close{
+    position:absolute; top:10px; right:10px; width:34px; height:34px;
+    display:grid; place-items:center; padding:0; cursor:pointer;
+    border:1px solid transparent; border-radius:var(--r-md);
+    background:none; color:var(--text-dim);
+    transition:color var(--dur-fast) var(--ease-out),
+               border-color var(--dur-fast) var(--ease-out);
+  }
+  .modal-close:hover{ color:var(--text); border-color:var(--border); }
+  .modal-close:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .modal .si-h{
+    font-size:var(--t-title); margin:0 0 var(--s-2); padding-right:var(--s-6);
+    line-height:1.2;
+  }
+  .modal .si-lede{
+    color:var(--text-dim); font-size:.92rem; line-height:1.55;
+    margin:0 0 var(--s-5);
+  }
+
+  /* Entrance: the card rises the last few pixels rather than snapping in.
+     allow-discrete lets a display:none element animate on the way in. */
+  @media (prefers-reduced-motion: no-preference){
+    .modal[open]{ animation:modalIn var(--dur) var(--ease-out); }
+    @keyframes modalIn{
+      from{ opacity:0; transform:translateY(10px) scale(.985); }
+      to{ opacity:1; transform:none; }
+    }
+  }
+
+  .field{ margin-bottom:11px; }
+  .field .row{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:5px; }
+  .field label{ font-size:.78rem; color:var(--text-dim); font-weight:500; }
+  .field .forgot{ font-size:.76rem; }
+  .modal-card input{
+    width:100%; background:var(--bg-alt); border:1px solid var(--border); color:var(--text);
+    border-radius:var(--r-md); padding:.74em .85em; font:inherit; font-size:.95rem;
+    transition:border-color var(--dur-fast) var(--ease-out),
+               box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .modal-card input::placeholder{ color:var(--text-dim); opacity:.75; }
+  .modal-card input:focus{
+    outline:none; border-color:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .modal-card .btn{ width:100%; justify-content:center; padding:.82em 1em; }
+  .si-err{ color:var(--danger); font-size:.84rem; min-height:1.1em; margin:2px 0 8px; line-height:1.35; }
+  .si-or{
+    display:flex; align-items:center; gap:var(--s-3); color:var(--text-dim);
+    font-size:.78rem; margin:var(--s-3) 0;
+  }
+  .si-or::before, .si-or::after{ content:""; flex:1; height:1px; background:var(--border); }
+  .si-alt{ text-align:center; color:var(--text-dim); font-size:.88rem; margin:var(--s-3) 0 0; }
+  .si-note{
+    display:flex; align-items:center; gap:.5em; justify-content:center;
+    color:var(--text-dim); font-size:.74rem; margin:var(--s-3) 0 0;
+  }
+  .si-note svg{ width:13px; height:13px; opacity:.7; flex:0 0 auto; }
+  .si-google{ display:inline-flex; align-items:center; gap:.6em; }
+
+  /* ── status pills ─────────────────────────────────────────────────────── */
+  .pill{
+    display:inline-flex; align-items:center; gap:.45em; padding:.28em .7em;
+    border-radius:var(--r-pill); font-size:.82rem; font-weight:600; border:1px solid;
+    color:var(--st, var(--text-dim));
+    border-color:color-mix(in srgb, var(--st, var(--text-dim)) var(--pill-bd), transparent);
+    background:color-mix(in srgb, var(--st, var(--text-dim)) var(--pill-bg), transparent);
+  }
+  .pill .dot{ width:.5em; height:.5em; border-radius:50%; background:currentColor; }
+  .pill.new{ --st:var(--st-new); }
+  .pill.rev{ --st:var(--st-rev); }
+  .pill.lrn{ --st:var(--st-lrn); }
+  .pill.mas{ --st:var(--st-mas); }
+
+  /* ── cards ────────────────────────────────────────────────────────────── */
+  .card{
+    position:relative; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r-lg); padding:var(--s-5); box-shadow:var(--e-1);
+    transition:border-color var(--dur) var(--ease-out),
+               transform var(--dur) var(--ease-out),
+               box-shadow var(--dur) var(--ease-out);
+  }
+  .card:hover{ border-color:var(--border-hi); transform:translateY(-2px); box-shadow:var(--e-2); }
+  .card .ic{
+    width:38px; height:38px; border-radius:var(--r-md); display:grid; place-items:center;
+    background:var(--accent-soft); color:var(--accent-text); margin-bottom:var(--s-3);
+  }
+  .card .ic svg{ width:20px; height:20px; }
+  .card h3{ font-size:var(--t-title); margin:0 0 var(--s-1); }
+  .card p{ margin:0; color:var(--text-dim); font-size:.94rem; }
+
+  /* ── cta band ─────────────────────────────────────────────────────────── */
+  .ctaband{
+    text-align:center;
+    background:radial-gradient(40rem 18rem at 50% 0%, var(--glow-accent), transparent 60%);
+  }
+  .ctaband h2{ font-size:var(--t-display); margin:0 0 var(--s-4); }
+
+  /* ── store badges ───────────────────────────────────────────────────────
+     Vendor artwork sets its own proportions, so the row matches on height and
+     lets the widths fall where they may — that is how these are meant to sit.
+     The gap is the clear space Google's guidelines ask for (a quarter of the
+     badge height, so ≥11px at 44px), which is why the artwork itself is
+     cropped to its ink rather than shipping its built-in padding. */
+  .badges{
+    display:flex; flex-wrap:wrap; gap:var(--s-4); justify-content:center;
+    align-items:center;
+  }
+  .badge-link{
+    display:block; border-radius:4px;
+    transition:transform var(--dur) var(--ease-out), opacity var(--dur) var(--ease-out);
+  }
+  .badge-link:hover{ transform:translateY(-2px); opacity:.88; }
+  .badge-link:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; }
+  .badge-link img{ height:44px; width:auto; display:block; }
+
+  /* GitHub has no badge to borrow, so this is one built to the same measure:
+     44px tall, 4px radius, the same two-line lockup. Markup rather than an
+     image, so the text stays selectable and sharp at any zoom. */
+  .badge-gh{
+    display:inline-flex; align-items:center; gap:9px;
+    height:44px; padding:0 14px; box-sizing:border-box;
+    background:#202020; color:#fff;
+    border:1px solid rgba(255,255,255,.14);
+    font-family:var(--font-body);
+  }
+  .badge-gh:hover{ text-decoration:none; color:#fff; }
+  .badge-gh svg{ width:24px; height:24px; flex:none; }
+  .badge-gh span{ display:flex; flex-direction:column; line-height:1.1; text-align:left; }
+  .badge-gh small{ font-size:9px; letter-spacing:.02em; opacity:.9; }
+  .badge-gh b{ font-size:16px; font-weight:600; letter-spacing:-.01em; }
+
+  /* Three phones abreast, each with its caption beneath — see the comment in
+     mobile.html for why these are not alternating rows like the desktop shots. */
+  .phone-tour{
+    display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s-5);
+  }
+  /* Centred, not left-aligned: the shot is capped narrower than its column, so
+     against left-aligned text it sat visibly inset from the words underneath it.
+     Sharing a centre line is what a phone gallery does everywhere else, too. */
+  .phone-tour > div{ text-align:center; }
+  .phone-tour h3{ margin:var(--s-4) 0 var(--s-1); font-size:1.08rem; }
+  .phone-tour p{ margin:0; color:var(--text-dim); font-size:.94rem; }
+  /* The same framing the desktop shots get — without it a white screenshot has
+     no edge against a near-white page. */
+  .phone-tour img{
+    border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--e-2);
+  }
+  /* Capped so a 2.2:1 shot cannot outgrow the text under it. */
+  .shot-phone{ max-width:206px; margin:0 auto; }
+  @media (max-width:1040px){ .phone-tour{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+  @media (max-width:560px){
+    .phone-tour{ grid-template-columns:1fr; gap:var(--s-7); }
+    .phone-tour > div{ max-width:30rem; margin:0 auto; }
+  }
+
+  .cta-more{ margin:var(--s-5) 0 0; font-size:.9rem; }
+  .cta-more a{ color:var(--text-dim); text-decoration:underline; text-underline-offset:3px; }
+  .cta-more a:hover{ color:var(--text); }
+
+  /* ── e-ink shots ──────────────────────────────────────────────────────── */
+  .eink{ border:1px solid var(--border); border-radius:var(--r-xl); }
+
+  /* ── footer ───────────────────────────────────────────────────────────── */
+  footer{
+    border-top:1px solid var(--border); padding:var(--s-7) 0 var(--s-6);
+    color:var(--text-dim);
+  }
+  .foot-grid{ display:grid;
+    grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(0,1fr)); gap:var(--s-6); }
+  /* Five tracks plus the brand need more room than the page's own 880px
+     breakpoint gives them — measured: the longest Product/Resources labels
+     start colliding just above it. */
+  @media (max-width:1000px){
+    .foot-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  }
+  .foot-grid h4{
+    font-size:var(--t-caption); text-transform:uppercase; letter-spacing:.07em;
+    color:var(--text); margin:0 0 var(--s-2); font-family:var(--font-body); font-weight:600;
+  }
+  .foot-grid a{ display:block; color:var(--text-dim); font-size:.92rem; padding:.18em 0; }
+  .foot-grid a:hover{ color:var(--text); text-decoration:none; }
+  .foot-grid .brand{ display:flex; align-items:center; padding:0; }
+  .foot-bottom{
+    display:flex; flex-wrap:wrap; gap:var(--s-3); align-items:center;
+    justify-content:space-between; margin-top:var(--s-6); padding-top:var(--s-5);
+    border-top:1px solid var(--border); font-size:.86rem;
+  }
+  .attrib{ color:var(--text-dim); }
 }
-@media (max-width:560px){
-  .grid{grid-template-columns:1fr;}
-  .foot-grid{grid-template-columns:1fr;}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+@layer utilities {
+  .sr-only{
+    position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; white-space:nowrap; border:0; clip-path:inset(50%);
+  }
+
+  /* Theme-conditional content. light-dark() covers every colour, but it
+     cannot swap an image — so this is the one place the theme condition is
+     spelled out three times: OS default, OS dark, and the explicit override.
+     It toggles `display` only; no colour logic lives here. */
+  /* `revert`, not `revert-layer`, was the bug: it rolls all the way back to the
+     user-agent value, and the UA display for <img> is `inline` — not the `block`
+     the reset in @layer base sets. Auto margins cannot centre an inline box, so
+     every dark screenshot on the e-reader page sat flush left while its light
+     twin was centred. revert-layer stops at the previous layer and keeps the
+     reset, while still restoring whatever default a non-<img> element had. */
+  .only-dark{ display:none; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .only-dark{ display:revert-layer; }
+    :root:not([data-theme="light"]) .only-light{ display:none; }
+  }
+  :root[data-theme="dark"] .only-dark{ display:revert-layer; }
+  :root[data-theme="dark"] .only-light{ display:none; }
+
+  /* Reveal on scroll. site.js adds .in via IntersectionObserver. A
+     [data-stagger] container promotes its children to .stagger-item and
+     numbers them with --i, so the group fans in instead of arriving as a slab. */
+  /* Both halves carry the html.js prefix. Without it on the second rule the
+     hidden state (0,2,1) outweighs the revealed one (0,2,0) and nothing ever
+     appears. */
+  html.js .reveal, html.js .stagger-item{
+    opacity:0; transform:translateY(16px);
+    transition:opacity var(--dur-slow) var(--ease-out) calc(var(--i, 0) * 60ms),
+               transform var(--dur-slow) var(--ease-out) calc(var(--i, 0) * 60ms);
+  }
+  html.js .reveal.in, html.js .stagger-item.in{ opacity:1; transform:none; }
 }
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto;}
-  .reveal{opacity:1; transform:none; transition:none;}
-  .zoom, .lightbox{transition:none;}
-  .zoom:hover{transform:none;}
+
+/* ==========================================================================
+   VIEW TRANSITION — theme change
+   The default cross-fade is replaced by a circle growing from the toggle
+   (site.js animates the clip-path). Both snapshots must hold still for that
+   to read, hence animation:none on the pair.
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
+::view-transition-old(root){ z-index:1; }
+::view-transition-new(root){ z-index:2; }
+
+/* ==========================================================================
+   RESPONSIVE
+   Its own layer, declared after `components`: these rules override component
+   defaults (.hero .wrap's two columns, .grid's three), and inside a layered
+   sheet that is decided by layer order, not by selector weight or source
+   position. Putting them in `layout` silently disabled every breakpoint.
+   ========================================================================== */
+@layer responsive {
+  /* Let the devices lean into the margin outside the wrap, from the two-column
+     breakpoint up. The 1160px (vs --maxw 1120) leaves room for a scrollbar,
+     since 100vw counts it and the layout viewport does not. */
+  @media (min-width:881px){
+    .hero .shot.device{ margin-right:calc(-1 * min(120px, max(0px, (100vw - 1160px) / 2))); }
+  }
+  @media (max-width:880px){
+    .hero .wrap{
+      grid-template-columns:1fr; gap:var(--s-6);
+      padding-top:var(--s-6); padding-bottom:var(--s-7);
+    }
+    .lede{ max-width:none; }
+    .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .show{ grid-template-columns:1fr; gap:var(--s-5); }
+    .show.flip .copy{ order:0; }
+    .nav-desktop{ display:none; }
+  }
+    /* The nav folds on its own, earlier than the page: its width is set by the
+     link labels, and the Ukrainian ones are long enough to overflow at 900px
+     while the rest of the layout is still comfortable in two columns.
+     Measured, not guessed — Ukrainian at the old 1010px broke by 5px once the
+     Android link joined the row, so the fold moved up to clear it. */
+  @media (max-width:1080px){
+    .nav-toggle{ display:flex; }
+    .nav-menu{
+      position:absolute; top:64px; left:0; right:0; display:none; flex-direction:column;
+      align-items:stretch; gap:var(--s-3); padding:var(--s-4) var(--s-5) var(--s-5);
+      background:var(--nav-bg-solid); backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border); box-shadow:var(--e-2);
+    }
+    .nav.open .nav-menu{ display:flex; }
+    .nav-menu .nav-links{ flex-direction:column; align-items:stretch; gap:2px; }
+    .nav-menu .nav-links a{ padding:9px 2px; font-size:var(--t-body); }
+    .nav-menu .btn{ width:100%; justify-content:center; margin-top:2px; }
+  }
+  @media (max-width:560px){
+    .grid{ grid-template-columns:1fr; }
+    .foot-grid{ grid-template-columns:1fr; }
+  }
 }
-:focus-visible{outline:2px solid var(--blue); outline-offset:2px; border-radius:6px;}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Anything that moves on its own must stop; anything that only moves on
+   interaction may stay if it is a colour or opacity change.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  /* html.js-scoped for the same reason the reveal rules are — see above. */
+  html.js .reveal, html.js .stagger-item{ opacity:1; transform:none; transition:none; }
+  .zoom, .lightbox{ transition:none; }
+  .zoom:hover{ transform:none; }
+  .btn:hover, .card:hover{ transform:none; }
+}

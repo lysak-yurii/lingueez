@@ -2,95 +2,13 @@
 layout: marketing
 title: Lingueez — build a vocabulary that sticks
 description: A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
+image: https://lingueez.app/assets/hero.png
 canonical: https://lingueez.app/
 nav_active: home
-head_extra: |
-  <style>
-    .hero h1 .new{color:var(--grey);}
-    .hero h1 .mastered{color:var(--green);}
-    /* Ukrainian words are longer — slightly smaller hero headline so it fits. */
-    html[data-lang="uk"] .hero h1{font-size:clamp(1.95rem,3.8vw,2.8rem);}
-    .shot img{animation:float 7s ease-in-out infinite;}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-
-    /* progression band */
-    .prog{background:linear-gradient(180deg,var(--surface),var(--bg)); border-top:1px solid var(--border);
-      border-bottom:1px solid var(--border);}
-    .ladder{display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap;}
-    .ladder .pill{font-size:.92rem; padding:.4em .9em;}
-    .ladder .arrow{color:var(--dim); margin:0 .8em; flex:0 0 auto;}
-    .prog .cap{text-align:center; color:var(--dim); margin:1.1rem auto 0; max-width:48ch;}
-
-    /* privacy strip */
-    .privacy{background:var(--surface); border:1px solid var(--border); border-radius:18px;
-      padding:42px; text-align:center;}
-    .privacy h2{font-size:clamp(1.5rem,2.6vw,1.9rem); margin:0 0 .5rem;}
-    .privacy p{color:var(--dim); max-width:60ch; margin:0 auto 1.1rem;}
-
-    /* ===== Web-section sign-in: living word card + inline login ===== */
-    .enter{position:relative;}
-    .enter::before{content:""; position:absolute; inset:-12% -8% -16% -8%; z-index:-1;
-      background:radial-gradient(closest-side, rgba(79,140,255,.20), transparent 72%),
-                 radial-gradient(closest-side, rgba(63,185,80,.12), transparent 70%);
-      filter:blur(10px);}
-    .panel{background:linear-gradient(180deg,var(--surface),var(--surface2)); border:1px solid var(--border);
-      border-radius:18px; overflow:hidden; box-shadow:0 30px 70px -32px rgba(0,0,0,.8);}
-
-    .wordcard{padding:22px 22px 20px;}
-    .wc-top{display:flex; align-items:center; justify-content:space-between; gap:12px;}
-    .wc-from{font-size:.66rem; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; font-weight:600;}
-    .wc-word{font-family:"Space Grotesk",Inter,sans-serif; font-weight:600; font-size:2rem;
-      line-height:1.1; margin:.5rem 0 .1rem; letter-spacing:-.01em;}
-    .wc-meta{display:flex; align-items:baseline; gap:.7em; color:var(--dim);}
-    .wc-ipa{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:.9rem; color:var(--text);}
-    .wc-pos{font-style:italic; font-size:.9rem;}
-    .wc-gloss{margin:.55rem 0 1.1rem; color:var(--text); font-size:1.02rem; line-height:1.5;}
-    .wc-gloss::before{content:"\2192\00a0"; color:var(--blue);}
-    .wc-fade{transition:opacity .28s ease, transform .28s ease;}
-    .wc-fade.out{opacity:0; transform:translateY(5px);}
-
-    .track{display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-top:4px;}
-    .track .step{position:relative; display:flex; flex-direction:column; align-items:center; gap:7px; padding-top:13px;}
-    .track .rail{position:absolute; top:4px; left:-50%; right:50%; height:2px; background:var(--border);}
-    .track .step:first-child .rail{display:none;}
-    .track .step.fill .rail{background:linear-gradient(90deg,var(--grey),var(--stepc,var(--blue)));}
-    .track .dot{width:9px; height:9px; border-radius:50%; background:var(--surface2);
-      border:2px solid var(--border); position:relative; z-index:1; transition:all .3s ease;}
-    .track .step.fill .dot{background:var(--stepc); border-color:var(--stepc);}
-    .track .step.on .dot{width:13px; height:13px; box-shadow:0 0 0 5px color-mix(in srgb,var(--stepc) 22%,transparent);}
-    .track .lbl{font-size:.6rem; letter-spacing:.04em; text-transform:uppercase; color:var(--dim);
-      transition:color .3s ease; font-weight:600;}
-    .track .step.on .lbl{color:var(--stepc);}
-    .track .step.s-new{--stepc:var(--grey);} .track .step.s-rev{--stepc:var(--blue);}
-    .track .step.s-lrn{--stepc:var(--amber);} .track .step.s-mas{--stepc:var(--green);}
-
-    .seam{height:1px; background:linear-gradient(90deg,transparent,rgba(79,140,255,.26) 18%,rgba(79,140,255,.26) 82%,transparent);}
-
-    .signin{padding:20px 22px 22px;}
-    .si-h{font-size:1.18rem; margin:0 0 .9rem;}
-    .field{margin-bottom:11px;}
-    .field .row{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:5px;}
-    .field label{font-size:.78rem; color:var(--dim); font-weight:500;}
-    .field .forgot{font-size:.76rem;}
-    .signin input{width:100%; background:var(--bg2); border:1px solid var(--border); color:var(--text);
-      border-radius:10px; padding:.74em .85em; font:inherit; font-size:.95rem;
-      transition:border-color .15s ease, box-shadow .15s ease;}
-    .signin input::placeholder{color:#5b6878;}
-    .signin input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(79,140,255,.16);}
-    .signin .btn{width:100%; justify-content:center; padding:.82em 1em;}
-    .si-err{color:#ff8f8f; font-size:.84rem; min-height:1.1em; margin:2px 0 8px; line-height:1.35;}
-    .si-or{display:flex; align-items:center; gap:12px; color:var(--dim); font-size:.78rem; margin:14px 0;}
-    .si-or::before,.si-or::after{content:""; flex:1; height:1px; background:var(--border);}
-    .si-alt{text-align:center; color:var(--dim); font-size:.88rem; margin:14px 0 0;}
-    .si-note{display:flex; align-items:center; gap:.5em; justify-content:center; color:var(--dim); font-size:.74rem; margin:12px 0 0;}
-    .si-note svg{width:13px; height:13px; opacity:.7; flex:0 0 auto;}
-    .si-google{display:inline-flex; align-items:center; gap:.6em;}
-    .btn[aria-busy="true"]{opacity:.65; pointer-events:none;}
-    @media (max-width:880px){ .enter{max-width:460px; margin:0 auto;} }
-
-    @media (prefers-reduced-motion:reduce){ .shot img{animation:none;} .wc-fade{transition:none;} }
-    @media (max-width:560px){ .privacy{padding:28px 20px;} .wc-word{font-size:1.7rem;} }
-  </style>
+styles:
+  - page-home.css
+scripts:
+  - hero.js
 ---
 
 <!-- HERO -->
@@ -100,8 +18,8 @@ head_extra: |
       <p class="eyebrow"><span lang="en">Free · Open-source vocabulary trainer</span><span lang="uk">Безкоштовний тренажер лексики з відкритим кодом</span></p>
       <h1 lang="en">Build a vocabulary that <span class="accent">actually stays with you</span></h1>
       <h1 lang="uk">Створюйте словниковий запас, який <span class="accent">справді залишається з вами</span></h1>
-      <p class="lede" lang="en">Save words as you discover them, get instant translations, practice with audio, and track your progress from first encounter to mastery. Read real-world content with synchronized translations and audio—all in one place.</p>
-      <p class="lede" lang="uk">Зберігайте нові слова, отримуйте миттєві переклади, закріплюйте лексику за допомогою аудіо та відстежуйте свій прогрес від першого знайомства до повного засвоєння. Читайте реальні тексти із синхронним перекладом та озвученням — усе в одному застосунку.</p>
+      <p class="lede" lang="en">Save words as you discover them, get instant translations, practise with audio, and track every word from first encounter to mastery. Read real articles in the app and add words straight from the page — on your computer, your phone and your e-reader.</p>
+      <p class="lede" lang="uk">Зберігайте нові слова, отримуйте миттєві переклади, закріплюйте лексику за допомогою аудіо та відстежуйте шлях кожного слова від першого знайомства до повного засвоєння. Читайте справжні статті прямо в застосунку й додавайте слова зі сторінки — на комп’ютері, смартфоні та е-читачі.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="/download/">
           <span data-os="any"><span lang="en">Download</span><span lang="uk">Завантажити</span></span>
@@ -110,43 +28,43 @@ head_extra: |
           <span data-os="android" hidden><span lang="en">Download for Android</span><span lang="uk">Завантажити для Android</span></span></a>
         <a class="btn btn-ghost" href="https://web.lingueez.app/">
           <span lang="en">Open web app</span><span lang="uk">Відкрити у браузері</span></a>
-        <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez">
-          <span lang="en">View on GitHub</span><span lang="uk">Переглянути на GitHub</span></a>
       </div>
-      <p class="trust">
-        <b><span lang="en">Free</span><span lang="uk">Безкоштовно</span></b> ·
-        <b><span lang="en">Open source</span><span lang="uk">Відкритий код</span></b> ·
-        <b><span lang="en">Local-first</span><span lang="uk">Локальне зберігання</span></b>
-      </p>
     </div>
+    <!-- The stage is inline SVG, so each device is a real element the page can
+         hover, focus and open. Markup is generated by tools/site/build_hero.py;
+         behaviour is in assets/hero.js. -->
     <div class="shot device">
-      <!-- The maximised view loads hero.svg: it is vector, so it stays crisp at
-           any size, and it is only fetched once someone actually opens it. -->
-      <button type="button" class="zoom" data-zoom="/assets/hero.svg">
-        <picture>
-          <source srcset="/assets/hero.webp" type="image/webp">
-          <img src="/assets/hero.png" width="1600" height="851" fetchpriority="high" decoding="async"
-               alt="Lingueez on a laptop showing the vocabulary list with words color-coded by learning status, on an e-reader saving a word from a book, and on a phone reviewing a practice card.">
-        </picture>
-        <span class="sr-only"><span lang="en">Enlarge</span><span lang="uk">Збільшити</span></span>
-      </button>
+      {% include hero-stage.html %}
+      <!-- One slot, two states: the rotating ribbon by default, and the name of
+           whichever device is open once one is. hero.js swaps them. -->
+      <div class="stage-note">
+        <p class="ribbon" data-ribbon>
+          <span class="rib-item"><span lang="en">Add a word from any app</span><span lang="uk">Додайте слово з будь-якої програми</span></span>
+          <span class="rib-item"><span lang="en">Translated the moment you save it</span><span lang="uk">Переклад одразу під час збереження</span></span>
+          <span class="rib-item"><span lang="en">AI-assisted definitions</span><span lang="uk">Визначення за допомогою ШІ</span></span>
+          <span class="rib-item"><span lang="en">Review with flashcards</span><span lang="uk">Повторюйте за допомогою флешкарток</span></span>
+          <span class="rib-item"><span lang="en">Read real articles in the app</span><span lang="uk">Читайте справжні статті в застосунку</span></span>
+          <span class="rib-item"><span lang="en">Listen hands-free</span><span lang="uk">Слухайте, не тримаючи пристрій</span></span>
+        </p>
+        <p class="dev-caption" data-dev-caption></p>
+      </div>
     </div>
   </div>
 </header>
 
 <!-- PROGRESSION (signature) -->
 <section class="prog">
-  <div class="wrap reveal">
-    <div class="ladder">
+  <div class="wrap">
+    <div class="ladder reveal">
       <span class="pill new"><span class="dot"></span><span lang="en">New</span><span lang="uk">Нове</span></span>
-      <span class="arrow">→</span>
+      <span class="arrow" aria-hidden="true"></span>
       <span class="pill rev"><span class="dot"></span><span lang="en">Reviewing</span><span lang="uk">Переглянуто</span></span>
-      <span class="arrow">→</span>
+      <span class="arrow" aria-hidden="true"></span>
       <span class="pill lrn"><span class="dot"></span><span lang="en">Learning</span><span lang="uk">Вивчається</span></span>
-      <span class="arrow">→</span>
+      <span class="arrow" aria-hidden="true"></span>
       <span class="pill mas"><span class="dot"></span><span lang="en">Mastered</span><span lang="uk">Засвоєно</span></span>
     </div>
-    <p class="cap"><span lang="en">Every word follows a clear learning path. Review, listen, and reinforce vocabulary at your own pace while Lingueez tracks your progress automatically.</span><span lang="uk">Кожне слово проходить зрозумілий шлях навчання. Повторюйте, слухайте та закріплюйте лексику у власному темпі, а Lingueez автоматично відстежуватиме ваш прогрес.</span></p>
+    <p class="cap reveal"><span lang="en">Every word follows a clear learning path. Review, listen, and reinforce vocabulary at your own pace while Lingueez tracks your progress automatically.</span><span lang="uk">Кожне слово проходить зрозумілий шлях навчання. Повторюйте, слухайте та закріплюйте лексику у власному темпі, а Lingueez автоматично відстежуватиме ваш прогрес.</span></p>
   </div>
 </section>
 
@@ -154,19 +72,32 @@ head_extra: |
 <section id="features">
   <div class="wrap">
     <div class="section-head reveal">
-      <h2><span lang="en">Everything you need to build vocabulary efficiently</span><span lang="uk">Усе необхідне для ефективного вивчення лексики</span></h2>
-      <p><span lang="en">A focused learning environment designed to help you acquire, review, and retain vocabulary across multiple languages.</span><span lang="uk">Зосереджене середовище для навчання, яке допомагає засвоювати, повторювати та запам’ятовувати лексику різними мовами.</span></p>
+      <h2><span lang="en">Everything you need, in the order you need it</span><span lang="uk">Усе необхідне — у тому порядку, в якому потрібно</span></h2>
+      <p><span lang="en">One place to capture a word, practise it until it sticks, and keep it — across every language you are learning.</span><span lang="uk">Одне місце, щоб додати слово, попрацювати з ним до повного засвоєння і зберегти його — для кожної мови, яку ви вивчаєте.</span></p>
     </div>
-    <div class="grid reveal">
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div><h3><span lang="en">Words, tags &amp; definitions</span><span lang="uk">Слова, теги й визначення</span></h3><p><span lang="en">Organize vocabulary with tags, favorites, definitions, and learning statuses to keep everything structured and searchable.</span><span lang="uk">Організовуйте лексику за допомогою тегів, обраного, визначень і статусів навчання, щоб усе залишалося впорядкованим і зручним для пошуку.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><h3><span lang="en">New → Mastered</span><span lang="uk">Нове → Засвоєно</span></h3><p><span lang="en">Track every word from first exposure to mastery with customizable progression rules.</span><span lang="uk">Відстежуйте шлях кожного слова від першого знайомства до повного засвоєння за допомогою гнучких правил прогресу.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></div><h3><span lang="en">Instant translation</span><span lang="uk">Миттєвий переклад</span></h3><p><span lang="en">Translate words instantly as you add them, with optional DeepL integration for enhanced accuracy.</span><span lang="uk">Перекладайте слова одразу під час додавання, з можливістю використання DeepL для ще вищої якості перекладу.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/><path d="M19 15l.85 3.15L23 19l-3.15.85L19 23l-.85-3.15L15 19l3.15-.85z"/></svg></div><h3><span lang="en">AI-assisted definitions</span><span lang="uk">Визначення за допомогою ШІ</span></h3><p><span lang="en">Generate definitions, examples, and study materials with OpenAI or Gemini integration.</span><span lang="uk">Створюйте визначення, приклади та навчальні матеріали за допомогою OpenAI або Gemini.</span></p></div>
+    <div class="fgroup reveal">
+      <h3><span lang="en">Capture</span><span lang="uk">Додавайте</span><span class="gsub"><span lang="en">Getting a word in, with its meaning already attached</span><span lang="uk">Слово потрапляє до словника разом зі значенням</span></span></h3>
+      <div class="grid" data-stagger>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3z"/></svg></div><h3><span lang="en">Add from anywhere</span><span lang="uk">Додавайте звідусіль</span></h3><p><span lang="en">Capture and translate words instantly from anywhere using a configurable global keyboard shortcut.</span><span lang="uk">Додавайте та перекладайте слова миттєво з будь-якої програми за допомогою налаштовуваної глобальної гарячої клавіші.</span></p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></div><h3><span lang="en">Translation &amp; AI definitions</span><span lang="uk">Переклад і визначення від ШІ</span></h3><p><span lang="en">Words arrive already translated, with optional DeepL for accuracy and OpenAI or Gemini for definitions and examples.</span><span lang="uk">Слова зберігаються вже з перекладом; DeepL за бажанням підвищує точність, а OpenAI чи Gemini додають визначення та приклади.</span></p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><h3><span lang="en">Texts reader</span><span lang="uk">Читач текстів</span></h3><p><span lang="en">Read articles, Wikipedia and RSS in the app and save words straight from the texts — or have AI write a text from the words you are learning.</span><span lang="uk">Читайте статті, Вікіпедію та RSS у застосунку й зберігайте слова прямо з текстів — або дозвольте ШІ написати текст зі слів, які ви вивчаєте.</span></p></div>
+      </div>
+    </div>
+    <div class="fgroup reveal">
+      <h3><span lang="en">Practise</span><span lang="uk">Практикуйте</span><span class="gsub"><span lang="en">Turning a word you have seen into one you know</span><span lang="uk">Побачене слово стає освоєним</span></span></h3>
+      <div class="grid" data-stagger>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg></div><h3><span lang="en">Flashcards &amp; spaced repetition</span><span lang="uk">Флешкартки й інтервальні повторення</span></h3><p><span lang="en">Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.</span><span lang="uk">Створюйте колоду за будь-яким фільтром і повторюйте її за системою інтервальних повторень, яка повертає слово саме перед тим, як ви його забудете.</span></p></div>
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></div><h3><span lang="en">Read-aloud &amp; MP3</span><span lang="uk">Озвучення та MP3</span></h3><p><span lang="en">Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.</span><span lang="uk">Закріплюйте лексику через аудіо з налаштовуваними повторами, темпом відтворення та експортом у MP3.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><h3><span lang="en">Texts reader</span><span lang="uk">Читач текстів</span></h3><p><span lang="en">Import articles, web content, Wikipedia pages, and RSS feeds for immersive reading with synchronized translations and audio.</span><span lang="uk">Імпортуйте статті, вебсторінки, матеріали з Вікіпедії та RSS-стрічок для занурення в читання із синхронним перекладом та озвученням.</span></p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><h3><span lang="en">Progress &amp; statistics</span><span lang="uk">Прогрес і статистика</span></h3><p><span lang="en">Watch vocabulary growth, streaks, status breakdown and definition coverage on one dashboard.</span><span lang="uk">Стежте за зростанням словника, серіями, розподілом за статусами й покриттям визначень на одній панелі.</span></p></div>
+      </div>
+    </div>
+    <div class="fgroup reveal">
+      <h3><span lang="en">Keep</span><span lang="uk">Зберігайте</span><span class="gsub"><span lang="en">Your vocabulary stays organised, backed up and yours</span><span lang="uk">Ваш словник упорядкований, збережений і належить вам</span></span></h3>
+      <div class="grid" data-stagger>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div><h3><span lang="en">Words, tags &amp; definitions</span><span lang="uk">Слова, теги й визначення</span></h3><p><span lang="en">Organize vocabulary with tags, favorites, definitions, and learning statuses to keep everything structured and searchable.</span><span lang="uk">Організовуйте лексику за допомогою тегів, обраного, визначень і статусів навчання, щоб усе залишалося впорядкованим і зручним для пошуку.</span></p></div>
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div><h3><span lang="en">Sync &amp; backups</span><span lang="uk">Синхронізація та копії</span></h3><p><span lang="en">Protect your learning data with automatic backups, recovery tools, and optional cloud synchronization.</span><span lang="uk">Захищайте свої дані за допомогою автоматичних резервних копій, інструментів відновлення та необов’язкової хмарної синхронізації.</span></p></div>
       <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><h3><span lang="en">Import &amp; export</span><span lang="uk">Імпорт та експорт</span></h3><p><span lang="en">Easily move your vocabulary between tools with Excel imports and exports to PDF, CSV, Excel, MP3 and Anki-compatible formats.</span><span lang="uk">Легко переносіть свою лексику між інструментами завдяки імпорту з Excel та експорту у PDF, CSV, Excel, MP3 і формати, сумісні з Anki.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3z"/></svg></div><h3><span lang="en">Add from anywhere</span><span lang="uk">Додавайте звідусіль</span></h3><p><span lang="en">Capture and translate words instantly from anywhere using a configurable global keyboard shortcut.</span><span lang="uk">Додавайте та перекладайте слова миттєво з будь-якої програми за допомогою налаштовуваної глобальної гарячої клавіші.</span></p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -176,151 +107,86 @@ head_extra: |
   <div class="wrap">
     <div class="show reveal">
       <div class="copy">
-        <h2><span lang="en">Learn from real content</span><span lang="uk">Навчайтеся на реальному контенті</span></h2>
-        <p><span lang="en">Read articles, web pages, Wikipedia entries, and other authentic content with side-by-side translations and synchronized audio. Focus on understanding instead of switching between multiple tools.</span><span lang="uk">Читайте статті, вебсторінки, матеріали з Вікіпедії та інший автентичний контент із паралельним перекладом і синхронним аудіо. Зосереджуйтеся на розумінні змісту, а не на постійному перемиканні між різними інструментами.</span></p>
+        <h2><span lang="en">Practise with flashcards</span><span lang="uk">Практикуйтеся з флешкартками</span></h2>
+        <p><span lang="en">Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.</span><span lang="uk">Кожне збережене слово стає флешкарткою. Створіть колоду за будь-яким фільтром — статусом, мовою чи тегом — і повторюйте її за системою інтервальних повторень, яка повертає кожне слово саме перед тим, як ви його забули б.</span></p>
       </div>
-      <img src="/assets/texts.png" alt="The Lingueez reader showing a text with a side-by-side translation.">
+      {%- comment -%}
+        Two screenshots of one feature, cross-fading. Both are in the page from
+        the start and only their opacity changes, so there is no href swap to
+        flash empty the way the hero's single <image> element used to.
+      {%- endcomment -%}
+      <div class="shot-switch" data-shot-switch>
+        <button type="button" class="ss-stack" data-ss-zoom>
+          <div class="ss-slide is-on">
+            {% include shot.html name="flashcards" width="1600" height="1121"
+               alt="The Lingueez flashcards page: a deck built from the vocabulary list, ready to review." %}
+          </div>
+          <div class="ss-slide">
+            {% include shot.html name="review" width="1600" height="1122"
+               alt="A Lingueez review session: a card face up with the spaced-repetition grading buttons." %}
+          </div>
+        </button>
+        <p class="ss-nav">
+          <span class="ss-labels">
+            <span class="ss-label is-on"><span lang="en">Build a deck</span><span lang="uk">Створіть колоду</span></span>
+            <span class="ss-label"><span lang="en">Practise a deck</span><span lang="uk">Практика колоди</span></span>
+          </span>
+          <span class="screen-dots" role="group">
+            <button type="button" class="screen-dot is-on" aria-pressed="true">
+              <span class="sr-only"><span lang="en">Build a deck</span><span lang="uk">Створіть колоду</span></span></button>
+            <button type="button" class="screen-dot" aria-pressed="false">
+              <span class="sr-only"><span lang="en">Practise a deck</span><span lang="uk">Практика колоди</span></span></button>
+          </span>
+        </p>
+      </div>
     </div>
     <div class="show flip reveal">
+      <div class="copy">
+        <h2><span lang="en">Read real texts — or ones written for you</span><span lang="uk">Читайте справжні тексти — або написані саме для вас</span></h2>
+        <p><span lang="en">Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.</span><span lang="uk">Імпортуйте статті, вебсторінки, матеріали з Вікіпедії та RSS-стрічки й читайте їх у застосунку — із синхронним перекладом та озвученням, зберігаючи слова прямо з текстів. А ще ШІ може написати короткий текст зі слів, які ви вивчаєте саме зараз, щоб ви зустріли їх у контексті — у реченнях, яких ще не читали.</span></p>
+      </div>
+      {% include shot.html name="texts" zoom="1" width="1600" height="1122"
+         alt="The Lingueez reader showing a German text open beside the reading library." %}
+    </div>
+    <div class="show reveal">
       <div class="copy">
         <h2><span lang="en">See your progress over time</span><span lang="uk">Бачте свій прогрес у часі</span></h2>
         <p><span lang="en">Monitor vocabulary growth, learning streaks, definition coverage, and mastery levels through a clear and informative dashboard.</span><span lang="uk">Відстежуйте зростання словникового запасу, навчальні серії, покриття визначень і рівень засвоєння через зрозумілу та інформативну панель статистики.</span></p>
       </div>
-      <img src="/assets/statistics.png" alt="The Lingueez statistics dashboard.">
+      {% include shot.html name="stats" zoom="1" width="1600" height="1122"
+         alt="The Lingueez statistics dashboard: totals, a status breakdown and words added over time." %}
     </div>
   </div>
 </section>
 
-<!-- WEB APP -->
-<section id="web">
-  <div class="wrap">
-    <div class="show reveal">
-      <div class="copy">
-        <p class="eyebrow"><span lang="en">No install required</span><span lang="uk">Без встановлення</span></p>
-        <h2><span lang="en">Use Lingueez right in your browser</span><span lang="uk">Користуйтеся Lingueez прямо у браузері</span></h2>
-        <p><span lang="en">Open the full Lingueez experience on the web — add and study words, read texts with synchronized translations, and track your progress. You're signed in to the same account as the desktop and e-reader apps, so everything stays in sync. Nothing to download; works on any computer or smartphone.</span><span lang="uk">Відкрийте повноцінний Lingueez у вебі — додавайте та вивчайте слова, читайте тексти із синхронним перекладом і відстежуйте прогрес. Ви входите в той самий акаунт, що й застосунки для комп'ютера та е-читача, тож усе залишається синхронізованим. Нічого не потрібно завантажувати; працює на будь-якому комп'ютері чи смартфоні.</span></p>
-        <div class="cta-row" style="margin-top:1.4rem;">
-          <a class="btn btn-primary" href="https://web.lingueez.app/"><span lang="en">Open the web app</span><span lang="uk">Відкрити вебзастосунок</span></a>
-        </div>
-      </div>
-
-      <div class="enter">
-        <div class="panel">
-          <!-- top: a living dictionary entry climbing New → Mastered -->
-          <div class="wordcard">
-            <div class="wc-top">
-              <span class="wc-from wc-fade" id="wc-from">French → English</span>
-              <span class="pill new wc-fade" id="wc-status"><span class="dot"></span><span lang="en">New</span><span lang="uk">Нове</span></span>
-            </div>
-            <div class="wc-word wc-fade" id="wc-word">dépaysement</div>
-            <div class="wc-meta wc-fade" id="wc-meta">
-              <span class="wc-ipa" id="wc-ipa">/de.pɛ.iz.mɑ̃/</span>
-              <span class="wc-pos" id="wc-pos"><span lang="en">noun</span><span lang="uk">іменник</span></span>
-            </div>
-            <div class="wc-gloss wc-fade" id="wc-gloss"><span lang="en">the feeling of being far from home</span><span lang="uk">відчуття перебування далеко від дому</span></div>
-            <div class="track" id="track">
-              <div class="step s-new fill on"><span class="rail"></span><span class="dot"></span><span class="lbl"><span lang="en">New</span><span lang="uk">Нове</span></span></div>
-              <div class="step s-rev"><span class="rail"></span><span class="dot"></span><span class="lbl"><span lang="en">Reviewing</span><span lang="uk">Перегляд</span></span></div>
-              <div class="step s-lrn"><span class="rail"></span><span class="dot"></span><span class="lbl"><span lang="en">Learning</span><span lang="uk">Вивчення</span></span></div>
-              <div class="step s-mas"><span class="rail"></span><span class="dot"></span><span class="lbl"><span lang="en">Mastered</span><span lang="uk">Засвоєно</span></span></div>
-            </div>
-          </div>
-
-          <div class="seam" role="presentation"></div>
-
-          <!-- bottom: sign in here, land in the web app already signed in -->
-          <div class="signin">
-            <h2 class="si-h"><span lang="en">Continue learning</span><span lang="uk">Продовжити навчання</span></h2>
-            <form id="signin-form" novalidate>
-              <div class="field">
-                <div class="row"><label for="si-email"><span lang="en">Email</span><span lang="uk">Ел. пошта</span></label></div>
-                <input id="si-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-              </div>
-              <div class="field">
-                <div class="row">
-                  <label for="si-pass"><span lang="en">Password</span><span lang="uk">Пароль</span></label>
-                  <a class="forgot" href="https://web.lingueez.app/"><span lang="en">Forgot?</span><span lang="uk">Забули?</span></a>
-                </div>
-                <input id="si-pass" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
-              </div>
-              <p class="si-err" id="si-err" role="alert" aria-live="polite"></p>
-              <button class="btn btn-primary" type="submit" id="si-submit">
-                <span lang="en">Open my vocabulary →</span><span lang="uk">Відкрити мій словник →</span></button>
-            </form>
-            <div class="si-or"><span lang="en">or</span><span lang="uk">або</span></div>
-            <button class="btn btn-ghost si-google" type="button" id="si-google">
-              <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.92v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.92a9 9 0 0 0 0 8.1l3.06-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .92 4.95L3.98 7.28C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
-              <span lang="en">Continue with Google</span><span lang="uk">Увійти через Google</span></button>
-            <p class="si-alt"><span lang="en">New here?</span><span lang="uk">Уперше тут?</span>
-              <a href="https://web.lingueez.app/"><span lang="en">Create your account →</span><span lang="uk">Створіть акаунт →</span></a></p>
-            <p class="si-note">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span lang="en">One account for all your devices.</span><span lang="uk">Один акаунт для всіх пристроїв.</span></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ANDROID TEASER -->
-<section>
-  <div class="wrap">
-    <div class="show flip reveal">
-      <div class="copy">
-        <p class="eyebrow"><span lang="en">Now on Android</span><span lang="uk">Тепер на Android</span></p>
-        <h2><span lang="en">Take your vocabulary with you</span><span lang="uk">Носіть свій словник із собою</span></h2>
-        <p><span lang="en">The Lingueez app for Android puts your words in your pocket. Browse and add words, review with flashcards, and listen hands-free with lock-screen playback controls. Sign in with the same account as desktop and web, and everything stays in sync.</span><span lang="uk">Застосунок Lingueez для Android завжди під рукою. Переглядайте й додавайте слова, повторюйте за допомогою флешкарток і слухайте, керуючи відтворенням прямо з екрана блокування. Увійдіть у той самий акаунт, що й на комп'ютері та в браузері, — усе залишиться синхронізованим.</span></p>
-        <div class="cta-row" style="margin-top:1.4rem;">
-          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=app.lingueez.mobile">
-            <span lang="en">Get it on Google Play</span><span lang="uk">Завантажити в Google Play</span></a>
-        </div>
-      </div>
-      <img src="/assets/mobile/flashcards.jpg" alt="Reviewing a flashcard in the Lingueez Android app." style="max-width:340px; margin:0 auto;">
-    </div>
-  </div>
-</section>
-
-<!-- E-READER TEASER -->
-<section>
-  <div class="wrap">
-    <div class="show reveal">
-      <div class="copy">
-        <p class="eyebrow"><span lang="en">Also on your e-reader</span><span lang="uk">Також на вашому е-читачі</span></p>
-        <h2><span lang="en">Save words straight from your books</span><span lang="uk">Зберігайте слова прямо з книжок</span></h2>
-        <p><span lang="en">The Lingueez plugin for KOReader lets you look up a word while you read, save it with its translation, and review it with flashcards on the device. Everything syncs to the same account as the desktop and web apps.</span><span lang="uk">Плагін Lingueez для KOReader дозволяє переглянути слово під час читання, зберегти його з перекладом і повторювати за допомогою флешкарток прямо на пристрої. Усе синхронізується з тим самим обліковим записом, що й застосунки для комп’ютера та вебу.</span></p>
-        <div class="cta-row" style="margin-top:1.4rem;">
-          <a class="btn btn-primary" href="/koreader/"><span lang="en">Explore the e-reader plugin</span><span lang="uk">Докладніше про плагін для е-читача</span></a>
-        </div>
-      </div>
-      <img class="eink" src="/assets/koreader/save-word.png" alt="Saving a word to Lingueez from a book on a KOReader e-reader." style="max-width:340px; margin:0 auto;">
-    </div>
-  </div>
-</section>
-
-<!-- PRIVACY -->
-<section>
-  <div class="wrap reveal">
-    <div class="privacy">
-      <h2><span lang="en">Your vocabulary belongs to you</span><span lang="uk">Ваш словниковий запас належить лише вам</span></h2>
-      <p><span lang="en">Lingueez is built with a local-first approach. Use it completely offline without creating an account. Cloud synchronization is optional, and your learning data is never tracked or analyzed. Free and open source under the AGPL license.</span><span lang="uk">Користуйтеся застосунком повністю офлайн і без створення облікового запису. Хмарна синхронізація залишається необов’язковою, а ваші навчальні дані ніколи не відстежуються та не аналізуються. Безкоштовний застосунок із відкритим кодом під ліцензією AGPL.</span></p>
-      <a class="btn btn-ghost" href="/legal/privacy-policy/"><span lang="en">Read the Privacy Policy</span><span lang="uk">Читати Політику конфіденційності</span></a>
-    </div>
-  </div>
-</section>
-
-<!-- SUPPORT -->
+<!-- PRIVACY + SUPPORT — two closing arguments, side by side -->
 <section id="support">
-  <div class="wrap reveal">
-    <div class="section-head">
-      <h2><span lang="en">Support the project</span><span lang="uk">Підтримати проєкт</span></h2>
-      <p><span lang="en">Lingueez is free and open-source, with no paywalls. If you enjoy Lingueez and find it useful, a one-off contribution helps cover the servers behind optional cloud sync and supports continued development.</span><span lang="uk">Lingueez — безкоштовний застосунок із відкритим кодом, без платних обмежень. Якщо вам подобається Lingueez і приносить користь, разовий внесок допомагає покривати витрати на сервери для необов'язкової хмарної синхронізації та підтримує подальшу розробку.</span></p>
+  <div class="wrap">
+    <div class="duo reveal">
+
+      <div class="pcard">
+        <h2><span lang="en">Your vocabulary belongs to you</span><span lang="uk">Ваш словниковий запас належить лише вам</span></h2>
+        <p><span lang="en">Lingueez is built with a local-first approach. Use it completely offline without creating an account. Cloud synchronization is optional, and your learning data is never tracked or analyzed. Free and open source under the AGPL license.</span><span lang="uk">Користуйтеся застосунком повністю офлайн і без створення облікового запису. Хмарна синхронізація залишається необов’язковою, а ваші навчальні дані ніколи не відстежуються та не аналізуються. Безкоштовний застосунок із відкритим кодом під ліцензією AGPL.</span></p>
+        <div class="pcard-foot">
+          <div class="cta-row">
+            <a class="btn btn-ghost" href="/legal/privacy-policy/"><span lang="en">Read the Privacy Policy</span><span lang="uk">Читати Політику конфіденційності</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <h2><svg class="h-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg><span lang="en">Support the project</span><span lang="uk">Підтримати проєкт</span></h2>
+        <p><span lang="en">Lingueez is free and open-source, with no paywalls. If you enjoy Lingueez and find it useful, a one-off contribution helps cover the servers behind optional cloud sync and supports continued development.</span><span lang="uk">Lingueez — безкоштовний застосунок із відкритим кодом, без платних обмежень. Якщо вам подобається Lingueez і приносить користь, разовий внесок допомагає покривати витрати на сервери для необов’язкової хмарної синхронізації та підтримує подальшу розробку.</span></p>
+        <div class="pcard-foot">
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://buy.stripe.com/14A8wRd41a8f1aI6rw43S02"><span lang="en">Support Lingueez’s development</span><span lang="uk">Підтримати розвиток Lingueez</span></a>
+            <a class="btn btn-ghost" href="https://github.com/sponsors/lysak-yurii"><span lang="en">GitHub Sponsors</span><span lang="uk">GitHub Sponsors</span></a>
+          </div>
+          <p class="pcard-note"><span lang="en">The Stripe option is one-time — no subscription. Payments are handled securely by Stripe or GitHub.</span><span lang="uk">Варіант зі Stripe — одноразовий, без підписки. Оплата здійснюється безпечно через Stripe або GitHub.</span></p>
+        </div>
+      </div>
+
     </div>
-    <div class="cta-row" style="justify-content:center;">
-      <a class="btn btn-primary" href="https://buy.stripe.com/14A8wRd41a8f1aI6rw43S02"><span lang="en">Support Lingueez's development</span><span lang="uk">Підтримати розвиток Lingueez</span></a>
-      <a class="btn btn-ghost" href="https://github.com/sponsors/lysak-yurii"><span lang="en">GitHub Sponsors</span><span lang="uk">GitHub Sponsors</span></a>
-    </div>
-    <p style="text-align:center; color:var(--dim); font-size:.85rem; margin-top:18px;"><span lang="en">The Stripe option is one-time — no subscription. Payments are handled securely by Stripe or GitHub.</span><span lang="uk">Варіант зі Stripe — одноразовий, без підписки. Оплата здійснюється безпечно через Stripe або GitHub.</span></p>
   </div>
 </section>
 
@@ -328,10 +194,11 @@ head_extra: |
 <section class="ctaband">
   <div class="wrap reveal">
     <h2><span lang="en">Start building a stronger vocabulary today</span><span lang="uk">Почніть розширювати свій словниковий запас вже сьогодні</span></h2>
-    <div class="cta-row" style="justify-content:center;">
-      <a class="btn btn-primary" href="/download/"><span lang="en">Download</span><span lang="uk">Завантажити</span></a>
-      <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez"><span lang="en">View on GitHub</span><span lang="uk">Переглянути на GitHub</span></a>
-    </div>
+    {% include store-badges.html store="1" play="1"
+       github="https://github.com/lysak-yurii/lingueez/releases/latest" %}
+    <p class="cta-more">
+      <a href="/download/"><span lang="en">All download options — Windows, Linux and the KOReader plugin</span><span lang="uk">Усі варіанти завантаження — Windows, Linux і плагін KOReader</span></a>
+    </p>
   </div>
 </section>
 
@@ -349,119 +216,3 @@ head_extra: |
 })();
 </script>
 
-<!-- supabase-js + inline sign-in: authenticate here, land in the web app already signed in -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script>
-(function(){
-  /* ---- Living word card: cycle a few "untranslatable" words New → Mastered ---- */
-  var WORDS=[
-    {w:"dépaysement", ipa:"/de.pɛ.iz.mɑ̃/", from:["French → English","Французька → Англійська"], pos:["noun","іменник"], gloss:["the feeling of being far from home","відчуття перебування далеко від дому"], stage:"new"},
-    {w:"Feierabend", ipa:"/ˈfaɪ.ɐˌʔaːbn̩t/", from:["German → English","Німецька → Англійська"], pos:["noun","іменник"], gloss:["the calm once the workday is done","спокій, коли робочий день завершено"], stage:"rev"},
-    {w:"木漏れ日", ipa:"/ko.mo.ɾe.bi/", from:["Japanese → English","Японська → Англійська"], pos:["noun","іменник"], gloss:["sunlight filtering through the leaves","сонячне світло крізь листя"], stage:"lrn"},
-    {w:"meraki", ipa:"/meˈra.ki/", from:["Greek → English","Грецька → Англійська"], pos:["noun","іменник"], gloss:["the soul and love poured into your work","душа й любов, вкладені у твою справу"], stage:"mas"}
-  ];
-  var STAGES=["new","rev","lrn","mas"];
-  var STATUS={
-    new:'<span class="dot"></span><span lang="en">New</span><span lang="uk">Нове</span>',
-    rev:'<span class="dot"></span><span lang="en">Reviewing</span><span lang="uk">Переглянуто</span>',
-    lrn:'<span class="dot"></span><span lang="en">Learning</span><span lang="uk">Вивчається</span>',
-    mas:'<span class="dot"></span><span lang="en">Mastered</span><span lang="uk">Засвоєно</span>'
-  };
-  function byId(id){return document.getElementById(id);}
-  var el={from:byId("wc-from"),word:byId("wc-word"),ipa:byId("wc-ipa"),pos:byId("wc-pos"),
-          gloss:byId("wc-gloss"),status:byId("wc-status"),track:byId("track")};
-  function langSpans(arr){return '<span lang="en">'+arr[0]+'</span><span lang="uk">'+arr[1]+'</span>';}
-
-  function paint(d){
-    el.from.innerHTML=langSpans(d.from);
-    el.word.textContent=d.w;
-    el.ipa.textContent=d.ipa;
-    el.pos.innerHTML=langSpans(d.pos);
-    el.gloss.innerHTML=langSpans(d.gloss);
-    el.status.className="pill "+d.stage+" wc-fade";
-    el.status.innerHTML=STATUS[d.stage];
-    var active=STAGES.indexOf(d.stage), steps=el.track.children;
-    for(var i=0;i<steps.length;i++){
-      steps[i].classList.toggle("fill", i<=active);
-      steps[i].classList.toggle("on", i===active);
-    }
-  }
-
-  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(el.word && !reduce){
-    var idx=0, fades=document.querySelectorAll(".wc-fade");
-    setInterval(function(){
-      fades.forEach(function(f){f.classList.add("out");});
-      setTimeout(function(){
-        idx=(idx+1)%WORDS.length;
-        paint(WORDS[idx]);
-        fades.forEach(function(f){f.classList.remove("out");});
-      },300);
-    },3400);
-  }
-
-  /* ---- Inline sign-in → hand the session to the web app (lands signed in) ---- */
-  var SUPABASE_URL="https://dtyrmkynrideeknsdlrn.supabase.co";
-  var SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0eXJta3lucmlkZWVrbnNkbHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njc1MTQsImV4cCI6MjA5NzQ0MzUxNH0.dds5SyMBN9u-0TUumB2nSCx68FJfpm3n63fLq1n9o10";
-  var WEB_APP="https://web.lingueez.app/";
-
-  function t(en,uk){return document.documentElement.getAttribute("data-lang")==="uk"?uk:en;}
-  var form=byId("signin-form"), errBox=byId("si-err"),
-      submit=byId("si-submit"), googleBtn=byId("si-google");
-  if(!form) return;
-
-  var client=null;
-  function sb(){
-    if(client) return client;
-    if(!window.supabase||!window.supabase.createClient){
-      throw new Error(t("Couldn't reach the sign-in service. Please try again.","Не вдалося звернутися до служби входу. Спробуйте ще раз."));
-    }
-    client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON,{auth:{persistSession:false,detectSessionInUrl:false}});
-    return client;
-  }
-  function showErr(msg){errBox.textContent=msg||"";}
-  function busy(btn,on){btn.setAttribute("aria-busy",on?"true":"false");}
-
-  function handOff(session){
-    var p=new URLSearchParams({
-      access_token:session.access_token,
-      refresh_token:session.refresh_token,
-      expires_in:String(session.expires_in),
-      expires_at:String(session.expires_at),
-      token_type:session.token_type||"bearer"
-    });
-    window.location.assign(WEB_APP+"#"+p.toString());
-  }
-  function mapError(error){
-    var m=(error&&error.message||"").toLowerCase();
-    if(m.indexOf("confirm")>-1) return t("Confirm your email first — check your inbox for the link.","Спершу підтвердьте електронну пошту — перевірте лист із посиланням.");
-    if(m.indexOf("invalid")>-1||m.indexOf("credentials")>-1) return t("We couldn't sign you in. Check your email and password.","Не вдалося увійти. Перевірте електронну пошту та пароль.");
-    return error&&error.message||t("Something went wrong. Please try again.","Щось пішло не так. Спробуйте ще раз.");
-  }
-
-  form.addEventListener("submit",function(e){
-    e.preventDefault();
-    showErr("");
-    var email=byId("si-email").value.trim(), pass=byId("si-pass").value;
-    if(!email||!pass){showErr(t("Enter your email and password to continue.","Введіть пошту та пароль, щоб продовжити."));return;}
-    busy(submit,true);
-    Promise.resolve().then(function(){return sb().auth.signInWithPassword({email:email,password:pass});})
-      .then(function(res){
-        if(res.error){busy(submit,false);showErr(mapError(res.error));return;}
-        if(res.data&&res.data.session){handOff(res.data.session);}
-        else{busy(submit,false);showErr(mapError({message:""}));}
-      })
-      .catch(function(err){busy(submit,false);showErr(err.message||mapError(err));});
-  });
-
-  googleBtn.addEventListener("click",function(){
-    showErr(""); busy(googleBtn,true);
-    Promise.resolve().then(function(){
-      return sb().auth.signInWithOAuth({provider:"google",options:{redirectTo:WEB_APP}});
-    }).then(function(res){
-      if(res.error){busy(googleBtn,false);showErr(mapError(res.error));}
-      /* on success the browser is already navigating to Google */
-    }).catch(function(err){busy(googleBtn,false);showErr(err.message||mapError(err));});
-  });
-})();
-</script>

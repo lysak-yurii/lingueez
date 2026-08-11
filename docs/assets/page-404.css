@@ -1,0 +1,20 @@
+/* ==========================================================================
+   404. One column, centred, nothing else on the page.
+   ========================================================================== */
+@layer page {
+  .nf{ padding:var(--s-9) 0 var(--s-10); text-align:center; }
+  .nf .eyebrow{
+    font-size:var(--t-caption); color:var(--accent-text); letter-spacing:.16em;
+  }
+  .nf h1{ font-size:var(--t-display); margin:var(--s-2) 0 var(--s-3); }
+  .nf .lede{ max-width:46ch; margin:0 auto var(--s-6); }
+  .nf .cta-row{ justify-content:center; }
+
+  .nf-links{
+    list-style:none; padding:0; margin:var(--s-8) 0 0;
+    display:flex; flex-wrap:wrap; gap:var(--s-3) var(--s-5); justify-content:center;
+    font-size:.94rem;
+  }
+  .nf-links a{ color:var(--text-dim); }
+  .nf-links a:hover{ color:var(--text); text-decoration:none; }
+}

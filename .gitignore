@@ -56,3 +56,5 @@ docs/store/
 # Jekyll (GitHub Pages site)
 docs/_site/
 docs/.jekyll-cache/
+# tools/site/preview.py output — the local stand-in for Jekyll
+docs/_preview/

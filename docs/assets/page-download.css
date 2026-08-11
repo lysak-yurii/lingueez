@@ -1,0 +1,88 @@
+/* ==========================================================================
+   Download page: one card per platform.
+   ========================================================================== */
+@layer page {
+
+  .dl-top{ padding-top:var(--s-7); }
+  .dl-top .section-head{ max-width:46ch; }
+  .dl-top h1{ font-size:var(--t-display); margin:var(--s-1) 0 var(--s-2); }
+
+  .dl-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  @media (max-width:760px){ .dl-grid{ grid-template-columns:1fr; } }
+
+  .dl-grid .card{ display:flex; flex-direction:column; padding:var(--s-5); }
+  /* These cards are containers, not links — they should not lift on hover. */
+  .dl-grid .card:hover{ transform:none; border-color:var(--border); box-shadow:var(--e-1); }
+  .dl-grid .card.mine{
+    border-color:color-mix(in srgb, var(--accent) 40%, var(--border));
+    background:color-mix(in srgb, var(--accent) 5%, var(--surface));
+  }
+  .dl-head{ display:flex; align-items:center; gap:var(--s-3); }
+  .dl-head .ic{ margin-bottom:0; flex:none; }
+  .dl-head h3{ margin:0; font-size:1.15rem; }
+  .plat-badge{
+    display:inline-flex; align-items:center; gap:.34em; font-size:.72rem; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--accent-text);
+    margin-left:auto; flex:none;
+  }
+  .plat-badge[hidden]{ display:none; }
+  .dl-req{ color:var(--text-dim); font-size:.85rem; margin:var(--s-2) 0 0; }
+
+  .dl-actions{
+    padding-top:var(--s-4); display:flex; flex-direction:column;
+    align-items:flex-start; gap:var(--s-3);
+  }
+  .dl-note{ color:var(--text-dim); font-size:.88rem; margin:0; }
+  .dl-note code{
+    background:var(--bg-alt); padding:.13em .42em; border-radius:6px; font-size:.88em;
+    font-family:var(--font-mono); color:var(--text);
+  }
+
+  /* Each install format sits in its own panel, so it reads as one discrete
+     choice and its terminal one-liner clearly belongs to it. The recommended
+     one gets a quiet tint. */
+  .method{
+    width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:var(--s-3);
+    background:var(--surface-alt); border:1px solid var(--border);
+    border-radius:var(--r-lg); padding:15px 16px;
+  }
+  .method.rec{
+    border-color:color-mix(in srgb, var(--success) 34%, var(--border));
+    background:color-mix(in srgb, var(--success) 6%, var(--surface-alt));
+  }
+  .method-row{ display:flex; align-items:baseline; gap:11px; flex-wrap:wrap; width:100%; }
+  .method-btn{ font-size:.92rem; padding:.58em 1.05em; }
+  .rec-tag{
+    display:inline-flex; align-items:center; gap:.34em; font-size:.72rem; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--success-text);
+  }
+  .rec-tag svg{ width:12px; height:12px; }
+
+  .dl-meta{ color:var(--text-dim); font-size:.8rem; font-variant-numeric:tabular-nums; }
+  .dl-meta:empty{ display:none; }
+
+  .cmd{ display:flex; align-items:stretch; gap:6px; width:100%; }
+  .cmd code{
+    flex:1; min-width:0; background:var(--bg-alt); border:1px solid var(--border);
+    border-radius:var(--r-sm); padding:.5em .65em; color:var(--text); font-size:.8rem;
+    font-family:var(--font-mono); overflow-x:auto; white-space:nowrap;
+  }
+  .cmd button{
+    flex:none; width:34px; background:transparent; border:1px solid var(--border);
+    border-radius:var(--r-sm); color:var(--text-dim); cursor:pointer;
+    display:grid; place-items:center;
+    transition:color var(--dur-fast) var(--ease-out),
+               border-color var(--dur-fast) var(--ease-out);
+  }
+  .cmd button:hover{ color:var(--text); border-color:var(--border-hi); }
+  .cmd button svg{ width:15px; height:15px; }
+  .cmd button .tick{ display:none; }
+  .cmd button.done{
+    color:var(--success);
+    border-color:color-mix(in srgb, var(--success) 45%, transparent);
+  }
+  .cmd button.done .tick{ display:block; }
+  .cmd button.done .clip{ display:none; }
+
+  .dl-foot{ text-align:center; color:var(--text-dim); font-size:.92rem; margin:var(--s-6) 0 0; }
+}

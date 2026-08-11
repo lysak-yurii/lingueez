@@ -1,16 +1,29 @@
-{%- comment -%} Marketing nav. Param: active ("features"|"koreader"|"download") for aria-current. {%- endcomment -%}
+{%- comment -%} Marketing nav. Param: active ("features"|"koreader"|"mobile"|"download") for aria-current. {%- endcomment -%}
 <nav class="nav">
   <div class="wrap">
-    <a class="brand" href="/"><img src="/assets/icon.png" alt=""> Lingueez</a>
+    <a class="brand" href="/"><img src="/assets/icon.png" alt="" width="28" height="28"> Lingueez</a>
     <div class="spacer"></div>
     <div class="nav-menu" id="nav-menu">
       <div class="nav-links">
-        <a href="/#features"><span lang="en">Features</span><span lang="uk">Можливості</span></a>
+        {%- comment -%}
+          Same destination, different name for where you are standing. On the
+          home page /#features is a jump down this page, so it is "Features";
+          from anywhere else it is the way to the desktop app's section, and
+          "Desktop" is what puts it beside Android and E-reader.
+        {%- endcomment -%}
+        {% if include.active == "home" %}<a href="/#features"><span lang="en">Features</span><span lang="uk">Можливості</span></a>
+        {% else %}<a href="/#features"><span lang="en">Desktop</span><span lang="uk">Комп’ютер</span></a>
+        {% endif %}
+        <a href="/mobile/"{% if include.active == "mobile" %} aria-current="page"{% endif %}><span lang="en">Android</span><span lang="uk">Android</span></a>
         <a href="/koreader/"{% if include.active == "koreader" %} aria-current="page"{% endif %}><span lang="en">E-reader</span><span lang="uk">Е-читач</span></a>
         <a href="/#support"><span lang="en">Support</span><span lang="uk">Підтримати</span></a>
-        <a href="https://github.com/lysak-yurii/lingueez"><span lang="en">Open source</span><span lang="uk">Відкритий код</span></a>
+        <a href="https://github.com/lysak-yurii/lingueez"><span lang="en">GitHub</span><span lang="uk">GitHub</span></a>
       </div>
-      <a class="btn btn-ghost" href="/#web">
+      {%- comment -%}
+        A real link to the web app so it works without JavaScript; assets/signin.js
+        intercepts the click and opens the sign-in modal instead.
+      {%- endcomment -%}
+      <a class="btn btn-ghost" href="https://web.lingueez.app/" data-signin>
         <span lang="en">Log in</span><span lang="uk">Увійти</span></a>
       <a class="btn btn-primary" href="/download/"{% if include.active == "download" %} aria-current="page"{% endif %}>
         <span lang="en">Download</span><span lang="uk">Завантажити</span></a>
@@ -19,6 +32,7 @@
       <button data-lang-btn="en" aria-pressed="true">EN</button>
       <button data-lang-btn="uk" aria-pressed="false">UK</button>
     </div>
+    {% include theme-toggle.html %}
     <button class="nav-toggle" type="button" aria-label="Menu" aria-controls="nav-menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>

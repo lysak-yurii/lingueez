@@ -2,20 +2,22 @@
   Shared <head>. Parameters (all optional):
     title       — <title> and og/twitter title
     description — meta description + og/twitter description
-    image       — absolute og/twitter image URL (default: dashboard.png)
+    image       — absolute og/twitter image URL (default: hero.png, the
+                social card built by tools/site/build_hero.py)
     url         — absolute canonical/og URL
     robots      — robots directive (default: index, follow)
 {%- endcomment -%}
 {%- assign t = include.title | default: site.title -%}
 {%- assign d = include.description -%}
-{%- assign img = include.image | default: "https://lingueez.app/assets/dashboard.png" -%}
+{%- assign img = include.image | default: "https://lingueez.app/assets/hero.png" -%}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="{{ include.robots | default: 'index, follow' }}">
 <title>{{ t }}</title>
 {% if d %}<meta name="description" content="{{ d }}">{% endif %}
 <link rel="icon" href="/assets/icon.png">
-<meta name="theme-color" content="#0d1117">
+{%- comment -%} theme-preinit.html sets this to the resolved theme before paint. {%- endcomment -%}
+<meta id="theme-color" name="theme-color" content="#101418">
 {% if include.url %}<link rel="canonical" href="{{ include.url }}">{% endif %}
 <meta property="og:title" content="{{ t }}">
 {% if d %}<meta property="og:description" content="{{ d }}">{% endif %}

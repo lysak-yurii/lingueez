@@ -3,12 +3,17 @@
 <head>
 {% include lang-preinit.html %}
 {% include head.html title=page.title description=page.description image=page.image url=page.canonical %}
-{{ page.head_extra }}
+{% include theme-preinit.html %}
+{% for s in page.styles %}<link rel="stylesheet" href="/assets/{{ s }}">
+{% endfor %}{{ page.head_extra }}
 </head>
 <body>
 {% include nav.html active=page.nav_active %}
 {{ content }}
 {% include footer.html %}
-<script src="/assets/site.js"></script>
-</body>
+{% include signin-dialog.html %}
+<script src="/assets/site.js" defer></script>
+<script src="/assets/signin.js" defer></script>
+{% for s in page.scripts %}<script src="/assets/{{ s }}" defer></script>
+{% endfor %}</body>
 </html>

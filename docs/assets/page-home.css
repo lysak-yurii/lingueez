@@ -1,0 +1,420 @@
+/* ==========================================================================
+   Home page. @layer page sits above components in site.css's layer order, so
+   these rules win without needing heavier selectors.
+   ========================================================================== */
+@layer page {
+
+  /* Ukrainian runs longer than English — give the hero headline room to fit. */
+  html[data-lang="uk"] .hero h1{ font-size:clamp(1.95rem,3.8vw,2.8rem); }
+
+  /* ── hero stage ────────────────────────────────────────────────────────
+     Three devices, each its own <g> in _includes/hero-stage.svg. Hovering
+     one lifts it and lets the others recede; clicking opens it to fill the
+     stage. The device you are actually reading this on is highlighted on
+     load — hero.js picks it, and the e-reader simply never wins, which is
+     correct: nobody browses the site from one. */
+  .stage-wrap{ position:relative; }
+  /* A solo stage is framed on one device, so at full column width its device
+     would come out far larger than the same device maximised on the home page.
+     build_hero.py derives --solo-w: the column fraction that makes the two
+     exactly the same size, at every viewport. Set on the wrap, never on the
+     SVG — the hotspot buttons are positioned in % of the wrap, so if the two
+     ever differ in width the buttons stop covering the artwork. */
+  .stage-wrap.is-solo{ width:var(--solo-w, 50%); margin-inline:auto; }
+
+  /* The artwork is decoration; these buttons are the real controls. They sit
+     over each device at coordinates build_hero.py derives from the same
+     geometry that draws it, so the two cannot drift apart. */
+  .dev-hit{
+    position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
+    margin:0; padding:0; border:0; background:none; cursor:pointer;
+    border-radius:var(--r-lg);
+    transition:inset var(--dur-slow) var(--ease-out);
+  }
+  .dev-hit:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; }
+  /* The rectangles overlap where the devices do. Stack them the way the
+     artwork is stacked — side devices in front, laptop behind — rather than
+     the way they are written, which is left-to-right for the tab order. */
+  .dev-hit[data-hit="laptop"]{ z-index:1; }
+  .dev-hit[data-hit="reader"],
+  .dev-hit[data-hit="phone"]{ z-index:2; }
+  .dev-hit.is-open{ z-index:3; }
+  .dev-hit.is-open{
+    left:0; top:0; width:100%; height:100%;
+  }
+  /* Pointer events belong to the buttons; the SVG must not intercept them. */
+  .hero-stage{ pointer-events:none; }
+
+  .hero-stage{
+    width:100%; height:auto; display:block;
+    /* Not clipped: a hovered device lifts above the viewBox and a maximised
+       one fills it edge to edge, and clipping cut the top off both. Safe
+       because build_hero.py clamps the halos inside the viewBox, so nothing
+       spills sideways to widen the page. */
+    overflow:visible;
+    /* the halo gradient paints with currentColor */
+    color:var(--accent);
+    /* pointer parallax; hero.js writes --px/--py in the range -1…1 */
+    transform:perspective(1600px)
+              rotateX(calc(var(--py, 0) * -2.6deg))
+              rotateY(calc(var(--px, 0) * 3deg));
+    transition:transform var(--dur-slow) var(--ease-out);
+  }
+
+  /* Device shadows and the contact shadows on the floor are tuned for a
+     near-black page; on white they have to come right down. Numbers, not
+     colours, so light-dark() cannot express them — hence the explicit trio. */
+  .hero-stage{ --dev-shadow:.24; --dev-shadow-side:.28; --ground:.42; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .hero-stage{
+      --dev-shadow:.55; --dev-shadow-side:.65; --ground:1;
+    }
+  }
+  :root[data-theme="dark"] .hero-stage{
+    --dev-shadow:.55; --dev-shadow-side:.65; --ground:1;
+  }
+  .hero-stage .ground{ opacity:var(--ground); transition:opacity var(--dur) var(--ease-out); }
+
+  .hero-stage .dev{
+    cursor:pointer; transform-box:fill-box; transform-origin:50% 50%;
+    transition:transform var(--dur-slow) var(--ease-spring),
+               opacity var(--dur) var(--ease-out),
+               filter var(--dur) var(--ease-out);
+  }
+  .hero-stage .dev .halo{
+    opacity:0; pointer-events:none;
+    transition:opacity var(--dur-page) var(--ease-out);
+  }
+  .hero-stage .dev.is-yours .halo{ opacity:1; }
+
+  /* Double-buffered screens: the one behind is transparent, and swapping which
+     is which cross-fades the picture. See _screen() in build_hero.py for why
+     the href is never written to a visible element. */
+  .hero-stage .screen{ transition:opacity var(--dur) var(--ease-out); }
+  .hero-stage .screen.is-back{ opacity:0; }
+
+  /* While one device is hot the others step back rather than disappear —
+     faded as one group, never individually. At 50% each the e-reader stops
+     occluding the laptop behind it and the keyboard shows through. hero.js
+     lifts the hot device out of .devices so it keeps full strength. */
+  .hero-stage .devices{
+    transition:opacity var(--dur) var(--ease-out),
+               filter var(--dur) var(--ease-out);
+  }
+  .hero-stage.has-hot .devices{ opacity:.5; filter:saturate(.55); }
+  .hero-stage .dev.is-hot{ transform:translateY(-12px) scale(1.05); }
+
+  /* Maximised: the chosen device fills the stage, the others clear out. */
+  .hero-stage.is-max .devices{ opacity:0; }
+  .hero-stage.is-max .ground{ opacity:0; }
+
+  /* The halo scales with the group, so at full size it would wash the stage. */
+  .hero-stage .dev.is-open .halo{ opacity:0; }
+
+  /* ── stage note ────────────────────────────────────────────────────────
+     One slot under the devices holding two mutually exclusive things: the
+     rotating capability ribbon, and — while a device is open — that device's
+     name plus a link to its full screenshot. Both are absolutely stacked so
+     the swap costs no layout shift. */
+  /* One grid cell holding both states, stacked. They are in normal flow rather
+     than absolutely positioned so the cell can grow: the ribbon is always
+     exactly --note-h, which sets the resting height and keeps the swap free of
+     layout shift, but a caption that wraps to a second row (Ukrainian, narrow
+     column) is then given the room instead of spilling out of a fixed box. */
+  .stage-note{
+    display:grid; place-items:center;
+    margin:var(--s-4) 0 0; text-align:center;
+  }
+  .stage-note > *{
+    grid-area:1/1; margin:0;
+    opacity:0; transition:opacity var(--dur-slow) var(--ease-out);
+    pointer-events:none;
+  }
+  .stage-note > .in{ opacity:1; pointer-events:auto; }
+  /* A solo page has no ribbon, so nothing else sets the resting height. */
+  .stage-note.is-solo{ min-height:var(--note-h, 2.6em); }
+
+  /* ── ribbon ────────────────────────────────────────────────────────────
+     No chrome at all: the phrases turn over inside a mask, the way a
+     departure board does, and the motion is the whole device. A bordered
+     pill here would just read as another status chip. */
+  .ribbon{
+    display:grid; place-items:center;
+    overflow:hidden;                      /* the mask the phrases roll behind */
+  }
+  .rib-item{
+    grid-area:1/1;
+    display:inline-flex; align-items:center; gap:.62em; white-space:nowrap;
+    height:var(--note-h, 2.6em); line-height:var(--note-h, 2.6em);
+    font-size:1.02rem; font-weight:500; color:var(--text);
+    /* Off-screen below by a full slot height, so nothing peeks past the mask. */
+    opacity:0; transform:translateY(100%);
+    transition:opacity var(--dur) var(--ease-out),
+               transform var(--dur-slow) var(--ease-spring);
+  }
+  .rib-item.is-on{ opacity:1; transform:none; }
+  .rib-item.is-out{ opacity:0; transform:translateY(-100%); }
+  /* A single accent mark, sized off the text so it tracks the type. */
+  .rib-item::before{
+    content:""; flex:none; width:.42em; height:.42em; border-radius:50%;
+    background:var(--accent);
+    transform:scale(.4); opacity:0;
+    transition:transform var(--dur-slow) var(--ease-spring) 60ms,
+               opacity var(--dur-slow) var(--ease-out) 60ms;
+  }
+  .rib-item.is-on::before{ transform:none; opacity:1; }
+
+  .dev-caption{
+    display:flex; align-items:center; align-content:center; justify-content:center;
+    flex-wrap:wrap; gap:.35em .7em;
+    font-size:.92rem; color:var(--text-dim);
+  }
+  /* The short parts stay whole: they always fit, and letting them shrink is
+     what turned Ukrainian's "Е-читач" into two lines, broken at its hyphen.
+     The label is deliberately left out — it is the one part that can be longer
+     than the column, and it has to wrap normally rather than overflow. */
+  .dev-caption b,
+  .dev-caption .cap-more{ flex:none; white-space:nowrap; }
+  /* Full-size control, top-right of the stage. Only present while a device is
+     open, and quiet until pointed at. */
+  .stage-expand{
+    position:absolute; top:0; right:0; z-index:4;
+    display:grid; place-items:center; width:38px; height:38px; padding:0;
+    border:1px solid var(--border); border-radius:var(--r-md);
+    background:var(--surface); color:var(--text-dim); cursor:pointer;
+    opacity:0; transform:scale(.9); pointer-events:none;
+    box-shadow:var(--e-1);
+    transition:opacity var(--dur) var(--ease-out),
+               transform var(--dur) var(--ease-spring),
+               color var(--dur-fast) var(--ease-out),
+               border-color var(--dur-fast) var(--ease-out);
+  }
+  .stage-wrap.is-max .stage-expand{ opacity:1; transform:none; pointer-events:auto; }
+  .stage-expand:hover{ color:var(--text); border-color:var(--border-hi); }
+  .stage-expand:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+  .dev-caption .cap-more{
+    color:var(--accent-text); text-decoration:underline; text-underline-offset:3px;
+    white-space:nowrap;
+  }
+  .dev-caption .cap-more::after{ content:" →"; text-decoration:none; }
+  .dev-caption b{ color:var(--text); font-weight:600; }
+  /* renderCaption rewrites this span whenever the screen changes, so the
+     animation replays on every step — the roll the ribbon used to do, kept now
+     that the caption holds the slot at rest. inline-block because a plain
+     inline box cannot be transformed. */
+  .dev-caption .cap-screen{ display:inline-block; animation:capIn var(--dur-slow) var(--ease-out); }
+  @keyframes capIn{
+    from{ opacity:0; transform:translateY(.5em); }
+    to{ opacity:1; transform:none; }
+  }
+  .dev-caption .cap-screen::before{ content:"—"; margin:0 .55em; opacity:.5; }
+  /* Standing alone the blurb is the whole sentence, not a tail after the
+     device name, so it loses the dash and gains a capital. */
+  .dev-caption .cap-screen.is-lead::before{ content:none; }
+  /* ::first-letter needs a block container. The caption <p> is a flex box,
+     which is excluded — but its children are blockified flex items, so the
+     rule goes on the span. */
+  .dev-caption .cap-screen.is-lead::first-letter{ text-transform:uppercase; }
+  .dev-caption .cap-full{
+    background:none; border:0; padding:0; font:inherit; cursor:pointer;
+    color:var(--accent-text); text-decoration:underline; text-underline-offset:3px;
+  }
+
+  /* Screen switcher: one mark per screen the open device can show. Dashes
+     rather than dots — they read as a sequence you move along, and they echo
+     the grade trail in the app's own review screen. */
+  .screen-dots{ display:inline-flex; align-items:center; gap:5px; margin:0 .2em; }
+  .screen-dot{
+    width:16px; height:4px; padding:0; border:0; border-radius:2px;
+    background:var(--border-hi); cursor:pointer;
+    transition:background var(--dur) var(--ease-out),
+               width var(--dur) var(--ease-out);
+  }
+  .screen-dot:hover{ background:var(--text-dim); }
+  .screen-dot.is-on{ width:26px; background:var(--accent); }
+  .screen-dot:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+  @media (max-width:880px){ .stage-note{ --note-h:3.4em; } }
+
+  /* ── two-shot showcase ─────────────────────────────────────────────────
+     One feature, two screenshots, cross-fading. Both are in the page from the
+     start and only opacity moves, so nothing ever reloads mid-swap.
+
+     The slides share one grid cell rather than being absolutely positioned, so
+     the cell takes the height of the tallest and centres the rest inside it.
+     Both shots are captured at the site's 1.43 aspect and so agree exactly
+     today; stacking this way means a future shot at some other shape would
+     letterbox rather than make the row jump as they alternate. */
+  .shot-switch{ display:flex; flex-direction:column; gap:var(--s-3); }
+  /* A <button>, so the pair opens in the lightbox — hence the UA reset. */
+  .ss-stack{
+    display:grid; width:100%; padding:0; border:0; background:none;
+    color:inherit; font:inherit; cursor:pointer;
+    transition:transform var(--dur) var(--ease-out);
+  }
+  .ss-stack:hover{ transform:translateY(-3px); }
+  .ss-stack:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:var(--r-lg); }
+  .ss-slide{
+    grid-area:1/1; align-self:center;
+    opacity:0; pointer-events:none;
+    transition:opacity var(--dur-slow) var(--ease-out);
+  }
+  .ss-slide.is-on{ opacity:1; pointer-events:auto; }
+  .ss-slide img{ width:100%; }
+
+  .ss-nav{
+    display:flex; align-items:center; justify-content:center; gap:.7em;
+    margin:0; font-size:.88rem; color:var(--text-dim);
+  }
+  /* Both labels occupy the same cell so the row cannot change width as they
+     swap — the dots beside them would shuffle sideways otherwise. */
+  .ss-labels{ display:grid; }
+  .ss-label{
+    grid-area:1/1; white-space:nowrap;
+    opacity:0; transition:opacity var(--dur) var(--ease-out);
+  }
+  .ss-label.is-on{ opacity:1; }
+
+  /* ── progression band ──────────────────────────────────────────────────
+     The ladder every saved word climbs. The rail fills as the band scrolls
+     through the viewport, so the motion states the mechanic rather than
+     decorating it. */
+  .prog{
+    background:linear-gradient(180deg, var(--surface-alt), var(--bg));
+    border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  .ladder{
+    display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap;
+    --fill:0;   /* 0 → 1, driven by scroll; see the animation at the end */
+  }
+  .ladder .pill{ font-size:.92rem; padding:.4em .9em; }
+  .ladder .arrow{
+    position:relative; width:3.2em; height:2px; margin:0 .55em; flex:0 0 auto;
+    background:var(--border); border-radius:2px; overflow:hidden;
+  }
+  /* Each arrow is a quarter of the run, so it fills over its own slice of the
+     0→1 progress: arrow n spans (n-1)/3 … n/3. */
+  .ladder .arrow::after{
+    content:""; position:absolute; inset:0; transform-origin:left center;
+    transform:scaleX(clamp(0, (var(--fill) - var(--from)) * 3, 1));
+    background:linear-gradient(90deg, var(--a), var(--b));
+  }
+  .ladder .arrow:nth-of-type(1){ --from:0;      --a:var(--st-new); --b:var(--st-rev); }
+  .ladder .arrow:nth-of-type(2){ --from:.3333;  --a:var(--st-rev); --b:var(--st-lrn); }
+  .ladder .arrow:nth-of-type(3){ --from:.6667;  --a:var(--st-lrn); --b:var(--st-mas); }
+  .prog .cap{
+    text-align:center; color:var(--text-dim); margin:var(--s-4) auto 0; max-width:48ch;
+  }
+
+  /* ── closing pair: privacy + support ───────────────────────────────────
+     Two equal grid tracks, so the cards are the same width and — because a
+     grid item stretches by default — the same height, whatever the language
+     does to the copy. Ukrainian runs ~40% longer than English here and it
+     costs nothing: the extra lines grow the row, they do not stagger it.
+
+     What does need help is the footer. Each card is a flex column with the
+     buttons pushed down by margin-top:auto, so they sit on the card floor
+     rather than trailing whatever length the paragraph happened to be. */
+  .duo{
+    display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--s-5);
+    align-items:stretch;
+  }
+  .pcard{
+    display:flex; flex-direction:column;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-2xl);
+    padding:var(--s-6); box-shadow:var(--e-1);
+  }
+  /* Left-aligned, not centred: at half width, centred paragraphs go ragged on
+     both edges and the two cards stop reading as a pair. */
+  .pcard h2{ font-size:var(--t-headline); margin:0 0 var(--s-2); }
+  /* Sized off the heading so it tracks the fluid type rather than fighting it,
+     and baseline-aligned so it reads as part of the line, not a bullet. */
+  .pcard h2 .h-ic{
+    width:.86em; height:.86em; margin-right:.42em;
+    color:var(--accent-text); vertical-align:-.04em;
+  }
+  .pcard p{ color:var(--text-dim); margin:0 0 var(--s-4); }
+  .pcard-foot{ margin-top:auto; }
+  .pcard-foot .cta-row{ margin:0; }
+  .pcard-note{ color:var(--text-dim); font-size:.85rem; margin:var(--s-3) 0 0 !important; }
+
+  /* ── feature groups ────────────────────────────────────────────────────
+     The nine features split into the three things you actually do with the
+     app, in the order you do them. The label is information, not ornament. */
+  .fgroup + .fgroup{ margin-top:var(--s-7); }
+  .fgroup > h3{
+    display:flex; align-items:baseline; gap:var(--s-3); flex-wrap:wrap;
+    font-family:var(--font-body); font-size:var(--t-caption); font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--accent-text);
+    margin:0 0 var(--s-4);
+  }
+  .fgroup > h3 .gsub{
+    letter-spacing:0; text-transform:none; font-weight:400; font-size:.94rem;
+    color:var(--text-dim);
+  }
+  .fgroup > h3::after{
+    content:""; flex:1 0 40px; height:1px; background:var(--border);
+    transform:translateY(-.25em);
+  }
+
+  /* Pointer-tracked hairline: the border brightens nearest the cursor. Purely
+     a border effect — no glow, no blob. */
+  .grid .card::before{
+    content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px;
+    background:radial-gradient(16rem 16rem at var(--mx,50%) var(--my,0%),
+               var(--accent), transparent 60%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    opacity:0; transition:opacity var(--dur) var(--ease-out); pointer-events:none;
+  }
+  .grid .card:hover::before{ opacity:.55; }
+
+  @media (max-width:880px){
+    .duo{ grid-template-columns:1fr; }
+  }
+  @media (max-width:560px){
+    .pcard{ padding:var(--s-5) var(--s-4); }
+    .ladder .arrow{ width:1.8em; margin:0 .35em; }
+  }
+}
+
+/* Scroll-driven ladder fill, outside the layer so the @supports test is plain.
+   Where scroll timelines exist the rail tracks the scroll exactly; elsewhere
+   site.js's .in class runs it once as a plain transition. */
+@media (prefers-reduced-motion: no-preference){
+  @supports (animation-timeline: view()){
+    .prog .ladder{
+      animation:ladder-fill linear both;
+      animation-timeline:view();
+      animation-range:entry 55% cover 55%;
+    }
+    @keyframes ladder-fill{ from{ --fill:0; } to{ --fill:1; } }
+  }
+  @supports not (animation-timeline: view()){
+    .prog .ladder{ transition:--fill 1.6s var(--ease-out); }
+    .prog .ladder.in{ --fill:1; }
+  }
+}
+@property --fill{ syntax:"<number>"; inherits:true; initial-value:0; }
+
+/* Reduced motion: show the finished state, never the animation. The hero stays
+   fully usable — hovering and opening a device still work, they just stop
+   moving, and the parallax is never applied at all (hero.js does not bind it). */
+@media (prefers-reduced-motion: reduce){
+  .prog .ladder{ --fill:1; }
+  .grid .card:hover::before{ opacity:.4; }
+  .hero-stage, .hero-stage .dev, .hero-stage .ground, .hero-stage .screen,
+  .hero-stage .dev .halo, .stage-note > *, .rib-item{ transition:none; }
+  /* Nothing rolls, so the whole list is shown at once rather than one phrase.
+     hero.js does not start the timer under reduced motion. */
+  .ribbon{ height:auto; overflow:visible; }
+  .ribbon{ display:flex; flex-wrap:wrap; gap:.2em 1.5em; justify-content:center; }
+  .rib-item{
+    grid-area:auto; opacity:1; transform:none; white-space:normal;
+    height:auto; line-height:1.6; font-size:.95rem; color:var(--text-dim);
+  }
+  .rib-item::before{ transform:none; opacity:1; }
+  .dev-caption .cap-screen{ animation:none; }
+  .hero-stage{ transform:none; }
+  .hero-stage .dev.is-hot{ transform:none; }
+}

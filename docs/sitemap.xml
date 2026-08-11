@@ -1,0 +1,22 @@
+---
+permalink: /sitemap.xml
+layout: null
+sitemap: false
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every published page. The marketing pages serve both languages from one
+     URL (the EN/UK toggle swaps inline spans), so they appear once; the legal
+     pages are genuinely separate files and are paired with hreflang. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://lingueez.app/</loc><priority>1.0</priority></url>
+  <url><loc>https://lingueez.app/download/</loc><priority>0.9</priority></url>
+  <url><loc>https://lingueez.app/koreader/</loc><priority>0.8</priority></url>
+  <url><loc>https://lingueez.app/mobile/</loc><priority>0.8</priority></url>
+{% for doc in site.pages %}{% if doc.alt %}  <url>
+    <loc>https://lingueez.app{{ doc.permalink }}</loc>
+    <xhtml:link rel="alternate" hreflang="{{ doc.lang }}" href="https://lingueez.app{{ doc.permalink }}"/>
+    <xhtml:link rel="alternate" hreflang="{% if doc.lang == 'uk' %}en{% else %}uk{% endif %}" href="https://lingueez.app{{ doc.alt }}"/>
+    <priority>0.3</priority>
+  </url>
+{% endif %}{% endfor %}</urlset>

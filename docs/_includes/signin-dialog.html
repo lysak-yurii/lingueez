@@ -1,0 +1,53 @@
+{%- comment -%}
+  Sign-in modal. Opened by the nav's Log in button; assets/signin.js does the
+  opening and the Supabase call. A native <dialog> rather than a hand-rolled
+  overlay: showModal() gives the focus trap, the Escape key, the inert
+  background and the ::backdrop for free, and all four are easy to get wrong.
+
+  The Log in control stays a real link to the web app, so it still works with
+  no JavaScript — signin.js intercepts the click and opens this instead.
+{%- endcomment -%}
+<dialog class="modal" id="signin-dialog" aria-labelledby="signin-title">
+  <div class="modal-card">
+    <button class="modal-close" type="button" data-signin-close>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      <span class="sr-only"><span lang="en">Close</span><span lang="uk">Закрити</span></span>
+    </button>
+
+    <h2 class="si-h" id="signin-title">
+      <span lang="en">Use Lingueez right in your browser</span>
+      <span lang="uk">Користуйтеся Lingueez прямо у браузері</span></h2>
+    <p class="si-lede">
+      <span lang="en">Sign in to open your vocabulary on the web — the same account as on your other devices, so everything stays in sync.</span>
+      <span lang="uk">Увійдіть, щоб відкрити свій словник у вебі — той самий акаунт, що й на інших пристроях, тож усе залишається синхронізованим.</span></p>
+
+    <form id="signin-form" novalidate>
+      <div class="field">
+        <div class="row"><label for="si-email"><span lang="en">Email</span><span lang="uk">Ел. пошта</span></label></div>
+        <input id="si-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <div class="row">
+          <label for="si-pass"><span lang="en">Password</span><span lang="uk">Пароль</span></label>
+          <a class="forgot" href="https://web.lingueez.app/"><span lang="en">Forgot?</span><span lang="uk">Забули?</span></a>
+        </div>
+        <input id="si-pass" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+      </div>
+      <p class="si-err" id="si-err" role="alert" aria-live="polite"></p>
+      <button class="btn btn-primary" type="submit" id="si-submit">
+        <span lang="en">Open my vocabulary →</span><span lang="uk">Відкрити мій словник →</span></button>
+    </form>
+
+    <div class="si-or"><span lang="en">or</span><span lang="uk">або</span></div>
+    <button class="btn btn-ghost si-google" type="button" id="si-google">
+      <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.02-3.7H.92v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.98 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.92a9 9 0 0 0 0 8.1l3.06-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .92 4.95L3.98 7.28C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      <span lang="en">Continue with Google</span><span lang="uk">Увійти через Google</span></button>
+
+    <p class="si-alt"><span lang="en">New here?</span><span lang="uk">Уперше тут?</span>
+      <a href="https://web.lingueez.app/"><span lang="en">Create your account →</span><span lang="uk">Створіть акаунт →</span></a></p>
+    <p class="si-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span lang="en">One account for all your devices.</span><span lang="uk">Один акаунт для всіх пристроїв.</span></p>
+  </div>
+</dialog>

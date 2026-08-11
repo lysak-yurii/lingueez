@@ -1,0 +1,27 @@
+{%- comment -%}
+  A product screenshot that follows the theme. Two <img>, one shown at a time
+  by the .only-light / .only-dark utilities in site.css — light-dark() covers
+  every colour on the site but it cannot swap a raster.
+
+  Parameters:
+    name    file stem under /assets/shots (e.g. "texts") — the include
+            appends -light.webp / -dark.webp
+    alt     alt text (English only, as elsewhere on the site: alt takes a
+            string, so it cannot carry the bilingual <span lang> pairs)
+    width   intrinsic width  (required — without it the row shifts on load)
+    height  intrinsic height (required)
+    class   extra classes for both images
+    dir     folder under /assets (default "shots")
+    ext     file extension (default "webp") — the phone shots are JPEG
+    zoom    any value: wrap the pair in a button that opens the full-size PNG
+            in the lightbox. site.js derives that source from the WebP's own
+            src, so there is no second path to keep in step here.
+{%- endcomment -%}
+{% if include.zoom %}<button type="button" class="zoom" data-shot-zoom>{% endif %}
+<img class="only-light {{ include.class }}" src="/assets/{{ include.dir | default: 'shots' }}/{{ include.name }}-light.{{ include.ext | default: 'webp' }}"
+     width="{{ include.width }}" height="{{ include.height }}" loading="lazy" decoding="async"
+     alt="{{ include.alt }}">
+<img class="only-dark {{ include.class }}" src="/assets/{{ include.dir | default: 'shots' }}/{{ include.name }}-dark.{{ include.ext | default: 'webp' }}"
+     width="{{ include.width }}" height="{{ include.height }}" loading="lazy" decoding="async"
+     alt="{{ include.alt }}">
+{% if include.zoom %}</button>{% endif %}

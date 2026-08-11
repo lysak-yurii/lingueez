@@ -1,0 +1,39 @@
+/* ==========================================================================
+   KOReader plugin page.
+   ========================================================================== */
+@layer page {
+
+  /* portrait e-ink screenshots: keep them tidy and framed */
+  .device img{
+    max-width:320px; margin:0 auto; border-radius:var(--r-xl); box-shadow:var(--e-3);
+  }
+  .kh1 .accent{ color:var(--accent-text); }
+  /* hero illustration: keep its native landscape ratio, never stretch */
+  .shot img{ height:auto; }
+
+  /* Numbered steps — these are an install sequence, so the numbers carry
+     order the reader actually needs. */
+  .steps{ list-style:none; counter-reset:step; padding:0; margin:0; max-width:640px; }
+  .steps > li{
+    counter-increment:step; position:relative; padding:0 0 0 52px; margin:0 0 1.1em;
+  }
+  /* The platform paths under step one are choices, not further steps — plain
+     bullets, and outside the counter. */
+  .steps ul{ list-style:disc; margin:.55em 0 0; padding-left:1.15em; }
+  .steps ul li{ margin:0 0 .3em; color:var(--text-dim); }
+  .steps ul li b{ color:var(--text); }
+  .steps > li::before{
+    content:counter(step); position:absolute; left:0; top:-2px;
+    width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+    background:var(--accent-soft); color:var(--accent-text);
+    font-weight:700; font-family:var(--font-display);
+  }
+  .steps li b{ color:var(--text); }
+  .steps code{
+    background:var(--surface-alt); padding:.13em .42em; border-radius:6px;
+    font-size:.88em; font-family:var(--font-mono);
+    /* Paths have no natural break points and run off a phone screen. */
+    overflow-wrap:anywhere;
+  }
+  .note{ color:var(--text-dim); font-size:.92rem; max-width:60ch; }
+}
