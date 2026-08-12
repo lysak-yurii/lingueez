@@ -19,6 +19,82 @@
   }
   window.lzPlatform=platform;
 
+  /* ── swipe ─────────────────────────────────────────────────────────────
+     Every gallery on the site steps with dashes and arrow keys; on a phone
+     neither is the gesture anyone reaches for first. swipe(el, step) adds the
+     one that is: step(+1) for a flick to the left, step(-1) to the right.
+
+     Touch and pen only — a mouse drag across a picture means selection, not
+     "next". The element gives up only the horizontal gesture: `pan-y` leaves
+     the page scrolling under the finger and `pinch-zoom` leaves a screenshot
+     zoomable, which matters most in the lightbox. Declaring it is also what
+     stops the browser from taking the pointer stream away mid-swipe.
+
+     `step` is only called once the gesture is unambiguously horizontal, and
+     the click that a finger-up would otherwise synthesise is swallowed — the
+     same elements are all clickable (open the lightbox, close the device), and
+     a swipe must not trip that. */
+  function swipe(el, step){
+    if(!window.PointerEvent) return;
+    el.style.touchAction='pan-y pinch-zoom';
+    if(!el.style.touchAction) el.style.touchAction='pan-y';   // older parser
+
+    var id=null, x0=0, y0=0, t0=0, lock=0;   // lock: 0 undecided, 1 across, -1 down
+
+    /* The click a finger-up synthesises, eaten in the capture phase before it
+       reaches the button underneath. It is dropped again the moment the next
+       gesture begins rather than after a timeout: a tap that lands soon after
+       a swipe is an ordinary tap and has to work, and a swipe that somehow
+       synthesises no click at all must not leave the trap armed. */
+    var killer=null;
+    function disarm(){
+      if(!killer) return;
+      el.removeEventListener('click', killer, true);
+      killer=null;
+    }
+    function swallowClick(){
+      disarm();
+      killer=function(e){ e.stopPropagation(); e.preventDefault(); disarm(); };
+      el.addEventListener('click', killer, true);
+    }
+
+    el.addEventListener('pointerdown', function(e){
+      disarm();                                    // any new press, mouse included
+      if(e.pointerType==='mouse' || !e.isPrimary) return;
+      id=e.pointerId; x0=e.clientX; y0=e.clientY; t0=Date.now(); lock=0;
+    });
+
+    el.addEventListener('pointermove', function(e){
+      if(e.pointerId!==id || lock) return;
+      var dx=e.clientX-x0, dy=e.clientY-y0;
+      if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;   // still inside the slop
+      // A drag that is mostly downward is the visitor scrolling past, not
+      // stepping; deciding once and sticking to it keeps a diagonal from
+      // flickering between the two.
+      lock=Math.abs(dx) > Math.abs(dy) * 1.2 ? 1 : -1;
+      // With the direction settled the gesture is ours to the end, even if the
+      // finger wanders off the element.
+      if(lock===1){ try{ el.setPointerCapture(id); }catch(err){} }
+    });
+
+    el.addEventListener('pointerup', function(e){
+      if(e.pointerId!==id) return;
+      var dx=e.clientX-x0, dt=Date.now()-t0, across=lock===1;
+      id=null; lock=0;
+      if(!across) return;
+      // Either a deliberate drag or a quick flick — a slow 20px wobble is
+      // neither, and stepping on it would feel like the page misread a tap.
+      if(Math.abs(dx) < 44 && !(Math.abs(dx) > 18 && dt < 260)) return;
+      swallowClick();
+      step(dx < 0 ? 1 : -1);
+    });
+
+    el.addEventListener('pointercancel', function(e){
+      if(e.pointerId===id){ id=null; lock=0; }
+    });
+  }
+  window.lzSwipe=swipe;
+
   /* ── language ──────────────────────────────────────────────────────────── */
   function setLang(l){
     root.setAttribute('data-lang',l);
@@ -238,6 +314,10 @@
       box.appendChild(next);
       box.appendChild(caption);
       gallery={go:function(step){ go(at + step); }};
+      // The whole sheet, not just the image: full size leaves a picture much
+      // narrower than the screen on a phone, and a swipe that only counted
+      // over the screenshot itself would mostly miss.
+      swipe(box, function(dir){ go(at + dir); });
       go(at);
     }
 
@@ -323,6 +403,9 @@
     Array.prototype.forEach.call(dots, function(d, i){
       d.addEventListener('click', function(){ go(i); start(); });  // a step restarts the dwell
     });
+    // Swipe across the pictures themselves, which is the whole block bar the
+    // dashes; the click that would otherwise open the lightbox is swallowed.
+    swipe(box.querySelector('.ss-stack') || box, function(dir){ go(at + dir); start(); });
 
     /* Click the picture to see it full size — as a gallery, so the lightbox can
        step between the same shots. onChange keeps the row underneath on

@@ -456,6 +456,24 @@
     if(open_) devs[open_].style.transform=fit(open_);
   });
 
+  /* ── swipe ───────────────────────────────────────────────────────────────
+     Only while a device is maximised — that is when the stage is a picture
+     being looked at rather than three small ones being chosen between, and it
+     keeps a flick across the idle hero from changing something the visitor was
+     not aiming at. A solo page counts as open from the first paint, which is
+     right: its device is the page. Any step restarts the dwell, exactly as
+     tapping a dash does. */
+  if(window.lzSwipe){
+    window.lzSwipe(stage.parentNode, function(dir){
+      if(!open_) return;
+      var list=screens[open_] || [];
+      if(list.length < 2) return;
+      showScreen(open_, ((shown[open_] || 0) + dir + list.length) % list.length);
+      renderCaption();
+      startCycle();
+    });
+  }
+
   /* ── pointer parallax ────────────────────────────────────────────────────
      Fine pointers only: on touch there is no hover to parallax with, and
      under reduced motion it never binds at all. */
