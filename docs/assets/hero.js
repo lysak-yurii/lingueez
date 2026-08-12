@@ -68,25 +68,15 @@
   var vb=stage.viewBox.baseVal;
   var open_=null;   // key of the maximised device, or null
 
-  /* Caption copy. The buttons carry their own bilingual <span lang> names, so
-     only this dynamic text needs a lookup here. */
+  /* Caption copy, looked up through site.js against the page's language. */
+  var t=window.lzT || function(s){ return s; };
   var STRINGS={
-    en:{
-      laptop:{name:'Desktop',   blurb:'your whole vocabulary, on your computer'},
-      reader:{name:'E-reader',  blurb:'save words straight from the book you are reading'},
-      phone: {name:'Phone',     blurb:'review anywhere, in your pocket'},
-      hint:'Pick a device to look closer'
-    },
-    uk:{
-      laptop:{name:'Комп’ютер', blurb:'увесь ваш словник на комп’ютері'},
-      reader:{name:'Е-читач',   blurb:'зберігайте слова прямо з книжки, яку читаєте'},
-      phone: {name:'Смартфон',  blurb:'повторюйте будь-де, просто в кишені'},
-      hint:'Оберіть пристрій, щоб роздивитися'
-    }
+    laptop:{name:t('Desktop'),  blurb:t('your whole vocabulary, on your computer')},
+    reader:{name:t('E-reader'), blurb:t('save words straight from the book you are reading')},
+    phone: {name:t('Phone'),    blurb:t('review anywhere, in your pocket')},
+    hint:t('Pick a device to look closer')
   };
-  function strings(){
-    return STRINGS[document.documentElement.getAttribute('data-lang')] || STRINGS.en;
-  }
+  function strings(){ return STRINGS; }
 
   function isDark(){
     var t=document.documentElement.getAttribute('data-theme');
@@ -220,7 +210,6 @@
     }
     caption.classList.add('in');
   }
-  document.addEventListener('lz:lang', renderCaption);
 
   /* ── your device ───────────────────────────────────────────────────────
      A soft halo on the device you are actually reading this on. The e-reader
@@ -302,8 +291,7 @@
     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5"/></svg>' +
-    '<span class="sr-only"><span lang="en">Open full size</span>' +
-    '<span lang="uk">Відкрити на весь екран</span></span>';
+    '<span class="sr-only">' + t('Open full size') + '</span>';
   function openFull(origin){
     if(!open_) return;
     var list=screens[open_] || [];

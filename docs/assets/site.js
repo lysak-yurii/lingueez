@@ -3,6 +3,18 @@
   var root=document.documentElement;
   var reduced=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ── strings ───────────────────────────────────────────────────────────
+     Text the scripts build instead of finding in the markup. _includes/i18n-js.html
+     drops the page's language into #i18n-js; the English is both the key and
+     the fallback, so a missing blob still reads. hero.js uses this too. */
+  var strings={};
+  try{
+    var blob=document.getElementById('i18n-js');
+    if(blob) strings=JSON.parse(blob.textContent);
+  }catch(e){ /* a broken blob must not take the rest of the page with it */ }
+  function t(s){ return strings[s] || s; }
+  window.lzT=t;
+
   /* ── platform ──────────────────────────────────────────────────────────
      One sniff, shared by the download CTA, the download-page card order and
      the hero's "this is your device" highlight. Returns '' when unsure —
@@ -95,23 +107,47 @@
   }
   window.lzSwipe=swipe;
 
-  /* ── language ──────────────────────────────────────────────────────────── */
-  function setLang(l){
-    root.setAttribute('data-lang',l);
-    try{localStorage.setItem('lz-lang',l);}catch(e){}
-    document.querySelectorAll('[data-lang-btn]').forEach(function(b){
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-lang-btn')===l));
+  /* ── language ──────────────────────────────────────────────────────────
+     Each language is its own page, so this only opens and closes the list —
+     and records the pick on the way out. */
+  (function(){
+    /* Written before the browser leaves, so lang-preinit.html on the next page
+       sees the new choice rather than the old one. Cookie and localStorage
+       writes are synchronous, so a click handler is early enough; the English
+       link also carries ?lang=en in case this script has not run yet. */
+    document.querySelectorAll('.lang-menu a[data-lang]').forEach(function(a){
+      a.addEventListener('click', function(){
+        var code=a.getAttribute('data-lang');
+        try{ localStorage.setItem('lz-lang', code); }catch(e){}
+        shareCookie('lz-lang', code);
+      });
     });
-    // For text that cannot be authored as bilingual spans — aria-label and
-    // friends take a string, not markup. hero.js listens for this.
-    document.dispatchEvent(new CustomEvent('lz:lang', {detail:l}));
-  }
-  document.querySelectorAll('[data-lang-btn]').forEach(function(b){
-    b.addEventListener('click', function(){ setLang(b.getAttribute('data-lang-btn')); });
-  });
-  if(document.querySelector('[data-lang-btn]')){
-    setLang(root.getAttribute('data-lang') || 'en');
-  }
+
+    /* There are two — one in the nav, one in the footer — and opening either
+       closes the other, so they never sit open at the same time. */
+    var shut=[];
+    document.querySelectorAll('.lang').forEach(function(box){
+      var btn=box.querySelector('.lang-current'), menu=box.querySelector('.lang-menu');
+      if(!btn||!menu) return;
+      function open(on){
+        menu.hidden=!on;
+        btn.setAttribute('aria-expanded', String(on));
+      }
+      shut.push(function(){ open(false); });
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var show=menu.hidden;
+        shut.forEach(function(f){ f(); });
+        open(show);
+      });
+      document.addEventListener('click', function(e){
+        if(!box.contains(e.target)) open(false);
+      });
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape') shut.forEach(function(f){ f(); });
+    });
+  })();
 
   /* ── theme ─────────────────────────────────────────────────────────────
      Three modes; 'system' is the absence of data-theme, so the light-dark()
@@ -119,10 +155,46 @@
      stored mode before paint — this only handles changes. */
   var MODES=['system','light','dark'];
 
+  /* lingueez.app and web.lingueez.app are separate origins and do not share
+     localStorage, but a cookie scoped to the parent domain is sent to both. So
+     every preference that should survive the crossing is written twice:
+     localStorage as the same-origin fast path, a cookie as the bridge. The web
+     app reads the cookie in its own pre-paint script and in src/lib/theme.ts.
+
+     Domain is only set on the real site — a Domain of .lingueez.app would be
+     rejected outright on localhost or a preview host. */
+  function shareCookie(name, value){
+    var dom = /(^|\.)lingueez\.app$/.test(location.hostname) ? '; domain=.lingueez.app' : '';
+    var age = value ? 31536000 : 0;
+    try{
+      document.cookie = name+'='+(value||'')+'; path=/'+dom+'; max-age='+age+'; SameSite=Lax';
+    }catch(e){}
+  }
+
+  function cookieValue(name){
+    var m = document.cookie.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]*)'));
+    return m ? m[1] : null;
+  }
+
   function storedMode(){
     var s; try{ s=localStorage.getItem('lz-theme'); }catch(e){}
+    if(s!=='light' && s!=='dark') s = cookieValue('lz-theme');
     return (s==='light'||s==='dark') ? s : 'system';
   }
+
+  /* Mirror the language into the cookie on every view — that is what lets the
+     web app, on its own origin, link back here in the language the visitor was
+     reading.
+
+     A stored choice comes first and the page's own language is only the
+     fallback, because pages exist with no translated twin (the legal pages,
+     404). Publishing their `en` unconditionally would quietly reset a visitor
+     who had chosen Deutsch and then opened the privacy policy. */
+  (function(){
+    var s; try{ s=localStorage.getItem('lz-lang'); }catch(e){}
+    if(!s) s=cookieValue('lz-lang');
+    shareCookie('lz-lang', s || root.getAttribute('data-lang') || 'en');
+  })();
 
   function resolved(mode){
     if(mode!=='system') return mode;
@@ -143,6 +215,7 @@
       if(mode==='system'){ localStorage.removeItem('lz-theme'); }
       else{ localStorage.setItem('lz-theme',mode); }
     }catch(e){}
+    shareCookie('lz-theme', mode==='system' ? '' : mode);
 
     /* The new theme wipes in as a circle growing from the button. Without
        View Transitions (or with reduced motion) the swap is simply instant. */
@@ -255,7 +328,7 @@
     load(opts.src);
 
     var close=icon('<path d="M6 6l12 12M18 6L6 18"/>',
-                   '<span lang="en">Close</span><span lang="uk">Закрити</span>');
+                   t('Close'));
     close.className='lightbox-close';
     close.addEventListener('click', closeZoom);
 
@@ -292,9 +365,9 @@
       caption.appendChild(dots);
 
       var prev=icon('<path d="M15 5l-7 7 7 7"/>',
-                    '<span lang="en">Previous</span><span lang="uk">Попередній</span>');
+                    t('Previous'));
       var next=icon('<path d="M9 5l7 7-7 7"/>',
-                    '<span lang="en">Next</span><span lang="uk">Наступний</span>');
+                    t('Next'));
       prev.className='lightbox-step prev';
       next.className='lightbox-step next';
       prev.addEventListener('click', function(e){ e.stopPropagation(); go(at - 1); });

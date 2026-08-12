@@ -1,0 +1,7 @@
+{%- comment -%}
+  One translated string, looked up by its English text. Falls back to the
+  English it was given, so a language with a gap in its catalogue still renders
+  a readable page. Call it with s='the English text'.
+{%- endcomment -%}
+{%- assign _c = site.data.i18n[page.lang] -%}
+{{- _c[include.s] | default: include.s -}}

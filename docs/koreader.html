@@ -1,145 +1,19 @@
 ---
 layout: marketing
+lang: en
+ref: koreader
+base: /koreader/
 permalink: /koreader/
 title: Lingueez for KOReader — save words from your e-reader
-description: A free, open-source KOReader plugin that saves words straight from your books into your Lingueez vocabulary — translated, language-detected, and synced to the desktop and web apps.
+description: A free, open-source KOReader plugin that saves words straight from your books into your Lingueez vocabulary — translated, language-detected, and synced across your devices.
 image: https://lingueez.app/assets/koreader/lingueez_hero.jpg
 canonical: https://lingueez.app/koreader/
 nav_active: koreader
 styles:
-  - page-home.css
-  - page-koreader.css
+- page-home.css
+- page-koreader.css
 scripts:
-  - hero.js
+- hero.js
 ---
 
-<!-- HERO -->
-<header class="hero">
-  <div class="wrap">
-    <div class="copy">
-      <p class="eyebrow"><span lang="en">Lingueez for KOReader · Free &amp; open source</span><span lang="uk">Lingueez для KOReader · Безкоштовно й з відкритим кодом</span></p>
-      <h1 class="kh1" lang="en">Save words straight from <span class="accent">your books</span></h1>
-      <h1 class="kh1" lang="uk">Зберігайте слова прямо <span class="accent">з ваших книжок</span></h1>
-      <p class="lede" lang="en">The Lingueez plugin for KOReader lets you look up a word while you read, save it to your Lingueez vocabulary with its translation, and review it with flashcards directly on the e-reader. Your words stay in sync across devices.</p>
-      <p class="lede" lang="uk">Плагін Lingueez для KOReader дозволяє переглянути слово під час читання, зберегти його до свого словника Lingueez разом із перекладом і повторювати за допомогою флешкарток прямо на е-читачі. Ваші слова залишаються синхронізованими на всіх пристроях.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/lysak-yurii/lingueez.koplugin/releases">
-          <span lang="en">Get the plugin</span><span lang="uk">Завантажити плагін</span></a>
-        <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez.koplugin">
-          <span lang="en">View on GitHub</span><span lang="uk">Переглянути на GitHub</span></a>
-      </div>
-    </div>
-    <div class="shot device">
-      {% include hero-stage-reader.html %}
-    </div>
-  </div>
-</header>
-
-<!-- SAVE WHILE READING -->
-<section>
-  <div class="wrap">
-    <div class="show reveal">
-      <div class="copy">
-        <h2><span lang="en">Save a word without leaving the book</span><span lang="uk">Зберігайте слово, не виходячи з книжки</span></h2>
-        <p><span lang="en">Long-press any word and tap <b>Save to Lingueez</b>. The plugin detects the book’s language, translates the word, and stores it in your account, ready to study. Adjust the translation before saving if you like.</span><span lang="uk">Затисніть будь-яке слово й натисніть <b>Зберегти в Lingueez</b>. Плагін визначає мову книжки, перекладає слово й зберігає його у вашому акаунті, готовим до вивчення. За бажання виправте переклад перед збереженням.</span></p>
-      </div>
-      <div class="device"><img class="eink only-light" src="/assets/koreader/save-word-light.png"
-             width="853" height="1019" loading="lazy" decoding="async" alt="The Save to Lingueez dialog on a KOReader e-reader.">
-        <img class="eink only-dark" src="/assets/koreader/save-word-dark.png"
-             width="853" height="1019" loading="lazy" decoding="async" alt="The Save to Lingueez dialog on a KOReader e-reader."></div>
-    </div>
-    <div class="show flip reveal">
-      <div class="copy">
-        <h2><span lang="en">Your whole list, on the reader</span><span lang="uk">Увесь ваш список — на читачі</span></h2>
-        <p><span lang="en">Open <b>My Words</b> from the Lingueez menu to page through everything you have saved, filter the list, and tap any entry to open it — without leaving the book.</span><span lang="uk">Відкрийте <b>Мої слова</b> в меню Lingueez, щоб гортати все збережене, фільтрувати список і торкнутися будь-якого запису, щоб відкрити його — не виходячи з книжки.</span></p>
-      </div>
-      <div class="device"><img class="eink only-light" src="/assets/koreader/view-words-light.png"
-             width="1271" height="1180" loading="lazy" decoding="async" alt="The My Words list from the Lingueez plugin on a KOReader e-reader.">
-        <img class="eink only-dark" src="/assets/koreader/view-words-dark.png"
-             width="1271" height="1180" loading="lazy" decoding="async" alt="The My Words list from the Lingueez plugin on a KOReader e-reader."></div>
-    </div>
-
-    <div class="show reveal">
-      <div class="copy">
-        <h2><span lang="en">Review with flashcards on the reader</span><span lang="uk">Повторюйте за допомогою флешкарток на читачі</span></h2>
-        <p><span lang="en">Flip through flashcards of your saved words right where you read — no separate device, no extra app. Reinforce vocabulary in the same place you discovered it.</span><span lang="uk">Гортайте флешкартки збережених слів прямо там, де читаєте — без окремого пристрою чи додатка. Закріплюйте лексику там само, де її знайшли.</span></p>
-      </div>
-      <div class="device"><img class="eink only-light" src="/assets/koreader/flashcards-light.png"
-             width="860" height="919" loading="lazy" decoding="async" alt="Reviewing saved words with flashcards on a KOReader e-reader.">
-        <img class="eink only-dark" src="/assets/koreader/flashcards-dark.png"
-             width="860" height="919" loading="lazy" decoding="async" alt="Reviewing saved words with flashcards on a KOReader e-reader."></div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURE CARDS -->
-<section id="features">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <h2><span lang="en">Built for reading</span><span lang="uk">Створено для читання</span></h2>
-      <p><span lang="en">Small, focused, and out of your way while you read.</span><span lang="uk">Компактний, зосереджений і непомітний, поки ви читаєте.</span></p>
-    </div>
-    <div class="grid reveal">
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></div><h3><span lang="en">Instant translation</span><span lang="uk">Миттєвий переклад</span></h3><p><span lang="en">Google Translate built in, with optional DeepL.</span><span lang="uk">Вбудований Google Translate, з можливістю використання DeepL.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg></div><h3><span lang="en">Knows the language</span><span lang="uk">Знає мову</span></h3><p><span lang="en">The word’s language is detected automatically, so saving to your dictionary is quick.</span><span lang="uk">Мова слова визначається автоматично для швидкого збереження слова у словник.</span></p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><h3><span lang="en">Texts, not just words</span><span lang="uk">Не лише слова, а й тексти</span></h3><p><span lang="en">Save the chapter you’re reading to your library, or pull texts saved on other devices back onto your reader.</span><span lang="uk">Зберігайте розділ, який читаєте, до бібліотеки, або навпаки завантажуйте збережені тексти з інших пристроїв назад на читач.</span></p></div>
-    </div>
-  </div>
-</section>
-
-<!-- SYNC EVERYWHERE -->
-<section>
-  <div class="wrap">
-    <div class="show flip reveal">
-      <div class="copy">
-        <h2><span lang="en">Your vocabulary, always with you</span><span lang="uk">Ваш словник завжди з вами</span></h2>
-        <p><span lang="en">Everything you save on your reader syncs to the same account as the Lingueez desktop and web apps. Study with full flashcards, audio, statistics, and side-by-side reading on your computer — your reader is simply one more place to add words.</span><span lang="uk">Усе, що ви зберігаєте на читачі, синхронізується з тим самим акаунтом, що й застосунки Lingueez для комп’ютера та вебу. Навчайтеся з повноцінними флешкартками, аудіо, статистикою та паралельним читанням на комп’ютері, а читач стає ще одним місцем, де ви поповнюєте свій словник.</span></p>
-        <a class="btn btn-ghost" href="/" style="margin-top:1.2rem;"><span lang="en">See the desktop app</span><span lang="uk">Переглянути застосунок для комп’ютера</span></a>
-      </div>
-      <div><img class="eink only-light" src="/assets/koreader/menu-light.png"
-             width="860" height="657" loading="lazy" decoding="async" alt="The Lingueez menu on a KOReader e-reader: View My Words, Flashcards, Save current chapter as text, and Cloud texts.">
-        <img class="eink only-dark" src="/assets/koreader/menu-dark.png"
-             width="860" height="657" loading="lazy" decoding="async" alt="The Lingueez menu on a KOReader e-reader: View My Words, Flashcards, Save current chapter as text, and Cloud texts."></div>
-    </div>
-  </div>
-</section>
-
-<!-- INSTALL -->
-<section id="install">
-  <div class="wrap reveal">
-    <div class="section-head">
-      <h2><span lang="en">Install in two steps</span><span lang="uk">Встановлення у два кроки</span></h2>
-      <p><span lang="en">No configuration — just copy the plugin and sign in.</span><span lang="uk">Без налаштувань — просто скопіюйте плагін і ввійдіть.</span></p>
-    </div>
-    <ol class="steps" style="margin:0 auto;">
-      <li lang="en">Copy the <code>lingueez.koplugin</code> folder into your KOReader plugins directory:
-        <ul>
-          <li><b>Android</b> — <code>/sdcard/koreader/plugins/</code></li>
-          <li><b>Linux</b> — <code>~/.config/koreader/plugins/</code></li>
-          <li><b>Kobo / Kindle / other</b> — see the KOReader documentation for the plugin path.</li>
-        </ul>
-      </li>
-      <li lang="en"><b>Restart KOReader.</b> The plugin appears in Plugin Management and adds a <b>Lingueez</b> entry to the menu. Open <b>Menu → Lingueez → Configure</b> and sign in.</li>
-      <li lang="uk">Скопіюйте теку <code>lingueez.koplugin</code> до каталогу плагінів KOReader:
-        <ul>
-          <li><b>Android</b> — <code>/sdcard/koreader/plugins/</code></li>
-          <li><b>Linux</b> — <code>~/.config/koreader/plugins/</code></li>
-          <li><b>Kobo / Kindle / інше</b> — шлях до плагінів дивіться в документації KOReader.</li>
-        </ul>
-      </li>
-      <li lang="uk"><b>Перезапустіть KOReader.</b> Плагін з’явиться в керуванні плагінами й додасть пункт <b>Lingueez</b> до меню. Відкрийте <b>Меню → Lingueez → Налаштувати</b> й увійдіть.</li>
-    </ol>
-    <p class="note" style="margin:1.6em auto 0; text-align:center;"><span lang="en">New to Lingueez? Create your account on the <a href="https://lingueez.app">desktop or web app</a> first — the plugin signs you in, it doesn’t register new accounts.</span><span lang="uk">Уперше в Lingueez? Спершу створіть акаунт у <a href="https://lingueez.app">застосунку для комп’ютера чи вебі</a> — плагін лише виконує вхід, він не реєструє нові акаунти.</span></p>
-  </div>
-</section>
-
-<!-- CTA BAND -->
-<section class="ctaband">
-  <div class="wrap reveal">
-    <h2><span lang="en">Turn every book into vocabulary</span><span lang="uk">Перетворіть кожну книжку на словниковий запас</span></h2>
-    {% include store-badges.html github="https://github.com/lysak-yurii/lingueez.koplugin/releases/latest" %}
-    <p class="cta-more">
-      <a href="https://github.com/lysak-yurii/lingueez.koplugin"><span lang="en">Read the source and the install guide</span><span lang="uk">Вихідний код та інструкція зі встановлення</span></a>
-    </p>
-  </div>
-</section>
+{% include pages/koreader.html %}

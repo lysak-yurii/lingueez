@@ -138,7 +138,7 @@
 </svg>
   <button type="button" class="dev-hit" data-hit="reader"
           style="--l:9.68%; --t:7.87%; --w:80.65%; --h:78.74%">
-    <span class="sr-only"><span lang="en">Lingueez on an e-reader</span><span lang="uk">Lingueez на е-читачі</span></span>
+    <span class="sr-only">{% include t.html s='Lingueez on an e-reader' %}</span>
   </button>
   <ul class="dev-screens" data-screens="reader"
       data-start="0"
@@ -147,18 +147,18 @@
           data-light="/assets/hero/reader-save-light.webp"
           data-dark="/assets/hero/reader-save-dark.webp"
           data-full-light="/assets/koreader/save-word-light.png"
-          data-full-dark="/assets/koreader/save-word-dark.png"><span lang="en">Save a word from a book</span><span lang="uk">Збережіть слово з книжки</span></li>
+          data-full-dark="/assets/koreader/save-word-dark.png">{% include t.html s='Save a word from a book' %}</li>
       <li data-screen="words"
           data-light="/assets/hero/reader-words-light.webp"
           data-dark="/assets/hero/reader-words-dark.webp"
           data-full-light="/assets/koreader/view-words-light.png"
-          data-full-dark="/assets/koreader/view-words-dark.png"><span lang="en">Browse your saved words</span><span lang="uk">Перегляд збережених слів</span></li>
+          data-full-dark="/assets/koreader/view-words-dark.png">{% include t.html s='Browse your saved words' %}</li>
       <li data-screen="cards"
           data-light="/assets/hero/reader-cards-light.webp"
           data-dark="/assets/hero/reader-cards-dark.webp"
           data-full-light="/assets/koreader/flashcards-light.png"
-          data-full-dark="/assets/koreader/flashcards-dark.png"><span lang="en">Flashcards on the device</span><span lang="uk">Флешкартки на пристрої</span></li>
-      <li class="more"><span lang="en">More about the e-reader</span><span lang="uk">Детальніше про плагін</span></li>
+          data-full-dark="/assets/koreader/flashcards-dark.png">{% include t.html s='Flashcards on the device' %}</li>
+      <li class="more">{% include t.html s='More about the e-reader' %}</li>
   </ul>
   <div class="stage-note is-solo">
     <p class="dev-caption" data-dev-caption></p>

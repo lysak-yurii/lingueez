@@ -1,94 +1,19 @@
 ---
 layout: marketing
+lang: en
+ref: mobile
+base: /mobile/
 permalink: /mobile/
 title: Lingueez for Android — your vocabulary in your pocket
-description: The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with the desktop app through your account.
+description: The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 image: https://lingueez.app/assets/hero.png
 canonical: https://lingueez.app/mobile/
 nav_active: mobile
 styles:
-  - page-home.css
-  - page-koreader.css
+- page-home.css
+- page-koreader.css
 scripts:
-  - hero.js
+- hero.js
 ---
 
-<header class="hero">
-  <div class="wrap">
-    <div class="copy">
-      <p class="eyebrow"><span lang="en">Now on Android</span><span lang="uk">Тепер на Android</span></p>
-      <h1 lang="en">Take your vocabulary <span class="accent">with you</span></h1>
-      <h1 lang="uk">Носіть свій словник <span class="accent">із собою</span></h1>
-      <p class="lede" lang="en">The Lingueez app for Android puts your words in your pocket. Browse and add words, review with flashcards, and listen hands-free with lock-screen playback controls. Sign in with the same account as desktop and web, and everything stays in sync.</p>
-      <p class="lede" lang="uk">Застосунок Lingueez для Android завжди під рукою. Переглядайте й додавайте слова, повторюйте за допомогою флешкарток і слухайте, керуючи відтворенням прямо з екрана блокування. Увійдіть у той самий акаунт, що й на комп’ютері та в браузері, — усе залишиться синхронізованим.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=app.lingueez.mobile">
-          <span lang="en">Get it on Google Play</span><span lang="uk">Завантажити в Google Play</span></a>
-        <a class="btn btn-ghost" href="/download/">
-          <span lang="en">All platforms</span><span lang="uk">Усі платформи</span></a>
-      </div>
-    </div>
-    <div class="shot device">
-      {% include hero-stage-phone.html %}
-    </div>
-  </div>
-</header>
-
-<section>
-  <div class="wrap">
-    <div class="section-head reveal">
-      <h2><span lang="en">The same vocabulary, on the move</span><span lang="uk">Той самий словник — у дорозі</span></h2>
-      <p><span lang="en">Everything you save on your computer or e-reader is already there when you open your phone.</span><span lang="uk">Усе, що ви зберегли на комп’ютері чи е-читачі, уже там, щойно ви відкриєте смартфон.</span></p>
-    </div>
-    {%- comment -%}
-      Three phones side by side rather than the alternating rows the desktop
-      screenshots use. A phone shot is 2.2:1 tall: in a two-column row it stands
-      taller than its own paragraph three times over, and the section becomes a
-      column of pictures with text stranded beside them. Abreast, they read as
-      one tour and the whole thing fits on a screen.
-    {%- endcomment -%}
-    <div class="phone-tour" data-stagger>
-      <div>
-        <div class="shot-phone">
-          {% include shot.html dir="mobile" ext="jpg" name="words" zoom="1" width="520" height="1127"
-             alt="The Lingueez Android app showing the saved-words list with statuses and translations." %}
-        </div>
-        <h3><span lang="en">Your whole library</span><span lang="uk">Уся ваша бібліотека</span></h3>
-        <p><span lang="en">Organised by language and by status, with favourites, instant search across words and definitions, and bulk import from Excel. Works offline.</span><span lang="uk">Упорядкована за мовою та статусом, з обраним, миттєвим пошуком по словах і визначеннях та імпортом з Excel. Працює офлайн.</span></p>
-      </div>
-      <div>
-        <div class="shot-phone">
-          {% include shot.html dir="mobile" ext="jpg" name="flashcards" zoom="1" width="520" height="1127"
-             alt="A flashcard in the Lingueez Android app with the Hard, Good and Easy grading buttons." %}
-        </div>
-        <h3><span lang="en">Practise anywhere</span><span lang="uk">Практика будь-де</span></h3>
-        <p><span lang="en">Spaced repetition brings each word back just before you would forget it. Swipe to grade, and the ones you found hard come round again.</span><span lang="uk">Інтервальні повторення повертають слово саме перед тим, як ви його забули б. Оцінюйте свайпом — складні картки повторяться ще раз.</span></p>
-      </div>
-      <div>
-        <div class="shot-phone">
-          {% include shot.html dir="mobile" ext="jpg" name="quiz" zoom="1" width="520" height="1127"
-             alt="A multiple-choice question in the Lingueez Android app, with the right answer marked." %}
-        </div>
-        <h3><span lang="en">Test yourself</span><span lang="uk">Перевірте себе</span></h3>
-        <p><span lang="en">Multiple choice or type the answer, on whichever deck you pick, asked in either direction — term to translation or back.</span><span lang="uk">Вибір варіанта або введення відповіді — на будь-якій колоді та в будь-якому напрямку: від слова до перекладу чи навпаки.</span></p>
-      </div>
-      <div>
-        <div class="shot-phone">
-          {% include shot.html dir="mobile" ext="jpg" name="listen" zoom="1" width="520" height="1127"
-             alt="The Lingueez Android app playing a deck aloud, with playback controls." %}
-        </div>
-        <h3><span lang="en">Listen hands-free</span><span lang="uk">Слухайте без рук</span></h3>
-        <p><span lang="en">Play your words aloud with background playback and lock-screen controls. Read-aloud runs on the device, so it needs no connection.</span><span lang="uk">Слухайте свої слова вголос — із фоновим відтворенням і керуванням на екрані блокування. Озвучення працює на пристрої, без інтернету.</span></p>
-      </div>
-  </div>
-</section>
-
-<section class="ctaband">
-  <div class="wrap reveal">
-    <h2><span lang="en">Get Lingueez on your phone</span><span lang="uk">Встановіть Lingueez на смартфон</span></h2>
-    {% include store-badges.html play="1" %}
-    <p class="cta-more">
-      <a href="/download/"><span lang="en">Lingueez on every other device</span><span lang="uk">Lingueez на всіх інших пристроях</span></a>
-    </p>
-  </div>
-</section>
+{% include pages/mobile.html %}

@@ -1,0 +1,21 @@
+{%- comment -%}
+  Language picker, used in the nav and again at the foot of the page. Each
+  language is its own URL, so this is a list of links rather than a toggle;
+  page.base is the path without the language prefix.
+
+  Param: up — open the list upwards, for the footer.
+
+  data-lang is what site.js records when the link is clicked, so the choice is
+  stored before the browser leaves the page. The English link additionally
+  carries ?lang=en: it is the one destination lang-preinit.html would otherwise
+  redirect straight back out of, and the parameter makes that impossible even
+  if site.js has not run yet.
+{%- endcomment -%}
+<div class="lang{% if include.up %} lang-up{% endif %}" role="group" aria-label="Language">
+  <button type="button" class="lang-current" aria-haspopup="true" aria-expanded="false">{{ page.lang | default: 'en' | upcase }}</button>
+  <ul class="lang-menu" hidden>
+    {%- for l in site.data.languages %}
+    <li><a href="{{ l.prefix }}{{ page.base }}{% if l.code == 'en' %}{% if page.lang != 'en' %}?lang=en{% endif %}{% endif %}" lang="{{ l.code }}" data-lang="{{ l.code }}"{% if l.code == page.lang %} aria-current="true"{% endif %}>{{ l.name }}</a></li>
+    {%- endfor %}
+  </ul>
+</div>

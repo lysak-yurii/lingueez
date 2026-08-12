@@ -115,7 +115,7 @@ SCREENS = {
         ("words",    "Your vocabulary",       "Ваш словник",            "mobile/words"),
         ("cards",    "Review in your pocket", "Повторення в кишені",    "mobile/flashcards"),
         ("quiz",     "Test yourself",         "Перевірте себе",         "mobile/quiz"),
-        ("listen",   "Listen hands-free",     "Слухайте без рук",       "mobile/listen"),
+        ("listen",   "Listen hands-free",     "Слухайте на ходу",       "mobile/listen"),
         ("progress", "See your progress",     "Дивіться свій прогрес",  "mobile/progress"),
     ],
 }
@@ -172,6 +172,12 @@ def halo(name: str) -> str:
              seen_y - (VIEW_Y + HALO_MARGIN), (VIEW_Y + VIEW_H - HALO_MARGIN) - seen_y)
     return (f'cx="{cx:.0f}" cy="{cy:.0f}" rx="{rx:.0f}" ry="{ry:.0f}" '
             f'fill="url(#haloPaint)"')
+
+
+def _t(s):
+    """A translated string in the stage markup. The Ukrainian in the tables
+    above is the seed for tools/site/i18n.py; the pages look it up by English."""
+    return "{%% include t.html s='%s' %%}" % s
 
 
 _missing = []
@@ -341,39 +347,8 @@ def solo_width(device: str) -> float:
     return VIEW_H / VIEW_W * vw / (y1 - y0)
 
 
-def build(embed: bool, backdrop: bool, only: str = None) -> str:
-    """`embed=False` writes the interactive stage: external screenshot hrefs,
-    per-device groups, no painted background (the page paints its own).
-    `embed=True, backdrop=True` writes the standalone social card.
-    `only` narrows the stage to a single device, framed on it — what the
-    e-reader and Android pages use for their own heroes."""
-    BACKDROP = """
-  <rect width="1200" height="700" fill="#0b0f17"/>
-  <ellipse cx="600"  cy="255" rx="640" ry="440" fill="url(#bgGlow)"/>
-  <ellipse cx="600"  cy="320" rx="440" ry="300" fill="url(#accentBlue)"/>
-  <ellipse cx="195"  cy="415" rx="300" ry="245" fill="url(#accentWarm)"/>
-  <ellipse cx="1015" cy="405" rx="255" ry="215" fill="url(#accentBlue)"/>""" if backdrop else ""
-    VIGNETTE = ('\n  <rect width="1200" height="700" fill="url(#vignette)" pointer-events="none"/>'
-                if backdrop else "")
-
-    keys = [only] if only else ["laptop", "reader", "phone"]
-    ground = "\n".join(GROUND[k] for k in keys)
-    vx, vy, vw, vh = solo_view(only) if only else (VIEW_X, VIEW_Y, VIEW_W, VIEW_H)
-
-    # Only the interactive stage carries the hooks: an id to address a device
-    # by, and a halo the page can bloom. Focus and clicks belong to the hotspot
-    # buttons (see hotspots()), not to the SVG.
-    def dev(idname, label, filt, body, halo):
-        if idname not in keys:
-            return ""            # a solo stage holds one device
-        if embed:
-            return f'    <g filter="url(#{filt})">\n{body}\n    </g>'
-        return (f'    <g id="dev-{idname}" class="dev" data-dev="{idname}">\n'
-                f'      <ellipse class="halo" {halo}/>\n'
-                f'      <g class="dev-body" filter="url(#{filt})">\n{body}\n      </g>\n'
-                f'    </g>')
-
-    laptop_body = f"""        <!-- lid -->
+def laptop_body(embed: bool) -> str:
+    return f"""        <!-- lid -->
         <rect x="313" y="88" width="574" height="418" rx="13" fill="url(#metal)"/>
         <rect x="313.8" y="88.8" width="572.4" height="416.4" rx="12.2" fill="none"
               stroke="url(#metalEdge)" stroke-width="1.6"/>
@@ -400,7 +375,9 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
         <!-- front lip notch -->
         <path d="M 570 523.5 H 630 Q 626 529 618 529 H 582 Q 574 529 570 523.5 Z" fill="#0d1118"/>"""
 
-    reader_body = f"""        <rect x="74" y="264" width="256" height="340" rx="17" fill="url(#metal)"/>
+
+def reader_body(embed: bool) -> str:
+    return f"""        <rect x="74" y="264" width="256" height="340" rx="17" fill="url(#metal)"/>
         <rect x="74.8" y="264.8" width="254.4" height="338.4" rx="16.2" fill="none"
               stroke="url(#metalEdge)" stroke-width="1.6"/>
         <!-- e-ink well. Matches eink_theme.DARK_BG so the screen and the page
@@ -418,7 +395,9 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
         <!-- chin detail -->
         <rect x="186" y="587" width="32" height="3" rx="1.5" fill="#414c5c" opacity="0.7"/>"""
 
-    phone_body = f"""        <rect x="920" y="255" width="172" height="349" rx="30" fill="url(#metal)"/>
+
+def phone_body(embed: bool, solo: bool = False) -> str:
+    return f"""        <rect x="920" y="255" width="172" height="349" rx="30" fill="url(#metal)"/>
         <rect x="920.8" y="255.8" width="170.4" height="347.4" rx="29.2" fill="none"
               stroke="url(#metalEdge)" stroke-width="1.6"/>
         <!-- side buttons -->
@@ -429,7 +408,7 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
         <!-- display -->
         <rect x="927" y="262" width="158" height="335" rx="24" fill="#0b0b0d"/>
         {_screen("phone", 927, 262, 158, 335, "clipPhone", embed, fit="slice",
-                 start=start_index("phone", bool(only)))}
+                 start=start_index("phone", solo))}
         <rect x="927" y="262" width="158" height="335" rx="24" fill="url(#sheen)"/>
         <rect x="927" y="262" width="158" height="335" rx="24" fill="none"
               stroke="#000" stroke-opacity="0.6" stroke-width="1"/>
@@ -441,18 +420,12 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
         <circle cx="1006" cy="272" r="1.7" fill="#18222f"/>
         <circle cx="1005.2" cy="271.2" r="0.6" fill="#4a5a70" opacity="0.7"/>"""
 
-    # The interactive stage is decoration over real buttons, so it is hidden
-    # from assistive tech entirely rather than described twice.
-    root_attrs = ('role="img" aria-label="Lingueez running on a laptop, an e-reader and a phone"'
-                  if embed else
-                  'class="hero-stage" data-hero-stage="" aria-hidden="true"')
 
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="{vx:.0f} {vy:.0f} {vw:.0f} {vh:.0f}" width="{vw * 2:.0f}" height="{vh * 2:.0f}"
-     {root_attrs}>
-  <title>Lingueez — one vocabulary, every device</title>
-
-  <defs>
+# The gradients, filters and screen clips every stage draws with. Module level so
+# other generators (tools/site/build_store_shots.py) paint devices out of the same
+# materials as the site — a device that looks different in the Store than on the
+# landing page is a device drawn twice.
+DEFS = """  <defs>
     <!-- ── Backdrop (social card only) ────────────────────────────── -->
     <radialGradient id="bgGlow" cx="50%" cy="38%" r="62%">
       <stop offset="0%"   stop-color="#1b2536" stop-opacity="0.9"/>
@@ -534,7 +507,53 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
     <clipPath id="clipDesktop"><rect x="324" y="99"  width="552" height="387" rx="3"/></clipPath>
     <clipPath id="clipReader"> <rect x="87"  y="277" width="230" height="296" rx="3"/></clipPath>
     <clipPath id="clipPhone">  <rect x="927" y="262" width="158" height="335" rx="24"/></clipPath>
-  </defs>
+  </defs>"""
+
+
+def build(embed: bool, backdrop: bool, only: str = None) -> str:
+    """`embed=False` writes the interactive stage: external screenshot hrefs,
+    per-device groups, no painted background (the page paints its own).
+    `embed=True, backdrop=True` writes the standalone social card.
+    `only` narrows the stage to a single device, framed on it — what the
+    e-reader and Android pages use for their own heroes."""
+    BACKDROP = """
+  <rect width="1200" height="700" fill="#0b0f17"/>
+  <ellipse cx="600"  cy="255" rx="640" ry="440" fill="url(#bgGlow)"/>
+  <ellipse cx="600"  cy="320" rx="440" ry="300" fill="url(#accentBlue)"/>
+  <ellipse cx="195"  cy="415" rx="300" ry="245" fill="url(#accentWarm)"/>
+  <ellipse cx="1015" cy="405" rx="255" ry="215" fill="url(#accentBlue)"/>""" if backdrop else ""
+    VIGNETTE = ('\n  <rect width="1200" height="700" fill="url(#vignette)" pointer-events="none"/>'
+                if backdrop else "")
+
+    keys = [only] if only else ["laptop", "reader", "phone"]
+    ground = "\n".join(GROUND[k] for k in keys)
+    vx, vy, vw, vh = solo_view(only) if only else (VIEW_X, VIEW_Y, VIEW_W, VIEW_H)
+
+    # Only the interactive stage carries the hooks: an id to address a device
+    # by, and a halo the page can bloom. Focus and clicks belong to the hotspot
+    # buttons (see hotspots()), not to the SVG.
+    def dev(idname, label, filt, body, halo):
+        if idname not in keys:
+            return ""            # a solo stage holds one device
+        if embed:
+            return f'    <g filter="url(#{filt})">\n{body}\n    </g>'
+        return (f'    <g id="dev-{idname}" class="dev" data-dev="{idname}">\n'
+                f'      <ellipse class="halo" {halo}/>\n'
+                f'      <g class="dev-body" filter="url(#{filt})">\n{body}\n      </g>\n'
+                f'    </g>')
+
+    # The interactive stage is decoration over real buttons, so it is hidden
+    # from assistive tech entirely rather than described twice.
+    root_attrs = ('role="img" aria-label="Lingueez running on a laptop, an e-reader and a phone"'
+                  if embed else
+                  'class="hero-stage" data-hero-stage="" aria-hidden="true"')
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="{vx:.0f} {vy:.0f} {vw:.0f} {vh:.0f}" width="{vw * 2:.0f}" height="{vh * 2:.0f}"
+     {root_attrs}>
+  <title>Lingueez — one vocabulary, every device</title>
+
+{DEFS}
 {BACKDROP}
   <g transform="translate(0,-4)">
     <!-- contact shadows on the implied floor -->
@@ -547,15 +566,15 @@ def build(embed: bool, backdrop: bool, only: str = None) -> str:
          the laptop and the keyboard shows through it. -->
     <g class="devices">
     <!-- ══ 1 · LAPTOP — centre, back plane ══════════════════════════ -->
-{dev("laptop", "Lingueez on the desktop app", "castLaptop", laptop_body,
+{dev("laptop", "Lingueez on the desktop app", "castLaptop", laptop_body(embed),
      halo("laptop"))}
 
     <!-- ══ 2 · E-READER — left, front plane ═════════════════════════ -->
-{dev("reader", "Lingueez on an e-reader", "castSide", reader_body,
+{dev("reader", "Lingueez on an e-reader", "castSide", reader_body(embed),
      halo("reader"))}
 
     <!-- ══ 3 · PHONE — right, front plane ═══════════════════════════ -->
-{dev("phone", "Lingueez on a phone", "castSide", phone_body,
+{dev("phone", "Lingueez on a phone", "castSide", phone_body(embed, bool(only)),
      halo("phone"))}
     </g>
   </g>
@@ -581,7 +600,7 @@ def screen_lists(only: str = None) -> str:
         if only and key != only:
             continue
         items = []
-        for skey, en, uk, stem in screens:
+        for skey, en, _uk, stem in screens:
             # data-full-* is the untouched source, for the lightbox; the hero
             # image is only as wide as the device screen can ever show.
             full = {th: "/" + _resolve(stem, th).relative_to(ROOT / "docs").as_posix()
@@ -592,14 +611,13 @@ def screen_lists(only: str = None) -> str:
                 f'          data-dark="/assets/hero/{device}-{skey}-dark.webp"\n'
                 f'          data-full-light="{full["light"]}"\n'
                 f'          data-full-dark="{full["dark"]}"'
-                f'><span lang="en">{en}</span><span lang="uk">{uk}</span></li>')
+                f'>{_t(en)}</li>')
         href, more_en, more_uk = MORE[device]
         out.append(f'  <ul class="dev-screens" data-screens="{key}"\n'
                    f'      data-start="{start_index(device, bool(only))}"\n'
                    f'      data-more-href="{href}" hidden>\n'
                    + "\n".join(items) + "\n"
-                   f'      <li class="more"><span lang="en">{more_en}</span>'
-                   f'<span lang="uk">{more_uk}</span></li>\n  </ul>')
+                   f'      <li class="more">{_t(more_en)}</li>\n  </ul>')
     return "\n".join(out)
 
 
@@ -623,8 +641,7 @@ def hotspots(only: str = None) -> str:
             f'  <button type="button" class="dev-hit" data-hit="{name}"\n'
             f'          style="--l:{left:.2f}%; --t:{top:.2f}%; '
             f'--w:{width:.2f}%; --h:{height:.2f}%">\n'
-            f'    <span class="sr-only"><span lang="en">{en}</span>'
-            f'<span lang="uk">{uk}</span></span>\n'
+            f'    <span class="sr-only">{_t(en)}</span>\n'
             f'  </button>')
     return "\n".join(out)
 

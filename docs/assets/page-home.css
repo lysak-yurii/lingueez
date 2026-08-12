@@ -4,8 +4,14 @@
    ========================================================================== */
 @layer page {
 
-  /* Ukrainian runs longer than English — give the hero headline room to fit. */
-  html[data-lang="uk"] .hero h1{ font-size:clamp(1.95rem,3.8vw,2.8rem); }
+  /* Ukrainian runs longer than English — give the hero headline room to fit.
+     --t-hero is clamp(2.2rem,3.4vw,3.05rem); this is that same curve scaled by
+     0.918, so the headline is 8% smaller at *every* viewport. All three values
+     have to be scaled together: clamp(ka,kb,kc) is k*clamp(a,b,c), but lowering
+     only the two bounds while leaving the middle term steeper than 3.4vw makes
+     Ukrainian overtake English between the two clamps. It did — 3.8vw put it
+     4.6px *larger* around 1150px, which is the width most laptops sit at. */
+  html[data-lang="uk"] .hero h1{ font-size:clamp(2.02rem,3.12vw,2.8rem); }
 
   /* ── hero stage ────────────────────────────────────────────────────────
      Three devices, each its own <g> in _includes/hero-stage.svg. Hovering
@@ -133,6 +139,20 @@
   .stage-note > .in{ opacity:1; pointer-events:auto; }
   /* A solo page has no ribbon, so nothing else sets the resting height. */
   .stage-note.is-solo{ min-height:var(--note-h, 2.6em); }
+
+  /* --solo-w narrows the wrap to size the artwork, and the note is inside it,
+     so the caption inherits a width meant for a drawing. On the phone page that
+     is 33% of the column — narrower than "Listen hands-free" and its dashes,
+     which then hang off to one side, because an overflowing grid item is
+     aligned to its start edge rather than centred.
+
+     So the note steps back out: its own content width, centred on the stage
+     rather than on itself. The cap keeps it inside the column — measured, since
+     the column width is a percentage the note cannot read back. */
+  .stage-wrap.is-solo .stage-note{
+    width:max-content; max-width:min(34ch, 86vw);
+    position:relative; left:50%; transform:translateX(-50%);
+  }
 
   /* ── ribbon ────────────────────────────────────────────────────────────
      No chrome at all: the phrases turn over inside a mask, the way a

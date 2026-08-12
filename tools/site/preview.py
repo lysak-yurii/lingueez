@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import functools
 import http.server
+import json
 import re
 import shutil
 import socketserver
@@ -60,12 +61,22 @@ TRIM_R = re.compile(r"-\}\}|-%\}")
 _STRING = re.compile(r"^(['\"])(.*)\1$", re.S)
 
 
+_SEGMENT = re.compile(r"([^.\[\]]+)|\[([^\]]+)\]")
+
+
 def _lookup(path: str, ctx: dict):
-    """Resolve `a.b.c` against the context. Missing links resolve to None."""
+    """Resolve `a.b.c`, and `a[b]` where the key is itself a variable.
+
+    The bracket form is what the translation lookup needs:
+    `site.data.i18n[page.lang][include.s]`.
+    """
     cur = ctx
-    for part in path.split("."):
+    for name, expr in _SEGMENT.findall(path):
+        key = name if name else _value(expr, ctx)
         if isinstance(cur, dict):
-            cur = cur.get(part)
+            cur = cur.get(key)
+        elif isinstance(cur, list) and isinstance(key, int):
+            cur = cur[key] if -len(cur) <= key < len(cur) else None
         else:
             return None
         if cur is None:
@@ -92,9 +103,21 @@ def _filters(expr: str, ctx: dict):
     out = _value(head, ctx)
     for f in rest:
         f = f.strip()
-        if f.startswith("default:"):
+        name, _, arg = f.partition(":")
+        name, arg = name.strip(), arg.strip()
+        if name == "default":
             if out in (None, "", False):
-                out = _value(f[len("default:"):], ctx)
+                out = _value(arg, ctx)
+        elif name == "upcase":
+            out = (out or "").upper()
+        elif name == "downcase":
+            out = (out or "").lower()
+        elif name == "prepend":
+            out = f"{_value(arg, ctx)}{out or ''}"
+        elif name == "append":
+            out = f"{out or ''}{_value(arg, ctx)}"
+        elif name == "jsonify":
+            out = json.dumps(out, ensure_ascii=False)
         else:
             raise ValueError(f"preview.py does not implement the {f!r} filter")
     return out
@@ -302,10 +325,24 @@ def out_path(url: str) -> Path:
     return OUT / url.lstrip("/")
 
 
+def load_data(root: Path) -> dict:
+    """`_data/` as Jekyll exposes it: folders nest, file stems are the keys."""
+    out: dict = {}
+    if not root.is_dir():
+        return out
+    for path in sorted(root.iterdir()):
+        if path.is_dir():
+            out[path.name] = load_data(path)
+        elif path.suffix in (".yml", ".yaml"):
+            out[path.stem] = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return out
+
+
 def build(quiet: bool = False) -> int:
     config = yaml.safe_load((DOCS / "_config.yml").read_text(encoding="utf-8")) or {}
     excluded = tuple(config.get("exclude", []) or [])
     site = {k: v for k, v in config.items() if k not in ("defaults", "exclude", "include")}
+    site["data"] = load_data(DOCS / "_data")
     renderer = Renderer(site, DOCS / "_includes")
 
     if OUT.exists():

@@ -1,0 +1,79 @@
+<header class="hero">
+  <div class="wrap">
+    <div class="copy">
+      <p class="eyebrow">{% include t.html s='Now on Android' %}</p>
+      <h1>{% include t.html s='Take your vocabulary <span class="accent">with you</span>' %}</h1>
+
+      <p class="lede">{% include t.html s='The Lingueez app for Android puts your words in your pocket. Browse and add words, review with flashcards, and listen hands-free with lock-screen playback controls. Sign in to your Lingueez account, and everything stays in sync.' %}</p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=app.lingueez.mobile">
+          {% include t.html s='Get it on Google Play' %}</a>
+        <a class="btn btn-ghost" href="/download/">
+          {% include t.html s='All platforms' %}</a>
+      </div>
+    </div>
+    <div class="shot device">
+      {% include hero-stage-phone.html %}
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>{% include t.html s='The same vocabulary, on the move' %}</h2>
+      <p>{% include t.html s='Everything you save on your computer or e-reader is already there when you open your phone.' %}</p>
+    </div>
+    {%- comment -%}
+      Three phones side by side rather than the alternating rows the desktop
+      screenshots use. A phone shot is 2.2:1 tall: in a two-column row it stands
+      taller than its own paragraph three times over, and the section becomes a
+      column of pictures with text stranded beside them. Abreast, they read as
+      one tour and the whole thing fits on a screen.
+    {%- endcomment -%}
+    <div class="phone-tour" data-stagger>
+      <div>
+        <div class="shot-phone">
+          {% include shot.html dir="mobile" ext="jpg" name="words" zoom="1" width="520" height="1127"
+             alt="The Lingueez Android app showing the saved-words list with statuses and translations." %}
+        </div>
+        <h3>{% include t.html s='Your whole library' %}</h3>
+        <p>{% include t.html s='Organised by language and by status, with favourites, instant search across words and definitions, and bulk import from Excel. Works offline.' %}</p>
+      </div>
+      <div>
+        <div class="shot-phone">
+          {% include shot.html dir="mobile" ext="jpg" name="flashcards" zoom="1" width="520" height="1127"
+             alt="A flashcard in the Lingueez Android app with the Hard, Good and Easy grading buttons." %}
+        </div>
+        <h3>{% include t.html s='Practise anywhere' %}</h3>
+        <p>{% include t.html s='Spaced repetition brings each word back just before you would forget it. Swipe to grade, and the ones you found hard come round again.' %}</p>
+      </div>
+      <div>
+        <div class="shot-phone">
+          {% include shot.html dir="mobile" ext="jpg" name="quiz" zoom="1" width="520" height="1127"
+             alt="A multiple-choice question in the Lingueez Android app, with the right answer marked." %}
+        </div>
+        <h3>{% include t.html s='Test yourself' %}</h3>
+        <p>{% include t.html s='Multiple choice or type the answer, on whichever deck you pick, asked in either direction — term to translation or back.' %}</p>
+      </div>
+      <div>
+        <div class="shot-phone">
+          {% include shot.html dir="mobile" ext="jpg" name="listen" zoom="1" width="520" height="1127"
+             alt="The Lingueez Android app playing a deck aloud, with playback controls." %}
+        </div>
+        <h3>{% include t.html s='Listen hands-free' %}</h3>
+        <p>{% include t.html s='Play your words aloud with background playback and lock-screen controls. Read-aloud runs on the device, so it needs no connection.' %}</p>
+      </div>
+  </div>
+</section>
+
+<section class="ctaband">
+  <div class="wrap reveal">
+    <h2>{% include t.html s='Get Lingueez on your phone' %}</h2>
+    {% include store-badges.html play="1" %}
+    <p class="cta-more">
+      <a href="/download/">{% include t.html s='Lingueez on every other device' %}</a>
+    </p>
+  </div>
+</section>

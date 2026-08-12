@@ -12,6 +12,12 @@
 {%- assign img = include.image | default: "https://lingueez.app/assets/hero.png" -%}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{%- comment -%}
+  As early as it can go while leaving charset in the first bytes: this can send
+  the visitor to another URL, and everything below is a download they would not
+  have needed.
+{%- endcomment -%}
+{% include lang-preinit.html %}
 <meta name="robots" content="{{ include.robots | default: 'index, follow' }}">
 <title>{{ t }}</title>
 {% if d %}<meta name="description" content="{{ d }}">{% endif %}
@@ -19,6 +25,13 @@
 {%- comment -%} theme-preinit.html sets this to the resolved theme before paint. {%- endcomment -%}
 <meta id="theme-color" name="theme-color" content="#101418">
 {% if include.url %}<link rel="canonical" href="{{ include.url }}">{% endif %}
+{%- comment -%} Tell search engines the same page exists in every language. {%- endcomment -%}
+{%- if page.base -%}
+{%- for l in site.data.languages %}
+<link rel="alternate" hreflang="{{ l.code }}" href="https://lingueez.app{{ l.prefix }}{{ page.base }}">
+{%- endfor %}
+<link rel="alternate" hreflang="x-default" href="https://lingueez.app{{ page.base }}">
+{%- endif %}
 <meta property="og:title" content="{{ t }}">
 {% if d %}<meta property="og:description" content="{{ d }}">{% endif %}
 <meta property="og:image" content="{{ img }}">

@@ -1,12 +1,15 @@
 <script>
 /* Pick the theme before paint, so a light visitor never sees a dark flash.
-   Mirrors lang-preinit.html; data-theme and data-lang coexist on <html>.
+   data-theme and data-lang coexist on <html>; the language comes from the URL.
    Absent (or invalid) key means "follow the OS", which is the default. */
 (function(){document.documentElement.classList.add('js');
 /* ^ Reveal-on-scroll starts at opacity:0, so it must only start hidden when
    there is script to reveal it. Without this a failed site.js leaves most of
    the page permanently blank. */
 var s;try{s=localStorage.getItem('lz-theme');}catch(e){}
+/* Not in localStorage? The choice may have been made on web.lingueez.app,
+   which shares it through a cookie on the parent domain. */
+if(s!=='light'&&s!=='dark'){var c=document.cookie.match(/(?:^|;\s*)lz-theme=(light|dark)(?:;|$)/);s=c?c[1]:null;}
 if(s==='light'||s==='dark'){document.documentElement.setAttribute('data-theme',s);}
 var dark=s==='dark'||(s!=='light'&&window.matchMedia
   &&window.matchMedia('(prefers-color-scheme: dark)').matches);

@@ -63,9 +63,24 @@ SCALING = 1.5
 #
 # review is the exception that wants *less*: it is one card centred in the
 # window, so the default leaves wide empty margins around it.
+#
+# flashcards used to sit at 700 alongside review, which drew the deck preview
+# at three columns and two rows and made the whole page read zoomed-in. Note
+# what does *not* scale: _CardGridLayout's min_item_width (250) and
+# _PreviewCard.HEIGHT (138) are fixed pixels, while widget_scaling grows the
+# type inside them — so a card never gets bigger, its text just crowds it, and
+# lowering --scaling would only narrow the window (width is content x scaling)
+# and cost a column. Widening the content is the lever that actually works.
+#
+# 850 is chosen to sit in the middle of the four-column band, not at its edge.
+# The grid takes another column every time the preview clears
+# n*250 + (n-1)*14 px, which lands the fifth at ~1306 and the fourth at ~1042;
+# the showcase width of 950 puts the preview at 1309 and tips into five columns
+# by three pixels, which is both too small to read and too fragile to keep — a
+# font change would silently drop it back to four. 850 gives 4 x 3.
 SHOWCASE_CONTENT = 950
 PAGE_CONTENT = {"texts": SHOWCASE_CONTENT, "stats": SHOWCASE_CONTENT,
-                "flashcards": 700, "review": 700}
+                "flashcards": 850, "review": 700}
 # Height is derived, not chosen: the hero's laptop screen rect is 552x387 SVG
 # units (1.4264:1), so a capture at exactly that aspect drops into it with
 # nothing cropped and nothing letterboxed.

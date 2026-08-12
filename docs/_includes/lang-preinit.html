@@ -1,6 +1,105 @@
+{%- comment -%}
+  First-visit language routing, before paint.
+
+  GitHub Pages serves static files, so there is no server-side Accept-Language
+  negotiation to hook into: the apex has to be English for everyone, and the
+  visitor is moved from there. That makes this the one piece of the site that
+  can send someone somewhere they did not ask to go, so the rules are narrow:
+
+  * Only the unprefixed English copy ever redirects. Every other URL is already
+    an explicit request for that language — a shared link, a search result, a
+    pick from the menu — and is left alone.
+  * An explicit choice always beats the browser list, and is remembered for a
+    year. Reading a prefixed page counts as a choice.
+  * ?lang=xx is the escape hatch, and the picker's English link carries it, so
+    "switch to English" cannot be undone by this script on the way there. The
+    parameter is stripped from the address bar once it has been recorded.
+  * location.replace, not assign: the redirect leaves no history entry, so Back
+    goes where the visitor came from instead of bouncing off the apex again.
+
+  Search engines are served by the hreflang set in head.html, which points at
+  the real URLs; Googlebot renders with an en-US language list and so falls
+  through this without redirecting.
+
+  Skipped on pages with no `base` (404, legal) — they have no translated twins
+  to route to.
+{%- endcomment -%}
+{%- if page.base -%}
 <script>
-/* Pick language before paint to avoid a flash. */
-(function(){var s;try{s=localStorage.getItem('lz-lang');}catch(e){}
-if(s!=='en'&&s!=='uk'){s=(navigator.language||'').toLowerCase().indexOf('uk')===0?'uk':'en';}
-document.documentElement.setAttribute('data-lang',s);})();
+(function(){
+  /* Canonical code -> path prefix, generated from _data/languages.yml so that
+     adding a language stays one file. Matching is done against a lowercased
+     index built below rather than a lowercased map here: navigator sends
+     `pt-BR` in any casing it likes, but the URL is case-sensitive and the
+     cookie has to carry the canonical spelling for the web app to reuse.
+
+     The space after the opening brace is load-bearing: a brace butted straight
+     against the tag that follows reads as the start of an output tag, to Liquid
+     and to preview.py alike, and swallows the loop. */
+  var SRC={ {% for l in site.data.languages %}"{{ l.code }}":"{{ l.prefix }}",{% endfor %} };
+  var L={}, own=Object.prototype.hasOwnProperty, k;
+  for(k in SRC){ if(own.call(SRC,k)) L[k.toLowerCase()]=[k,SRC[k]]; }
+
+  /* Tags browsers still send that are not the code we publish under. */
+  var ALIAS={"no":"nb","nn":"nb","in":"id","sh":"sr"};
+  var here="{{ page.lang | default: 'en' }}", base="{{ page.base }}";
+
+  function has(x){ return own.call(L,x); }
+
+  function save(code){
+    try{ localStorage.setItem('lz-lang',code); }catch(e){}
+    /* Same bridge site.js uses: a cookie on the parent domain is the only way
+       to hand the choice to web.lingueez.app, a separate origin. */
+    var dom=/(^|\.)lingueez\.app$/.test(location.hostname)?'; domain=.lingueez.app':'';
+    try{
+      document.cookie='lz-lang='+code+'; path=/'+dom+'; max-age=31536000; SameSite=Lax';
+    }catch(e){}
+  }
+
+  /* Already on a translated page: record it and stop. */
+  if(here!=='en'){ save(here); return; }
+
+  var q=location.search.match(/[?&]lang=([\w-]+)/);
+  if(q){
+    var w=q[1].toLowerCase();
+    if(has(w)){
+      save(L[w][0]);
+      /* Tidy the address bar so the parameter is not carried into shares or
+         into the canonical URL the visitor copies. */
+      if(window.history&&history.replaceState){
+        var clean=location.search.replace(/([?&])lang=[\w-]+&?/,'$1').replace(/[?&]$/,'');
+        history.replaceState(null,'',location.pathname+clean+location.hash);
+      }
+    }
+    return;
+  }
+
+  var stored; try{ stored=localStorage.getItem('lz-lang'); }catch(e){}
+  if(!stored){
+    var m=document.cookie.match(/(?:^|;\s*)lz-lang=([^;]*)/);
+    stored=m?m[1]:null;
+  }
+
+  var want=null;
+  if(stored&&has(String(stored).toLowerCase())){
+    want=String(stored).toLowerCase();
+  }else{
+    /* navigator.languages is in the visitor's own order of preference; the
+       first tag we publish wins. Region first (pt-BR), then the bare language
+       (pt), so a Brazilian gets the Brazilian copy and a Portuguese one does
+       not get sent to it. */
+    var list=navigator.languages||[navigator.language||''];
+    for(var i=0;i<list.length&&!want;i++){
+      var t=String(list[i]).toLowerCase(), b=t.split('-')[0];
+      if(has(t)) want=t;
+      else if(has(b)) want=b;
+      else if(ALIAS[t]&&has(ALIAS[t])) want=ALIAS[t];
+      else if(ALIAS[b]&&has(ALIAS[b])) want=ALIAS[b];
+    }
+  }
+
+  if(!want||want==='en') return;
+  location.replace(L[want][1]+base+location.search+location.hash);
+})();
 </script>
+{%- endif -%}

@@ -1,0 +1,122 @@
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="copy">
+      <p class="eyebrow">{% include t.html s='Lingueez for KOReader · Free &amp; open source' %}</p>
+      <h1 class="kh1">{% include t.html s='Save words straight from <span class="accent">your books</span>' %}</h1>
+
+      <p class="lede">{% include t.html s='The Lingueez plugin for KOReader lets you look up a word while you read, save it to your Lingueez vocabulary with its translation, and review it with flashcards directly on the e-reader. Your words stay in sync across devices.' %}</p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/lysak-yurii/lingueez.koplugin/releases">
+          {% include t.html s='Get the plugin' %}</a>
+        <a class="btn btn-ghost" href="https://github.com/lysak-yurii/lingueez.koplugin">
+          {% include t.html s='View on GitHub' %}</a>
+      </div>
+    </div>
+    <div class="shot device">
+      {% include hero-stage-reader.html %}
+    </div>
+  </div>
+</header>
+
+<!-- SAVE WHILE READING -->
+<section>
+  <div class="wrap">
+    <div class="show reveal">
+      <div class="copy">
+        <h2>{% include t.html s='Save a word without leaving the book' %}</h2>
+        <p>{% include t.html s='Long-press any word and tap <b>Save to Lingueez</b>. The plugin detects the book’s language, translates the word, and stores it in your account, ready to study. Adjust the translation before saving if you like.' %}</p>
+      </div>
+      <div class="device"><img class="eink only-light" src="/assets/koreader/save-word-light.png"
+             width="853" height="1019" loading="lazy" decoding="async" alt="The Save to Lingueez dialog on a KOReader e-reader.">
+        <img class="eink only-dark" src="/assets/koreader/save-word-dark.png"
+             width="853" height="1019" loading="lazy" decoding="async" alt="The Save to Lingueez dialog on a KOReader e-reader."></div>
+    </div>
+    <div class="show flip reveal">
+      <div class="copy">
+        <h2>{% include t.html s='Your whole list, on the reader' %}</h2>
+        <p>{% include t.html s='Open <b>My Words</b> from the Lingueez menu to page through everything you have saved, filter the list, and tap any entry to open it — without leaving the book.' %}</p>
+      </div>
+      <div class="device"><img class="eink only-light" src="/assets/koreader/view-words-light.png"
+             width="1271" height="1180" loading="lazy" decoding="async" alt="The My Words list from the Lingueez plugin on a KOReader e-reader.">
+        <img class="eink only-dark" src="/assets/koreader/view-words-dark.png"
+             width="1271" height="1180" loading="lazy" decoding="async" alt="The My Words list from the Lingueez plugin on a KOReader e-reader."></div>
+    </div>
+
+    <div class="show reveal">
+      <div class="copy">
+        <h2>{% include t.html s='Review with flashcards on the reader' %}</h2>
+        <p>{% include t.html s='Flip through flashcards of your saved words right where you read — no separate device, no extra app. Reinforce vocabulary in the same place you discovered it.' %}</p>
+      </div>
+      <div class="device"><img class="eink only-light" src="/assets/koreader/flashcards-light.png"
+             width="860" height="919" loading="lazy" decoding="async" alt="Reviewing saved words with flashcards on a KOReader e-reader.">
+        <img class="eink only-dark" src="/assets/koreader/flashcards-dark.png"
+             width="860" height="919" loading="lazy" decoding="async" alt="Reviewing saved words with flashcards on a KOReader e-reader."></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE CARDS -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>{% include t.html s='Built for reading' %}</h2>
+      <p>{% include t.html s='Small, focused, and out of your way while you read.' %}</p>
+    </div>
+    <div class="grid reveal">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></div><h3>{% include t.html s='Instant translation' %}</h3><p>{% include t.html s='Google Translate built in, with optional DeepL.' %}</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg></div><h3>{% include t.html s='Knows the language' %}</h3><p>{% include t.html s='The word’s language is detected automatically, so saving to your dictionary is quick.' %}</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><h3>{% include t.html s='Texts, not just words' %}</h3><p>{% include t.html s='Save the chapter you’re reading to your library, or pull texts saved on other devices back onto your reader.' %}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SYNC EVERYWHERE -->
+<section>
+  <div class="wrap">
+    <div class="show flip reveal">
+      <div class="copy">
+        <h2>{% include t.html s='Your vocabulary, always with you' %}</h2>
+        <p>{% include t.html s='Everything you save on your reader syncs to your Lingueez account on your other devices. Study with full flashcards, audio, statistics, and side-by-side reading on your computer — your reader is simply one more place to add words.' %}</p>
+        <a class="btn btn-ghost" href="/" style="margin-top:1.2rem;">{% include t.html s='See the desktop app' %}</a>
+      </div>
+      <div><img class="eink only-light" src="/assets/koreader/menu-light.png"
+             width="860" height="657" loading="lazy" decoding="async" alt="The Lingueez menu on a KOReader e-reader: View My Words, Flashcards, Save current chapter as text, and Cloud texts.">
+        <img class="eink only-dark" src="/assets/koreader/menu-dark.png"
+             width="860" height="657" loading="lazy" decoding="async" alt="The Lingueez menu on a KOReader e-reader: View My Words, Flashcards, Save current chapter as text, and Cloud texts."></div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="wrap reveal">
+    <div class="section-head">
+      <h2>{% include t.html s='Install in two steps' %}</h2>
+      <p>{% include t.html s='No configuration — just copy the plugin and sign in.' %}</p>
+    </div>
+    <ol class="steps" style="margin:0 auto;">
+      <li>{% include t.html s='Copy the <code>lingueez.koplugin</code> folder into your KOReader plugins directory:
+        <ul>
+          <li><b>Android</b> — <code>/sdcard/koreader/plugins/</code></li>
+          <li><b>Linux</b> — <code>~/.config/koreader/plugins/</code></li>
+          <li><b>Kobo / Kindle / other</b> — see the KOReader documentation for the plugin path.</li>
+        </ul>' %}</li>
+      <li>{% include t.html s='<b>Restart KOReader.</b> The plugin appears in Plugin Management and adds a <b>Lingueez</b> entry to the menu. Open <b>Menu → Lingueez → Configure</b> and sign in.' %}</li>
+
+    </ol>
+    <p class="note" style="margin:1.6em auto 0; text-align:center;">{% include t.html s='New to Lingueez? Create your account on the <a href="https://lingueez.app">desktop or web app</a> first — the plugin signs you in, it doesn’t register new accounts.' %}</p>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="ctaband">
+  <div class="wrap reveal">
+    <h2>{% include t.html s='Turn every book into vocabulary' %}</h2>
+    {% include store-badges.html github="https://github.com/lysak-yurii/lingueez.koplugin/releases/latest" %}
+    <p class="cta-more">
+      <a href="https://github.com/lysak-yurii/lingueez.koplugin">{% include t.html s='Read the source and the install guide' %}</a>
+    </p>
+  </div>
+</section>

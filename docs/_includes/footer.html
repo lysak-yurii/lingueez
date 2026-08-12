@@ -3,37 +3,34 @@
     <div class="foot-grid">
       <div>
         <a class="brand" href="/" style="font-size:1.05rem;"><img src="/assets/icon.png" alt="" width="24" height="24"> Lingueez</a>
-        <p style="margin:.7rem 0 0; max-width:30ch;"><span lang="en">Build vocabulary with confidence—across every language you learn.</span><span lang="uk">Вивчайте лексику впевнено — незалежно від того, яку мову ви опановуєте.</span></p>
+        <p style="margin:.7rem 0 0; max-width:30ch;">{% include t.html s='Build vocabulary with confidence—across every language you learn.' %}</p>
       </div>
       <div>
-        <h4><span lang="en">Product</span><span lang="uk">Продукт</span></h4>
-        <a href="/#features"><span lang="en">Desktop</span><span lang="uk">Комп’ютер</span></a>
-        <a href="/mobile/"><span lang="en">Android</span><span lang="uk">Android</span></a>
-        <a href="/koreader/"><span lang="en">KOReader plugin</span><span lang="uk">Плагін KOReader</span></a>
-        <a href="https://web.lingueez.app/"><span lang="en">Web app</span><span lang="uk">Вебзастосунок</span></a>
+        <h4>{% include t.html s='Product' %}</h4>
+        <a href="/#features">{% include t.html s='Desktop' %}</a>
+        <a href="/mobile/">{% include t.html s='Android' %}</a>
+        <a href="/koreader/">{% include t.html s='KOReader plugin' %}</a>
+        <a href="https://web.lingueez.app/">{% include t.html s='Web app' %}</a>
       </div>
       <div>
-        <h4><span lang="en">Resources</span><span lang="uk">Ресурси</span></h4>
-        <a href="/download/"><span lang="en">Download</span><span lang="uk">Завантажити</span></a>
-        <a href="https://github.com/lysak-yurii/lingueez"><span lang="en">Source code</span><span lang="uk">Вихідний код</span></a>
-        <a href="/#support"><span lang="en">Support the project</span><span lang="uk">Підтримати проєкт</span></a>
+        <h4>{% include t.html s='Resources' %}</h4>
+        <a href="/download/">{% include t.html s='Download' %}</a>
+        <a href="https://github.com/lysak-yurii/lingueez">{% include t.html s='Source code' %}</a>
+        <a href="/#support">{% include t.html s='Support the project' %}</a>
       </div>
       <div>
-        <h4><span lang="en">Legal</span><span lang="uk">Правова інформація</span></h4>
-        <a href="/legal/privacy-policy/"><span lang="en">Privacy Policy</span><span lang="uk">Політика конфіденційності</span></a>
-        <a href="/legal/terms-of-service/"><span lang="en">Terms</span><span lang="uk">Умови</span></a>
+        <h4>{% include t.html s='Legal' %}</h4>
+        <a href="/legal/privacy-policy/">{% include t.html s='Privacy Policy' %}</a>
+        <a href="/legal/terms-of-service/">{% include t.html s='Terms' %}</a>
       </div>
       <div>
-        <h4><span lang="en">Contact</span><span lang="uk">Контакти</span></h4>
+        <h4>{% include t.html s='Contact' %}</h4>
         <a href="mailto:support@lingueez.app">support@lingueez.app</a>
       </div>
     </div>
     <div class="foot-bottom">
       <span class="attrib">© 2024–2026 Lingueez — created by Yurii Lysak</span>
-      <span class="lang" role="group" aria-label="Language">
-        <button data-lang-btn="en" aria-pressed="true">EN</button>
-        <button data-lang-btn="uk" aria-pressed="false">UK</button>
-      </span>
+      {% include lang-picker.html up=true %}
     </div>
   </div>
 </footer>

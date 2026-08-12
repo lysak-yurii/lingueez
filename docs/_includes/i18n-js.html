@@ -1,0 +1,19 @@
+{%- comment -%}
+  The handful of strings the scripts build at runtime rather than find in the
+  markup. They come from the same catalogue as everything else, handed over as
+  JSON; hero.js and site.js fall back to their English if this is absent.
+{%- endcomment -%}
+{%- assign c = site.data.i18n[page.lang] -%}
+<script id="i18n-js" type="application/json">{
+"Desktop": {{ c['Desktop'] | default: 'Desktop' | jsonify }},
+"E-reader": {{ c['E-reader'] | default: 'E-reader' | jsonify }},
+"Phone": {{ c['Phone'] | default: 'Phone' | jsonify }},
+"your whole vocabulary, on your computer": {{ c['your whole vocabulary, on your computer'] | default: 'your whole vocabulary, on your computer' | jsonify }},
+"save words straight from the book you are reading": {{ c['save words straight from the book you are reading'] | default: 'save words straight from the book you are reading' | jsonify }},
+"review anywhere, in your pocket": {{ c['review anywhere, in your pocket'] | default: 'review anywhere, in your pocket' | jsonify }},
+"Pick a device to look closer": {{ c['Pick a device to look closer'] | default: 'Pick a device to look closer' | jsonify }},
+"Open full size": {{ c['Open full size'] | default: 'Open full size' | jsonify }},
+"Close": {{ c['Close'] | default: 'Close' | jsonify }},
+"Previous": {{ c['Previous'] | default: 'Previous' | jsonify }},
+"Next": {{ c['Next'] | default: 'Next' | jsonify }}
+}</script>

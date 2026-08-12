@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" data-lang="en">
+{%- assign lang = page.lang | default: 'en' -%}
+{%- comment -%}
+  The title and description live in front matter rather than the body, so they
+  go through the catalogue here instead of via t.html.
+{%- endcomment -%}
+{%- assign c = site.data.i18n[lang] -%}
+{%- assign t = c[page.title] | default: page.title -%}
+{%- assign d = c[page.description] | default: page.description -%}
+<html lang="{{ lang }}" data-lang="{{ lang }}">
 <head>
-{% include lang-preinit.html %}
-{% include head.html title=page.title description=page.description image=page.image url=page.canonical %}
+{% include head.html title=t description=d image=page.image url=page.canonical %}
 {% include theme-preinit.html %}
 {% for s in page.styles %}<link rel="stylesheet" href="/assets/{{ s }}">
 {% endfor %}{{ page.head_extra }}
 </head>
 <body>
+{% include i18n-js.html %}
 {% include nav.html active=page.nav_active %}
 {{ content }}
 {% include footer.html %}
