@@ -1242,6 +1242,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "K učení",
     "Reviewing": "Opakované",
     "Ignored": "Ignorováno",
+    "Undo": "Zpět",
+    "Restored": "Obnoveno",
+    "Ignore word": "Ignorovat slovo",
+    "Ignore this word": "Ignorovat toto slovo",
+    "Already ignored.": "Již ignorováno.",
+    "{count} word(s) won't come up in practice.": "{count} slovo/slova se už neobjeví v procvičování.",
+    "'{word}' is back in rotation": "„{word}“ se vrací do procvičování",
+    "'{word}' won't come up again": "„{word}“ se už neobjeví",
 
     # Table density
     "Compact": "Kompaktní",

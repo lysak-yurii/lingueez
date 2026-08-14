@@ -1239,6 +1239,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Προς εκμάθηση",
     "Reviewing": "Σε επανάληψη",
     "Ignored": "Παραβλέφθηκε",
+    "Undo": "Αναίρεση",
+    "Restored": "Επαναφέρθηκε",
+    "Ignore word": "Αγνόηση λέξης",
+    "Ignore this word": "Αγνόηση αυτής της λέξης",
+    "Already ignored.": "Έχει ήδη αγνοηθεί.",
+    "{count} word(s) won't come up in practice.": "{count} λέξη(εις) δεν θα εμφανίζονται στην εξάσκηση.",
+    "'{word}' is back in rotation": "«{word}» επέστρεψε στην εξάσκηση",
+    "'{word}' won't come up again": "«{word}» δεν θα εμφανιστεί ξανά",
 
     # Table density
     "Compact": "Συμπαγές",

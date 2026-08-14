@@ -21,9 +21,11 @@
 
 """Sliding toast notifications shown in the corner of the main window."""
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt
-from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel
+from PySide6.QtWidgets import (QFrame, QGraphicsOpacityEffect, QHBoxLayout,
+                               QLabel, QPushButton)
 
 from app.ui import theme
+from app.ui.widgets import style_as_link
 
 _ICONS = {"info": "ℹ", "success": "✔", "error": "✖", "warning": "⚠"}
 # Palette keys, not hex: these used to be copies of the dark values and stayed
@@ -42,10 +44,12 @@ class Toast(QFrame):
     SPACING = 8
     _active = []
 
-    def __init__(self, parent, title, message, toast_type="info", duration=4000):
+    def __init__(self, parent, title, message, toast_type="info", duration=4000,
+                 action_text=None, on_action=None):
         super().__init__(parent)
         self.setObjectName("ToastFrame")
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self._closing = False
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(14, 10, 14, 10)
@@ -59,6 +63,17 @@ class Toast(QFrame):
         text.setWordWrap(True)
         text.setStyleSheet("background: transparent;")
         layout.addWidget(text, 1)
+
+        if action_text and on_action:
+            action = style_as_link(QPushButton(action_text))
+            action.setFlat(True)
+            action.setStyleSheet(
+                f"QPushButton {{ color: {_toast_color(toast_type)};"
+                f" background: transparent; border: none; font-weight: 600;"
+                f" padding: 2px 4px; }}"
+                "QPushButton:hover { text-decoration: underline; }")
+            action.clicked.connect(lambda: self._run_action(on_action))
+            layout.addWidget(action, 0, Qt.AlignVCenter)
 
         self.setMaximumWidth(380)
         self.adjustSize()
@@ -79,7 +94,17 @@ class Toast(QFrame):
 
         QTimer.singleShot(duration, self._fade_out)
 
+    def _run_action(self, callback):
+        # Dismiss first: the callback usually raises a follow-up toast, and
+        # leaving this one on screen would stack the two.
+        self._close()
+        callback()
+
     def _fade_out(self):
+        # The dismiss timer is armed for the toast's whole lifetime, so it still
+        # fires after an action button has closed (and deleted) this widget.
+        if self._closing:
+            return
         anim = QPropertyAnimation(self._effect, b"opacity", self)
         anim.setDuration(300)
         anim.setStartValue(1.0)
@@ -89,6 +114,9 @@ class Toast(QFrame):
         self._fade_anim = anim
 
     def _close(self):
+        if self._closing:
+            return
+        self._closing = True
         if self in Toast._active:
             Toast._active.remove(self)
         self.close()
@@ -110,5 +138,7 @@ class Toast(QFrame):
             y -= Toast.SPACING
 
 
-def show_toast(parent, title, message, toast_type="info", duration=4000):
-    return Toast(parent, title, message, toast_type, duration)
+def show_toast(parent, title, message, toast_type="info", duration=4000,
+               action_text=None, on_action=None):
+    return Toast(parent, title, message, toast_type, duration,
+                 action_text, on_action)

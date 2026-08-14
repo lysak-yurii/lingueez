@@ -1065,6 +1065,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Öğrenilecek",
     "Reviewing": "Tekrar Ediliyor",
     "Ignored": "Yoksayıldı",
+    "Undo": "Geri al",
+    "Restored": "Geri yüklendi",
+    "Ignore word": "Kelimeyi yok say",
+    "Ignore this word": "Bu kelimeyi yok say",
+    "Already ignored.": "Zaten yok sayılıyor.",
+    "{count} word(s) won't come up in practice.": "{count} kelime artık alıştırmalarda çıkmayacak.",
+    "'{word}' is back in rotation": "'{word}' yeniden alıştırmalarda",
+    "'{word}' won't come up again": "'{word}' bir daha çıkmayacak",
 
     # Table density (settings → Table size)
     "Compact": "Kompakt",

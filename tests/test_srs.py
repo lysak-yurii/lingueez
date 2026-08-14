@@ -240,6 +240,17 @@ class SrsStorageTests(unittest.TestCase):
         self.assertIn(overdue, ids)
         self.assertIn(never, ids)  # never graded counts as due
 
+    def test_ignored_is_excluded_however_another_client_cased_it(self):
+        studying = self._add_word()
+        cased = [self._add_word(status=s) for s in ("Ignored", "ignored", "IGNORED", " Ignored ")]
+
+        ids = db.srs_due_word_ids(
+            10, now_iso=NOW.isoformat(timespec="seconds"), db_path=self.db_path
+        )
+        self.assertIn(studying, ids)
+        for wid in cased:
+            self.assertNotIn(wid, ids)
+
     def test_due_limit(self):
         for _ in range(5):
             self._add_word()

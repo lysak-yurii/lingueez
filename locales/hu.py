@@ -1237,6 +1237,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Megtanulandó",
     "Reviewing": "Áttekintés alatt",
     "Ignored": "Mellőzött",
+    "Undo": "Visszavonás",
+    "Restored": "Visszaállítva",
+    "Ignore word": "Szó mellőzése",
+    "Ignore this word": "Ennek a szónak a mellőzése",
+    "Already ignored.": "Már mellőzve van.",
+    "{count} word(s) won't come up in practice.": "{count} szó nem jelenik meg többé a gyakorlásban.",
+    "'{word}' is back in rotation": "„{word}” ismét szerepel a gyakorlásban",
+    "'{word}' won't come up again": "„{word}” nem jelenik meg többé",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

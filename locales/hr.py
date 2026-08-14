@@ -1088,6 +1088,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Za naučiti",
     "Reviewing": "Ponavljanje",
     "Ignored": "Ignorirano",
+    "Undo": "Poništi",
+    "Restored": "Vraćeno",
+    "Ignore word": "Zanemari riječ",
+    "Ignore this word": "Zanemari ovu riječ",
+    "Already ignored.": "Već je zanemarena.",
+    "{count} word(s) won't come up in practice.": "{count} riječ(i) više se neće pojavljivati u vježbanju.",
+    "'{word}' is back in rotation": "„{word}” se vraća u vježbanje",
+    "'{word}' won't come up again": "„{word}” se više neće pojaviti",
 
     # Table density (settings → Table size)
     "Compact": "Kompaktno",

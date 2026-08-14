@@ -1079,6 +1079,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Выучить",
     "Reviewing": "Просмотрено",
     "Ignored": "Игнорируется",
+    "Undo": "Отменить",
+    "Restored": "Восстановлено",
+    "Ignore word": "Игнорировать слово",
+    "Ignore this word": "Игнорировать это слово",
+    "Already ignored.": "Уже игнорируется.",
+    "{count} word(s) won't come up in practice.": "{count} слов(а) больше не появятся в практике.",
+    "'{word}' is back in rotation": "«{word}» снова в ротации",
+    "'{word}' won't come up again": "«{word}» больше не появится",
 
     # Table density
     "Compact": "Компактный",

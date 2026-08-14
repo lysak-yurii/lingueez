@@ -58,6 +58,7 @@ from PySide6.QtWidgets import (
 
 from app.core import audio
 from app.core import db as dbq
+from app.core import progression
 from app.core import srs
 from app.i18n import lang_label, tr
 from app.ui import icons, theme
@@ -711,6 +712,7 @@ class FlashcardWidget(QWidget):
 
     clicked = Signal()
     speak_clicked = Signal()
+    ignore_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
@@ -737,10 +739,17 @@ class FlashcardWidget(QWidget):
         self.speak_btn.setIconSize(QSize(16, 16))
         self.speak_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
         self.speak_btn.clicked.connect(self.speak_clicked.emit)
+        self.ignore_btn = QPushButton(objectName="iconButton")
+        self.ignore_btn.setToolTip(tr("Ignore this word"))
+        self.ignore_btn.setCursor(Qt.PointingHandCursor)
+        self.ignore_btn.setIconSize(QSize(16, 16))
+        self.ignore_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
+        self.ignore_btn.clicked.connect(self.ignore_clicked.emit)
         self.status_chip = QLabel()
         self.status_chip.setAlignment(Qt.AlignCenter)
         head.addWidget(self.caption)
         head.addStretch(1)
+        head.addWidget(self.ignore_btn)
         head.addWidget(self.speak_btn)
         head.addSpacing(4)
         head.addWidget(self.status_chip)
@@ -777,6 +786,14 @@ class FlashcardWidget(QWidget):
         self._definition = ""
         self._side = 0
         self._hint_text = hint_text
+        self._refresh_faces()
+
+    def refresh_status(self):
+        """Re-read the status off the record already on screen.
+
+        For the autoplay case, where the card stays put after being ignored and
+        the chip and the button would otherwise keep the stale rung.
+        """
         self._refresh_faces()
 
     def set_definition(self, text):
@@ -820,6 +837,7 @@ class FlashcardWidget(QWidget):
         self.status_chip.setText(tr(status) if status else "")
         self.status_chip.setVisible(bool(status))
         self._style_status_chip()  # the ramp color changes with the card
+        self.ignore_btn.setVisible(progression.is_studiable(status))
         # the answer side announces itself: caption + divider go accent
         self.caption.setStyleSheet(
             f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
@@ -871,6 +889,9 @@ class FlashcardWidget(QWidget):
         self.divider.setStyleSheet(  # only ever visible on the answer side
             f"background:{_soft(c['accent_text'], 130)};border:none;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 16))
+        # Grey, not the danger red: parking a word is reversible bookkeeping,
+        # and the Ignored ramp is deliberately off to one side of the ladder.
+        self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
 
     def paintEvent(self, _event):  # noqa: N802
         p = QPainter(self)
@@ -893,6 +914,7 @@ class FlashcardsPage(QWidget):
 
     play_requested = Signal(list)               # records → start read-aloud
     status_change_requested = Signal(str, str, str)  # word_id, status, label
+    ignore_requested = Signal(str, str, str)         # word_id, previous, label
     player_toggle_requested = Signal()          # pause/resume the word player
     player_prev_requested = Signal()
     player_next_requested = Signal()
@@ -1134,6 +1156,7 @@ class FlashcardsPage(QWidget):
         self.card = FlashcardWidget(self._colors)
         self.card.clicked.connect(self._card_clicked)
         self.card.speak_clicked.connect(self._speak_current_clicked)
+        self.card.ignore_clicked.connect(self._ignore_current)
         self.card_stack = _CardStack(self.card, self._colors)
         # Bounded, not free-expanding: the stretches above and below centre the
         # card, but without a ceiling it grew to the full height of the page and
@@ -1278,6 +1301,7 @@ class FlashcardsPage(QWidget):
         bind(Qt.Key_3, lambda: self._grade("easy"))
         bind(Qt.Key_Left, self._prev_card)
         bind(Qt.Key_Right, self._next_card_skip)
+        bind(Qt.Key_I, self._ignore_current)
 
     # -------------------------------------------------------------- deck
 
@@ -1880,6 +1904,48 @@ class FlashcardsPage(QWidget):
             self._show_card(self._index + 1)
         else:
             self._complete()
+
+    def _ignore_current(self):
+        """Park the current word on Ignored and take it out of the run.
+
+        Refused once the card has been graded: ``_grade_history`` is keyed by
+        deck index, and pulling a card out from under an answer that already
+        occupies that slot would misalign the trail and the hard-word drill.
+        """
+        if self._stack.currentIndex() != self.STATE_SESSION or not self._deck:
+            return
+        rec = self._deck[self._index]
+        wid = rec.get("ID")
+        if wid is None or wid in self._graded:
+            return
+        if not progression.is_studiable(rec.get("Status")):
+            return
+        previous = rec.get("Status")
+        rec["Status"] = progression.IGNORED_STATUS
+        self.ignore_requested.emit(
+            str(wid), previous if isinstance(previous, str) else "",
+            str(rec.get("Word1") or ""))
+        if self._autoplay:
+            # The deck mirrors a frozen player queue, and rebuilding it here
+            # would desync the audio. Skip instead; the word is gone for good
+            # from the next deck build.
+            self.card.refresh_status()
+            self.player_next_requested.emit()
+            return
+        self._drop_current()
+
+    def _drop_current(self):
+        """Remove the current card, keeping the index-keyed grade trail aligned."""
+        self._deck.pop(self._index)
+        self._grade_history = {(k - 1 if k > self._index else k): g
+                               for k, g in self._grade_history.items()}
+        if not self._deck:
+            # An empty summary would read as a bug, not as an emptied deck.
+            self._show_picker()
+        elif self._index >= len(self._deck):
+            self._complete()
+        else:
+            self._show_card(self._index)
 
     def _prev_card(self):
         if self._stack.currentIndex() != self.STATE_SESSION or not self._deck:

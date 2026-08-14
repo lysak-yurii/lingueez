@@ -1075,6 +1075,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Cần học",
     "Reviewing": "Đang ôn tập",
     "Ignored": "Đã bỏ qua",
+    "Undo": "Hoàn tác",
+    "Restored": "Đã khôi phục",
+    "Ignore word": "Bỏ qua từ",
+    "Ignore this word": "Bỏ qua từ này",
+    "Already ignored.": "Đã bỏ qua rồi.",
+    "{count} word(s) won't come up in practice.": "{count} từ sẽ không xuất hiện trong luyện tập nữa.",
+    "'{word}' is back in rotation": "'{word}' đã trở lại luyện tập",
+    "'{word}' won't come up again": "'{word}' sẽ không xuất hiện nữa",
 
     # Table density (settings → Table size)
     "Compact": "Gọn gàng",

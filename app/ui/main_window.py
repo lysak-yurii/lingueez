@@ -1187,6 +1187,7 @@ class MainWindow(QMainWindow):
         self.flashcards_page.play_requested.connect(self._read_records_action)
         self.flashcards_page.status_change_requested.connect(
             self._apply_status_change)
+        self.flashcards_page.ignore_requested.connect(self._ignore_word)
         self.flashcards_page.player_toggle_requested.connect(
             self.word_player.toggle_pause)
         self.flashcards_page.player_prev_requested.connect(self.word_player.prev)
@@ -1206,6 +1207,7 @@ class MainWindow(QMainWindow):
             pool_provider=self._quiz_pool,
             settings_provider=lambda: self.settings)
         self.quiz_page.status_change_requested.connect(self._apply_status_change)
+        self.quiz_page.ignore_requested.connect(self._ignore_word)
 
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
@@ -3006,6 +3008,41 @@ class MainWindow(QMainWindow):
 
         self._run_bulk(work, done)
 
+    def ignore_words(self):
+        """Park the selected words on Ignored from the vocabulary table.
+
+        The session pages have their own one-click button; this is the bulk
+        route, and the only one that has to cope with a mixed selection — so
+        already-ignored rows are left out of the count rather than counted as
+        newly parked.
+        """
+        records = self._require_selection("ignore")
+        if not records:
+            return
+        pending = [r for r in records if progression.is_studiable(r.get("Status"))]
+        if not pending:
+            show_toast(self, tr("Ignored"),
+                       tr("Already ignored."), "info")
+            return
+        self._sync_before_db_operation(force=True)
+
+        def work():
+            return self.db_adapter.update_words_bulk(
+                [r["ID"] for r in pending],
+                {'Status': progression.IGNORED_STATUS})
+
+        def done(result):
+            updated, failed = result
+            self.load_data()
+            show_toast(self, tr("Ignored"),
+                       tr("{count} word(s) won't come up in practice.").format(
+                           count=updated),
+                       "warning" if failed else "success")
+            if failed:
+                logging.warning(f"Ignore skipped {len(failed)} word(s): {failed[:5]}")
+
+        self._run_bulk(work, done)
+
     def view_definition(self):
         records = self._require_selection("view its definition")
         if not records:
@@ -3065,6 +3102,7 @@ class MainWindow(QMainWindow):
         menu.addAction(tr("Copy Translation"), lambda: self._copy_field(self.selected_records(), 'Word2'))
         menu.addSeparator()
         menu.addAction(tr("Toggle Favorite"), self.toggle_favorite)
+        menu.addAction(tr("Ignore word"), self.ignore_words)
         menu.addAction(tr("Change Status…"), self.change_status)
         menu.addAction(tr("Add / Remove Tags…"), self.open_tags)
         menu.addSeparator()
@@ -3278,7 +3316,8 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             logging.error(f"Playback status update failed: {exc}")
 
-    def _apply_status_change(self, wid, target, word_label=""):
+    def _apply_status_change(self, wid, target, word_label="", undo_from=None,
+                             toast=None):
         """Promote a word's status (playback listens or quiz/flashcard grading):
         synced DB update, DataFrame + table model refresh, and a toast.
 
@@ -3290,6 +3329,11 @@ class MainWindow(QMainWindow):
         An empty ``word_label`` suppresses the toast, for callers that already
         show the promotion in place — the quiz puts it in the feedback block,
         and a toast would both repeat it and float over the Next button.
+
+        ``undo_from`` adds an Undo button restoring that status; ``toast``
+        overrides the default (title, message, type) triple. Undo restores the
+        rung the word actually had, so ignoring a Mastered word and changing
+        your mind gives Mastered back rather than a recomputed New.
         """
         try:
             run_in_thread(
@@ -3300,25 +3344,79 @@ class MainWindow(QMainWindow):
             if self.df is not None:
                 self.df.loc[self.df['ID'] == wid, 'Status'] = target
             self.model.update_status(wid, target)
-            if word_label:
+            if toast:
+                title, message, kind = toast
+                undoable = undo_from is not None
+                show_toast(
+                    self, title, message, kind, 5000,
+                    action_text=tr("Undo") if undoable else None,
+                    on_action=(lambda: self._undo_status_change(
+                        wid, undo_from, word_label)) if undoable else None)
+            elif word_label:
                 show_toast(self, tr("Promoted"),
                            f"'{word_label}' → {target}", "success", 2500)
         except Exception as exc:
             logging.error(f"Status update failed: {exc}")
 
+    def _ignore_word(self, wid, previous, word_label=""):
+        """Park a word on Ignored from inside a running flashcards/quiz session.
+
+        The page has already dropped the card by the time this runs, so the
+        toast is the only confirmation — hence the Undo, which restores the rung
+        but deliberately does not put the card back.
+        """
+        # A record straight out of the DataFrame carries NaN for a blank status,
+        # which is truthy and has no .strip().
+        previous = previous if isinstance(previous, str) else ""
+        if not progression.is_studiable(previous):
+            return
+        self._apply_status_change(
+            wid, progression.IGNORED_STATUS, word_label, undo_from=previous,
+            toast=(tr("Ignored"),
+                   tr("'{word}' won't come up again").format(word=word_label),
+                   "info"))
+
+    def _undo_status_change(self, wid, previous, word_label=""):
+        """Put a word back on ``previous`` and confirm it.
+
+        Only the rung is restored, not the session: the card that was dropped
+        stays dropped. Undo means "I did not mean to park this word", not
+        "replay that card".
+        """
+        self._apply_status_change(
+            wid, previous, word_label,
+            toast=(tr("Restored"),
+                   tr("'{word}' is back in rotation").format(word=word_label),
+                   "info"))
+
+    def _studiable(self, df):
+        """``df`` without the words parked on Ignored.
+
+        Applied *before* the deck is trimmed to length, so filtering ignored
+        words shortens the pool rather than the deck the user asked for.
+        """
+        return df[df["Status"].fillna("").map(progression.is_studiable)]
+
     def _flashcards_deck(self, kind, n):
         """Deck source for the Flashcards page. `kind`: "selected" (table
         selection), "filtered" (current Vocabulary filters), "newest", or
-        "due" (SM-2 schedule, most-overdue first)."""
+        "due" (SM-2 schedule, most-overdue first).
+
+        Every automatic kind skips Ignored words; "selected" does not. Dropping
+        rows the user hand-picked in the table would silently shrink their
+        selection, which reads as a bug rather than as the opt-out working.
+        """
         n = max(1, int(n))
         if kind == "selected":
             return self.selected_records()[:n]
         if self.df is None or self.df.empty:
             return []
         if kind == "filtered":
-            return self.word_filter.apply(self.df).head(n).to_dict("records")
+            return self._studiable(
+                self.word_filter.apply(self.df)).head(n).to_dict("records")
         if kind == "newest":
-            return self.df.head(n).to_dict("records")  # df is newest-first
+            # df is newest-first
+            return self._studiable(self.df).head(n).to_dict("records")
         if kind == "due":
             ids = dbq.srs_due_word_ids(n)
             by_id = {rec["ID"]: rec
@@ -3339,7 +3437,7 @@ class MainWindow(QMainWindow):
         the page-open animation."""
         if self.df is None or self.df.empty:
             return 0 if count_only else []
-        studiable = self.df[self.df["Status"].fillna("") != "Ignored"]
+        studiable = self._studiable(self.df)
         if count_only:
             return len(studiable)
         return studiable.to_dict("records")

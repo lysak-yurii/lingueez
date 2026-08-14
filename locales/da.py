@@ -1238,6 +1238,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Skal læres",
     "Reviewing": "Repeteres",
     "Ignored": "Ignoreret",
+    "Undo": "Fortryd",
+    "Restored": "Gendannet",
+    "Ignore word": "Ignorér ord",
+    "Ignore this word": "Ignorér dette ord",
+    "Already ignored.": "Allerede ignoreret.",
+    "{count} word(s) won't come up in practice.": "{count} ord vises ikke længere i øvelser.",
+    "'{word}' is back in rotation": "«{word}» er tilbage i rotation",
+    "'{word}' won't come up again": "«{word}» dukker ikke op igen",
     # "Learning" and "Mastered" translated in main blocks
 
     # Table density (settings → Table size)

@@ -108,11 +108,13 @@ class _PromptCard(QWidget):
     """
 
     speak_clicked = Signal()
+    ignore_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
         self._colors = colors
         self._ink = colors["accent"]
+        self._ignorable = False
         self.setMinimumHeight(150)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
@@ -135,6 +137,16 @@ class _PromptCard(QWidget):
         self.speak_btn.clicked.connect(self.speak_clicked)
         speak_row.addWidget(self.speak_btn)
         speak_row.addStretch(1)
+
+        # Parked in the corner rather than beside Pronounce: two equal buttons
+        # under a two-word prompt read as a toolbar and crowd the one thing
+        # worth looking at. Unmanaged, so it cannot shift the centred column.
+        self.ignore_btn = QPushButton(self, objectName="iconButton")
+        self.ignore_btn.setCursor(Qt.PointingHandCursor)
+        self.ignore_btn.setIconSize(QSize(16, 16))
+        self.ignore_btn.setFixedSize(24, 24)
+        self.ignore_btn.setToolTip(tr("Ignore this word"))
+        self.ignore_btn.clicked.connect(self.ignore_clicked)
         lay.addSpacing(2)
         lay.addLayout(speak_row)
         self.answer_hint = QLabel(alignment=Qt.AlignCenter)
@@ -152,8 +164,20 @@ class _PromptCard(QWidget):
         self.answer_hint.setVisible(bool(answer_language))
         self.speak_btn.setVisible(audio.is_language_supported(
             question.prompt_language))
+        self._ignorable = progression.is_studiable(question.record.get("Status"))
+        self.ignore_btn.setVisible(self._ignorable)
         self._apply_styles()
         self.update()
+
+    def set_ignorable(self, ignorable):
+        """Hide the ignore button once the question is answered.
+
+        An answer already occupies this question's slot, and pulling the
+        question out from under it would misalign ``_answers`` with
+        ``_questions`` — which the missed-deck and the progress trail both read
+        positionally.
+        """
+        self.ignore_btn.setVisible(bool(ignorable) and self._ignorable)
 
     def refresh_theme(self, colors):
         self._colors = colors
@@ -172,6 +196,11 @@ class _PromptCard(QWidget):
             f"color:{c['text_dim']};background:transparent;"
             f"font-size:{theme.font_pt('caption')}pt;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 18))
+        self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
+
+    def resizeEvent(self, event):  # noqa: N802
+        super().resizeEvent(event)
+        self.ignore_btn.move(self.width() - self.ignore_btn.width() - 12, 12)
 
     def paintEvent(self, _event):  # noqa: N802
         p = QPainter(self)
@@ -490,6 +519,7 @@ class QuizPage(QWidget):
     """Deck picker → question loop → score summary."""
 
     status_change_requested = Signal(str, str, str)  # word_id, status, label
+    ignore_requested = Signal(str, str, str)         # word_id, previous, label
 
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
@@ -787,6 +817,7 @@ class QuizPage(QWidget):
 
         self.prompt_card = _PromptCard(self._colors)
         self.prompt_card.speak_clicked.connect(self._speak_prompt)
+        self.prompt_card.ignore_clicked.connect(self._ignore_current)
         column.addWidget(self.prompt_card)
 
         self.options_host = QWidget()
@@ -1378,6 +1409,7 @@ class QuizPage(QWidget):
         question = self._current()
         answer = {"verdict": verdict, "picked": picked, "promoted": None}
         self._answers.append(answer)
+        self.prompt_card.set_ignorable(False)
         answer["promoted"] = self._grade(question, verdict)
         self._show_verdict(question, verdict, picked)
         self._refresh_session_header()
@@ -1508,6 +1540,36 @@ class QuizPage(QWidget):
                 logging.error(f"Definition lookup failed: {exc}")
             self._definitions[wid] = text
         return self._definitions[wid]
+
+    def _ignore_current(self):
+        """Park the current question's word on Ignored and drop the question.
+
+        Refused once answered — see ``_PromptCard.set_ignorable``.
+        """
+        if self._stack.currentIndex() != self.STATE_SESSION or self._revealed:
+            return
+        question = self._current()
+        if question is None:
+            return
+        rec = question.record
+        wid = rec.get("ID")
+        if wid is None or not progression.is_studiable(rec.get("Status")):
+            return
+        previous = rec.get("Status")
+        rec["Status"] = progression.IGNORED_STATUS
+        self._advance_timer.stop()
+        self._stall_timer.stop()
+        self.drain_bar.stop()
+        self.ignore_requested.emit(
+            str(wid), previous if isinstance(previous, str) else "",
+            str(rec.get("Word1") or ""))
+        self._questions.pop(self._index)
+        if not self._questions:
+            self._show_picker()
+        elif self._index >= len(self._questions):
+            self._complete()
+        else:
+            self._show_question()
 
     def _next_question(self):
         self._advance_timer.stop()

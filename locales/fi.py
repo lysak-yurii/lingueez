@@ -1226,6 +1226,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Opittava",
     "Reviewing": "Kerrattava",
     "Ignored": "Ohitettu",
+    "Undo": "Kumoa",
+    "Restored": "Palautettu",
+    "Ignore word": "Ohita sana",
+    "Ignore this word": "Ohita tämä sana",
+    "Already ignored.": "Ohitetaan jo.",
+    "{count} word(s) won't come up in practice.": "{count} sana(a) ei tule enää harjoituksiin.",
+    "'{word}' is back in rotation": "'{word}' on taas mukana harjoituksissa",
+    "'{word}' won't come up again": "'{word}' ei tule enää vastaan",
 
     # Table density
     "Compact": "Tiivis",

@@ -1239,6 +1239,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Untuk Dipelajari",
     "Reviewing": "Diulas",
     "Ignored": "Diabaikan",
+    "Undo": "Urungkan",
+    "Restored": "Dipulihkan",
+    "Ignore word": "Abaikan kata",
+    "Ignore this word": "Abaikan kata ini",
+    "Already ignored.": "Sudah diabaikan.",
+    "{count} word(s) won't come up in practice.": "{count} kata tidak akan muncul lagi dalam latihan.",
+    "'{word}' is back in rotation": "'{word}' kembali masuk latihan",
+    "'{word}' won't come up again": "'{word}' tidak akan muncul lagi",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

@@ -1079,6 +1079,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "학습 예정",
     "Reviewing": "복습 중",
     "Ignored": "무시됨",
+    "Undo": "실행 취소",
+    "Restored": "복원됨",
+    "Ignore word": "단어 무시",
+    "Ignore this word": "이 단어 무시",
+    "Already ignored.": "이미 무시되었습니다.",
+    "{count} word(s) won't come up in practice.": "단어 {count}개가 연습에 나오지 않습니다.",
+    "'{word}' is back in rotation": "'{word}'이(가) 다시 연습에 포함됩니다",
+    "'{word}' won't come up again": "'{word}'은(는) 더 이상 나오지 않습니다",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

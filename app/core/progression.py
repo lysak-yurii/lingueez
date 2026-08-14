@@ -42,10 +42,36 @@ _RANK = {name: i for i, name in enumerate(LADDER)}
 # it, so a word can never be promoted into a state the UI refuses to offer back.
 ALL_STATUSES = ["New", "To Learn", "Reviewing", "Learning", "Mastered", "Ignored"]
 
+# The rung a word is parked on to stop being asked about it. Off the ladder on
+# purpose: nothing promotes onto it and nothing promotes off it. Writes use this
+# exact string; reads go through ``is_ignored``, because the phone and the web
+# app do not agree with us on casing.
+IGNORED_STATUS = "Ignored"
+
 
 def rank(status):
     """Zero-based position on the ladder, or ``None`` for anything off it."""
     return _RANK.get((status or "").strip().title())
+
+
+def is_ignored(status) -> bool:
+    """Whether ``status`` is the ignored rung, however another client cased it.
+
+    Anything that is not a string — ``None``, or the NaN a blank status becomes
+    once it has been through a DataFrame — is not ignored.
+    """
+    if not isinstance(status, str):
+        return False
+    return status.strip().lower() == "ignored"
+
+
+def is_studiable(status) -> bool:
+    """Whether a word with ``status`` may appear in a practice session.
+
+    Shared by the deck builder, the quiz's distractor pool and the read-aloud
+    playlist, so all three agree on what "your words" means.
+    """
+    return not is_ignored(status)
 
 
 DEFAULT_REVIEWING_LISTENS = 3

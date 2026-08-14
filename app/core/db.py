@@ -937,7 +937,7 @@ def srs_due_word_ids(limit, now_iso=None, db_path=None):
     cursor.execute('''
         SELECT w.ID
         FROM words w LEFT JOIN srs_progress s ON s.word_id = w.ID
-        WHERE COALESCE(w.Status, '') != 'Ignored'
+        WHERE LOWER(TRIM(COALESCE(w.Status, ''))) != 'ignored'
           AND (s.next_review IS NULL OR s.next_review <= ?)
         ORDER BY s.next_review ASC, COALESCE(s.review_count, 0) ASC
         LIMIT ?

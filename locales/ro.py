@@ -1110,6 +1110,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "De învățat",
     "Reviewing": "În curs de recapitulare",
     "Ignored": "Ignorat",
+    "Undo": "Anulează",
+    "Restored": "Restaurat",
+    "Ignore word": "Ignoră cuvântul",
+    "Ignore this word": "Ignoră acest cuvânt",
+    "Already ignored.": "Este deja ignorat.",
+    "{count} word(s) won't come up in practice.": "{count} cuvânt/cuvinte nu va mai apărea la exersare.",
+    "'{word}' is back in rotation": "„{word}” a revenit în exersare",
+    "'{word}' won't come up again": "„{word}” nu va mai apărea",
 
     # Table density (settings → Table size)
     "Compact": "Compact",

@@ -1238,6 +1238,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Da imparare",
     "Reviewing": "In ripasso",
     "Ignored": "Ignorata",
+    "Undo": "Annulla",
+    "Restored": "Ripristinato",
+    "Ignore word": "Ignora parola",
+    "Ignore this word": "Ignora questa parola",
+    "Already ignored.": "Già ignorata.",
+    "{count} word(s) won't come up in practice.": "{count} parola/parole non compariranno più negli esercizi.",
+    "'{word}' is back in rotation": "«{word}» è di nuovo in rotazione",
+    "'{word}' won't come up again": "«{word}» non comparirà più",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

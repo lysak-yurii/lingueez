@@ -1239,6 +1239,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Вивчити",
     "Reviewing": "Переглянуто",
     "Ignored": "Ігнороване",
+    "Undo": "Скасувати",
+    "Restored": "Відновлено",
+    "Ignore word": "Ігнорувати слово",
+    "Ignore this word": "Ігнорувати це слово",
+    "Already ignored.": "Уже ігнорується.",
+    "{count} word(s) won't come up in practice.": "{count} слово(слів) більше не з'являтиметься у практиці.",
+    "'{word}' is back in rotation": "«{word}» знову в ротації",
+    "'{word}' won't come up again": "«{word}» більше не з'явиться",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

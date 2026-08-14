@@ -1075,6 +1075,14 @@ TRANSLATIONS: dict[str, str] = {
     "To Learn": "Att lära",
     "Reviewing": "Repeterar",
     "Ignored": "Ignorerad",
+    "Undo": "Ångra",
+    "Restored": "Återställd",
+    "Ignore word": "Ignorera ord",
+    "Ignore this word": "Ignorera det här ordet",
+    "Already ignored.": "Redan ignorerat.",
+    "{count} word(s) won't come up in practice.": "{count} ord kommer inte längre upp i övningar.",
+    "'{word}' is back in rotation": "'{word}' är tillbaka i rotationen",
+    "'{word}' won't come up again": "'{word}' dyker inte upp igen",
 
     # Table density
     "Compact": "Kompakt",
