@@ -20,6 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import os
+import httpx
 from supabase import create_client, Client
 from typing import Optional, List, Dict, Any, Tuple
 import logging
@@ -88,7 +89,16 @@ def probe_credentials(url: str, key: str) -> tuple[bool, Optional[str]]:
 def _client_options():
     """Desktop-tuned client options. PKCE flow is required for the Google OAuth
     loopback (``exchange_code_for_session``); session persistence is handled by
-    AuthManager via the OS keychain, not by gotrue's own storage."""
+    AuthManager via the OS keychain, not by gotrue's own storage.
+
+    The PostgREST timeout is split rather than left at the library default of a
+    flat 120s: DatabaseAdapter writes through to the cloud synchronously on the
+    GUI thread, so a server that accepts packets but never answers (VPN drop,
+    captive portal, hung host) would freeze the UI for two minutes per write
+    before falling back to the sync queue. A 5s *connect* budget bounds that,
+    while the read/write budget stays at the previous 120s so bulk sync queries
+    are unaffected. A name that doesn't resolve already fails instantly.
+    """
     try:
         from supabase import ClientOptions
     except ImportError:  # older layout
@@ -97,6 +107,7 @@ def _client_options():
         flow_type="pkce",
         auto_refresh_token=True,
         persist_session=False,
+        postgrest_client_timeout=httpx.Timeout(120.0, connect=5.0),
     )
 
 

@@ -24,6 +24,9 @@ feedparser>=6.0.0
 
 # Cloud Database
 supabase>=2.0.0
+# Already a supabase dependency; imported directly to split the PostgREST
+# connect/read timeouts (see _client_options).
+httpx>=0.24.0
 
 # Environment Variables
 python-dotenv>=1.0.0
