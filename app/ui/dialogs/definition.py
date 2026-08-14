@@ -29,6 +29,7 @@ configured AI provider (ChatGPT or Gemini).
 import html
 import logging
 import re
+from datetime import datetime
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -41,9 +42,10 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import ai
-from app.i18n import lang_label, tr
+from app.i18n import full_date, lang_label, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
+from app.ui.widgets import ElidedLabel
 from app.ui.workers import run_in_thread
 
 
@@ -147,6 +149,40 @@ def markup_to_html(text):
     return "".join(out)
 
 
+def _parse_dt(value):
+    """Stored timestamp -> naive local datetime, or None if unusable."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except Exception:
+        return None
+    if dt.tzinfo is not None:
+        dt = dt.astimezone().replace(tzinfo=None)
+    return dt
+
+
+def _added_captions(value):
+    """``(caption, exact)`` for when a word was added — a short 'Added · Today'
+    line plus the full date and time for its tooltip. Both empty when the
+    timestamp is missing or unreadable.
+
+    Phrased as label · value rather than a sentence so it reads naturally in
+    every locale from strings that already ship."""
+    dt = _parse_dt(value)
+    if dt is None:
+        return "", ""
+    days = (datetime.now().date() - dt.date()).days
+    if days <= 0:
+        when = tr("Today")
+    elif days == 1:
+        when = tr("Yesterday")
+    else:
+        when = full_date(dt)
+    exact = f"{full_date(dt)} · {dt.strftime('%H:%M')}"
+    return f"{tr('Added')} · {when}", f"{tr('Added')} · {exact}"
+
+
 class _DefinitionEditor(QTextEdit):
     """Editor that pastes as plain text, so web content can't inject fonts or
     structures the markup can't represent (keeps the round-trip lossless)."""
@@ -181,9 +217,12 @@ class DefinitionDialog(FramelessDialog):
         glyph = QLabel()
         glyph.setPixmap(icons.icon("book-open", self.colors["text_dim"], 20).pixmap(QSize(20, 20)))
         head.addWidget(glyph, 0, Qt.AlignVCenter)
-        self.header_label = QLabel(objectName="AppTitle")
-        head.addWidget(self.header_label, 0, Qt.AlignVCenter)
-        head.addStretch(1)
+        # Elided: a long word truncates with an ellipsis (full text on hover)
+        # instead of pushing the dialog wide or crowding the caption beside it.
+        self.header_label = ElidedLabel(min_width=80)
+        self.header_label.setObjectName("AppTitle")
+        head.addWidget(self.header_label, 1, Qt.AlignVCenter)
+        head.addWidget(self._build_added_caption(), 0, Qt.AlignVCenter)
         layout.addLayout(head)
 
         # Segmented toggle: pick which side's definition to show — the word's or
@@ -279,6 +318,36 @@ class DefinitionDialog(FramelessDialog):
         layout.addLayout(buttons)
 
         self.reload_word()
+
+    def _build_added_caption(self):
+        """When this word was added, parked at the far end of the header row.
+
+        Deliberately quiet — a small clock glyph and a dimmed caption a size
+        below the body text, so it registers as provenance rather than
+        competing with the word itself. The exact date and time are one hover
+        away."""
+        self.added_row = QWidget()
+        row = QHBoxLayout(self.added_row)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(5)
+        self.added_glyph = QLabel()
+        self.added_glyph.setPixmap(
+            icons.icon("clock", self.colors["text_dim"], 13).pixmap(QSize(13, 13)))
+        row.addWidget(self.added_glyph, 0, Qt.AlignVCenter)
+        self.added_label = QLabel(objectName="dimLabel")
+        caption_font = QFont(self.added_label.font())
+        caption_font.setPointSizeF(max(7.0, caption_font.pointSizeF() - 1))
+        self.added_label.setFont(caption_font)
+        row.addWidget(self.added_label, 0, Qt.AlignVCenter)
+        self.added_row.hide()  # shown once a usable timestamp is loaded
+        return self.added_row
+
+    def _refresh_added_caption(self):
+        caption, exact = _added_captions(self.word.get('created_at'))
+        self.added_label.setText(caption)
+        for widget in (self.added_row, self.added_glyph, self.added_label):
+            widget.setToolTip(exact)
+        self.added_row.setVisible(bool(caption))
 
     def _build_empty_state(self):
         """Centered placeholder shown in the card when no definition is stored."""
@@ -568,7 +637,8 @@ class DefinitionDialog(FramelessDialog):
 
     def refresh_view(self):
         definition = str(self.word.get(self._definition_column()) or "").strip()
-        self.header_label.setText(str(self._displayed_word()))
+        self.header_label.set_full_text(str(self._displayed_word()))
+        self._refresh_added_caption()
         for chip, field in self.lang_chips:
             chip.setChecked(field == self.current_field)
         if definition:
