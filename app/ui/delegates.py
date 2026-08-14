@@ -25,13 +25,49 @@ paint() runs for every visible status cell on every repaint (scrolling,
 resizing, hover), so pills are rendered once per (status, theme, font)
 into a pixmap cache and blitted afterwards.
 """
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt
+import html
+
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPixmap
-from PySide6.QtWidgets import QStyledItemDelegate, QStyle, QStyleOptionViewItem
+from PySide6.QtWidgets import (QStyledItemDelegate, QStyle, QStyleOptionViewItem,
+                               QToolTip)
 
 from app.i18n import tr
 from app.ui import theme
 from app.ui.word_model import ROLE_FAV_STRIPE
+
+
+# Offset from the point handed to QToolTip.showText() to where the tip's text
+# is actually drawn: Qt nudges the tip by (2, 16) to keep it clear of the
+# cursor, and the QToolTip style rule adds a 1px border plus 8px/5px padding.
+# Subtracting it puts the revealed text exactly where we ask for it.
+_TIP_TEXT_OFFSET = QPoint(2 + 9, 16 + 6)
+
+# Gap between the row and the revealed text below it. The tip must not land
+# under the pointer: a tooltip window appearing beneath the cursor sends the
+# viewport a Leave event, and Qt hides the tip on Leave — which is exactly the
+# flicker an overlapping "expand in place" reveal produces.
+_TIP_DROP = 10
+
+
+def _reveal_cell_text(view, cell_rect, text_rect, text, font):
+    """Reveal the untruncated ``text`` of a cell too narrow to show it.
+
+    Drops directly below the cell, left-aligned with the cell's own first
+    glyph and typeset at its font size, so it reads as that row continuing
+    rather than a label chasing the mouse. Stays up while the pointer remains
+    inside ``cell_rect`` (viewport coordinates)."""
+    point = QPoint(text_rect.left(), cell_rect.bottom() + _TIP_DROP)
+    anchor = view.viewport().mapToGlobal(point) - _TIP_TEXT_OFFSET
+    size = font.pointSizeF()
+    # Table rows are rendered at the current density's font size, which the
+    # tooltip does not inherit; restate it so the reveal matches the row.
+    tip = (f'<span style="font-size:{size:.1f}pt">{html.escape(text)}</span>'
+           if size > 0 else text)
+    # The viewport, not the view, is what the mouse events reach — hand
+    # QToolTip that widget so it reads cell_rect in the right coordinate
+    # system and keeps the tip alive across the whole cell.
+    QToolTip.showText(anchor, tip, view.viewport(), cell_rect)
 
 
 class RowTintDelegate(QStyledItemDelegate):
@@ -57,6 +93,22 @@ class RowTintDelegate(QStyledItemDelegate):
             inset = max(3, r.height() // 5)  # keep clear of the row borders
             painter.fillRect(r.left(), r.top() + inset, 3,
                              r.height() - 2 * inset, stripe)
+
+    def helpEvent(self, event, view, option, index):
+        """Hovering a cell whose text the column had to elide reveals the whole
+        thing; cells that already fit stay silent (a tip on every hover would
+        be noise)."""
+        if event.type() != QEvent.ToolTip or not index.isValid():
+            return super().helpEvent(event, view, option, index)
+        text = str(index.data(Qt.DisplayRole) or "")
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        text_rect = view.style().subElementRect(QStyle.SE_ItemViewItemText, opt, view)
+        if not text or QFontMetrics(opt.font).horizontalAdvance(text) <= text_rect.width():
+            QToolTip.hideText()
+            return False
+        _reveal_cell_text(view, option.rect, text_rect, text, opt.font)
+        return True
 
 
 class StatusPillDelegate(QStyledItemDelegate):
