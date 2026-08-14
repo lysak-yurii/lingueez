@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Âmbito da pesquisa",
     "Search scope…": "Âmbito da pesquisa…",
     "Add word": "Adicionar palavra",
+    "Copy a word in any app, then press:":
+        "Copie uma palavra em qualquer app e prima:",
+    "Set a shortcut": "Definir um atalho",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Copie uma palavra em qualquer app e prima {keys} para adicioná-la com a tradução.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Defina um atalho nas Definições para adicionar palavras copiadas de qualquer app.",
     " Favorites": " Favoritos",
     " Filters": " Filtros",
     "Filters that don't fit the table": "Filtros que não cabem na tabela",

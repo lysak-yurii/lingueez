@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Обхват на търсенето",
     "Search scope…": "Обхват на търсенето…",
     "Add word": "Добавяне на дума",
+    "Copy a word in any app, then press:":
+        "Копирайте дума в друго приложение и натиснете:",
+    "Set a shortcut": "Задаване на пряк път",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Копирайте дума в друго приложение и натиснете {keys}, за да я добавите с превода ѝ.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Задайте пряк път в Настройки, за да добавяте копирани думи от всяко приложение.",
     " Favorites": " Любими",
     " Filters": " Филтри",
     "Filters that don't fit the table": "Филтри, които не се побират в таблицата",

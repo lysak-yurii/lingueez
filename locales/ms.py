@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Skop carian",
     "Search scope…": "Skop carian…",
     "Add word": "Tambah perkataan",
+    "Copy a word in any app, then press:":
+        "Salin perkataan dalam mana-mana apl, kemudian tekan:",
+    "Set a shortcut": "Tetapkan pintasan",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Salin perkataan dalam mana-mana apl, kemudian tekan {keys} untuk menambahkannya bersama terjemahan.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Tetapkan pintasan dalam Tetapan untuk menambah perkataan yang disalin daripada mana-mana apl.",
     " Favorites": " Kegemaran",
     " Filters": " Penapis",
     "Filters that don't fit the table": "Penapis yang tidak muat dalam jadual",

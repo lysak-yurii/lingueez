@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Rozsah hledání",
     "Search scope…": "Rozsah hledání…",
     "Add word": "Přidat slovo",
+    "Copy a word in any app, then press:":
+        "Zkopírujte slovo v jakékoli aplikaci a stiskněte:",
+    "Set a shortcut": "Nastavit zkratku",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Zkopírujte slovo v jakékoli aplikaci a stisknutím {keys} ho přidáte i s překladem.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Nastavte zkratku v Nastavení a přidávejte zkopírovaná slova z jakékoli aplikace.",
     " Favorites": " Oblíbené",
     " Filters": " Filtry",
     "Filters that don't fit the table": "Filtry, které se nevejdou do tabulky",

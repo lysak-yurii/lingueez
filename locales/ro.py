@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Domeniul căutării",
     "Search scope…": "Domeniul căutării…",
     "Add word": "Adaugă cuvânt",
+    "Copy a word in any app, then press:":
+        "Copiază un cuvânt în orice aplicație, apoi apasă:",
+    "Set a shortcut": "Setează o scurtătură",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Copiază un cuvânt în orice aplicație, apoi apasă {keys} pentru a-l adăuga cu traducerea.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Setează o scurtătură în Setări pentru a adăuga cuvinte copiate din orice aplicație.",
     " Favorites": " Favorite",
     " Filters": " Filtre",
     "Filters that don't fit the table": "Filtre care nu încap în tabel",

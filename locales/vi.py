@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Phạm vi tìm kiếm",
     "Search scope…": "Phạm vi tìm kiếm…",
     "Add word": "Thêm từ",
+    "Copy a word in any app, then press:":
+        "Sao chép một từ trong ứng dụng bất kỳ, rồi nhấn:",
+    "Set a shortcut": "Đặt phím tắt",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Sao chép một từ trong ứng dụng bất kỳ, rồi nhấn {keys} để thêm từ đó kèm bản dịch.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Đặt phím tắt trong Cài đặt để thêm các từ đã sao chép từ mọi ứng dụng.",
     " Favorites": " Yêu thích",
     " Filters": " Bộ lọc",
     "Filters that don't fit the table": "Bộ lọc không vừa với bảng",

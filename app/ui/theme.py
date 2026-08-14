@@ -227,6 +227,15 @@ QLabel {{
 QLabel#dimLabel {{
     color: {c['text_dim']};
 }}
+QLabel#KeyCap {{
+    background: {c['surface_alt']};
+    border: 1px solid {c['border']};
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: {c['text']};
+    font-size: {base_font_size - 1}pt;
+    font-weight: 600;
+}}
 QToolTip {{
     background: {c['surface_alt']};
     color: {c['text']};

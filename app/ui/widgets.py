@@ -20,6 +20,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """Small reusable widgets."""
+import re
+
 from PySide6.QtCore import (
     QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QRectF, QSize, Qt,
     QTimer, Signal,
@@ -84,6 +86,36 @@ class ProgressionMeter(QWidget):
 
     def paintEvent(self, event):  # noqa: N802
         paint_progression(QPainter(self), self.rect(), self._status)
+
+
+class ShortcutKeys(QWidget):
+    """A keyboard shortcut drawn as key-caps: Ctrl + Shift + V.
+
+    Takes Qt's native form ("Ctrl+Shift+V"); an empty string leaves it blank.
+    The caps are #KeyCap labels, so they follow the theme with the stylesheet.
+    """
+
+    def __init__(self, text="", parent=None):
+        super().__init__(parent)
+        self._row = QHBoxLayout(self)
+        self._row.setContentsMargins(0, 0, 0, 0)
+        self._row.setSpacing(4)
+        self.set_text(text)
+
+    def set_text(self, text):
+        while self._row.count():
+            widget = self._row.takeAt(0).widget()
+            if widget is not None:
+                # Unparent before deleting: a widget only dropped from the layout
+                # keeps painting at its old geometry until the deletion is processed.
+                widget.setParent(None)
+                widget.deleteLater()
+        # Split on the separator only: the last key can itself be "+" (Ctrl++).
+        for i, key in enumerate(p for p in re.split(r"\+(?=.)", text or "") if p):
+            if i:
+                self._row.addWidget(QLabel("+", objectName="dimLabel"))
+            self._row.addWidget(QLabel(key, objectName="KeyCap"))
+        self.adjustSize()
 
 
 def style_as_link(button):

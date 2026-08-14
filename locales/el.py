@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Εύρος αναζήτησης",
     "Search scope…": "Εύρος αναζήτησης…",
     "Add word": "Προσθήκη λέξης",
+    "Copy a word in any app, then press:":
+        "Αντιγράψτε μια λέξη σε οποιαδήποτε εφαρμογή και πατήστε:",
+    "Set a shortcut": "Ορισμός συντόμευσης",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Αντιγράψτε μια λέξη σε οποιαδήποτε εφαρμογή και πατήστε {keys} για να την προσθέσετε με τη μετάφρασή της.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Ορίστε μια συντόμευση στις Ρυθμίσεις για να προσθέτετε αντιγραμμένες λέξεις από κάθε εφαρμογή.",
     " Favorites": " Αγαπημένα",
     " Filters": " Φίλτρα",
     "Filters that don't fit the table": "Φίλτρα που δεν χωρούν στον πίνακα",

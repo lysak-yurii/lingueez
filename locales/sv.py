@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Sökscope",
     "Search scope…": "Sökscope…",
     "Add word": "Lägg till ord",
+    "Copy a word in any app, then press:":
+        "Kopiera ett ord i valfri app och tryck:",
+    "Set a shortcut": "Ange en genväg",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Kopiera ett ord i valfri app och tryck {keys} för att lägga till det med översättningen.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Ange en genväg i Inställningar för att lägga till kopierade ord från valfri app.",
     " Favorites": " Favoriter",
     " Filters": " Filter",
     "Filters that don't fit the table": "Filter som inte får plats i tabellen",

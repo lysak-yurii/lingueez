@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "搜索范围",
     "Search scope…": "搜索范围…",
     "Add word": "添加单词",
+    "Copy a word in any app, then press:":
+        "在任意应用中复制单词，然后按：",
+    "Set a shortcut": "设置快捷键",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "在任意应用中复制单词，按 {keys} 即可连同译文一起添加。",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "在设置中指定快捷键，即可添加从任意应用复制的单词。",
     " Favorites": " 收藏",
     " Filters": " 筛选",
     "Filters that don't fit the table": "不适合在表格中显示的筛选器",

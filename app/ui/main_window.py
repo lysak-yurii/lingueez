@@ -68,7 +68,8 @@ from app.ui.texts_page import TextsPage
 from app.ui.stats_page import StatsPage
 from app.ui.toast import show_toast
 from app.ui.widgets import (ContentComboBox, ElidedLabel, OverflowToolBar,
-                            SearchField, clamp_combo_popup_onscreen, style_as_link)
+                            SearchField, ShortcutKeys, clamp_combo_popup_onscreen,
+                            style_as_link)
 from app.ui.word_model import (
     COL_ID, COL_CREATED, COL_LANG1, COL_LANG2, COL_ROWNUM, COL_SOURCE, COL_STATUS,
     COL_WORD1, COL_WORD2, HEADERS, WordFilter, WordTableModel, words_to_dataframe,
@@ -299,6 +300,10 @@ class MainWindow(QMainWindow):
     # Marshals an account switch onto the GUI thread (the startup session restore
     # runs on a worker). Payload is the user_id, or None for the local-only store.
     account_switch_requested = Signal(object)
+
+    # Class default: the tray is built before _setup_global_hotkey() runs, and it
+    # already asks whether a shortcut is live.
+    _hotkey_registered = False
 
     def __init__(self, settings, start_hidden=False, open_add_word=False,
                  activation_token=""):
@@ -885,7 +890,7 @@ class MainWindow(QMainWindow):
         self.header_overflow_btn.setToolTip(tr("More actions"))
         self.header_overflow_btn.setCursor(Qt.PointingHandCursor)
         self._header_overflow_menu = QMenu(self)
-        self._header_overflow_menu.addAction(
+        self._overflow_add_action = self._header_overflow_menu.addAction(
             self._icon("plus"), tr("Add word"), self.open_add_word)
         self._header_overflow_menu.addAction(
             self._icon("filter"), tr("Search scope…"), self.show_search_scope_menu)
@@ -1745,6 +1750,13 @@ class MainWindow(QMainWindow):
     def _hotkey_setting(self):
         return (self.settings.get("hotkey", DEFAULT_HOTKEY) or "").strip()
 
+    def hotkey_label(self):
+        """The Add-Word shortcut written the way the desktop writes it, or "" when
+        none is registered — no surface may advertise a dead key combination."""
+        if not self._hotkey_registered:
+            return ""
+        return QKeySequence(self._hotkey_setting()).toString(QKeySequence.NativeText)
+
     def _setup_global_hotkey(self):
         """Global Add-Word hotkey (configurable in Settings → General → Behavior).
 
@@ -1757,6 +1769,7 @@ class MainWindow(QMainWindow):
         self._hotkey_proc = None
         self._hotkey_handle = None
         self._active_hotkey = None
+        self._hotkey_registered = False    # a shortcut is actually live right now
         self._hotkey_started_at = 0.0      # monotonic clock when the agent last started
         self._hotkey_fast_failures = 0     # consecutive die-on-startup count (capped)
         self._ipc_server = None
@@ -1808,27 +1821,33 @@ class MainWindow(QMainWindow):
         if hotkey == self._active_hotkey:
             return
         self._active_hotkey = hotkey
-        self._update_tray_hotkey_label()
+        self._hotkey_registered = self._register_global_hotkey(hotkey)
+        self._refresh_hotkey_hints()
 
+    def _register_global_hotkey(self, hotkey):
+        """Do the platform-specific registration. Returns whether a shortcut is
+        live afterwards, which is what the UI may advertise."""
         if sys.platform == 'win32':
             try:
                 import keyboard
                 if self._hotkey_handle is not None:
                     keyboard.remove_hotkey(self._hotkey_handle)
                     self._hotkey_handle = None
-                if hotkey:
-                    self._hotkey_handle = keyboard.add_hotkey(
-                        _hotkey_to_keyboard(hotkey), self.hotkey_pressed.emit)
+                if not hotkey:
+                    return False
+                self._hotkey_handle = keyboard.add_hotkey(
+                    _hotkey_to_keyboard(hotkey), self.hotkey_pressed.emit)
+                return True
             except Exception as exc:
                 logging.warning(f"Global hotkey unavailable: {exc}")
-            return
+                return False
 
         # Linux. Tear down whichever registration we had, then pick the right one
         # for the current session so we never leave two active at once.
         self._stop_hotkey_agent()
         self._remove_gnome_hotkey()
         if not hotkey:
-            return
+            return False
 
         # Single capability gate (shared with the Settings UI): if no global-hotkey
         # mechanism exists here — e.g. the Flatpak sandbox on pre-portal Wayland —
@@ -1836,19 +1855,22 @@ class MainWindow(QMainWindow):
         available, _reason = hotkey_capability()
         if not available:
             self._warn_hotkey_unavailable()
-            return
+            return False
 
         if not _is_wayland():
-            # X11: the pynput record-extension agent works (unchanged path).
+            # X11: the pynput record-extension agent works (unchanged path). It
+            # reports failure by dying — see _on_hotkey_agent_died.
             self._start_hotkey_agent()
-        elif _global_shortcuts_portal_available() and self._apply_portal_hotkey(hotkey):
-            pass                                  # GNOME 48+/KDE
-        elif _desktop_is_gnome() and not _is_flatpak():
+            return True
+        if _global_shortcuts_portal_available() and self._apply_portal_hotkey(hotkey):
+            return True                           # GNOME 48+/KDE
+        if _desktop_is_gnome() and not _is_flatpak():
             # Native/AppImage on GNOME Wayland: register with the desktop itself.
             self._apply_gnome_gsettings_hotkey(hotkey)
-        else:
-            # Defensive: capability said OK but no concrete path matched.
-            self._warn_hotkey_unavailable()
+            return self._gsettings_active
+        # Defensive: capability said OK but no concrete path matched.
+        self._warn_hotkey_unavailable()
+        return False
 
     # ---- Wayland: GNOME custom keybinding via gsettings -----------------
     # Wayland forbids apps from globally grabbing keys (pynput sees nothing), so
@@ -1958,11 +1980,23 @@ class MainWindow(QMainWindow):
                    tr("The global Add-Word hotkey isn't available in this "
                       "environment. See Settings ▸ System for options."), "info")
 
-    def _update_tray_hotkey_label(self):
-        action = getattr(self, "tray_add_action", None)
-        if action is not None:
-            hotkey = self._hotkey_setting()
-            action.setText(f"{tr('Add Word')} ({hotkey})" if hotkey else tr("Add Word"))
+    def _refresh_hotkey_hints(self):
+        """Give every surface that names the Add-Word shortcut the same answer:
+        the tray entry, the header button (and its overflow twin) and the
+        first-run empty page."""
+        label = self.hotkey_label()
+        tray_action = getattr(self, "tray_add_action", None)
+        if tray_action is not None:
+            tray_action.setText(
+                f"{tr('Add Word')} ({label})" if label else tr("Add Word"))
+        add_label = f"{tr('Add word')} ({label})" if label else tr("Add word")
+        if getattr(self, "add_button", None) is not None:
+            self.add_button.setToolTip(add_label)
+        overflow_action = getattr(self, "_overflow_add_action", None)
+        if overflow_action is not None:
+            overflow_action.setText(add_label)
+        if getattr(self, "_empty_shortcut_row", None) is not None:
+            self._update_empty_shortcut()
 
     def _stop_hotkey_agent(self):
         # A deliberate stop (reconfigure / teardown) clears the fast-failure count so
@@ -2029,6 +2063,8 @@ class MainWindow(QMainWindow):
         if self._hotkey_fast_failures >= 3:
             logging.error("Hotkey agent keeps exiting immediately — giving up; the "
                           "global Add-Word hotkey is disabled for this session.")
+            self._hotkey_registered = False
+            self._refresh_hotkey_hints()
             show_toast(self, tr("Add Word hotkey"),
                        tr("The global hotkey could not start on this system."),
                        "warning")
@@ -2049,7 +2085,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         self.tray_add_action = menu.addAction(
             tr("Add Word"), lambda: self.open_add_word_and_translate(from_hotkey=True))
-        self._update_tray_hotkey_label()
+        self._refresh_hotkey_hints()
         menu.addAction(tr("Settings"), self._open_settings_from_tray)
         menu.addSeparator()
         menu.addAction(tr("Quit"), self.quit_app)
@@ -2411,6 +2447,12 @@ class MainWindow(QMainWindow):
         outer.addWidget(self._empty_sub, 0, Qt.AlignHCenter)
         outer.addSpacing(18)
 
+        def link_button(slot):
+            b = QPushButton()
+            b.setFlat(True)
+            b.clicked.connect(slot)
+            return style_as_link(b)
+
         self._empty_add_btn = QPushButton(objectName="primaryButton")
         self._empty_add_btn.setIcon(icons.icon("plus", "#ffffff", 18))
         self._empty_add_btn.setIconSize(QSize(18, 18))
@@ -2418,18 +2460,32 @@ class MainWindow(QMainWindow):
         self._empty_add_btn.setStyleSheet("padding: 9px 18px; border-radius: 8px;")
         self._empty_add_btn.clicked.connect(self.open_add_word)
         outer.addWidget(self._empty_add_btn, 0, Qt.AlignHCenter)
-        outer.addSpacing(12)
+        outer.addSpacing(10)
+
+        # The global Add-Word shortcut, taught on the one screen every new user
+        # sees. Falls back to an invitation when no shortcut is live.
+        self._empty_shortcut_row = QWidget()
+        shortcut = QHBoxLayout(self._empty_shortcut_row)
+        shortcut.setContentsMargins(0, 0, 0, 0)
+        shortcut.setSpacing(8)
+        shortcut.addStretch(1)
+        # Elided: this caption is a full sentence in some languages and must not
+        # pin a width floor on the window.
+        self._empty_shortcut_caption = ElidedLabel(min_width=0)
+        self._empty_shortcut_caption.setObjectName("dimLabel")
+        self._empty_shortcut_keys = ShortcutKeys()
+        self._empty_shortcut_btn = link_button(self.open_settings)
+        for w in (self._empty_shortcut_caption, self._empty_shortcut_keys,
+                  self._empty_shortcut_btn):
+            shortcut.addWidget(w, 0, Qt.AlignVCenter)
+        shortcut.addStretch(1)
+        outer.addWidget(self._empty_shortcut_row)
+        outer.addSpacing(8)
 
         # secondary actions: Import · Take the tour  /  Clear filters
         links = QHBoxLayout()
         links.setSpacing(8)
         links.addStretch(1)
-
-        def link_button(slot):
-            b = QPushButton()
-            b.setFlat(True)
-            b.clicked.connect(slot)
-            return style_as_link(b)
 
         self._empty_import_btn = link_button(self.import_excel)
         self._empty_dot = QLabel("·", objectName="dimLabel")
@@ -2440,7 +2496,8 @@ class MainWindow(QMainWindow):
         self._empty_signin_btn = link_button(self.open_sign_in)
         self._empty_clear_btn = link_button(self._clear_word_filters)
         self._empty_links = (self._empty_import_btn, self._empty_tour_btn,
-                             self._empty_signin_btn, self._empty_clear_btn)
+                             self._empty_signin_btn, self._empty_clear_btn,
+                             self._empty_shortcut_btn)
         self._style_empty_links()
         for w in (self._empty_import_btn, self._empty_dot, self._empty_tour_btn,
                   self._empty_signin_dot, self._empty_signin_btn,
@@ -2501,14 +2558,25 @@ class MainWindow(QMainWindow):
             self._empty_sub.setText(tr("Try a different search or filter."))
             self._empty_clear_btn.setText(tr("Clear filters"))
         pin_wrapped_height(self._empty_sub)
-        for w in (self._empty_add_btn, self._empty_import_btn, self._empty_dot,
-                  self._empty_tour_btn):
+        self._update_empty_shortcut()
+        for w in (self._empty_add_btn, self._empty_shortcut_row,
+                  self._empty_import_btn, self._empty_dot, self._empty_tour_btn):
             w.setVisible(first_run)
         self._empty_clear_btn.setVisible(not first_run)
         self._update_empty_signin_link()
 
         self.table_stack.setCurrentIndex(1)
         self._empty_anim.start()
+
+    def _update_empty_shortcut(self):
+        """Show the live Add-Word shortcut as key-caps, or offer to set one up."""
+        label = self.hotkey_label()
+        self._empty_shortcut_caption.set_full_text(tr("Copy a word in any app, then press:"))
+        self._empty_shortcut_keys.set_text(label)
+        self._empty_shortcut_btn.setText(tr("Set a shortcut"))
+        for w in (self._empty_shortcut_caption, self._empty_shortcut_keys):
+            w.setVisible(bool(label))
+        self._empty_shortcut_btn.setVisible(not label)
 
     def _update_empty_signin_link(self):
         """The empty Words page offers 'Sign in to sync' only in the first-run

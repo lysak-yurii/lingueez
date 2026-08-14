@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "खोज का दायरा",
     "Search scope…": "खोज का दायरा…",
     "Add word": "शब्द जोड़ें",
+    "Copy a word in any app, then press:":
+        "किसी भी ऐप में शब्द कॉपी करें, फिर दबाएँ:",
+    "Set a shortcut": "शॉर्टकट सेट करें",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "किसी भी ऐप में शब्द कॉपी करें और {keys} दबाएँ — वह अनुवाद सहित जुड़ जाएगा।",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "किसी भी ऐप से कॉपी किए शब्द जोड़ने के लिए सेटिंग्स में शॉर्टकट सेट करें।",
     " Favorites": " पसंदीदा",
     " Filters": " फ़िल्टर",
     "Filters that don't fit the table": "फ़िल्टर जो तालिका में फ़िट नहीं होते",

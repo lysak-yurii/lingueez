@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Hakualue",
     "Search scope…": "Hakualue…",
     "Add word": "Lisää sana",
+    "Copy a word in any app, then press:":
+        "Kopioi sana missä tahansa sovelluksessa ja paina:",
+    "Set a shortcut": "Aseta pikanäppäin",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Kopioi sana missä tahansa sovelluksessa ja lisää se käännöksineen painamalla {keys}.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Aseta pikanäppäin Asetuksissa, niin voit lisätä kopioituja sanoja mistä tahansa sovelluksesta.",
     " Favorites": " Suosikit",
     " Filters": " Suodattimet",
     "Filters that don't fit the table": "Suodattimet, jotka eivät mahdu taulukkoon",

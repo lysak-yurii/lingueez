@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Keresési tartomány",
     "Search scope…": "Keresési tartomány…",
     "Add word": "Szó hozzáadása",
+    "Copy a word in any app, then press:":
+        "Másoljon ki egy szót bármelyik alkalmazásban, majd nyomja meg:",
+    "Set a shortcut": "Gyorsbillentyű beállítása",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Másoljon ki egy szót bármelyik alkalmazásban, majd a {keys} megnyomásával a fordításával együtt hozzáadhatja.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Állítson be gyorsbillentyűt a Beállításokban, hogy bármelyik alkalmazásból hozzáadhassa a másolt szavakat.",
     " Favorites": " Kedvencek",
     " Filters": " Szűrők",
     "Filters that don't fit the table": "A táblázatba nem illő szűrők",

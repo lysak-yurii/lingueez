@@ -390,8 +390,13 @@ class TourController(QObject):
                 tr("Search across your words, translations and tags as you type."))
 
     def _step_add(self):
+        keys = self.win.hotkey_label()
+        hint = (tr("Copy a word in any app, then press {keys} to add it with its "
+                   "translation.").format(keys=keys) if keys
+                else tr("Set a shortcut in Settings to add copied words from any app."))
         return (self.win.add_button, tr("Add a word"),
-                tr("Add a new word here — its translation can be fetched automatically."))
+                tr("Add a new word here — its translation can be fetched automatically.")
+                + "\n\n" + hint)
 
     def _step_read(self):
         w = self.win

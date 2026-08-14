@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Arama kapsamı",
     "Search scope…": "Arama kapsamı…",
     "Add word": "Kelime ekle",
+    "Copy a word in any app, then press:":
+        "Herhangi bir uygulamada bir kelime kopyalayın, sonra basın:",
+    "Set a shortcut": "Kısayol belirle",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Herhangi bir uygulamada bir kelime kopyalayıp {keys} tuşlarına basın; çevirisiyle birlikte eklenir.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Herhangi bir uygulamadan kopyalanan kelimeleri eklemek için Ayarlar'dan bir kısayol belirleyin.",
     " Favorites": " Favoriler",
     " Filters": " Filtreler",
     "Filters that don't fit the table": "Tabloya sığmayan filtreler",

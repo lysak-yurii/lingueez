@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Cakupan pencarian",
     "Search scope…": "Cakupan pencarian…",
     "Add word": "Tambah kata",
+    "Copy a word in any app, then press:":
+        "Salin kata di aplikasi mana pun, lalu tekan:",
+    "Set a shortcut": "Atur pintasan",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Salin kata di aplikasi mana pun, lalu tekan {keys} untuk menambahkannya beserta terjemahannya.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Atur pintasan di Pengaturan untuk menambahkan kata yang disalin dari aplikasi mana pun.",
     " Favorites": " Favorit",
     " Filters": " Filter",
     "Filters that don't fit the table": "Filter yang tidak muat di tabel",

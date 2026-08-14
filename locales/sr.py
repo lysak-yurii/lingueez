@@ -68,6 +68,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search scope": "Област претраге",
     "Search scope…": "Област претраге…",
     "Add word": "Додај реч",
+    "Copy a word in any app, then press:":
+        "Копирајте реч у било којој апликацији и притисните:",
+    "Set a shortcut": "Постави пречицу",
+    "Copy a word in any app, then press {keys} to add it with its "
+    "translation.":
+        "Копирајте реч у било којој апликацији и притисните {keys} да је додате са преводом.",
+    "Set a shortcut in Settings to add copied words from any app.":
+        "Поставите пречицу у Подешавањима да бисте додавали копиране речи из било које апликације.",
     " Favorites": " Омиљено",
     " Filters": " Филтери",
     "Filters that don't fit the table": "Филтери који не стају у табелу",
