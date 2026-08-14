@@ -69,6 +69,9 @@ from app.ui.widgets import ProgressionMeter
 from app.ui.workers import run_in_thread
 
 DECK_KINDS = ("due", "filtered", "newest", "selected")
+#: Emblem scale in a picker header. Shared with the Quiz page so both study
+#: pages open with an identically sized mark and their titles line up.
+PICKER_LOGO_SCALE = 0.62
 FLIP_MS = 220
 FLIP_MS_AUTOPLAY = 160
 
@@ -121,13 +124,26 @@ class _DeckLogo(QWidget):
     distracting.
     """
 
+    #: Unscaled footprint of the emblem, in pixels.
+    BASE_SIZE = (150, 104)
+
+    @classmethod
+    def size_for(cls, scale=1.0):
+        """The footprint this emblem occupies at *scale*.
+
+        Exposed so a sibling page's emblem can claim the same box and the two
+        picker headers line up, without either copying these numbers.
+        """
+        w, h = cls.BASE_SIZE
+        return QSize(int(w * scale), int(h * scale))
+
     def __init__(self, colors, scale=1.0, parent=None):
         super().__init__(parent)
         self._colors = colors
         self._scale = float(scale)
         self._spread = 1.0   # 0 = stacked, 1 = fanned open
         self._sway = 0.0     # ±1 slow idle drift
-        self.setFixedSize(int(150 * self._scale), int(104 * self._scale))
+        self.setFixedSize(self.size_for(self._scale))
 
         self._intro = QVariantAnimation(self)
         self._intro.setDuration(700)
@@ -222,13 +238,19 @@ class _SlimBar(QWidget):
     In a manual session it draws one segment per card, colored by the grade
     the card received (the session's history at a glance); when segments
     would get too thin — or in autoplay, where the deck plays through
-    continuously — it falls back to a plain fill."""
+    continuously — it falls back to a plain fill.
+
+    ``color_keys`` maps whatever the caller puts in ``grades`` to palette
+    keys. It is overridable because the quiz has two outcomes rather than
+    three grades, and a correct answer there must not borrow the amber that
+    means "Good, but hard work" on a flashcard."""
 
     GRADE_COLOR_KEYS = {"easy": "success", "good": "warning", "hard": "danger"}
 
-    def __init__(self, colors, parent=None):
+    def __init__(self, colors, parent=None, color_keys=None):
         super().__init__(parent)
         self._colors = colors
+        self._color_keys = dict(color_keys or self.GRADE_COLOR_KEYS)
         self._current = 0
         self._total = 0
         self._grades = None  # index → grade key, or None for a plain fill
@@ -270,8 +292,8 @@ class _SlimBar(QWidget):
         seg_radius = min(radius, seg_w / 2)
         for i in range(self._total):
             grade = self._grades.get(i)
-            if grade in self.GRADE_COLOR_KEYS:
-                color = QColor(c[self.GRADE_COLOR_KEYS[grade]])
+            if grade in self._color_keys:
+                color = QColor(c[self._color_keys[grade]])
             elif i == self._current - 1:
                 color = QColor(c["accent"])
             elif i < self._current - 1:
@@ -899,7 +921,7 @@ class FlashcardsPage(QWidget):
 
         head = QHBoxLayout()
         head.setSpacing(14)
-        self.logo = _DeckLogo(self._colors, scale=0.62)
+        self.logo = _DeckLogo(self._colors, scale=PICKER_LOGO_SCALE)
         head.addWidget(self.logo, 0, Qt.AlignVCenter)
         id_col = QVBoxLayout()
         id_col.setSpacing(2)
