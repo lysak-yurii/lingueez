@@ -49,6 +49,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QColor, QFont, QIcon, QKeySequence, QPainter, QPen, QShortcut,
+    QTextLayout, QTextOption,
 )
 from PySide6.QtWidgets import (
     QButtonGroup, QFrame, QHBoxLayout, QLabel, QLayout, QPushButton,
@@ -352,6 +353,60 @@ def _definition_html(text, colors):
     return "".join(out)
 
 
+class _ClampedLabel(QLabel):
+    """Word-wrapped text that stops on a whole line and elides what is cut.
+
+    A plain QLabel fills the height it is given and lets the last line be
+    sliced through the middle of its glyphs whenever that height is not an
+    exact multiple of the line spacing. This lays the text out itself, keeps
+    only the lines that fit whole, and marks the cut with an ellipsis.
+    """
+
+    def __init__(self, text="", parent=None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+        self._ink = QColor(Qt.gray)
+        # The card's height is fixed, so this label takes what it is given;
+        # letting its own wrapped height feed back would fight that.
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
+
+    def set_ink(self, color):
+        self._ink = QColor(color)
+        self.update()
+
+    def paintEvent(self, _event):  # noqa: N802
+        text = self.text().strip()
+        rect = self.contentsRect()
+        if not text or rect.width() <= 0:
+            return
+        painter = QPainter(self)
+        painter.setPen(self._ink)
+        fm = painter.fontMetrics()
+        spacing = fm.lineSpacing()
+        room = max(1, rect.height() // spacing)
+
+        option = QTextOption()
+        option.setWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        layout = QTextLayout(text, self.font())
+        layout.setTextOption(option)
+        layout.beginLayout()
+        y = rect.top()
+        for drawn in range(room):
+            line = layout.createLine()
+            if not line.isValid():
+                break
+            line.setLineWidth(rect.width())
+            start, length = line.textStart(), line.textLength()
+            chunk = text[start:start + length]
+            if drawn == room - 1 and start + length < len(text):
+                chunk = fm.elidedText(text[start:], Qt.ElideRight, rect.width())
+            painter.drawText(QRectF(rect.left(), y, rect.width(), spacing),
+                             Qt.AlignLeft | Qt.AlignVCenter, chunk.rstrip())
+            y += spacing
+        layout.endLayout()
+        painter.end()
+
+
 class _CardGridLayout(QLayout):
     """Responsive uniform grid: as many equal-width columns as fit the
     minimum item width, with items stretched to consume the full row —
@@ -440,7 +495,10 @@ class _PreviewCard(QWidget):
     clicked = Signal()
 
     HEIGHT = 138          # width comes from the responsive grid columns
-    HEIGHT_COMPACT = 92   # no definition — nothing to reserve space for
+    HEIGHT_COMPACT = 106  # no definition, but still air under the translation
+    # Without a floor the empty body collapses and the footer row sits right
+    # against the translation.
+    EMPTY_BODY_GAP = 14
 
     def __init__(self, record, definition, due_text, due_key, colors,
                  speak_cb, lang_tag="", parent=None):
@@ -452,7 +510,7 @@ class _PreviewCard(QWidget):
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(tr("Definition — {word}").format(
             word=str(record.get("Word1") or "")))
-        snippet = _snippet(definition, record.get("Word1"))
+        snippet = _snippet(definition, record.get("Word1"), limit=240)
         self._pref_h = self.HEIGHT if snippet else self.HEIGHT_COMPACT
 
         v = QVBoxLayout(self)
@@ -480,9 +538,8 @@ class _PreviewCard(QWidget):
         v.addLayout(head)
         self.translation = QLabel(str(record.get("Word2") or ""))
         v.addWidget(self.translation)
-        self.body = QLabel(snippet)
-        self.body.setWordWrap(True)
-        self.body.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.body = _ClampedLabel(snippet)
+        self.body.setMinimumHeight(0 if snippet else self.EMPTY_BODY_GAP)
         v.addWidget(self.body, 1)
         foot = QHBoxLayout()
         foot.setSpacing(6)
@@ -511,8 +568,9 @@ class _PreviewCard(QWidget):
     def set_definition(self, definition):
         """Refresh the snippet after the definition dialog changed it; a
         compact tile grows to full height once it has content to show."""
-        snippet = _snippet(definition, self._record.get("Word1"))
+        snippet = _snippet(definition, self._record.get("Word1"), limit=240)
         self.body.setText(snippet)
+        self.body.setMinimumHeight(0 if snippet else self.EMPTY_BODY_GAP)
         pref = self.HEIGHT if snippet else self.HEIGHT_COMPACT
         if pref != self._pref_h:
             self._pref_h = pref
@@ -548,8 +606,8 @@ class _PreviewCard(QWidget):
             f"color:{c['text']};background:transparent;"
             f"font-size:{theme.font_pt('body')}pt;")
         self.body.setStyleSheet(
-            f"color:{c['text_dim']};background:transparent;"
-            f"font-size:{theme.font_pt('caption')}pt;")
+            f"background:transparent;font-size:{theme.font_pt('caption')}pt;")
+        self.body.set_ink(c["text_dim"])
         status = str(self._record.get("Status") or "").strip()
         self.meter.set_status(status)
         if status:
