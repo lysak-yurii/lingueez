@@ -1401,6 +1401,74 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Zavrieť",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Používajte svoj účet Lingueez plynule na stolnom počítači aj zariadeniach s Androidom.",
     "Get the app…": "Získať aplikáciu…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kvíz",
+    "Quiz (recall practice)": "Kvíz (precvičovanie vybavovania)",
+    "Recall your words, one question at a time":
+        "Vybavte si svoje slová, otázku po otázke",
+    "Questions": "Otázok",
+    "Answer with": "Odpovedať",
+    "Choices": "Výber",
+    "Typing": "Písanie",
+    "Ask": "Pýtať sa na",
+    "Term": "Termín",
+    "Mixed": "Zmiešane",
+    "Auto-advance": "Automatický prechod",
+    "Move on by itself after a correct answer": "Po správnej odpovedi pokračovať samo",
+    "Speak the question, then the answer once it is revealed":
+        "Prečítať otázku a po odhalení aj odpoveď",
+    "Start quiz": "Spustiť kvíz",
+    "questions ready": "otázok pripravených",
+    "Nothing to quiz": "Nie je na čo sa pýtať",
+    "No words match this deck.": "Tomuto balíčku nezodpovedajú žiadne slová.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Kvíz potrebuje aspoň dve slová — nesprávne odpovede pochádzajú práve zo slov, "
+        "na ktoré sa práve nepýtame.",
+    "Not enough words": "Málo slov",
+    "Add a few more words, or widen the deck.":
+        "Pridajte niekoľko slov alebo rozšírte balíček.",
+    "Question {n} of {total}": "Otázka {n} z {total}",
+    "Missed words": "Chybné slová",
+    "End quiz": "Ukončiť kvíz",
+    "Answer in {language}": "Odpovedzte v jazyku: {language}",
+    "Type the answer": "Napíšte odpoveď",
+    "Check": "Skontrolovať",
+    "Click to continue": "Kliknutím pokračujte",
+    "See results": "Zobraziť výsledky",
+    "Almost — it is \"{answer}\"": "Takmer — správne je „{answer}“",
+    "It is \"{answer}\"": "Správne je „{answer}“",
+    "Now {status}": "Teraz {status}",
+    "Correct": "Správne",
+    "Missed": "Chyby",
+    "Worth another look": "Stojí za zopakovanie",
+    "Again": "Znova",
+    "Missed words cleared!": "Chybné slová zvládnuté!",
+    "Perfect run": "Bezchybné kolo",
+    "Quiz complete": "Kvíz dokončený",
+    "Practice missed": "Precvičiť chyby",
+    "Default number of questions": "Predvolený počet otázok",
+    "Move on after a correct answer": "Po správnej odpovedi pokračovať",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Vyberte, na čo sa budeme pýtať",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Rovnaké balíčky ako pri kartičkách — slová na opakovanie, aktuálny filter, "
+        "najnovšie alebo ručne vybrané — a koľko otázok.",
+    "Choices or typing": "Výber alebo písanie",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Výber“ ponúkne štyri možnosti; „Písanie“ vyžaduje odpoveď napísať — je to "
+        "ťažšie, ale lepšia skúška. Písanie odpúšťa diakritiku aj drobné preklepy. "
+        "„Pýtať sa na“ určuje, ktorú stranu vidíte: termín, preklad alebo striedavo.",
+    "Start, and it counts": "Začnite — a počíta sa to",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Pruh ukazuje zloženie balíčka podľa stavov. Každá odpoveď napĺňa rovnaký plán "
+        "opakovania ako kartičky: slovo, ktoré si vybavíte, sa vráti neskôr, chybné "
+        "skôr.",
 }
 
 MONTHS = ["januára", "februára", "marca", "apríla", "mája", "júna",

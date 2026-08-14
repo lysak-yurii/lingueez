@@ -1400,6 +1400,74 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Sluiten",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Gebruik je Lingueez-account naadloos op desktop- en Android-apparaten.",
     "Get the app…": "Download de app…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (actief ophalen)",
+    "Recall your words, one question at a time": "Haal je woorden op, vraag voor vraag",
+    "Questions": "Vragen",
+    "Answer with": "Antwoorden met",
+    "Choices": "Keuze",
+    "Typing": "Typen",
+    "Ask": "Vragen naar",
+    "Term": "Term",
+    "Mixed": "Gemengd",
+    "Auto-advance": "Automatisch verder",
+    "Move on by itself after a correct answer": "Vanzelf doorgaan na een goed antwoord",
+    "Speak the question, then the answer once it is revealed":
+        "De vraag uitspreken en daarna het antwoord zodra het getoond wordt",
+    "Start quiz": "Quiz starten",
+    "questions ready": "vragen klaar",
+    "Nothing to quiz": "Niets om te overhoren",
+    "No words match this deck.": "Geen woorden passen bij dit stapeltje.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Een quiz heeft minstens twee woorden nodig — de foute antwoorden komen juist "
+        "uit de woorden waar je niet naar gevraagd wordt.",
+    "Not enough words": "Niet genoeg woorden",
+    "Add a few more words, or widen the deck.":
+        "Voeg wat woorden toe of maak het stapeltje breder.",
+    "Question {n} of {total}": "Vraag {n} van {total}",
+    "Missed words": "Foute woorden",
+    "End quiz": "Quiz beëindigen",
+    "Answer in {language}": "Antwoord in {language}",
+    "Type the answer": "Typ het antwoord",
+    "Check": "Controleren",
+    "Click to continue": "Klik om door te gaan",
+    "See results": "Resultaten bekijken",
+    "Almost — it is \"{answer}\"": "Bijna — het is “{answer}”",
+    "It is \"{answer}\"": "Het is “{answer}”",
+    "Now {status}": "Nu {status}",
+    "Correct": "Goed",
+    "Missed": "Fout",
+    "Worth another look": "Nog eens bekijken",
+    "Again": "Opnieuw",
+    "Missed words cleared!": "Foute woorden weggewerkt!",
+    "Perfect run": "Foutloze ronde",
+    "Quiz complete": "Quiz voltooid",
+    "Practice missed": "Fouten oefenen",
+    "Default number of questions": "Standaardaantal vragen",
+    "Move on after a correct answer": "Doorgaan na een goed antwoord",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Kies waarnaar je gevraagd wordt",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Dezelfde stapels als bij de kaarten — woorden die klaarstaan, je huidige "
+        "filter, de nieuwste of een eigen selectie — en hoeveel vragen.",
+    "Choices or typing": "Keuze of typen",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Keuze” biedt vier antwoorden aan; “Typen” vraagt je het antwoord te "
+        "schrijven: lastiger, maar een betere toets. Typen vergeeft accenten en kleine "
+        "typefouten. “Vragen naar” bepaalt welke kant je ziet: de term, de vertaling "
+        "of door elkaar.",
+    "Start, and it counts": "Begin — en het telt",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "De balk laat zien waaruit het stapeltje bestaat per status. Elk antwoord "
+        "voedt hetzelfde herhalingsschema als de kaarten: een woord dat je weet komt "
+        "later terug, een fout woord eerder.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase for Dutch formatting.

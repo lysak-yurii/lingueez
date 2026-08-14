@@ -1428,6 +1428,74 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Bỏ qua",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Sử dụng tài khoản Lingueez liền mạch trên cả máy tính và thiết bị Android.",
     "Get the app…": "Tải ứng dụng…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Trắc nghiệm",
+    "Quiz (recall practice)": "Trắc nghiệm (luyện nhớ lại)",
+    "Recall your words, one question at a time": "Nhớ lại các từ của bạn, từng câu một",
+    "Questions": "Số câu hỏi",
+    "Answer with": "Trả lời bằng",
+    "Choices": "Chọn đáp án",
+    "Typing": "Gõ chữ",
+    "Ask": "Hỏi về",
+    "Term": "Từ gốc",
+    "Mixed": "Xen kẽ",
+    "Auto-advance": "Tự chuyển câu",
+    "Move on by itself after a correct answer":
+        "Tự sang câu tiếp theo sau khi trả lời đúng",
+    "Speak the question, then the answer once it is revealed":
+        "Đọc câu hỏi, rồi đọc đáp án khi đã hiện ra",
+    "Start quiz": "Bắt đầu trắc nghiệm",
+    "questions ready": "câu đã sẵn sàng",
+    "Nothing to quiz": "Không có gì để hỏi",
+    "No words match this deck.": "Không có từ nào khớp với bộ này.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Bài trắc nghiệm cần ít nhất hai từ — các đáp án sai được lấy chính từ những "
+        "từ không được hỏi tới.",
+    "Not enough words": "Không đủ từ",
+    "Add a few more words, or widen the deck.":
+        "Hãy thêm vài từ nữa, hoặc mở rộng bộ từ.",
+    "Question {n} of {total}": "Câu {n} trên {total}",
+    "Missed words": "Từ trả lời sai",
+    "End quiz": "Kết thúc trắc nghiệm",
+    "Answer in {language}": "Trả lời bằng {language}",
+    "Type the answer": "Nhập câu trả lời",
+    "Check": "Kiểm tra",
+    "Click to continue": "Nhấp để tiếp tục",
+    "See results": "Xem kết quả",
+    "Almost — it is \"{answer}\"": "Suýt đúng — đáp án là “{answer}”",
+    "It is \"{answer}\"": "Đáp án là “{answer}”",
+    "Now {status}": "Giờ là {status}",
+    "Correct": "Đúng",
+    "Missed": "Sai",
+    "Worth another look": "Đáng xem lại",
+    "Again": "Lần nữa",
+    "Missed words cleared!": "Đã nắm được các từ trả lời sai!",
+    "Perfect run": "Đúng trọn vẹn",
+    "Quiz complete": "Hoàn thành trắc nghiệm",
+    "Practice missed": "Luyện từ trả lời sai",
+    "Default number of questions": "Số câu hỏi mặc định",
+    "Move on after a correct answer": "Sang câu tiếp theo sau khi trả lời đúng",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Chọn nội dung sẽ được hỏi",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Cùng các bộ từ như thẻ ghi nhớ — từ đến hạn ôn, bộ lọc hiện tại, từ mới nhất, "
+        "hoặc do bạn chọn tay — và số câu hỏi.",
+    "Choices or typing": "Chọn đáp án hay gõ chữ",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Chọn đáp án” đưa ra bốn phương án; “Gõ chữ” yêu cầu bạn viết ra câu trả lời "
+        "— khó hơn, nhưng kiểm tra tốt hơn. Khi gõ, dấu và lỗi gõ nhỏ vẫn được chấp "
+        "nhận. “Hỏi về” quyết định bạn thấy mặt nào — từ gốc, bản dịch, hay xen kẽ.",
+    "Start, and it counts": "Bắt đầu — và nó được tính",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Thanh màu cho thấy bộ từ gồm những trạng thái nào. Mỗi câu trả lời đều đi vào "
+        "cùng lịch lặp lại ngắt quãng như thẻ ghi nhớ: từ bạn nhớ được sẽ quay lại "
+        "muộn hơn, từ trả lời sai sẽ quay lại sớm hơn.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

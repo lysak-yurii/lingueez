@@ -92,6 +92,10 @@ ICONS = {
     # behind it. Offset rectangles would read as the "copy" glyph instead.
     "cards": '<rect x="9" y="3" width="12" height="18" rx="2.5"/>'
              '<path d="M5.5 6v12"/><path d="M2 8.5v7"/>',
+    # An answered checklist: one option ticked, the others still open. Reads as
+    # "pick the right one", which neither `cards` nor `help-circle` does.
+    "quiz": '<polyline points="3 6.5 5 8.5 8.5 5"/><line x1="12" y1="7" x2="21" y2="7"/>'
+            '<polyline points="3 15.5 5 17.5 8.5 14"/><line x1="12" y1="16" x2="21" y2="16"/>',
     "archive": '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/>'
                '<line x1="10" y1="12" x2="14" y2="12"/>',
     "sliders": '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>'

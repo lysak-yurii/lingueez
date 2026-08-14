@@ -1694,6 +1694,74 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Používejte svůj účet Lingueez plynule mezi počítačem a zařízeními Android.",
     "Get the app…": "Získat aplikaci…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kvíz",
+    "Quiz (recall practice)": "Kvíz (procvičování vybavování)",
+    "Recall your words, one question at a time":
+        "Vybavte si svá slova, otázku po otázce",
+    "Questions": "Otázek",
+    "Answer with": "Odpovídat",
+    "Choices": "Výběr",
+    "Typing": "Psaní",
+    "Ask": "Ptát se na",
+    "Term": "Termín",
+    "Mixed": "Smíšeně",
+    "Auto-advance": "Automatický přechod",
+    "Move on by itself after a correct answer": "Po správné odpovědi pokračovat samo",
+    "Speak the question, then the answer once it is revealed":
+        "Přečíst otázku a po odhalení i odpověď",
+    "Start quiz": "Spustit kvíz",
+    "questions ready": "otázek připraveno",
+    "Nothing to quiz": "Není na co se ptát",
+    "No words match this deck.": "Tomuto balíčku neodpovídají žádná slova.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Kvíz potřebuje alespoň dvě slova — špatné odpovědi pocházejí právě ze slov, "
+        "na která se právě neptáme.",
+    "Not enough words": "Málo slov",
+    "Add a few more words, or widen the deck.":
+        "Přidejte několik slov nebo rozšiřte balíček.",
+    "Question {n} of {total}": "Otázka {n} z {total}",
+    "Missed words": "Chybná slova",
+    "End quiz": "Ukončit kvíz",
+    "Answer in {language}": "Odpovězte v jazyce: {language}",
+    "Type the answer": "Napište odpověď",
+    "Check": "Zkontrolovat",
+    "Click to continue": "Klepnutím pokračujte",
+    "See results": "Zobrazit výsledky",
+    "Almost — it is \"{answer}\"": "Skoro — správně je „{answer}“",
+    "It is \"{answer}\"": "Správně je „{answer}“",
+    "Now {status}": "Nyní {status}",
+    "Correct": "Správně",
+    "Missed": "Chyby",
+    "Worth another look": "Stojí za zopakování",
+    "Again": "Znovu",
+    "Missed words cleared!": "Chybná slova zvládnuta!",
+    "Perfect run": "Bezchybné kolo",
+    "Quiz complete": "Kvíz dokončen",
+    "Practice missed": "Procvičit chyby",
+    "Default number of questions": "Výchozí počet otázek",
+    "Move on after a correct answer": "Po správné odpovědi pokračovat",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Vyberte, na co se budeme ptát",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Stejné balíčky jako u kartiček — slova k opakování, aktuální filtr, "
+        "nejnovější nebo ručně vybraná — a kolik otázek.",
+    "Choices or typing": "Výběr nebo psaní",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Výběr“ nabídne čtyři možnosti; „Psaní“ vyžaduje odpověď napsat — je to "
+        "těžší, ale lepší zkouška. Psaní odpouští diakritiku i drobné překlepy. „Ptát "
+        "se na“ určuje, kterou stranu vidíte: termín, překlad, nebo obojí střídavě.",
+    "Start, and it counts": "Začněte — a počítá se to",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Pruh ukazuje složení balíčku podle stavů. Každá odpověď plní stejný plán "
+        "opakování jako kartičky: slovo, které si vybavíte, se vrátí později, chybné "
+        "dříve.",
 }
 
 # Date names, read by app.i18n.

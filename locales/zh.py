@@ -1426,6 +1426,65 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "忽略",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "在桌面和 Android 设备间无缝使用您的 Lingueez 账户。",
     "Get the app…": "获取应用…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "测验",
+    "Quiz (recall practice)": "测验（回忆练习）",
+    "Recall your words, one question at a time": "一题一题地回忆你的单词",
+    "Questions": "题目数",
+    "Answer with": "作答方式",
+    "Choices": "选择",
+    "Typing": "输入",
+    "Ask": "考查",
+    "Term": "词条",
+    "Mixed": "混合",
+    "Auto-advance": "自动前进",
+    "Move on by itself after a correct answer": "答对后自动进入下一题",
+    "Speak the question, then the answer once it is revealed": "朗读题目，答案揭晓后再朗读答案",
+    "Start quiz": "开始测验",
+    "questions ready": "道题已准备好",
+    "Nothing to quiz": "没有可考查的内容",
+    "No words match this deck.": "没有单词符合这一组。",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "测验至少需要两个单词——错误选项正是取自那些当前没有考你的单词。",
+    "Not enough words": "单词不够",
+    "Add a few more words, or widen the deck.": "再添加几个单词，或扩大范围。",
+    "Question {n} of {total}": "第 {n} 题，共 {total} 题",
+    "Missed words": "答错的单词",
+    "End quiz": "结束测验",
+    "Answer in {language}": "用{language}作答",
+    "Type the answer": "输入答案",
+    "Check": "检查",
+    "Click to continue": "点击继续",
+    "See results": "查看结果",
+    "Almost — it is \"{answer}\"": "差一点——正确答案是“{answer}”",
+    "It is \"{answer}\"": "正确答案是“{answer}”",
+    "Now {status}": "现在是 {status}",
+    "Correct": "正确",
+    "Missed": "错误",
+    "Worth another look": "值得再看一遍",
+    "Again": "再来一次",
+    "Missed words cleared!": "答错的单词都掌握了！",
+    "Perfect run": "全部答对",
+    "Quiz complete": "测验完成",
+    "Practice missed": "练习错题",
+    "Default number of questions": "默认题目数",
+    "Move on after a correct answer": "答对后进入下一题",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "选择考查的范围",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "与卡片相同的范围——到期复习的单词、当前筛选、最新添加，或手动挑选——以及出多少道题。",
+    "Choices or typing": "选择还是输入",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“选择”给出四个选项供你挑；“输入”要求你写出答案，更难，但也更能检验掌握程度。输入会宽容变音符号和小的拼写笔误。“考查”决定你看到哪一侧——词条、译文，或两者混合。",
+    "Start, and it counts": "开始吧——这会计入进度",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "色条按状态显示这组词的构成。每次作答都会计入与卡片相同的间隔重复计划：答对的词下次出现得更晚，答错的词更早回来。",
 }
 
 # Date names, read by app.i18n. Months in Simplified Chinese numbers/names ("1月", "2月" etc.)

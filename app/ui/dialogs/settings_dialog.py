@@ -468,6 +468,16 @@ class SettingsDialog(FramelessDialog):
                      self._spin("flashcards_deck_size", 1, 200, 20))
         form.addRow(flash_group)
 
+        # The rest of the quiz options (format, direction, shuffle) live on the
+        # picker itself, where they are chosen per session and remembered.
+        quiz_group = QGroupBox(tr("Quiz"))
+        qform = QFormLayout(quiz_group)
+        qform.addRow(tr("Default number of questions"),
+                     self._spin("quiz_deck_size", 1, 200, 20))
+        qform.addRow(tr("Move on after a correct answer"),
+                     self._check("quiz_auto_advance", True))
+        form.addRow(quiz_group)
+
         note = QLabel(tr("Fully listening to a word in Read Aloud promotes it along the "
                          "familiarity ladder New → Reviewing → Learning → Mastered. Each "
                          "number is the total completed listens needed to reach that level — "

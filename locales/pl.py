@@ -1692,6 +1692,75 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Używaj swojego konta Lingueez bez przeszkód na komputerze i urządzeniach z Androidem.",
     "Get the app…": "Pobierz aplikację…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (ćwiczenie przypominania)",
+    "Recall your words, one question at a time":
+        "Przypomnij sobie swoje słowa, pytanie po pytaniu",
+    "Questions": "Pytania",
+    "Answer with": "Odpowiadaj przez",
+    "Choices": "Wybór",
+    "Typing": "Wpisywanie",
+    "Ask": "Pytaj o",
+    "Term": "Termin",
+    "Mixed": "Mieszane",
+    "Auto-advance": "Automatyczne przejście",
+    "Move on by itself after a correct answer":
+        "Przechodź dalej po poprawnej odpowiedzi",
+    "Speak the question, then the answer once it is revealed":
+        "Czytaj pytanie, a po odsłonięciu także odpowiedź",
+    "Start quiz": "Rozpocznij quiz",
+    "questions ready": "pytań gotowych",
+    "Nothing to quiz": "Nie ma o co pytać",
+    "No words match this deck.": "Żadne słowo nie pasuje do tej talii.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Quiz wymaga co najmniej dwóch słów — błędne odpowiedzi pochodzą właśnie z "
+        "tych słów, o które akurat nie pytamy.",
+    "Not enough words": "Za mało słów",
+    "Add a few more words, or widen the deck.": "Dodaj kilka słów albo poszerz talię.",
+    "Question {n} of {total}": "Pytanie {n} z {total}",
+    "Missed words": "Błędne słowa",
+    "End quiz": "Zakończ quiz",
+    "Answer in {language}": "Odpowiedz w języku: {language}",
+    "Type the answer": "Wpisz odpowiedź",
+    "Check": "Sprawdź",
+    "Click to continue": "Kliknij, aby kontynuować",
+    "See results": "Zobacz wyniki",
+    "Almost — it is \"{answer}\"": "Prawie — to „{answer}”",
+    "It is \"{answer}\"": "To „{answer}”",
+    "Now {status}": "Teraz {status}",
+    "Correct": "Poprawne",
+    "Missed": "Błędne",
+    "Worth another look": "Warto powtórzyć",
+    "Again": "Jeszcze raz",
+    "Missed words cleared!": "Błędne słowa opanowane!",
+    "Perfect run": "Bezbłędna runda",
+    "Quiz complete": "Quiz ukończony",
+    "Practice missed": "Powtórz błędy",
+    "Default number of questions": "Domyślna liczba pytań",
+    "Move on after a correct answer": "Przechodź dalej po poprawnej odpowiedzi",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Wybierz, o co będziesz pytany",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Te same talie co w fiszkach — słowa do powtórki, bieżący filtr, najnowsze lub "
+        "wybrane ręcznie — oraz liczbę pytań.",
+    "Choices or typing": "Wybór albo wpisywanie",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Wybór” podaje cztery odpowiedzi do wskazania; „Wpisywanie” każe napisać "
+        "odpowiedź — trudniej, ale to lepszy sprawdzian. Wpisywanie wybacza znaki "
+        "diakrytyczne i drobne literówki. „Pytaj o” decyduje, którą stronę widzisz: "
+        "termin, tłumaczenie albo na przemian.",
+    "Start, and it counts": "Zacznij — to się liczy",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Pasek pokazuje skład talii według statusów. Każda odpowiedź zasila ten sam "
+        "harmonogram powtórek co fiszki: słowo, które pamiętasz, wróci później, a "
+        "pomylone — wcześniej.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

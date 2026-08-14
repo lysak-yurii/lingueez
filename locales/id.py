@@ -1695,6 +1695,75 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Gunakan akun Lingueez Anda secara lancar di seluruh perangkat desktop dan Android.",
     "Get the app…": "Dapatkan aplikasinya…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kuis",
+    "Quiz (recall practice)": "Kuis (latihan mengingat)",
+    "Recall your words, one question at a time":
+        "Ingat kembali kata-kata Anda, satu pertanyaan sekaligus",
+    "Questions": "Pertanyaan",
+    "Answer with": "Jawab dengan",
+    "Choices": "Pilihan",
+    "Typing": "Mengetik",
+    "Ask": "Tanyakan",
+    "Term": "Istilah",
+    "Mixed": "Campuran",
+    "Auto-advance": "Lanjut otomatis",
+    "Move on by itself after a correct answer": "Lanjut sendiri setelah jawaban benar",
+    "Speak the question, then the answer once it is revealed":
+        "Ucapkan pertanyaan, lalu jawabannya begitu terungkap",
+    "Start quiz": "Mulai kuis",
+    "questions ready": "pertanyaan siap",
+    "Nothing to quiz": "Tidak ada yang bisa ditanyakan",
+    "No words match this deck.": "Tidak ada kata yang cocok dengan set ini.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Kuis memerlukan setidaknya dua kata — pilihan yang salah justru diambil dari "
+        "kata-kata yang tidak sedang ditanyakan.",
+    "Not enough words": "Kata tidak cukup",
+    "Add a few more words, or widen the deck.":
+        "Tambahkan beberapa kata lagi, atau perluas setnya.",
+    "Question {n} of {total}": "Pertanyaan {n} dari {total}",
+    "Missed words": "Kata yang salah",
+    "End quiz": "Akhiri kuis",
+    "Answer in {language}": "Jawab dalam bahasa {language}",
+    "Type the answer": "Ketik jawabannya",
+    "Check": "Periksa",
+    "Click to continue": "Klik untuk melanjutkan",
+    "See results": "Lihat hasil",
+    "Almost — it is \"{answer}\"": "Hampir — jawabannya “{answer}”",
+    "It is \"{answer}\"": "Jawabannya “{answer}”",
+    "Now {status}": "Sekarang {status}",
+    "Correct": "Benar",
+    "Missed": "Salah",
+    "Worth another look": "Layak dilihat lagi",
+    "Again": "Lagi",
+    "Missed words cleared!": "Kata-kata yang salah sudah dikuasai!",
+    "Perfect run": "Putaran sempurna",
+    "Quiz complete": "Kuis selesai",
+    "Practice missed": "Latih yang salah",
+    "Default number of questions": "Jumlah pertanyaan bawaan",
+    "Move on after a correct answer": "Lanjut setelah jawaban benar",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Pilih apa yang akan ditanyakan",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Set yang sama seperti kartu — kata yang jatuh tempo, filter Anda saat ini, "
+        "yang terbaru, atau pilihan sendiri — dan berapa banyak pertanyaan.",
+    "Choices or typing": "Pilihan atau mengetik",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Pilihan” menyodorkan empat jawaban; “Mengetik” meminta Anda menuliskan "
+        "jawabannya — lebih sulit, tetapi ujian yang lebih baik. Mengetik memaafkan "
+        "tanda diakritik dan salah ketik kecil. “Tanyakan” menentukan sisi mana yang "
+        "Anda lihat: istilah, terjemahannya, atau campuran.",
+    "Start, and it counts": "Mulai — dan ini dihitung",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Bilah menunjukkan komposisi set menurut status. Setiap jawaban mengisi jadwal "
+        "pengulangan berjarak yang sama dengan kartu: kata yang Anda ingat kembali "
+        "lebih lama lagi, yang salah kembali lebih cepat.",
 }
 
 # Date names read by app.i18n.

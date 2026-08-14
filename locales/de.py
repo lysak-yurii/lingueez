@@ -1692,6 +1692,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Nutzen Sie Ihr Lingueez-Konto nahtlos auf Desktop- und Android-Geräten.",
     "Get the app…": "App herunterladen…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (Abfrage aus dem Gedächtnis)",
+    "Recall your words, one question at a time":
+        "Rufen Sie Ihre Wörter ab, Frage für Frage",
+    "Questions": "Fragen",
+    "Answer with": "Antworten mit",
+    "Choices": "Auswahl",
+    "Typing": "Eingabe",
+    "Ask": "Abfragen",
+    "Term": "Begriff",
+    "Mixed": "Gemischt",
+    "Auto-advance": "Automatisch weiter",
+    "Move on by itself after a correct answer":
+        "Nach einer richtigen Antwort von selbst weitergehen",
+    "Speak the question, then the answer once it is revealed":
+        "Die Frage vorlesen und die Antwort, sobald sie aufgedeckt ist",
+    "Start quiz": "Quiz starten",
+    "questions ready": "Fragen bereit",
+    "Nothing to quiz": "Nichts zum Abfragen",
+    "No words match this deck.": "Keine Wörter passen zu diesem Stapel.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Ein Quiz braucht mindestens zwei Wörter — die falschen Antworten stammen aus "
+        "genau den Wörtern, nach denen gerade nicht gefragt wird.",
+    "Not enough words": "Nicht genügend Wörter",
+    "Add a few more words, or widen the deck.":
+        "Fügen Sie ein paar Wörter hinzu oder erweitern Sie den Stapel.",
+    "Question {n} of {total}": "Frage {n} von {total}",
+    "Missed words": "Falsch beantwortet",
+    "End quiz": "Quiz beenden",
+    "Answer in {language}": "Antwort auf {language}",
+    "Type the answer": "Antwort eingeben",
+    "Check": "Prüfen",
+    "Click to continue": "Zum Fortfahren klicken",
+    "See results": "Ergebnisse",
+    "Almost — it is \"{answer}\"": "Fast — es heißt „{answer}“",
+    "It is \"{answer}\"": "Es heißt „{answer}“",
+    "Now {status}": "Jetzt {status}",
+    "Correct": "Richtig",
+    "Missed": "Falsch",
+    "Worth another look": "Noch einmal ansehen",
+    "Again": "Nochmal",
+    "Missed words cleared!": "Alle Fehler ausgeräumt!",
+    "Perfect run": "Fehlerfreier Durchgang",
+    "Quiz complete": "Quiz abgeschlossen",
+    "Practice missed": "Fehler üben",
+    "Default number of questions": "Standardanzahl der Fragen",
+    "Move on after a correct answer": "Nach einer richtigen Antwort weitergehen",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Wählen Sie, wonach gefragt wird",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Dieselben Stapel wie bei den Karteikarten — fällige Wörter, Ihr aktueller "
+        "Filter, die neuesten oder eine eigene Auswahl — und wie viele Fragen.",
+    "Choices or typing": "Auswahl oder Eingabe",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Auswahl“ bietet vier Möglichkeiten an; „Eingabe“ verlangt, die Antwort zu "
+        "schreiben — schwerer, aber die bessere Prüfung. Die Eingabe verzeiht Akzente "
+        "und kleine Tippfehler. „Abfragen“ bestimmt, welche Seite Sie sehen: den "
+        "Begriff, die Übersetzung oder gemischt.",
+    "Start, and it counts": "Starten — und es zählt",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Der Balken zeigt, woraus der Stapel nach Status besteht. Jede Antwort fließt "
+        "in denselben Wiederholungsplan wie bei den Karteikarten: ein Wort, das Sie "
+        "können, kommt später wieder — eines mit Fehler früher.",
 }
 
 # Date names, read by app.i18n. Months are in standard nominative/genitive German format.

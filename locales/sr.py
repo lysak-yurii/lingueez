@@ -1409,6 +1409,74 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Одбаци",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Користите свој налог несметано на свим уређајима.",
     "Get the app…": "Преузмите апликацију…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Квиз",
+    "Quiz (recall practice)": "Квиз (вежба присећања)",
+    "Recall your words, one question at a time":
+        "Присетите се својих речи, питање по питање",
+    "Questions": "Питања",
+    "Answer with": "Одговарај",
+    "Choices": "Избор",
+    "Typing": "Куцање",
+    "Ask": "Питај",
+    "Term": "Појам",
+    "Mixed": "Мешано",
+    "Auto-advance": "Аутоматски даље",
+    "Move on by itself after a correct answer": "Настави само после тачног одговора",
+    "Speak the question, then the answer once it is revealed":
+        "Изговори питање, па одговор када се открије",
+    "Start quiz": "Покрени квиз",
+    "questions ready": "питања спремно",
+    "Nothing to quiz": "Нема шта да се пита",
+    "No words match this deck.": "Ниједна реч не одговара овом шпилу.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Квизу требају најмање две речи — нетачни одговори долазе управо из речи о "
+        "којима вас не питамо.",
+    "Not enough words": "Нема довољно речи",
+    "Add a few more words, or widen the deck.":
+        "Додајте још коју реч или проширите шпил.",
+    "Question {n} of {total}": "Питање {n} од {total}",
+    "Missed words": "Промашене речи",
+    "End quiz": "Заврши квиз",
+    "Answer in {language}": "Одговорите на језику: {language}",
+    "Type the answer": "Упишите одговор",
+    "Check": "Провери",
+    "Click to continue": "Кликните да наставите",
+    "See results": "Погледај резултате",
+    "Almost — it is \"{answer}\"": "Скоро — тачно је „{answer}”",
+    "It is \"{answer}\"": "Тачно је „{answer}”",
+    "Now {status}": "Сада {status}",
+    "Correct": "Тачно",
+    "Missed": "Промашено",
+    "Worth another look": "Вреди поновити",
+    "Again": "Поново",
+    "Missed words cleared!": "Промашене речи савладане!",
+    "Perfect run": "Савршен круг",
+    "Quiz complete": "Квиз завршен",
+    "Practice missed": "Вежбај промашено",
+    "Default number of questions": "Подразумевани број питања",
+    "Move on after a correct answer": "Настави после тачног одговора",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Изаберите о чему ће вас питати",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Исти шпилови као код картица — речи за понављање, тренутни филтер, најновије "
+        "или ручно изабране — и колико питања.",
+    "Choices or typing": "Избор или куцање",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Избор” нуди четири одговора; „Куцање” тражи да одговор напишете — теже је, "
+        "али је боља провера. Куцање прашта дијакритику и ситне грешке у куцању. "
+        "„Питај” одређује коју страну видите: појам, превод или измешано.",
+    "Start, and it counts": "Почните — и рачуна се",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Трака показује састав шпила по статусима. Сваки одговор храни исти распоред "
+        "понављања као картице: реч које се сетите враћа се касније, а промашена "
+        "раније.",
 }
 
 # Date names, read by app.i18n. Months in Serbian (nominative/standard format).

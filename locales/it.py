@@ -1694,6 +1694,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Usa il tuo account Lingueez senza interruzioni tra computer e dispositivi Android.",
     "Get the app…": "Ottieni l'app…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (esercizio di richiamo)",
+    "Recall your words, one question at a time":
+        "Richiama le tue parole, una domanda alla volta",
+    "Questions": "Domande",
+    "Answer with": "Rispondi con",
+    "Choices": "Scelta",
+    "Typing": "Digitazione",
+    "Ask": "Chiedi",
+    "Term": "Termine",
+    "Mixed": "Misto",
+    "Auto-advance": "Avanzamento automatico",
+    "Move on by itself after a correct answer":
+        "Prosegui da solo dopo una risposta corretta",
+    "Speak the question, then the answer once it is revealed":
+        "Pronuncia la domanda e poi la risposta una volta rivelata",
+    "Start quiz": "Inizia il quiz",
+    "questions ready": "domande pronte",
+    "Nothing to quiz": "Niente da chiedere",
+    "No words match this deck.": "Nessuna parola corrisponde a questo mazzo.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Un quiz richiede almeno due parole: le risposte sbagliate vengono proprio "
+        "dalle parole su cui non ti stiamo interrogando.",
+    "Not enough words": "Parole insufficienti",
+    "Add a few more words, or widen the deck.":
+        "Aggiungi qualche parola o allarga il mazzo.",
+    "Question {n} of {total}": "Domanda {n} di {total}",
+    "Missed words": "Parole sbagliate",
+    "End quiz": "Termina il quiz",
+    "Answer in {language}": "Rispondi in {language}",
+    "Type the answer": "Digita la risposta",
+    "Check": "Verifica",
+    "Click to continue": "Clicca per continuare",
+    "See results": "Vedi i risultati",
+    "Almost — it is \"{answer}\"": "Quasi — è «{answer}»",
+    "It is \"{answer}\"": "È «{answer}»",
+    "Now {status}": "Ora {status}",
+    "Correct": "Corrette",
+    "Missed": "Sbagliate",
+    "Worth another look": "Da rivedere",
+    "Again": "Ancora",
+    "Missed words cleared!": "Parole sbagliate recuperate!",
+    "Perfect run": "Percorso perfetto",
+    "Quiz complete": "Quiz completato",
+    "Practice missed": "Ripassa gli errori",
+    "Default number of questions": "Numero di domande predefinito",
+    "Move on after a correct answer": "Prosegui dopo una risposta corretta",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Scegli su cosa essere interrogato",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Gli stessi mazzi delle flashcard — parole da ripassare, il filtro corrente, "
+        "le più recenti o una selezione manuale — e quante domande.",
+    "Choices or typing": "Scelta o digitazione",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "«Scelta» propone quattro opzioni; «Digitazione» ti chiede di scrivere la "
+        "risposta: più difficile, ma è la prova migliore. La digitazione perdona "
+        "accenti e piccoli refusi. «Chiedi» decide quale lato vedi: il termine, la "
+        "traduzione o un misto.",
+    "Start, and it counts": "Inizia, e conta",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "La barra mostra com'è composto il mazzo per stato. Ogni risposta alimenta lo "
+        "stesso calendario di ripetizione dilazionata delle flashcard: una parola "
+        "ricordata torna più tardi, una sbagliata torna prima.",
 }
 
 # Date names, read by app.i18n. Months are in the format used for dates

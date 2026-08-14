@@ -213,9 +213,10 @@ class SpotlightOverlay(QWidget):
             super().keyPressEvent(event)
 
 
-# Maps MainWindow.stack indices (PAGE_WORDS/FLASHCARDS/TEXTS/STATS = 0/1/2/3)
-# to tour keys. Kept local so this module needn't import main_window.
-_PAGE_TO_TOUR = {0: "words", 1: "flashcards", 2: "texts", 3: "stats"}
+# Maps MainWindow.stack indices (PAGE_WORDS/FLASHCARDS/QUIZ/TEXTS/STATS =
+# 0/1/2/3/4) to tour keys. Kept local so this module needn't import
+# main_window.
+_PAGE_TO_TOUR = {0: "words", 1: "flashcards", 2: "quiz", 3: "texts", 4: "stats"}
 
 
 class TourController(QObject):
@@ -235,12 +236,15 @@ class TourController(QObject):
         # returning (widget, title, body); a resolver may perform a small
         # side-effect (e.g. select a row) to reveal a contextual target.
         self._saved_deck_kind = None  # flashcards deck chip, restored after
+        self._saved_quiz_kind = None  # quiz deck chip, restored after
         self._tours = {
             "words": [self._step_nav, self._step_search, self._step_add,
                       self._step_read, self._step_generate, self._step_sync],
             "flashcards": [self._step_cards_deck, self._step_cards_options,
                            self._step_cards_preview, self._step_cards_start,
                            self._step_cards_listen],
+            "quiz": [self._step_quiz_deck, self._step_quiz_format,
+                     self._step_quiz_start],
             "texts": [self._step_texts_add, self._step_texts_list,
                       self._step_texts_read, self._step_texts_translate,
                       self._step_texts_modes],
@@ -290,9 +294,13 @@ class TourController(QObject):
 
         The Flashcards tour spotlights the deck picker; if the page opened
         straight into a session (read-aloud autoplay hand-off), skip and keep
-        the seen flag unset so the tour runs on the next normal visit."""
+        the seen flag unset so the tour runs on the next normal visit. The
+        Quiz tour spotlights its picker for the same reason."""
         fp = self.win.flashcards_page
         if key == "flashcards" and fp._stack.currentIndex() != fp.STATE_PICKER:
+            return
+        qz = self.win.quiz_page
+        if key == "quiz" and qz._stack.currentIndex() != qz.STATE_PICKER:
             return
         self.start(key)
 
@@ -468,6 +476,33 @@ class TourController(QObject):
                    "and flip in sync with the voice. Pause anytime to grade "
                    "a card yourself."))
 
+    # ------------------------------------------------------------- quiz steps
+    def _step_quiz_deck(self):
+        qz = self.win.quiz_page
+        return (list(qz._deck_chips.values()) + [qz.size_label, qz.size_spin],
+                tr("Pick what you'll be asked"),
+                tr("The same deck choices as Flashcards — words due for "
+                   "review, your current filter, the newest ones, or a "
+                   "hand-picked selection — and how many questions to ask."))
+
+    def _step_quiz_format(self):
+        qz = self.win.quiz_page
+        return ([qz.format_label] + list(qz._format_chips.values())
+                + [qz.ask_label] + list(qz._direction_chips.values()),
+                tr("Choices or typing"),
+                tr("Choices offers four options to pick from; Typing asks you "
+                   "to write the answer, which is harder but the better test. "
+                   "Typing forgives accents and small typos. Ask decides which "
+                   "side you see — the term, its translation, or a mix."))
+
+    def _step_quiz_start(self):
+        qz = self.win.quiz_page
+        return (qz.session_panel, tr("Start, and it counts"),
+                tr("The bar shows what the deck is made of by status. Every "
+                   "answer feeds the same spaced-repetition schedule as "
+                   "Flashcards, so a word you recall here comes back later — "
+                   "and one you miss comes back sooner."))
+
     # ------------------------------------------------------------ texts steps
     def _ensure_text_open(self):
         """Open the first text so the reader controls become visible."""
@@ -572,6 +607,25 @@ class TourController(QObject):
             if self._demo:
                 fp._refresh_picker_info()
                 fp._refresh_preview()  # now, not via the debounce timer
+        elif key == "quiz":
+            qz = win.quiz_page
+            if win.df is None or getattr(win.df, "empty", True):
+                self._saved_df = win.df
+                win.df = _demo_words_df()
+                win.refresh_display()
+                self._demo.add("words")  # restored via the Words demo path
+            # "Nothing to quiz" demonstrates nothing — if the checked deck
+            # resolves empty (typically "Due" before any review exists), show
+            # the newest words instead. Signals stay blocked: this is the
+            # tour's choice, not the user's, and must not be persisted.
+            if not qz._fetch_deck(qz._deck_kind(), 1):
+                self._saved_quiz_kind = qz._deck_kind()
+                qz._deck_group.blockSignals(True)
+                qz._deck_chips["newest"].setChecked(True)
+                qz._deck_group.blockSignals(False)
+                self._demo.add("quiz")
+            if self._demo:
+                qz._refresh_picker_info()  # now, not via the debounce timer
         elif key == "texts":
             tp = win.texts_page
             if tp.listing.count() == 0:
@@ -605,11 +659,19 @@ class TourController(QObject):
         if "flashcards" in self._demo and self._saved_deck_kind:
             win.flashcards_page._deck_chips[self._saved_deck_kind].setChecked(True)
             self._saved_deck_kind = None
+        if "quiz" in self._demo and self._saved_quiz_kind:
+            qz = win.quiz_page
+            qz._deck_group.blockSignals(True)
+            qz._deck_chips[self._saved_quiz_kind].setChecked(True)
+            qz._deck_group.blockSignals(False)
+            self._saved_quiz_kind = None
         if {"words", "flashcards"} & self._demo:
             # the deck picker read the demo rows too — put the real ones back
             # (both refreshes no-op / stay cheap while the page is hidden)
             win.flashcards_page._refresh_picker_info()
             win.flashcards_page._schedule_preview_refresh()
+        if {"words", "quiz"} & self._demo:
+            win.quiz_page._refresh_picker_info()
         self._demo.clear()
 
     # ------------------------------------------------------------------ fade

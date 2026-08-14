@@ -1692,6 +1692,75 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Használja Lingueez-fiókját zökkenőmentesen az asztali és Android eszközök között.",
     "Get the app…": "Alkalmazás beszerzése…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kvíz",
+    "Quiz (recall practice)": "Kvíz (felidézés gyakorlása)",
+    "Recall your words, one question at a time":
+        "Idézze fel a szavait, kérdésről kérdésre",
+    "Questions": "Kérdések",
+    "Answer with": "Válasz módja",
+    "Choices": "Választás",
+    "Typing": "Gépelés",
+    "Ask": "Kérdezze",
+    "Term": "Kifejezés",
+    "Mixed": "Vegyes",
+    "Auto-advance": "Automatikus továbblépés",
+    "Move on by itself after a correct answer": "Helyes válasz után magától lép tovább",
+    "Speak the question, then the answer once it is revealed":
+        "Mondja ki a kérdést, majd a választ, amint látszik",
+    "Start quiz": "Kvíz indítása",
+    "questions ready": "kérdés készen áll",
+    "Nothing to quiz": "Nincs mit kérdezni",
+    "No words match this deck.": "Egy szó sem illik ehhez a paklihoz.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "A kvízhez legalább két szó kell — a rossz válaszok éppen azokból a szavakból "
+        "származnak, amelyekre nem kérdezünk rá.",
+    "Not enough words": "Nincs elég szó",
+    "Add a few more words, or widen the deck.":
+        "Vegyen fel még néhány szót, vagy bővítse a paklit.",
+    "Question {n} of {total}": "{n}. kérdés / {total}",
+    "Missed words": "Elrontott szavak",
+    "End quiz": "Kvíz befejezése",
+    "Answer in {language}": "Válasz ezen a nyelven: {language}",
+    "Type the answer": "Írja be a választ",
+    "Check": "Ellenőrzés",
+    "Click to continue": "Kattintson a folytatáshoz",
+    "See results": "Eredmények",
+    "Almost — it is \"{answer}\"": "Majdnem — a helyes válasz: „{answer}”",
+    "It is \"{answer}\"": "A helyes válasz: „{answer}”",
+    "Now {status}": "Most {status}",
+    "Correct": "Helyes",
+    "Missed": "Elrontott",
+    "Worth another look": "Érdemes átnézni",
+    "Again": "Újra",
+    "Missed words cleared!": "Az elrontott szavak megvannak!",
+    "Perfect run": "Hibátlan kör",
+    "Quiz complete": "Kvíz kész",
+    "Practice missed": "Hibák gyakorlása",
+    "Default number of questions": "Kérdések alapértelmezett száma",
+    "Move on after a correct answer": "Továbblépés helyes válasz után",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Válassza ki, mire kérdezzünk rá",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Ugyanazok a paklik, mint a kártyáknál — ismétlésre váró szavak, a jelenlegi "
+        "szűrő, a legújabbak vagy kézzel válogatottak — és hány kérdés legyen.",
+    "Choices or typing": "Választás vagy gépelés",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "A „Választás” négy lehetőséget kínál; a „Gépelés” a válasz beírását kéri — "
+        "nehezebb, de jobb próba. A gépelés megbocsátja az ékezeteket és az apró "
+        "elgépeléseket. A „Kérdezze” dönti el, melyik oldalt látja: a kifejezést, a "
+        "fordítást vagy vegyesen.",
+    "Start, and it counts": "Kezdje el — és számít",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "A sáv a pakli összetételét mutatja állapot szerint. Minden válasz ugyanabba "
+        "az ismétlési ütemtervbe folyik be, mint a kártyáknál: a felidézett szó később "
+        "tér vissza, az elrontott hamarabb.",
 }
 
 # Date names, read by app.i18n. Months in Hungarian usually use nominative or -i suffix.

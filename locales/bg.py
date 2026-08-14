@@ -1693,6 +1693,75 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Използвайте своя Lingueez акаунт безпроблемно на настолни и Android устройства.",
     "Get the app…": "Вземете приложението…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Тест",
+    "Quiz (recall practice)": "Тест (упражнение за припомняне)",
+    "Recall your words, one question at a time":
+        "Припомнете си думите, въпрос по въпрос",
+    "Questions": "Въпроси",
+    "Answer with": "Отговаряй с",
+    "Choices": "Избор",
+    "Typing": "Писане",
+    "Ask": "Питай за",
+    "Term": "Термин",
+    "Mixed": "Смесено",
+    "Auto-advance": "Автоматично напред",
+    "Move on by itself after a correct answer": "Продължаване само след верен отговор",
+    "Speak the question, then the answer once it is revealed":
+        "Прочитане на въпроса, а после и на отговора след разкриването му",
+    "Start quiz": "Започни теста",
+    "questions ready": "въпроса готови",
+    "Nothing to quiz": "Няма какво да се пита",
+    "No words match this deck.": "Няма думи за това тесте.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Тестът се нуждае от поне две думи — грешните отговори идват точно от думите, "
+        "за които не ви питаме.",
+    "Not enough words": "Няма достатъчно думи",
+    "Add a few more words, or widen the deck.":
+        "Добавете още няколко думи или разширете тестето.",
+    "Question {n} of {total}": "Въпрос {n} от {total}",
+    "Missed words": "Сгрешени думи",
+    "End quiz": "Край на теста",
+    "Answer in {language}": "Отговорете на език: {language}",
+    "Type the answer": "Напишете отговора",
+    "Check": "Провери",
+    "Click to continue": "Щракнете, за да продължите",
+    "See results": "Виж резултатите",
+    "Almost — it is \"{answer}\"": "Почти — вярното е „{answer}“",
+    "It is \"{answer}\"": "Вярното е „{answer}“",
+    "Now {status}": "Сега {status}",
+    "Correct": "Верни",
+    "Missed": "Сгрешени",
+    "Worth another look": "Струва си да се повтори",
+    "Again": "Отново",
+    "Missed words cleared!": "Сгрешените думи са усвоени!",
+    "Perfect run": "Безупречен кръг",
+    "Quiz complete": "Тестът е завършен",
+    "Practice missed": "Упражни грешките",
+    "Default number of questions": "Брой въпроси по подразбиране",
+    "Move on after a correct answer": "Продължаване след верен отговор",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Изберете за какво да ви питаме",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Същите тестета като при картите — думи за повторение, текущият ви филтър, "
+        "най-новите или ръчно избрани — и колко въпроса.",
+    "Choices or typing": "Избор или писане",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Избор“ предлага четири отговора; „Писане“ иска да напишете отговора — "
+        "по-трудно е, но е по-добрата проверка. Писането прощава ударения и дребни "
+        "печатни грешки. „Питай за“ решава коя страна виждате: термина, превода или "
+        "смесено.",
+    "Start, and it counts": "Започнете — и се брои",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Лентата показва състава на тестето по статуси. Всеки отговор захранва същия "
+        "график за разредено повторение като картите: дума, която сте си спомнили, се "
+        "връща по-късно, а сгрешена — по-рано.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

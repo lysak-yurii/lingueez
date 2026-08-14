@@ -1436,6 +1436,68 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "무시",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "데스크톱과 Android 기기에서 Lingueez 계정을 원활하게 함께 사용하세요.",
     "Get the app…": "앱 다운로드…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "퀴즈",
+    "Quiz (recall practice)": "퀴즈 (인출 연습)",
+    "Recall your words, one question at a time": "한 문제씩 단어를 떠올려 보세요",
+    "Questions": "문항 수",
+    "Answer with": "답변 방식",
+    "Choices": "선택",
+    "Typing": "입력",
+    "Ask": "출제",
+    "Term": "단어",
+    "Mixed": "섞기",
+    "Auto-advance": "자동으로 넘기기",
+    "Move on by itself after a correct answer": "정답을 맞히면 저절로 다음으로 넘어갑니다",
+    "Speak the question, then the answer once it is revealed":
+        "문제를 읽어 주고, 답이 공개되면 답도 읽어 줍니다",
+    "Start quiz": "퀴즈 시작",
+    "questions ready": "문제 준비됨",
+    "Nothing to quiz": "출제할 단어가 없습니다",
+    "No words match this deck.": "이 묶음에 해당하는 단어가 없습니다.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "퀴즈에는 단어가 최소 두 개 필요합니다. 오답 보기는 바로 지금 묻지 않는 단어들에서 나옵니다.",
+    "Not enough words": "단어가 부족합니다",
+    "Add a few more words, or widen the deck.": "단어를 몇 개 더 추가하거나 범위를 넓혀 보세요.",
+    "Question {n} of {total}": "{total}문제 중 {n}번",
+    "Missed words": "틀린 단어",
+    "End quiz": "퀴즈 끝내기",
+    "Answer in {language}": "{language}(으)로 답하기",
+    "Type the answer": "답을 입력하세요",
+    "Check": "확인",
+    "Click to continue": "클릭하면 계속됩니다",
+    "See results": "결과 보기",
+    "Almost — it is \"{answer}\"": "거의 정답 — 정답은 “{answer}”",
+    "It is \"{answer}\"": "정답은 “{answer}”",
+    "Now {status}": "이제 {status}",
+    "Correct": "정답",
+    "Missed": "오답",
+    "Worth another look": "다시 볼 만한 단어",
+    "Again": "다시",
+    "Missed words cleared!": "틀린 단어를 모두 익혔습니다!",
+    "Perfect run": "전부 정답",
+    "Quiz complete": "퀴즈 완료",
+    "Practice missed": "틀린 단어 연습",
+    "Default number of questions": "기본 문항 수",
+    "Move on after a correct answer": "정답 후 다음으로 넘어가기",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "무엇을 물을지 고르기",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "카드와 같은 출제 범위 — 복습할 단어, 현재 필터, 최신순, 직접 고른 단어 — 그리고 문항 수를 정합니다.",
+    "Choices or typing": "선택 또는 입력",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“선택”은 네 개의 보기에서 고릅니다. “입력”은 답을 직접 써야 해서 더 어렵지만 실력을 더 잘 확인할 수 있습니다. 입력은 발음 부호와 "
+        "사소한 오타를 너그럽게 봅니다. “출제”는 어느 쪽을 볼지 정합니다 — 단어, 번역, 또는 섞기.",
+    "Start, and it counts": "시작하세요 — 기록에 반영됩니다",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "막대는 출제 범위의 상태별 구성을 보여 줍니다. 모든 답은 카드와 같은 간격 반복 일정에 반영되므로, 떠올린 단어는 나중에 다시 나오고 "
+        "틀린 단어는 더 빨리 돌아옵니다.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

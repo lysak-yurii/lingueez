@@ -1426,6 +1426,75 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Stäng",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Använd ditt Lingueez-konto sömlöst på dator- och Android-enheter.",
     "Get the app…": "Hämta appen…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (återkallningsövning)",
+    "Recall your words, one question at a time":
+        "Plocka fram dina ord, en fråga i taget",
+    "Questions": "Frågor",
+    "Answer with": "Svara med",
+    "Choices": "Alternativ",
+    "Typing": "Skriva",
+    "Ask": "Fråga efter",
+    "Term": "Term",
+    "Mixed": "Blandat",
+    "Auto-advance": "Gå vidare automatiskt",
+    "Move on by itself after a correct answer":
+        "Gå vidare av sig själv efter ett rätt svar",
+    "Speak the question, then the answer once it is revealed":
+        "Läs upp frågan, och svaret så snart det visas",
+    "Start quiz": "Starta quiz",
+    "questions ready": "frågor redo",
+    "Nothing to quiz": "Inget att fråga om",
+    "No words match this deck.": "Inga ord matchar den här leken.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Ett quiz behöver minst två ord — de felaktiga svaren kommer just från de ord "
+        "du inte får frågan om.",
+    "Not enough words": "Inte tillräckligt med ord",
+    "Add a few more words, or widen the deck.":
+        "Lägg till några ord eller bredda leken.",
+    "Question {n} of {total}": "Fråga {n} av {total}",
+    "Missed words": "Missade ord",
+    "End quiz": "Avsluta quiz",
+    "Answer in {language}": "Svara på {language}",
+    "Type the answer": "Skriv svaret",
+    "Check": "Kontrollera",
+    "Click to continue": "Klicka för att fortsätta",
+    "See results": "Visa resultat",
+    "Almost — it is \"{answer}\"": "Nästan — det är ”{answer}”",
+    "It is \"{answer}\"": "Det är ”{answer}”",
+    "Now {status}": "Nu {status}",
+    "Correct": "Rätt",
+    "Missed": "Fel",
+    "Worth another look": "Värt en titt till",
+    "Again": "Igen",
+    "Missed words cleared!": "De missade orden är avklarade!",
+    "Perfect run": "Felfri omgång",
+    "Quiz complete": "Quizet är klart",
+    "Practice missed": "Öva på felen",
+    "Default number of questions": "Standardantal frågor",
+    "Move on after a correct answer": "Gå vidare efter ett rätt svar",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Välj vad du ska få frågor om",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Samma lekar som i korten — ord som väntar på repetition, ditt nuvarande "
+        "filter, de nyaste eller ett eget urval — och hur många frågor.",
+    "Choices or typing": "Alternativ eller skriva",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "”Alternativ” ger fyra svar att välja bland; ”Skriva” ber dig skriva svaret — "
+        "svårare, men det bättre provet. Skrivning förlåter accenter och små stavfel. "
+        "”Fråga efter” avgör vilken sida du ser: termen, översättningen eller blandat.",
+    "Start, and it counts": "Sätt igång — det räknas",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Stapeln visar vad leken består av per status. Varje svar matar samma "
+        "repetitionsschema som korten: ett ord du minns kommer tillbaka senare, ett du "
+        "missar tidigare.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

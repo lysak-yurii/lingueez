@@ -1689,6 +1689,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Usa tu cuenta de Lingueez sin problemas entre tu ordenador y dispositivos Android.",
     "Get the app…": "Obtener la app…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Cuestionario",
+    "Quiz (recall practice)": "Cuestionario (práctica de recuerdo)",
+    "Recall your words, one question at a time":
+        "Recuerda tus palabras, una pregunta a la vez",
+    "Questions": "Preguntas",
+    "Answer with": "Responder con",
+    "Choices": "Opciones",
+    "Typing": "Escritura",
+    "Ask": "Preguntar",
+    "Term": "Término",
+    "Mixed": "Mixto",
+    "Auto-advance": "Avance automático",
+    "Move on by itself after a correct answer":
+        "Continuar solo tras una respuesta correcta",
+    "Speak the question, then the answer once it is revealed":
+        "Pronunciar la pregunta y luego la respuesta al revelarla",
+    "Start quiz": "Empezar cuestionario",
+    "questions ready": "preguntas listas",
+    "Nothing to quiz": "Nada que preguntar",
+    "No words match this deck.": "Ninguna palabra coincide con este mazo.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Un cuestionario necesita al menos dos palabras: las respuestas incorrectas "
+        "salen precisamente de las que no se te preguntan.",
+    "Not enough words": "No hay palabras suficientes",
+    "Add a few more words, or widen the deck.":
+        "Añade algunas palabras más o amplía el mazo.",
+    "Question {n} of {total}": "Pregunta {n} de {total}",
+    "Missed words": "Palabras falladas",
+    "End quiz": "Terminar cuestionario",
+    "Answer in {language}": "Responde en {language}",
+    "Type the answer": "Escribe la respuesta",
+    "Check": "Comprobar",
+    "Click to continue": "Haz clic para continuar",
+    "See results": "Ver resultados",
+    "Almost — it is \"{answer}\"": "Casi — es «{answer}»",
+    "It is \"{answer}\"": "Es «{answer}»",
+    "Now {status}": "Ahora {status}",
+    "Correct": "Correctas",
+    "Missed": "Falladas",
+    "Worth another look": "Merece otro repaso",
+    "Again": "Otra vez",
+    "Missed words cleared!": "¡Palabras falladas superadas!",
+    "Perfect run": "Ronda perfecta",
+    "Quiz complete": "Cuestionario completado",
+    "Practice missed": "Repasar falladas",
+    "Default number of questions": "Número de preguntas predeterminado",
+    "Move on after a correct answer": "Continuar tras una respuesta correcta",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Elige sobre qué te preguntarán",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Los mismos mazos que en las tarjetas: palabras pendientes, tu filtro actual, "
+        "las más recientes o una selección manual, y cuántas preguntas.",
+    "Choices or typing": "Opciones o escritura",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "«Opciones» ofrece cuatro respuestas para elegir; «Escritura» te pide "
+        "escribirla: más difícil, pero mejor prueba. La escritura perdona acentos y "
+        "erratas pequeñas. «Preguntar» decide qué lado ves: el término, su traducción "
+        "o una mezcla.",
+    "Start, and it counts": "Empieza, y cuenta",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "La barra muestra de qué se compone el mazo por estado. Cada respuesta "
+        "alimenta el mismo calendario de repetición espaciada que las tarjetas: la "
+        "palabra que recuerdas vuelve más tarde y la que fallas, antes.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase as standard in Spanish dates.

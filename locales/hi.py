@@ -1670,6 +1670,74 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "डेस्कटॉप और एंड्रॉइड डिवाइसों पर अपने Lingueez खाते का निर्बाध उपयोग करें।",
     "Get the app…": "ऐप प्राप्त करें…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "प्रश्नोत्तरी",
+    "Quiz (recall practice)": "प्रश्नोत्तरी (याद करने का अभ्यास)",
+    "Recall your words, one question at a time":
+        "एक-एक प्रश्न करके अपने शब्द याद कीजिए",
+    "Questions": "प्रश्न",
+    "Answer with": "उत्तर का तरीका",
+    "Choices": "विकल्प",
+    "Typing": "टाइपिंग",
+    "Ask": "पूछें",
+    "Term": "शब्द",
+    "Mixed": "मिश्रित",
+    "Auto-advance": "स्वतः आगे बढ़ें",
+    "Move on by itself after a correct answer": "सही उत्तर के बाद अपने आप आगे बढ़ें",
+    "Speak the question, then the answer once it is revealed":
+        "प्रश्न बोलें, और उत्तर दिखते ही उत्तर भी बोलें",
+    "Start quiz": "प्रश्नोत्तरी शुरू करें",
+    "questions ready": "प्रश्न तैयार",
+    "Nothing to quiz": "पूछने के लिए कुछ नहीं",
+    "No words match this deck.": "इस सेट से कोई शब्द मेल नहीं खाता।",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "प्रश्नोत्तरी के लिए कम से कम दो शब्द चाहिए — गलत विकल्प उन्हीं शब्दों से आते "
+        "हैं जिनके बारे में आपसे नहीं पूछा जा रहा।",
+    "Not enough words": "पर्याप्त शब्द नहीं",
+    "Add a few more words, or widen the deck.": "कुछ और शब्द जोड़ें, या सेट बड़ा करें।",
+    "Question {n} of {total}": "प्रश्न {n} / {total}",
+    "Missed words": "गलत हुए शब्द",
+    "End quiz": "प्रश्नोत्तरी समाप्त करें",
+    "Answer in {language}": "{language} में उत्तर दें",
+    "Type the answer": "उत्तर लिखें",
+    "Check": "जाँचें",
+    "Click to continue": "जारी रखने के लिए क्लिक करें",
+    "See results": "परिणाम देखें",
+    "Almost — it is \"{answer}\"": "लगभग — सही उत्तर है “{answer}”",
+    "It is \"{answer}\"": "सही उत्तर है “{answer}”",
+    "Now {status}": "अब {status}",
+    "Correct": "सही",
+    "Missed": "गलत",
+    "Worth another look": "एक बार और देखने लायक",
+    "Again": "फिर से",
+    "Missed words cleared!": "गलत हुए शब्द सध गए!",
+    "Perfect run": "पूरी तरह सही",
+    "Quiz complete": "प्रश्नोत्तरी पूरी हुई",
+    "Practice missed": "गलतियों का अभ्यास",
+    "Default number of questions": "प्रश्नों की डिफ़ॉल्ट संख्या",
+    "Move on after a correct answer": "सही उत्तर के बाद आगे बढ़ें",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "चुनें कि किस बारे में पूछा जाए",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "वही सेट जो फ़्लैशकार्ड में हैं — दोहराने योग्य शब्द, आपका मौजूदा फ़िल्टर, "
+        "सबसे नए, या हाथ से चुने हुए — और कितने प्रश्न पूछे जाएँ।",
+    "Choices or typing": "विकल्प या टाइपिंग",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“विकल्प” चार उत्तर देता है जिनमें से चुनना होता है; “टाइपिंग” उत्तर लिखवाता "
+        "है — कठिन है, पर यही असली परख है। टाइपिंग में मात्राएँ और छोटी टाइपिंग "
+        "गलतियाँ माफ़ रहती हैं। “पूछें” तय करता है कि आप कौन-सा पक्ष देखेंगे — शब्द, "
+        "उसका अनुवाद, या दोनों मिलाकर।",
+    "Start, and it counts": "शुरू करें — यह गिना जाता है",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "पट्टी दिखाती है कि सेट में किस स्थिति के कितने शब्द हैं। हर उत्तर वही "
+        "अंतराल-पुनरावृत्ति कार्यक्रम भरता है जो फ़्लैशकार्ड का है: याद आया शब्द बाद "
+        "में लौटता है, और चूका हुआ जल्दी।",
 }
 
 # Date names, read by app.i18n.

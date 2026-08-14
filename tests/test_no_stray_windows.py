@@ -26,8 +26,10 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QEvent, QObject  # noqa: E402
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
+from app.core.quiz import QuizQuestion  # noqa: E402
 from app.ui import theme  # noqa: E402
 from app.ui.flashcards_page import _PreviewCard  # noqa: E402
+from app.ui.quiz_page import _OptionRow, _PromptCard  # noqa: E402
 
 _app = QApplication.instance() or QApplication([])
 
@@ -91,6 +93,54 @@ class PreviewCardWindowTests(unittest.TestCase):
         card, stray = self.build("")
         self.assertEqual([w.metaObject().className() for w in stray], [])
         self.assertFalse(card.lang.isVisibleTo(card))
+
+
+class QuizWidgetWindowTests(unittest.TestCase):
+    """The quiz builds its option rows and prompt card the same way.
+
+    Each is a bare QWidget assembled before a layout adopts it, so the same
+    stray-window flash the deck preview hit is one careless setVisible away."""
+
+    def build(self, factory):
+        spy = StrayWindowSpy()
+        _app.installEventFilter(spy)
+        try:
+            widget = factory()
+        finally:
+            _app.removeEventFilter(spy)
+        return widget, [w.metaObject().className() for w in spy.shown]
+
+    def test_option_row_does_not_flash_a_window(self):
+        row, stray = self.build(lambda: _OptionRow(0, theme.current_colors()))
+        self.assertEqual(stray, [])
+        row.set_text("Haus")
+        self.assertEqual(row.text.text(), "Haus")
+        self.assertEqual(row.badge.text(), "A")
+
+    def test_answered_option_row_stays_clean(self):
+        row, _ = self.build(lambda: _OptionRow(1, theme.current_colors()))
+        spy = StrayWindowSpy()
+        _app.installEventFilter(spy)
+        try:
+            # The verdict mark appears only once answered — the moment a
+            # not-yet-adopted child would be shown.
+            row.set_state("correct", animate=False)
+        finally:
+            _app.removeEventFilter(spy)
+        self.assertEqual([w.metaObject().className() for w in spy.shown], [])
+        self.assertFalse(row.mark.pixmap().isNull())
+
+    def test_prompt_card_does_not_flash_a_window(self):
+        card, stray = self.build(lambda: _PromptCard(theme.current_colors()))
+        self.assertEqual(stray, [])
+        spy = StrayWindowSpy()
+        _app.installEventFilter(spy)
+        try:
+            card.set_question(QuizQuestion(record=RECORD, reversed=False))
+        finally:
+            _app.removeEventFilter(spy)
+        self.assertEqual([w.metaObject().className() for w in spy.shown], [])
+        self.assertEqual(card.prompt.text(), "house")
 
 
 if __name__ == "__main__":

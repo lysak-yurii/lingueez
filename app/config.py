@@ -46,6 +46,7 @@ DEFAULTS = {
     "tour_completed": "False",
     "tour_words_seen": "False",
     "tour_flashcards_seen": "False",
+    "tour_quiz_seen": "False",
     "tour_texts_seen": "False",
     "tour_stats_seen": "False",
     # First-run welcome (sync pitch). Set once it has been shown, so it never
@@ -72,6 +73,13 @@ DEFAULTS = {
     "flashcards_shuffle": "False",         # shuffle manual decks
     "flashcards_autoswitch": "True",       # jump to Flashcards when Read Aloud starts
     "flashcards_pronounce": "True",        # speak cards on show/flip in manual review
+    # Quiz
+    "quiz_deck_size": "20",                # default number of questions
+    "quiz_format": "choices",              # choices | typing
+    "quiz_direction": "term",              # term | translation | mixed
+    "quiz_auto_advance": "True",           # move on by itself after a correct answer
+    "quiz_shuffle": "False",               # shuffle the deck before asking
+    "quiz_pronounce": "True",              # speak the prompt, then the revealed answer
     # Reader
     "reader_translate_target": "English",  # word-popup translation target
     "reader_zoom": "0",                 # font-size pt offset (Ctrl+scroll / Ctrl +/-)

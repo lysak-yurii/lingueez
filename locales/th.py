@@ -1409,6 +1409,71 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "ปิด",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "ใช้งานบัญชี Lingueez ของคุณได้อย่างราบรื่นทั้งบนเดสก์ท็อปและอุปกรณ์ Android",
     "Get the app…": "รับแอปพลิเคชัน…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "แบบทดสอบ",
+    "Quiz (recall practice)": "แบบทดสอบ (ฝึกนึกคำ)",
+    "Recall your words, one question at a time": "นึกคำศัพท์ของคุณทีละข้อ",
+    "Questions": "จำนวนข้อ",
+    "Answer with": "ตอบด้วย",
+    "Choices": "ตัวเลือก",
+    "Typing": "พิมพ์",
+    "Ask": "ถามด้วย",
+    "Term": "คำศัพท์",
+    "Mixed": "สลับกัน",
+    "Auto-advance": "ไปข้อถัดไปอัตโนมัติ",
+    "Move on by itself after a correct answer": "ไปข้อถัดไปเองเมื่อตอบถูก",
+    "Speak the question, then the answer once it is revealed":
+        "อ่านออกเสียงคำถาม แล้วอ่านคำตอบเมื่อเฉลย",
+    "Start quiz": "เริ่มแบบทดสอบ",
+    "questions ready": "ข้อพร้อมแล้ว",
+    "Nothing to quiz": "ไม่มีอะไรให้ทดสอบ",
+    "No words match this deck.": "ไม่มีคำที่ตรงกับชุดนี้",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "แบบทดสอบต้องมีอย่างน้อยสองคำ — ตัวเลือกที่ผิดมาจากคำที่ไม่ได้ถามในข้อนั้นเอง",
+    "Not enough words": "คำไม่พอ",
+    "Add a few more words, or widen the deck.": "เพิ่มคำอีกสักสองสามคำ หรือขยายชุดคำ",
+    "Question {n} of {total}": "ข้อ {n} จาก {total}",
+    "Missed words": "คำที่ตอบผิด",
+    "End quiz": "จบแบบทดสอบ",
+    "Answer in {language}": "ตอบเป็นภาษา{language}",
+    "Type the answer": "พิมพ์คำตอบ",
+    "Check": "ตรวจ",
+    "Click to continue": "คลิกเพื่อไปต่อ",
+    "See results": "ดูผล",
+    "Almost — it is \"{answer}\"": "เกือบถูก — คำตอบคือ “{answer}”",
+    "It is \"{answer}\"": "คำตอบคือ “{answer}”",
+    "Now {status}": "ตอนนี้ {status}",
+    "Correct": "ถูก",
+    "Missed": "ผิด",
+    "Worth another look": "ควรทบทวนอีกครั้ง",
+    "Again": "อีกครั้ง",
+    "Missed words cleared!": "เก็บคำที่ตอบผิดได้ครบแล้ว!",
+    "Perfect run": "ถูกทุกข้อ",
+    "Quiz complete": "ทำแบบทดสอบเสร็จแล้ว",
+    "Practice missed": "ฝึกคำที่ตอบผิด",
+    "Default number of questions": "จำนวนข้อเริ่มต้น",
+    "Move on after a correct answer": "ไปข้อถัดไปเมื่อตอบถูก",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "เลือกว่าจะให้ถามเรื่องอะไร",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "ชุดคำเดียวกับบัตรคำ — คำที่ถึงกำหนดทบทวน ตัวกรองปัจจุบัน คำใหม่ล่าสุด "
+        "หรือคำที่เลือกเอง — และจะถามกี่ข้อ",
+    "Choices or typing": "เลือกตอบหรือพิมพ์",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“ตัวเลือก” ให้เลือกจากสี่คำตอบ ส่วน “พิมพ์” ให้เขียนคำตอบเอง ซึ่งยากกว่า "
+        "แต่วัดผลได้ดีกว่า การพิมพ์ยอมรับเครื่องหมายเสียงและคำผิดเล็กน้อย ส่วน "
+        "“ถามด้วย” กำหนดว่าจะเห็นด้านไหน — คำศัพท์ คำแปล หรือสลับกัน",
+    "Start, and it counts": "เริ่มได้เลย — และมีผลกับความคืบหน้า",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "แถบสีแสดงส่วนประกอบของชุดคำตามสถานะ "
+        "ทุกคำตอบจะเข้าสู่ตารางทบทวนแบบเว้นช่วงเดียวกับบัตรคำ คำที่จำได้จะกลับมาช้าลง "
+        "ส่วนคำที่ตอบผิดจะกลับมาเร็วขึ้น",
 }
 
 MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",

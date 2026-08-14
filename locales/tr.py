@@ -1416,6 +1416,75 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Kapat",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Lingueez hesabınızı masaüstü ve Android cihazlar arasında sorunsuz bir şekilde kullanın.",
     "Get the app…": "Uygulamayı edinin…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Test",
+    "Quiz (recall practice)": "Test (hatırlama alıştırması)",
+    "Recall your words, one question at a time": "Kelimelerinizi hatırlayın, soru soru",
+    "Questions": "Soru",
+    "Answer with": "Yanıt biçimi",
+    "Choices": "Seçenek",
+    "Typing": "Yazma",
+    "Ask": "Sorulacak",
+    "Term": "Terim",
+    "Mixed": "Karışık",
+    "Auto-advance": "Otomatik geçiş",
+    "Move on by itself after a correct answer":
+        "Doğru yanıttan sonra kendiliğinden ilerle",
+    "Speak the question, then the answer once it is revealed":
+        "Soruyu, ardından açıldığında yanıtı seslendir",
+    "Start quiz": "Testi başlat",
+    "questions ready": "soru hazır",
+    "Nothing to quiz": "Sorulacak bir şey yok",
+    "No words match this deck.": "Bu desteye uyan kelime yok.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Bir test en az iki kelime ister — yanlış seçenekler tam da size sorulmayan "
+        "kelimelerden gelir.",
+    "Not enough words": "Yeterli kelime yok",
+    "Add a few more words, or widen the deck.":
+        "Birkaç kelime ekleyin ya da desteyi genişletin.",
+    "Question {n} of {total}": "Soru {n} / {total}",
+    "Missed words": "Yanlış kelimeler",
+    "End quiz": "Testi bitir",
+    "Answer in {language}": "Yanıt dili: {language}",
+    "Type the answer": "Yanıtı yazın",
+    "Check": "Kontrol et",
+    "Click to continue": "Devam etmek için tıklayın",
+    "See results": "Sonuçları gör",
+    "Almost — it is \"{answer}\"": "Neredeyse — doğrusu “{answer}”",
+    "It is \"{answer}\"": "Doğrusu “{answer}”",
+    "Now {status}": "Artık {status}",
+    "Correct": "Doğru",
+    "Missed": "Yanlış",
+    "Worth another look": "Tekrar bakmaya değer",
+    "Again": "Yeniden",
+    "Missed words cleared!": "Yanlış kelimeler halloldu!",
+    "Perfect run": "Kusursuz tur",
+    "Quiz complete": "Test tamamlandı",
+    "Practice missed": "Yanlışları çalış",
+    "Default number of questions": "Varsayılan soru sayısı",
+    "Move on after a correct answer": "Doğru yanıttan sonra ilerle",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Neyin sorulacağını seçin",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Kartlardakiyle aynı desteler — tekrar zamanı gelen kelimeler, geçerli "
+        "filtreniz, en yeniler ya da elle seçilenler — ve kaç soru sorulacağı.",
+    "Choices or typing": "Seçenek ya da yazma",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Seçenek” dört şık sunar; “Yazma” yanıtı yazmanızı ister — daha zordur ama "
+        "asıl sınav odur. Yazma, aksanları ve küçük yazım hatalarını bağışlar. "
+        "“Sorulacak”, hangi tarafı göreceğinizi belirler: terim, çevirisi ya da "
+        "karışık.",
+    "Start, and it counts": "Başlayın — ve sayılır",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Çubuk, destenin durumlara göre bileşimini gösterir. Her yanıt kartlarla aynı "
+        "aralıklı tekrar programını besler: hatırladığınız kelime daha geç, "
+        "yanıldığınız daha erken geri gelir.",
 }
 
 # Date names, read by app.i18n.

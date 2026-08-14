@@ -1432,6 +1432,76 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Скрыть",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Используйте аккаунт Lingueez на компьютерах и устройствах Android без лишних хлопот.",
     "Get the app…": "Получить приложение…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Тест",
+    "Quiz (recall practice)": "Тест (проверка памяти)",
+    "Recall your words, one question at a time":
+        "Вспоминайте свои слова, вопрос за вопросом",
+    "Questions": "Вопросов",
+    "Answer with": "Отвечать",
+    "Choices": "Выбор",
+    "Typing": "Ввод",
+    "Ask": "Показывать",
+    "Term": "Термин",
+    "Mixed": "Смешанно",
+    "Auto-advance": "Автопереход",
+    "Move on by itself after a correct answer":
+        "Переходить дальше после правильного ответа",
+    "Speak the question, then the answer once it is revealed":
+        "Озвучивать вопрос, а затем ответ после его показа",
+    "Start quiz": "Начать тест",
+    "questions ready": "вопросов готово",
+    "Nothing to quiz": "Нечего спрашивать",
+    "No words match this deck.": "Нет слов для этой колоды.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Для теста нужно минимум два слова — неправильные ответы берутся именно из тех "
+        "слов, о которых вас не спрашивают.",
+    "Not enough words": "Недостаточно слов",
+    "Add a few more words, or widen the deck.":
+        "Добавьте ещё несколько слов или расширьте колоду.",
+    "Question {n} of {total}": "Вопрос {n} из {total}",
+    "Missed words": "Слова с ошибками",
+    "End quiz": "Завершить тест",
+    "Answer in {language}": "Ответ на языке: {language}",
+    "Type the answer": "Введите ответ",
+    "Check": "Проверить",
+    "Click to continue": "Нажмите, чтобы продолжить",
+    "See results": "Результаты",
+    "Almost — it is \"{answer}\"": "Почти — правильно «{answer}»",
+    "It is \"{answer}\"": "Правильно «{answer}»",
+    "Now {status}": "Теперь {status}",
+    "Correct": "Верно",
+    "Missed": "Ошибки",
+    "Worth another look": "Стоит повторить",
+    "Again": "Ещё раз",
+    "Missed words cleared!": "Слова с ошибками отработаны!",
+    "Perfect run": "Безупречный результат",
+    "Quiz complete": "Тест завершён",
+    "Practice missed": "Отработать ошибки",
+    "Default number of questions": "Число вопросов по умолчанию",
+    "Move on after a correct answer": "Переходить дальше после правильного ответа",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Выберите, о чём вас будут спрашивать",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Те же наборы, что и в карточках — слова к повторению, текущий фильтр, самые "
+        "новые или выбранные вручную — и количество вопросов.",
+    "Choices or typing": "Выбор или ввод",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "«Выбор» предлагает четыре варианта; «Ввод» просит написать ответ — это "
+        "сложнее, но проверяет лучше. Ввод прощает диакритику и мелкие опечатки. "
+        "«Показывать» определяет, какую сторону вы видите: термин, перевод или "
+        "вперемешку.",
+    "Start, and it counts": "Начните — и это засчитается",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Полоса показывает состав набора по статусам. Каждый ответ питает тот же "
+        "график интервального повторения, что и карточки: слово, которое вы вспомнили, "
+        "вернётся позже, а с ошибкой — раньше.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

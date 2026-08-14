@@ -1451,6 +1451,74 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Odbaci",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Besprijekorno koristite svoj Lingueez račun na računalima i Android uređajima.",
     "Get the app…": "Preuzmi aplikaciju…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kviz",
+    "Quiz (recall practice)": "Kviz (vježba prisjećanja)",
+    "Recall your words, one question at a time":
+        "Prisjetite se svojih riječi, pitanje po pitanje",
+    "Questions": "Pitanja",
+    "Answer with": "Odgovaraj",
+    "Choices": "Izbor",
+    "Typing": "Upisivanje",
+    "Ask": "Pitaj",
+    "Term": "Pojam",
+    "Mixed": "Miješano",
+    "Auto-advance": "Automatski dalje",
+    "Move on by itself after a correct answer": "Nastavi samo nakon točnog odgovora",
+    "Speak the question, then the answer once it is revealed":
+        "Izgovori pitanje, a zatim odgovor kad se otkrije",
+    "Start quiz": "Pokreni kviz",
+    "questions ready": "pitanja spremno",
+    "Nothing to quiz": "Nema što pitati",
+    "No words match this deck.": "Nijedna riječ ne odgovara ovom špilu.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Kviz treba najmanje dvije riječi — netočni odgovori dolaze upravo iz riječi o "
+        "kojima vas se ne pita.",
+    "Not enough words": "Nema dovoljno riječi",
+    "Add a few more words, or widen the deck.":
+        "Dodajte još koju riječ ili proširite špil.",
+    "Question {n} of {total}": "Pitanje {n} od {total}",
+    "Missed words": "Promašene riječi",
+    "End quiz": "Završi kviz",
+    "Answer in {language}": "Odgovorite na jeziku: {language}",
+    "Type the answer": "Upišite odgovor",
+    "Check": "Provjeri",
+    "Click to continue": "Kliknite za nastavak",
+    "See results": "Pogledaj rezultate",
+    "Almost — it is \"{answer}\"": "Skoro — točno je „{answer}”",
+    "It is \"{answer}\"": "Točno je „{answer}”",
+    "Now {status}": "Sada {status}",
+    "Correct": "Točno",
+    "Missed": "Promašeno",
+    "Worth another look": "Vrijedi ponoviti",
+    "Again": "Ponovno",
+    "Missed words cleared!": "Promašene riječi svladane!",
+    "Perfect run": "Savršen krug",
+    "Quiz complete": "Kviz završen",
+    "Practice missed": "Vježbaj promašeno",
+    "Default number of questions": "Zadani broj pitanja",
+    "Move on after a correct answer": "Nastavi nakon točnog odgovora",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Odaberite o čemu će vas pitati",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Isti špilovi kao kod kartica — riječi za ponavljanje, trenutni filtar, "
+        "najnovije ili ručno odabrane — i koliko pitanja.",
+    "Choices or typing": "Izbor ili upisivanje",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Izbor” nudi četiri odgovora; „Upisivanje” traži da odgovor napišete — teže "
+        "je, ali je bolja provjera. Upisivanje oprašta dijakritiku i sitne tipfelere. "
+        "„Pitaj” određuje koju stranu vidite: pojam, prijevod ili izmiješano.",
+    "Start, and it counts": "Počnite — i broji se",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Traka pokazuje sastav špila po statusima. Svaki odgovor hrani isti raspored "
+        "ponavljanja kao kartice: riječ koje se sjetite vraća se kasnije, a promašena "
+        "ranije.",
 }
 
 # Date names, read by app.i18n.

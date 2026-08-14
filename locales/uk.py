@@ -1692,6 +1692,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Ваш акаунт Lingueez синхронізується із застосунком для Android",
     "Get the app…": "Завантажити застосунок…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Тест",
+    "Quiz (recall practice)": "Тест (перевірка пам'яті)",
+    "Recall your words, one question at a time":
+        "Згадуйте свої слова, запитання за запитанням",
+    "Questions": "Запитань",
+    "Answer with": "Відповідати",
+    "Choices": "Вибір",
+    "Typing": "Введення",
+    "Ask": "Показувати",
+    "Term": "Термін",
+    "Mixed": "Змішано",
+    "Auto-advance": "Автоперехід",
+    "Move on by itself after a correct answer":
+        "Переходити далі після правильної відповіді",
+    "Speak the question, then the answer once it is revealed":
+        "Озвучувати запитання, а потім відповідь після її показу",
+    "Start quiz": "Почати тест",
+    "questions ready": "запитань готово",
+    "Nothing to quiz": "Немає матеріалу для тесту",
+    "No words match this deck.": "Немає слів для цього набору.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Для тесту потрібно щонайменше два слова — саме з тих, про які вас не "
+        "запитують, беруться неправильні відповіді.",
+    "Not enough words": "Недостатньо слів",
+    "Add a few more words, or widen the deck.":
+        "Додайте ще кілька слів або розширте набір.",
+    "Question {n} of {total}": "Запитання {n} з {total}",
+    "Missed words": "Слова з помилками",
+    "End quiz": "Завершити тест",
+    "Answer in {language}": "Відповідь мовою: {language}",
+    "Type the answer": "Введіть відповідь",
+    "Check": "Перевірити",
+    "Click to continue": "Натисніть, щоб продовжити",
+    "See results": "Результати",
+    "Almost — it is \"{answer}\"": "Майже — правильно «{answer}»",
+    "It is \"{answer}\"": "Правильно «{answer}»",
+    "Now {status}": "Тепер {status}",
+    "Correct": "Правильно",
+    "Missed": "Помилки",
+    "Worth another look": "Варто повторити",
+    "Again": "Ще раз",
+    "Missed words cleared!": "Слова з помилками опрацьовано!",
+    "Perfect run": "Бездоганний результат",
+    "Quiz complete": "Тест завершено",
+    "Practice missed": "Опрацювати помилки",
+    "Default number of questions": "Типова кількість запитань",
+    "Move on after a correct answer": "Переходити далі після правильної відповіді",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Оберіть, про що вас питатимуть",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Ті самі набори, що й у флеш-картках — слова до повторення, ваш поточний "
+        "фільтр, найновіші або вибрані вручну — та кількість запитань.",
+    "Choices or typing": "Вибір або введення",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "«Вибір» пропонує чотири варіанти на вибір; «Введення» просить написати "
+        "відповідь — це важче, але перевіряє краще. Введення прощає діакритику та "
+        "дрібні одруківки. «Показувати» визначає, який бік ви бачите: термін, переклад "
+        "або впереміш.",
+    "Start, and it counts": "Почніть — і це зараховується",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Смужка показує склад набору за статусами. Кожна відповідь живить той самий "
+        "графік інтервального повторення, що й флеш-картки: слово, яке ви згадали, "
+        "повернеться пізніше, а те, у якому помилилися, — раніше.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

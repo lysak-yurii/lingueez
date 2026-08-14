@@ -1689,6 +1689,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Käytä Lingueez-tiliäsi saumattomasti tietokoneella ja Android-laitteilla.",
     "Get the app…": "Hanki sovellus…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Tietovisa",
+    "Quiz (recall practice)": "Tietovisa (muistista palauttaminen)",
+    "Recall your words, one question at a time":
+        "Palauta sanasi mieleen, kysymys kerrallaan",
+    "Questions": "Kysymyksiä",
+    "Answer with": "Vastaustapa",
+    "Choices": "Valinta",
+    "Typing": "Kirjoitus",
+    "Ask": "Kysytään",
+    "Term": "Termi",
+    "Mixed": "Sekaisin",
+    "Auto-advance": "Automaattinen siirtyminen",
+    "Move on by itself after a correct answer":
+        "Siirry eteenpäin itsestään oikean vastauksen jälkeen",
+    "Speak the question, then the answer once it is revealed":
+        "Lue kysymys ja sen jälkeen vastaus, kun se paljastuu",
+    "Start quiz": "Aloita tietovisa",
+    "questions ready": "kysymystä valmiina",
+    "Nothing to quiz": "Ei kysyttävää",
+    "No words match this deck.": "Mikään sana ei vastaa tätä pakkaa.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Tietovisa tarvitsee vähintään kaksi sanaa — väärät vaihtoehdot tulevat juuri "
+        "niistä sanoista, joita ei kysytä.",
+    "Not enough words": "Ei tarpeeksi sanoja",
+    "Add a few more words, or widen the deck.":
+        "Lisää muutama sana tai laajenna pakkaa.",
+    "Question {n} of {total}": "Kysymys {n}/{total}",
+    "Missed words": "Väärin menneet sanat",
+    "End quiz": "Lopeta tietovisa",
+    "Answer in {language}": "Vastaa kielellä {language}",
+    "Type the answer": "Kirjoita vastaus",
+    "Check": "Tarkista",
+    "Click to continue": "Jatka napsauttamalla",
+    "See results": "Näytä tulokset",
+    "Almost — it is \"{answer}\"": "Melkein — oikea vastaus on ”{answer}”",
+    "It is \"{answer}\"": "Oikea vastaus on ”{answer}”",
+    "Now {status}": "Nyt {status}",
+    "Correct": "Oikein",
+    "Missed": "Väärin",
+    "Worth another look": "Kannattaa kerrata",
+    "Again": "Uudelleen",
+    "Missed words cleared!": "Väärin menneet sanat hallussa!",
+    "Perfect run": "Virheetön kierros",
+    "Quiz complete": "Tietovisa valmis",
+    "Practice missed": "Harjoittele virheitä",
+    "Default number of questions": "Kysymysten oletusmäärä",
+    "Move on after a correct answer": "Siirry eteenpäin oikean vastauksen jälkeen",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Valitse, mistä sinulta kysytään",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Samat pakat kuin korteissa — kertausta odottavat sanat, nykyinen "
+        "suodattimesi, uusimmat tai itse valitut — ja montako kysymystä.",
+    "Choices or typing": "Valinta vai kirjoitus",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "”Valinta” tarjoaa neljä vaihtoehtoa; ”Kirjoitus” pyytää kirjoittamaan "
+        "vastauksen — vaikeampaa, mutta parempi koe. Kirjoitus antaa anteeksi tarkkeet "
+        "ja pienet lyöntivirheet. ”Kysytään” määrää, kumman puolen näet: termin, "
+        "käännöksen vai sekaisin.",
+    "Start, and it counts": "Aloita — ja se lasketaan",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Palkki näyttää pakan koostumuksen tiloittain. Jokainen vastaus syöttää samaa "
+        "kertausaikataulua kuin kortit: muistamasi sana palaa myöhemmin, väärin mennyt "
+        "aiemmin.",
 }
 
 # Date names, read by app.i18n. Months are in genitive / partitive form for date displays.

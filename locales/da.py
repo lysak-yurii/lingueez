@@ -1692,6 +1692,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Brug din Lingueez-konto problemfrit på tværs af computer og Android-enheder.",
     "Get the app…": "Hent appen…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (genkaldelsesøvelse)",
+    "Recall your words, one question at a time":
+        "Genkald dine ord, ét spørgsmål ad gangen",
+    "Questions": "Spørgsmål",
+    "Answer with": "Svar med",
+    "Choices": "Valg",
+    "Typing": "Indtastning",
+    "Ask": "Spørg om",
+    "Term": "Term",
+    "Mixed": "Blandet",
+    "Auto-advance": "Gå automatisk videre",
+    "Move on by itself after a correct answer":
+        "Gå videre af sig selv efter et rigtigt svar",
+    "Speak the question, then the answer once it is revealed":
+        "Læs spørgsmålet op, og svaret så snart det vises",
+    "Start quiz": "Start quiz",
+    "questions ready": "spørgsmål klar",
+    "Nothing to quiz": "Intet at spørge om",
+    "No words match this deck.": "Ingen ord passer til dette bundt.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "En quiz kræver mindst to ord — de forkerte svar kommer netop fra de ord, du "
+        "ikke bliver spurgt om.",
+    "Not enough words": "Ikke nok ord",
+    "Add a few more words, or widen the deck.":
+        "Tilføj et par ord, eller udvid bundtet.",
+    "Question {n} of {total}": "Spørgsmål {n} af {total}",
+    "Missed words": "Forkerte ord",
+    "End quiz": "Afslut quiz",
+    "Answer in {language}": "Svar på {language}",
+    "Type the answer": "Skriv svaret",
+    "Check": "Tjek",
+    "Click to continue": "Klik for at fortsætte",
+    "See results": "Se resultater",
+    "Almost — it is \"{answer}\"": "Næsten — det er „{answer}“",
+    "It is \"{answer}\"": "Det er „{answer}“",
+    "Now {status}": "Nu {status}",
+    "Correct": "Rigtige",
+    "Missed": "Forkerte",
+    "Worth another look": "Værd at se på igen",
+    "Again": "Igen",
+    "Missed words cleared!": "De forkerte ord er klaret!",
+    "Perfect run": "Fejlfri runde",
+    "Quiz complete": "Quiz gennemført",
+    "Practice missed": "Øv fejlene",
+    "Default number of questions": "Standardantal spørgsmål",
+    "Move on after a correct answer": "Gå videre efter et rigtigt svar",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Vælg, hvad du bliver spurgt om",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "De samme bundter som ved kortene — ord til gentagelse, dit nuværende filter, "
+        "de nyeste eller et selvvalgt udvalg — og hvor mange spørgsmål.",
+    "Choices or typing": "Valg eller indtastning",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Valg“ giver fire svar at vælge imellem; „Indtastning“ beder dig skrive "
+        "svaret — sværere, men den bedre prøve. Indtastning tilgiver accenter og små "
+        "tastefejl. „Spørg om“ afgør, hvilken side du ser: termen, oversættelsen eller "
+        "blandet.",
+    "Start, and it counts": "Gå i gang — og det tæller",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Bjælken viser bundtets sammensætning efter status. Hvert svar føder den samme "
+        "gentagelsesplan som kortene: et ord, du husker, vender tilbage senere, et "
+        "forkert tidligere.",
 }
 
 # Date names read by app.i18n.

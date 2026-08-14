@@ -1693,6 +1693,75 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Utilize a sua conta Lingueez sem problemas entre dispositivos desktop e Android.",
     "Get the app…": "Obter a aplicação…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Questionário",
+    "Quiz (recall practice)": "Questionário (prática de evocação)",
+    "Recall your words, one question at a time":
+        "Recorde as suas palavras, uma pergunta de cada vez",
+    "Questions": "Perguntas",
+    "Answer with": "Responder com",
+    "Choices": "Opções",
+    "Typing": "Escrita",
+    "Ask": "Perguntar",
+    "Term": "Termo",
+    "Mixed": "Misto",
+    "Auto-advance": "Avanço automático",
+    "Move on by itself after a correct answer":
+        "Avançar sozinho após uma resposta certa",
+    "Speak the question, then the answer once it is revealed":
+        "Ler a pergunta e depois a resposta assim que for revelada",
+    "Start quiz": "Iniciar questionário",
+    "questions ready": "perguntas prontas",
+    "Nothing to quiz": "Nada para perguntar",
+    "No words match this deck.": "Nenhuma palavra corresponde a este baralho.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Um questionário precisa de pelo menos duas palavras — as respostas erradas "
+        "vêm precisamente daquelas sobre as quais não é perguntado.",
+    "Not enough words": "Palavras insuficientes",
+    "Add a few more words, or widen the deck.":
+        "Adicione mais algumas palavras ou alargue o baralho.",
+    "Question {n} of {total}": "Pergunta {n} de {total}",
+    "Missed words": "Palavras erradas",
+    "End quiz": "Terminar questionário",
+    "Answer in {language}": "Responder em {language}",
+    "Type the answer": "Escreva a resposta",
+    "Check": "Verificar",
+    "Click to continue": "Clique para continuar",
+    "See results": "Ver resultados",
+    "Almost — it is \"{answer}\"": "Quase — é «{answer}»",
+    "It is \"{answer}\"": "É «{answer}»",
+    "Now {status}": "Agora {status}",
+    "Correct": "Certas",
+    "Missed": "Erradas",
+    "Worth another look": "Vale a pena rever",
+    "Again": "Outra vez",
+    "Missed words cleared!": "Palavras erradas dominadas!",
+    "Perfect run": "Ronda perfeita",
+    "Quiz complete": "Questionário concluído",
+    "Practice missed": "Rever os erros",
+    "Default number of questions": "Número de perguntas predefinido",
+    "Move on after a correct answer": "Avançar após uma resposta certa",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Escolha sobre o que será perguntado",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Os mesmos baralhos dos cartões — palavras a rever, o seu filtro atual, as "
+        "mais recentes ou uma seleção manual — e quantas perguntas.",
+    "Choices or typing": "Opções ou escrita",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "«Opções» dá quatro respostas para escolher; «Escrita» pede que a escreva: "
+        "mais difícil, mas é o melhor teste. A escrita perdoa acentos e pequenas "
+        "gralhas. «Perguntar» decide que lado vê: o termo, a tradução ou uma mistura.",
+    "Start, and it counts": "Comece — e conta",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "A barra mostra a composição do baralho por estado. Cada resposta alimenta o "
+        "mesmo calendário de repetição espaçada dos cartões: uma palavra que recorda "
+        "volta mais tarde e uma que falha volta mais cedo.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -63,6 +63,7 @@ from app.ui.brand_wordmark import BrandWordmark
 from app.ui.mini_player import MiniPlayer
 from app.ui.player import PlaybackSettingsPopup, PlayerBar, WordPlayer
 from app.ui.flashcards_page import FlashcardsPage
+from app.ui.quiz_page import QuizPage
 from app.ui.texts_page import TextsPage
 from app.ui.stats_page import StatsPage
 from app.ui.toast import show_toast
@@ -81,7 +82,7 @@ GEOMETRY_FILE = "window_geometry.json"
 # promotes words *to* — leaving that state unreachable by hand.
 PREDEFINED_STATUSES = list(progression.ALL_STATUSES)
 DEFAULT_HOTKEY = "Ctrl+Shift+V"
-PAGE_WORDS, PAGE_FLASHCARDS, PAGE_TEXTS, PAGE_STATS = 0, 1, 2, 3
+PAGE_WORDS, PAGE_FLASHCARDS, PAGE_QUIZ, PAGE_TEXTS, PAGE_STATS = 0, 1, 2, 3, 4
 # Words empty-state subtitle: 355 keeps this page's floor in line with the
 # Texts page (~403) so switching tabs never resizes the window.
 EMPTY_SUB_WIDTH = 355
@@ -352,10 +353,11 @@ class MainWindow(QMainWindow):
         self._quitting = False
         self._open_dialogs = {}
         self._tts_fallback_warned = False
-        self._page_search = {PAGE_WORDS: "", PAGE_FLASHCARDS: "",
+        self._page_search = {PAGE_WORDS: "", PAGE_FLASHCARDS: "", PAGE_QUIZ: "",
                              PAGE_TEXTS: "", PAGE_STATS: ""}
         self._footer_counts = {PAGE_WORDS: tr("No data"),
                                PAGE_FLASHCARDS: tr("Flashcards"),
+                               PAGE_QUIZ: tr("Quiz"),
                                PAGE_TEXTS: tr("No texts yet"),
                                PAGE_STATS: tr("Statistics")}
         self._words_subtitle = tr("Vocabulary")
@@ -614,6 +616,7 @@ class MainWindow(QMainWindow):
             self.read_button.setIcon(self._icon("stop", "danger", 17))
         self.action_tools.refresh_theme(self.colors)  # re-tint "⋯" + rebuild menu
         self.flashcards_page.refresh_theme(self.colors)
+        self.quiz_page.refresh_theme(self.colors)
         self.texts_page.refresh_theme(self.colors)
         self.stats_page.refresh_theme(self.colors)
         self.player_bar.refresh_theme(self.colors)
@@ -773,6 +776,10 @@ class MainWindow(QMainWindow):
         self.nav_flash = nav_button("cards", tr("Flashcards"),
                                     lambda: self.switch_page(PAGE_FLASHCARDS),
                                     checkable=True)
+        self.nav_quiz = nav_button("quiz", tr("Quiz"),
+                                   lambda: self.switch_page(PAGE_QUIZ),
+                                   checkable=True,
+                                   tooltip=tr("Quiz (recall practice)"))
         self.nav_texts = nav_button("text-page", tr("Texts"),
                                     lambda: self.switch_page(PAGE_TEXTS),
                                     checkable=True)
@@ -1181,6 +1188,17 @@ class MainWindow(QMainWindow):
         self.flashcards_page.player_next_requested.connect(self.word_player.next)
         self.flashcards_page.player_stop_requested.connect(self.word_player.stop)
 
+        # The quiz reuses the flashcards deck provider verbatim — the same four
+        # deck kinds mean the same thing here — and adds a pool provider, since
+        # multiple-choice questions draw their wrong answers from the whole
+        # library rather than from the deck being asked.
+        self.quiz_page = QuizPage(
+            self.db_adapter, self.colors,
+            deck_provider=self._flashcards_deck,
+            pool_provider=self._quiz_pool,
+            settings_provider=lambda: self.settings)
+        self.quiz_page.status_change_requested.connect(self._apply_status_change)
+
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
         self.texts_page.tour_requested.connect(self.start_tour)
@@ -1189,6 +1207,7 @@ class MainWindow(QMainWindow):
 
         self.stack.addWidget(words_page)
         self.stack.addWidget(self.flashcards_page)
+        self.stack.addWidget(self.quiz_page)
         self.stack.addWidget(self.texts_page)
         self.stack.addWidget(self.stats_page)
         root.addWidget(self.stack, 1)
@@ -2147,6 +2166,7 @@ class MainWindow(QMainWindow):
         search itself is disabled on the dashboard."""
         for btn, page, icon in ((self.nav_words, PAGE_WORDS, "book-open"),
                                 (self.nav_flash, PAGE_FLASHCARDS, "cards"),
+                                (self.nav_quiz, PAGE_QUIZ, "quiz"),
                                 (self.nav_texts, PAGE_TEXTS, "text-page"),
                                 (self.nav_stats, PAGE_STATS, "bar-chart")):
             btn.setChecked(index == page)
@@ -2169,10 +2189,13 @@ class MainWindow(QMainWindow):
         on_words = index == PAGE_WORDS
         on_stats = index == PAGE_STATS
         on_flash = index == PAGE_FLASHCARDS
+        on_quiz = index == PAGE_QUIZ
         self._apply_responsive_header(index)  # add/scope: words-only & when wide
-        self.search_field.setVisible(not on_stats and not on_flash)
+        # Search has nothing to filter in a study session or on the dashboard.
+        self.search_field.setVisible(not on_stats and not on_flash and not on_quiz)
         subtitle = (self._words_subtitle if on_words
                     else tr("Flashcards") if on_flash
+                    else tr("Quiz") if on_quiz
                     else tr("Statistics") if on_stats else tr("Texts"))
         self.source_label.set_full_text(subtitle)
         self._update_file_view()
@@ -2184,6 +2207,8 @@ class MainWindow(QMainWindow):
             self._refresh_stats()
         elif on_flash:
             self.flashcards_page.on_shown()
+        elif on_quiz:
+            self.quiz_page.on_shown()
 
         if animate:
             self.stack.set_current_index_animated(index)
@@ -3182,13 +3207,17 @@ class MainWindow(QMainWindow):
             logging.error(f"Playback status update failed: {exc}")
 
     def _apply_status_change(self, wid, target, word_label=""):
-        """Promote a word's status (playback listens or flashcard grading):
+        """Promote a word's status (playback listens or quiz/flashcard grading):
         synced DB update, DataFrame + table model refresh, and a toast.
 
         The database write goes to a worker: update_word costs two round trips,
         which stuttered audio playback every time a listen crossed a threshold.
         The in-memory refresh below is what the user sees, and it stays on the
         GUI thread; a failed write is logged and reconciled by the next sync.
+
+        An empty ``word_label`` suppresses the toast, for callers that already
+        show the promotion in place — the quiz puts it in the feedback block,
+        and a toast would both repeat it and float over the Next button.
         """
         try:
             run_in_thread(
@@ -3199,8 +3228,9 @@ class MainWindow(QMainWindow):
             if self.df is not None:
                 self.df.loc[self.df['ID'] == wid, 'Status'] = target
             self.model.update_status(wid, target)
-            show_toast(self, tr("Promoted"),
-                       f"'{word_label}' → {target}", "success", 2500)
+            if word_label:
+                show_toast(self, tr("Promoted"),
+                           f"'{word_label}' → {target}", "success", 2500)
         except Exception as exc:
             logging.error(f"Status update failed: {exc}")
 
@@ -3223,6 +3253,24 @@ class MainWindow(QMainWindow):
                      for rec in self.df[self.df["ID"].isin(ids)].to_dict("records")}
             return [by_id[i] for i in ids if i in by_id]
         return []
+
+    def _quiz_pool(self, count_only=False):
+        """Every word a quiz may draw wrong answers from.
+
+        The whole library rather than the deck, so a short session still gets
+        plausible distractors. Ignored words are left out for the same reason
+        the deck skips them: the user opted them out of studying.
+
+        ``count_only`` skips building the records. The picker refreshes on
+        every chip click but only needs to know whether two words exist, and
+        materialising a few thousand dicts for that was slow enough to stutter
+        the page-open animation."""
+        if self.df is None or self.df.empty:
+            return 0 if count_only else []
+        studiable = self.df[self.df["Status"].fillna("") != "Ignored"]
+        if count_only:
+            return len(studiable)
+        return studiable.to_dict("records")
 
     def _on_player_finished(self):
         self._set_playback_ui(False)

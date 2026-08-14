@@ -1676,6 +1676,67 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "PCとAndroid端末で Lingueez アカウントをシームレスに活用できます。",
     "Get the app…": "アプリを入手…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "クイズ",
+    "Quiz (recall practice)": "クイズ（思い出す練習）",
+    "Recall your words, one question at a time": "1問ずつ、覚えた単語を思い出しましょう",
+    "Questions": "問題数",
+    "Answer with": "回答方法",
+    "Choices": "選択",
+    "Typing": "入力",
+    "Ask": "出題",
+    "Term": "単語",
+    "Mixed": "混合",
+    "Auto-advance": "自動で次へ",
+    "Move on by itself after a correct answer": "正解したら自動で次に進む",
+    "Speak the question, then the answer once it is revealed":
+        "問題を読み上げ、答えが表示されたら答えも読み上げる",
+    "Start quiz": "クイズを開始",
+    "questions ready": "問が準備できました",
+    "Nothing to quiz": "出題できる単語がありません",
+    "No words match this deck.": "この一組に該当する単語はありません。",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "クイズには少なくとも2つの単語が必要です。出題されない単語が、誤答の選択肢になります。",
+    "Not enough words": "単語が足りません",
+    "Add a few more words, or widen the deck.": "単語をいくつか追加するか、対象を広げてください。",
+    "Question {n} of {total}": "問題 {n} / {total}",
+    "Missed words": "間違えた単語",
+    "End quiz": "クイズを終了",
+    "Answer in {language}": "{language}で回答",
+    "Type the answer": "答えを入力",
+    "Check": "確認",
+    "Click to continue": "クリックして続ける",
+    "See results": "結果を見る",
+    "Almost — it is \"{answer}\"": "惜しい — 正解は「{answer}」",
+    "It is \"{answer}\"": "正解は「{answer}」",
+    "Now {status}": "現在 {status}",
+    "Correct": "正解",
+    "Missed": "不正解",
+    "Worth another look": "もう一度見ておきたい単語",
+    "Again": "もう一度",
+    "Missed words cleared!": "間違えた単語を克服しました！",
+    "Perfect run": "全問正解",
+    "Quiz complete": "クイズ終了",
+    "Practice missed": "間違えた単語を練習",
+    "Default number of questions": "既定の問題数",
+    "Move on after a correct answer": "正解したら次に進む",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "何を出題するか選ぶ",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "カードと同じ出題範囲 — 復習時期の単語、現在の絞り込み、新しい順、手動で選んだもの — と、出題数を決めます。",
+    "Choices or typing": "選択か入力か",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "「選択」は4つの選択肢から選びます。「入力」は答えを書くので難しくなりますが、力試しには向いています。入力ではアクセント記号や軽い打ち間違いは許容されます。「出題」は表示される側を決めます "
+        "— 単語、訳語、またはその混合です。",
+    "Start, and it counts": "始めましょう — 記録されます",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "バーは出題範囲の状態別の内訳です。どの回答もカードと同じ間隔反復の予定に反映されるので、思い出せた単語は次に出るまで長くなり、間違えた単語は早く戻ってきます。",
 }
 
 # Date names, read by app.i18n. Months use standard Japanese calendar names.

@@ -1628,6 +1628,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Χρησιμοποιήστε τον λογαριασμό σας Lingueez απρόσκοπτα σε υπολογιστή και συσκευές Android.",
     "Get the app…": "Λήψη της εφαρμογής…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Κουίζ",
+    "Quiz (recall practice)": "Κουίζ (εξάσκηση ανάκλησης)",
+    "Recall your words, one question at a time":
+        "Ανακαλέστε τις λέξεις σας, μία ερώτηση τη φορά",
+    "Questions": "Ερωτήσεις",
+    "Answer with": "Απάντηση με",
+    "Choices": "Επιλογή",
+    "Typing": "Πληκτρολόγηση",
+    "Ask": "Ερώτηση για",
+    "Term": "Όρος",
+    "Mixed": "Μικτά",
+    "Auto-advance": "Αυτόματη μετάβαση",
+    "Move on by itself after a correct answer":
+        "Συνέχεια από μόνη της μετά από σωστή απάντηση",
+    "Speak the question, then the answer once it is revealed":
+        "Εκφώνηση της ερώτησης και μετά της απάντησης μόλις αποκαλυφθεί",
+    "Start quiz": "Έναρξη κουίζ",
+    "questions ready": "ερωτήσεις έτοιμες",
+    "Nothing to quiz": "Τίποτα για εξέταση",
+    "No words match this deck.": "Καμία λέξη δεν ταιριάζει σε αυτήν τη δεσμίδα.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Ένα κουίζ χρειάζεται τουλάχιστον δύο λέξεις — οι λανθασμένες απαντήσεις "
+        "προέρχονται ακριβώς από τις λέξεις για τις οποίες δεν ερωτάστε.",
+    "Not enough words": "Δεν υπάρχουν αρκετές λέξεις",
+    "Add a few more words, or widen the deck.":
+        "Προσθέστε μερικές λέξεις ή διευρύνετε τη δεσμίδα.",
+    "Question {n} of {total}": "Ερώτηση {n} από {total}",
+    "Missed words": "Λάθος λέξεις",
+    "End quiz": "Τέλος κουίζ",
+    "Answer in {language}": "Απαντήστε στα {language}",
+    "Type the answer": "Πληκτρολογήστε την απάντηση",
+    "Check": "Έλεγχος",
+    "Click to continue": "Κάντε κλικ για συνέχεια",
+    "See results": "Δείτε τα αποτελέσματα",
+    "Almost — it is \"{answer}\"": "Σχεδόν — είναι «{answer}»",
+    "It is \"{answer}\"": "Είναι «{answer}»",
+    "Now {status}": "Τώρα {status}",
+    "Correct": "Σωστά",
+    "Missed": "Λάθη",
+    "Worth another look": "Αξίζει άλλη μια ματιά",
+    "Again": "Ξανά",
+    "Missed words cleared!": "Οι λάθος λέξεις κατακτήθηκαν!",
+    "Perfect run": "Τέλειος γύρος",
+    "Quiz complete": "Το κουίζ ολοκληρώθηκε",
+    "Practice missed": "Εξάσκηση στα λάθη",
+    "Default number of questions": "Προεπιλεγμένος αριθμός ερωτήσεων",
+    "Move on after a correct answer": "Συνέχεια μετά από σωστή απάντηση",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Επιλέξτε τι θα σας ρωτήσουμε",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Οι ίδιες δεσμίδες με τις κάρτες — λέξεις προς επανάληψη, το τρέχον φίλτρο "
+        "σας, οι νεότερες ή μια δική σας επιλογή — και πόσες ερωτήσεις.",
+    "Choices or typing": "Επιλογή ή πληκτρολόγηση",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "Η «Επιλογή» δίνει τέσσερις απαντήσεις· η «Πληκτρολόγηση» ζητά να γράψετε την "
+        "απάντηση — δυσκολότερο, αλλά καλύτερη δοκιμασία. Η πληκτρολόγηση συγχωρεί "
+        "τόνους και μικρά τυπογραφικά. Η «Ερώτηση για» ορίζει ποια πλευρά βλέπετε: τον "
+        "όρο, τη μετάφραση ή ανάμεικτα.",
+    "Start, and it counts": "Ξεκινήστε — και μετράει",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Η μπάρα δείχνει από τι αποτελείται η δεσμίδα ανά κατάσταση. Κάθε απάντηση "
+        "τροφοδοτεί το ίδιο πρόγραμμα επαναλήψεων με τις κάρτες: μια λέξη που "
+        "θυμηθήκατε επιστρέφει αργότερα, μια λάθος νωρίτερα.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

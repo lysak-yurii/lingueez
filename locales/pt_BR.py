@@ -1399,6 +1399,76 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Dispensar",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Use sua conta do Lingueez perfeitamente entre dispositivos desktop e Android.",
     "Get the app…": "Baixar o aplicativo…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (prática de evocação)",
+    "Recall your words, one question at a time":
+        "Lembre suas palavras, uma pergunta por vez",
+    "Questions": "Perguntas",
+    "Answer with": "Responder com",
+    "Choices": "Opções",
+    "Typing": "Digitação",
+    "Ask": "Perguntar",
+    "Term": "Termo",
+    "Mixed": "Misto",
+    "Auto-advance": "Avanço automático",
+    "Move on by itself after a correct answer":
+        "Seguir sozinho após uma resposta certa",
+    "Speak the question, then the answer once it is revealed":
+        "Falar a pergunta e depois a resposta assim que for revelada",
+    "Start quiz": "Iniciar quiz",
+    "questions ready": "perguntas prontas",
+    "Nothing to quiz": "Nada para perguntar",
+    "No words match this deck.": "Nenhuma palavra corresponde a este baralho.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Um quiz precisa de pelo menos duas palavras — as respostas erradas vêm "
+        "justamente daquelas sobre as quais você não está sendo perguntado.",
+    "Not enough words": "Palavras insuficientes",
+    "Add a few more words, or widen the deck.":
+        "Adicione mais algumas palavras ou amplie o baralho.",
+    "Question {n} of {total}": "Pergunta {n} de {total}",
+    "Missed words": "Palavras erradas",
+    "End quiz": "Encerrar quiz",
+    "Answer in {language}": "Responder em {language}",
+    "Type the answer": "Digite a resposta",
+    "Check": "Verificar",
+    "Click to continue": "Clique para continuar",
+    "See results": "Ver resultados",
+    "Almost — it is \"{answer}\"": "Quase — é “{answer}”",
+    "It is \"{answer}\"": "É “{answer}”",
+    "Now {status}": "Agora {status}",
+    "Correct": "Certas",
+    "Missed": "Erradas",
+    "Worth another look": "Vale outra olhada",
+    "Again": "De novo",
+    "Missed words cleared!": "Palavras erradas dominadas!",
+    "Perfect run": "Rodada perfeita",
+    "Quiz complete": "Quiz concluído",
+    "Practice missed": "Revisar os erros",
+    "Default number of questions": "Número padrão de perguntas",
+    "Move on after a correct answer": "Seguir após uma resposta certa",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Escolha sobre o que será perguntado",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Os mesmos baralhos dos cartões — palavras a revisar, seu filtro atual, as "
+        "mais recentes ou uma seleção manual — e quantas perguntas.",
+    "Choices or typing": "Opções ou digitação",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Opções” dá quatro respostas para escolher; “Digitação” pede que você "
+        "escreva: mais difícil, mas é o melhor teste. A digitação perdoa acentos e "
+        "pequenos erros de digitação. “Perguntar” decide qual lado você vê: o termo, a "
+        "tradução ou uma mistura.",
+    "Start, and it counts": "Comece — e conta",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "A barra mostra a composição do baralho por status. Cada resposta alimenta o "
+        "mesmo cronograma de repetição espaçada dos cartões: uma palavra que você "
+        "lembra volta mais tarde e uma que erra volta mais cedo.",
 }
 
 # Date names, read by app.i18n.

@@ -1507,6 +1507,76 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Închide",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Folosește-ți contul Lingueez fără întreruperi pe dispozitivele desktop și Android.",
     "Get the app…": "Obține aplicația…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Test",
+    "Quiz (recall practice)": "Test (exercițiu de reamintire)",
+    "Recall your words, one question at a time":
+        "Amintește-ți cuvintele, întrebare cu întrebare",
+    "Questions": "Întrebări",
+    "Answer with": "Răspunde prin",
+    "Choices": "Alegere",
+    "Typing": "Tastare",
+    "Ask": "Întreabă",
+    "Term": "Termen",
+    "Mixed": "Mixt",
+    "Auto-advance": "Avansare automată",
+    "Move on by itself after a correct answer":
+        "Continuă singur după un răspuns corect",
+    "Speak the question, then the answer once it is revealed":
+        "Rostește întrebarea, apoi răspunsul odată dezvăluit",
+    "Start quiz": "Începe testul",
+    "questions ready": "întrebări pregătite",
+    "Nothing to quiz": "Nimic de întrebat",
+    "No words match this deck.": "Niciun cuvânt nu se potrivește acestui pachet.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Un test are nevoie de cel puțin două cuvinte — răspunsurile greșite vin "
+        "tocmai din cuvintele despre care nu ești întrebat.",
+    "Not enough words": "Nu sunt destule cuvinte",
+    "Add a few more words, or widen the deck.":
+        "Adaugă câteva cuvinte sau lărgește pachetul.",
+    "Question {n} of {total}": "Întrebarea {n} din {total}",
+    "Missed words": "Cuvinte greșite",
+    "End quiz": "Încheie testul",
+    "Answer in {language}": "Răspunde în {language}",
+    "Type the answer": "Scrie răspunsul",
+    "Check": "Verifică",
+    "Click to continue": "Clic pentru a continua",
+    "See results": "Vezi rezultatele",
+    "Almost — it is \"{answer}\"": "Aproape — este „{answer}”",
+    "It is \"{answer}\"": "Este „{answer}”",
+    "Now {status}": "Acum {status}",
+    "Correct": "Corecte",
+    "Missed": "Greșite",
+    "Worth another look": "Merită revăzute",
+    "Again": "Din nou",
+    "Missed words cleared!": "Cuvintele greșite au fost stăpânite!",
+    "Perfect run": "Rundă perfectă",
+    "Quiz complete": "Test încheiat",
+    "Practice missed": "Exersează greșelile",
+    "Default number of questions": "Numărul implicit de întrebări",
+    "Move on after a correct answer": "Continuă după un răspuns corect",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Alege despre ce vei fi întrebat",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Aceleași pachete ca la cartonașe — cuvinte de repetat, filtrul curent, cele "
+        "mai noi sau o selecție manuală — și câte întrebări.",
+    "Choices or typing": "Alegere sau tastare",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "„Alegere” oferă patru variante; „Tastare” îți cere să scrii răspunsul — mai "
+        "greu, dar este proba mai bună. Tastarea iartă diacriticele și micile greșeli "
+        "de tastare. „Întreabă” decide ce parte vezi: termenul, traducerea sau "
+        "amestecat.",
+    "Start, and it counts": "Începe — și contează",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Bara arată din ce e alcătuit pachetul, pe stări. Fiecare răspuns alimentează "
+        "același calendar de repetiție ca la cartonașe: un cuvânt reamintit revine mai "
+        "târziu, iar unul greșit revine mai devreme.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case (or standard Romanian names used for formatting).

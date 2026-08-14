@@ -1409,6 +1409,76 @@ TRANSLATIONS: dict[str, str] = {
     "Dismiss": "Tutup",
     "Use your Lingueez account seamlessly across desktop and Android devices.": "Gunakan akaun Lingueez anda dengan lancar merentas peranti desktop dan Android.",
     "Get the app…": "Dapatkan apl…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Kuiz",
+    "Quiz (recall practice)": "Kuiz (latihan mengingat)",
+    "Recall your words, one question at a time":
+        "Ingat semula perkataan anda, satu soalan pada satu masa",
+    "Questions": "Soalan",
+    "Answer with": "Jawab dengan",
+    "Choices": "Pilihan",
+    "Typing": "Menaip",
+    "Ask": "Tanya",
+    "Term": "Istilah",
+    "Mixed": "Campuran",
+    "Auto-advance": "Maju automatik",
+    "Move on by itself after a correct answer":
+        "Teruskan sendiri selepas jawapan betul",
+    "Speak the question, then the answer once it is revealed":
+        "Sebut soalan, kemudian jawapan sebaik sahaja ia didedahkan",
+    "Start quiz": "Mulakan kuiz",
+    "questions ready": "soalan sedia",
+    "Nothing to quiz": "Tiada apa-apa untuk ditanya",
+    "No words match this deck.": "Tiada perkataan sepadan dengan set ini.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Kuiz memerlukan sekurang-kurangnya dua perkataan — jawapan yang salah diambil "
+        "daripada perkataan yang tidak sedang ditanya.",
+    "Not enough words": "Perkataan tidak mencukupi",
+    "Add a few more words, or widen the deck.":
+        "Tambah beberapa perkataan lagi, atau luaskan set.",
+    "Question {n} of {total}": "Soalan {n} daripada {total}",
+    "Missed words": "Perkataan tersalah",
+    "End quiz": "Tamatkan kuiz",
+    "Answer in {language}": "Jawab dalam bahasa {language}",
+    "Type the answer": "Taip jawapan",
+    "Check": "Semak",
+    "Click to continue": "Klik untuk teruskan",
+    "See results": "Lihat keputusan",
+    "Almost — it is \"{answer}\"": "Hampir — jawapannya “{answer}”",
+    "It is \"{answer}\"": "Jawapannya “{answer}”",
+    "Now {status}": "Kini {status}",
+    "Correct": "Betul",
+    "Missed": "Salah",
+    "Worth another look": "Berbaloi dilihat semula",
+    "Again": "Sekali lagi",
+    "Missed words cleared!": "Perkataan tersalah sudah dikuasai!",
+    "Perfect run": "Pusingan sempurna",
+    "Quiz complete": "Kuiz selesai",
+    "Practice missed": "Latih yang salah",
+    "Default number of questions": "Bilangan soalan lalai",
+    "Move on after a correct answer": "Teruskan selepas jawapan betul",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Pilih apa yang akan ditanya",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Set yang sama seperti kad — perkataan yang perlu diulang, penapis semasa "
+        "anda, yang terbaharu, atau pilihan sendiri — dan berapa banyak soalan.",
+    "Choices or typing": "Pilihan atau menaip",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "“Pilihan” menawarkan empat jawapan; “Menaip” meminta anda menulis jawapannya "
+        "— lebih sukar, tetapi ujian yang lebih baik. Menaip memaafkan tanda diakritik "
+        "dan salah taip kecil. “Tanya” menentukan sisi mana yang anda lihat: istilah, "
+        "terjemahannya, atau campuran.",
+    "Start, and it counts": "Mulakan — dan ia dikira",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "Bar menunjukkan komposisi set mengikut status. Setiap jawapan mengisi jadual "
+        "ulangan berselang yang sama seperti kad: perkataan yang anda ingat kembali "
+        "lebih lewat, yang tersilap kembali lebih awal.",
 }
 
 MONTHS = ["Januari", "Februari", "Mac", "April", "Mei", "Jun",

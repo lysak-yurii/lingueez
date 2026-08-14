@@ -1693,6 +1693,76 @@ TRANSLATIONS: dict[str, str] = {
     "Use your Lingueez account seamlessly across desktop and Android devices.":
         "Utilisez votre compte Lingueez en toute fluidité entre votre ordinateur et vos appareils Android.",
     "Get the app…": "Obtenir l'application…",
+    # ── Quiz (quiz_page.py) ───────────────────────────────────────────
+    "Quiz": "Quiz",
+    "Quiz (recall practice)": "Quiz (exercice de rappel)",
+    "Recall your words, one question at a time":
+        "Retrouvez vos mots, une question à la fois",
+    "Questions": "Questions",
+    "Answer with": "Répondre par",
+    "Choices": "Choix",
+    "Typing": "Saisie",
+    "Ask": "Demander",
+    "Term": "Terme",
+    "Mixed": "Mixte",
+    "Auto-advance": "Avance automatique",
+    "Move on by itself after a correct answer":
+        "Passer à la suite après une bonne réponse",
+    "Speak the question, then the answer once it is revealed":
+        "Prononcer la question, puis la réponse une fois révélée",
+    "Start quiz": "Commencer le quiz",
+    "questions ready": "questions prêtes",
+    "Nothing to quiz": "Rien à réviser",
+    "No words match this deck.": "Aucun mot ne correspond à ce paquet.",
+    "A quiz needs at least two words — the ones you are not being asked about are "
+    "where the wrong answers come from.":
+        "Un quiz demande au moins deux mots — les mauvaises réponses proviennent "
+        "justement des mots sur lesquels vous n'êtes pas interrogé.",
+    "Not enough words": "Pas assez de mots",
+    "Add a few more words, or widen the deck.":
+        "Ajoutez quelques mots ou élargissez le paquet.",
+    "Question {n} of {total}": "Question {n} sur {total}",
+    "Missed words": "Mots manqués",
+    "End quiz": "Terminer le quiz",
+    "Answer in {language}": "Répondre en {language}",
+    "Type the answer": "Saisissez la réponse",
+    "Check": "Vérifier",
+    "Click to continue": "Cliquez pour continuer",
+    "See results": "Voir les résultats",
+    "Almost — it is \"{answer}\"": "Presque — c'est « {answer} »",
+    "It is \"{answer}\"": "C'est « {answer} »",
+    "Now {status}": "Maintenant {status}",
+    "Correct": "Correct",
+    "Missed": "Manqués",
+    "Worth another look": "À revoir",
+    "Again": "Encore",
+    "Missed words cleared!": "Mots manqués maîtrisés !",
+    "Perfect run": "Parcours parfait",
+    "Quiz complete": "Quiz terminé",
+    "Practice missed": "Revoir les erreurs",
+    "Default number of questions": "Nombre de questions par défaut",
+    "Move on after a correct answer": "Passer à la suite après une bonne réponse",
+    # ── Quiz tour (tour.py) ───────────────────────────────────────────
+    "Pick what you'll be asked": "Choisissez ce qui sera demandé",
+    "The same deck choices as Flashcards — words due for review, your current filter, "
+    "the newest ones, or a hand-picked selection — and how many questions to ask.":
+        "Les mêmes paquets que les cartes — mots à réviser, votre filtre actuel, les "
+        "plus récents ou une sélection manuelle — et le nombre de questions.",
+    "Choices or typing": "Choix ou saisie",
+    "Choices offers four options to pick from; Typing asks you to write the answer, "
+    "which is harder but the better test. Typing forgives accents and small typos. Ask "
+    "decides which side you see — the term, its translation, or a mix.":
+        "« Choix » propose quatre réponses ; « Saisie » demande d'écrire la réponse : "
+        "plus difficile, mais bien plus révélateur. La saisie pardonne les accents et "
+        "les petites fautes de frappe. « Demander » décide du côté affiché : le terme, "
+        "sa traduction, ou les deux en alternance.",
+    "Start, and it counts": "Lancez — et ça compte",
+    "The bar shows what the deck is made of by status. Every answer feeds the same "
+    "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
+    "later — and one you miss comes back sooner.":
+        "La barre montre la composition du paquet par statut. Chaque réponse alimente "
+        "le même calendrier de répétition espacée que les cartes : un mot retrouvé "
+        "revient plus tard, un mot manqué revient plus tôt.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase standard French form.
