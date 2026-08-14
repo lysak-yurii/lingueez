@@ -114,6 +114,7 @@ ICONS = {
     "translate": '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/>'
                  '<path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
     "chevron-down": '<polyline points="6 9 12 15 18 9"/>',
+    "chevron-up": '<polyline points="18 15 12 9 6 15"/>',
     "chevron-left": '<polyline points="15 18 9 12 15 6"/>',
     "chevron-right": '<polyline points="9 18 15 12 9 6"/>',
     "check": '<polyline points="20 6 9 17 4 12"/>',
@@ -201,7 +202,8 @@ def write_qss_icons(colors, directory="assets/generated"):
     """Write SVG files needed by the stylesheet (e.g. combo arrows)."""
     os.makedirs(directory, exist_ok=True)
     paths = {}
-    for name, color_key in [("chevron-down", "text_dim"), ("check", "accent")]:
+    for name, color_key in [("chevron-down", "text_dim"), ("chevron-up", "text_dim"),
+                            ("check", "accent")]:
         path = os.path.join(directory, f"{name}.svg")
         with open(path, "wb") as fh:
             fh.write(svg_bytes(name, colors[color_key]))

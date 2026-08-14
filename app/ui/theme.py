@@ -196,6 +196,7 @@ def palette_status(mode):
 def build_qss(c, base_font_size=10, icon_paths=None):
     icon_paths = icon_paths or {}
     chevron = icon_paths.get("chevron-down", "")
+    chevron_up = icon_paths.get("chevron-up", "")
     return f"""
 * {{
     font-family: "Inter", "Segoe UI", "Noto Sans", "Ubuntu", sans-serif;
@@ -245,6 +246,48 @@ QLineEdit, QPlainTextEdit, QTextEdit, QSpinBox, QDoubleSpinBox {{
 QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus,
 QSpinBox:focus, QDoubleSpinBox:focus {{
     border: 1px solid {c['accent']};
+}}
+/* Styling a spin box's buttons replaces the native ones, arrows included, so
+   the chevrons have to be supplied here or they vanish. */
+QSpinBox, QDoubleSpinBox {{
+    padding-right: 28px;
+}}
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+    subcontrol-origin: border;
+    width: 22px;
+    margin: 2px 3px;
+    border: none;
+    border-radius: 5px;
+    background: {c['surface_alt']};
+}}
+QSpinBox::up-button, QDoubleSpinBox::up-button {{ subcontrol-position: top right; }}
+QSpinBox::down-button, QDoubleSpinBox::down-button {{ subcontrol-position: bottom right; }}
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {{
+    background: {c['accent_soft']};
+}}
+QSpinBox::up-button:pressed, QDoubleSpinBox::up-button:pressed,
+QSpinBox::down-button:pressed, QDoubleSpinBox::down-button:pressed {{
+    background: {c['selection']};
+}}
+QSpinBox::up-button:disabled, QDoubleSpinBox::up-button:disabled,
+QSpinBox::down-button:disabled, QDoubleSpinBox::down-button:disabled {{
+    background: transparent;
+}}
+QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled {{
+    color: {c['text_dim']};
+    background: {c['bg']};
+}}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
+    image: url("{chevron_up}");
+    width: 11px;
+    height: 11px;
+}}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
+    image: url("{chevron}");
+    width: 11px;
+    height: 11px;
 }}
 QLineEdit#SearchBox {{
     border-radius: 16px;
