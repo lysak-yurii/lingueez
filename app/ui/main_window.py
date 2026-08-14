@@ -3142,9 +3142,18 @@ class MainWindow(QMainWindow):
 
     def _apply_status_change(self, wid, target, word_label=""):
         """Promote a word's status (playback listens or flashcard grading):
-        synced DB update, DataFrame + table model refresh, and a toast."""
+        synced DB update, DataFrame + table model refresh, and a toast.
+
+        The database write goes to a worker: update_word costs two round trips,
+        which stuttered audio playback every time a listen crossed a threshold.
+        The in-memory refresh below is what the user sees, and it stays on the
+        GUI thread; a failed write is logged and reconciled by the next sync.
+        """
         try:
-            self.db_adapter.update_word(wid, {'Status': target})
+            run_in_thread(
+                lambda: self.db_adapter.update_word(wid, {'Status': target}),
+                on_error=lambda exc: logging.error(
+                    f"Status promotion for {wid} failed to save: {exc}"))
             self._session_status[wid] = target
             if self.df is not None:
                 self.df.loc[self.df['ID'] == wid, 'Status'] = target
