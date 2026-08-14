@@ -958,7 +958,10 @@ class SyncManager:
                 for deletion in words_deletions:
                     word_id = deletion.get('ID') or deletion.get('id')
                     if word_id:
-                        # Delete locally (simple deletion, no conflict checking for quick pull)
+                        # Delete locally (simple deletion, no conflict checking for quick pull).
+                        # Drop the tag links too, as _delete_word_sqlite does — otherwise
+                        # they linger as orphans and get re-pushed as local-only links.
+                        cursor.execute("DELETE FROM word_tags WHERE word_id = ?", (word_id,))
                         cursor.execute("DELETE FROM words WHERE ID = ?", (word_id,))
                         words_deleted += 1
                         logging.debug(f"Quick pull: deleted word {word_id} locally (synced from cloud)")
@@ -1180,12 +1183,37 @@ class SyncManager:
             return 0
         if not dirty:
             return 0
+        # Progress rows whose word is gone locally can never be pushed (the cloud
+        # foreign key rejects them), so they would be retried on every sync
+        # forever. Skip them instead of re-issuing a doomed request each time.
+        orphans = self._orphan_progress_word_ids({str(r.get('word_id')) for r in dirty})
+        if orphans:
+            dirty = [r for r in dirty if str(r.get('word_id')) not in orphans]
+            logging.info(f"Skipping {len(orphans)} word_progress row(s) for words "
+                         f"that no longer exist locally")
+        if not dirty:
+            return 0
         pushed, failed = self.supabase.upsert_word_progress_bulk(dirty)
         if pushed:
             dbcore.srs_mark_synced(pushed, self.local_db)
         if failed:
             logging.info(f"{len(failed)} word_progress row(s) deferred (retry next sync)")
         return len(pushed)
+
+    def _orphan_progress_word_ids(self, word_ids: set) -> set:
+        """Of *word_ids*, those with no matching row in the local words table."""
+        if not word_ids:
+            return set()
+        try:
+            conn = sqlite3.connect(self.local_db)
+            try:
+                present = {str(r[0]) for r in conn.execute("SELECT ID FROM words")}
+            finally:
+                conn.close()
+        except sqlite3.Error as exc:
+            logging.warning(f"Could not check for orphaned progress rows: {exc}")
+            return set()
+        return {w for w in word_ids if w not in present}
 
     def _sync_word_progress(self, full: bool = False):
         """Pull-merge-push learning progress with the cloud word_progress table.
@@ -1745,7 +1773,8 @@ class SyncManager:
                     logging.info(f"Skipping deletion of word {word_id} - queued for upload to cloud")
                     continue
                 
-                # Delete locally
+                # Delete locally, tag links included (see _delete_word_sqlite)
+                cursor.execute("DELETE FROM word_tags WHERE word_id = ?", (word_id,))
                 cursor.execute("DELETE FROM words WHERE ID = ?", (word_id,))
                 logging.info(f"Deleted word {word_id} locally (synced from cloud)")
             
