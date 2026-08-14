@@ -1187,6 +1187,8 @@ class MainWindow(QMainWindow):
         self.flashcards_page.player_prev_requested.connect(self.word_player.prev)
         self.flashcards_page.player_next_requested.connect(self.word_player.next)
         self.flashcards_page.player_stop_requested.connect(self.word_player.stop)
+        self.flashcards_page.player_config_requested.connect(
+            lambda: self._open_playback_settings(self.flashcards_page.config_btn))
 
         # The quiz reuses the flashcards deck provider verbatim — the same four
         # deck kinds mean the same thing here — and adds a pool provider, since
@@ -3082,8 +3084,9 @@ class MainWindow(QMainWindow):
             repeats=get_int(self.settings, "playback_repeats", 1))
         self._sync_mini_player()  # may already be hidden to tray
 
-    def _open_playback_settings(self):
-        """Open the compact pacing popup anchored under the bar's config button.
+    def _open_playback_settings(self, anchor=None):
+        """Open the compact pacing popup anchored under ``anchor`` (the player
+        bar's config button by default; the flashcards transport row has its own).
 
         Changes are persisted to settings.cfg and applied live to the running
         session (and used as the snapshot for the next session)."""
@@ -3105,7 +3108,7 @@ class MainWindow(QMainWindow):
         popup.pause_changed.connect(on_pause)
         popup.repeats_changed.connect(on_repeats)
         self._playback_popup = popup  # keep a reference alive
-        popup.popup_at(self.player_bar.config_btn)
+        popup.popup_at(anchor or self.player_bar.config_btn)
 
     def _set_playback_ui(self, active):
         """Toggle reading state; the toolbar handles where the player goes

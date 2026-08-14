@@ -897,6 +897,7 @@ class FlashcardsPage(QWidget):
     player_prev_requested = Signal()
     player_next_requested = Signal()
     player_stop_requested = Signal()
+    player_config_requested = Signal()          # open the playback pacing popup
 
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
@@ -1162,6 +1163,10 @@ class FlashcardsPage(QWidget):
             transport.addWidget(btn)
             return btn
 
+        self.config_btn = _transport_button(
+            tr("Playback settings"), self.player_config_requested.emit)
+        self.config_btn.setIconSize(QSize(16, 16))
+        transport.addSpacing(8)
         self.prev_btn = _transport_button(
             tr("Previous word"), self.player_prev_requested.emit)
         self.pause_btn = _transport_button(
@@ -1171,7 +1176,7 @@ class FlashcardsPage(QWidget):
         self.stop_btn = _transport_button(
             tr("Stop"), self.player_stop_requested.emit)
         transport.addStretch(1)
-        self._transport_buttons = (self.prev_btn, self.pause_btn,
+        self._transport_buttons = (self.config_btn, self.prev_btn, self.pause_btn,
                                    self.next_btn, self.stop_btn)
         sv.addLayout(transport)
 
@@ -2033,6 +2038,7 @@ class FlashcardsPage(QWidget):
             f"font-size:{theme.font_pt('headline')}pt;font-weight:700;")
         self.complete_sub.setStyleSheet(dim + f"font-size:{theme.font_pt('body_lg')}pt;")
         self.end_btn.setIcon(icons.icon("x", c["text_dim"], 16))
+        self.config_btn.setIcon(icons.icon("sliders", c["text"], 16))
         self.prev_btn.setIcon(icons.icon("skip-back", c["text"], 18))
         self.next_btn.setIcon(icons.icon("skip-forward", c["text"], 18))
         self.stop_btn.setIcon(icons.icon("stop", c["danger"], 18))
