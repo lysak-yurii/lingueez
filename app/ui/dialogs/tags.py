@@ -113,8 +113,9 @@ class TagDialog(FramelessDialog):
         if not tag_name:
             return
         try:
-            for word_id in self.word_ids:
-                self.db_adapter.add_tag_to_word(word_id, tag_name)
+            # One cloud request for the whole selection; the per-word call costs
+            # a round trip each and froze the dialog on a large selection.
+            self.db_adapter.add_tag_to_words(self.word_ids, tag_name)
             self.tag_input.clear()
             self.populate()
         except Exception as exc:
@@ -128,8 +129,7 @@ class TagDialog(FramelessDialog):
             return
         try:
             for tag in tags:
-                for word_id in self.word_ids:
-                    self.db_adapter.add_tag_to_word(word_id, tag)
+                self.db_adapter.add_tag_to_words(self.word_ids, tag)
             self.populate()
         except Exception as exc:
             logging.error(f"Error applying tags: {exc}")
@@ -142,8 +142,7 @@ class TagDialog(FramelessDialog):
             return
         try:
             for tag in tags:
-                for word_id in self.word_ids:
-                    self.db_adapter.remove_tag_from_word(word_id, tag)
+                self.db_adapter.remove_tag_from_words(self.word_ids, tag)
             self.populate()
         except Exception as exc:
             logging.error(f"Error removing tags: {exc}")

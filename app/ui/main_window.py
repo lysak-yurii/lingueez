@@ -2754,38 +2754,80 @@ class MainWindow(QMainWindow):
                 tr("Delete {count} word(s)?").format(count=len(records)) + f"\n\n{names}",
                 QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
             return
-        errors = 0
-        for record in records:
-            try:
-                self.db_adapter.delete_word(record["ID"])
-            except Exception as exc:
-                logging.error(f"Error deleting word {record['ID']}: {exc}")
-                errors += 1
-        backup_database()
-        self.load_data()
-        if errors:
-            show_toast(self, tr("Delete"), tr("Deleted with {n} error(s).").format(n=errors), "warning")
-        else:
-            show_toast(self, tr("Deleted"), tr("{count} word(s) deleted.").format(count=len(records)), "success")
+        def work():
+            return self.db_adapter.delete_words_bulk([r["ID"] for r in records])
+
+        def done(result):
+            _deleted, failed = result
+            backup_database()
+            self.load_data()
+            if failed:
+                show_toast(self, tr("Delete"),
+                           tr("Deleted with {n} error(s).").format(n=len(failed)), "warning")
+            else:
+                show_toast(self, tr("Deleted"),
+                           tr("{count} word(s) deleted.").format(count=len(records)), "success")
+
+        self._run_bulk(work, done)
+
+    def _run_bulk(self, work, on_done):
+        """Run a bulk database action off the GUI thread.
+
+        These used to loop a per-word cloud write on the GUI thread, so a
+        selection cost N × (round trip) with the window hung throughout —
+        Ctrl+A over the whole library made that minutes. The adapter's bulk
+        methods collapse the cloud half into one request; running them on a
+        worker keeps the UI live for the local writes too. A busy flag stops a
+        second click from starting an overlapping run over the same rows.
+        """
+        if getattr(self, "_bulk_busy", False):
+            return
+        self._bulk_busy = True
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        def finish():
+            self._bulk_busy = False
+            QApplication.restoreOverrideCursor()
+
+        def ok(result):
+            finish()
+            on_done(result)
+
+        def err(exc):
+            finish()
+            logging.error(f"Bulk operation failed: {exc}")
+            self.load_data()  # show whatever did land
+            show_toast(self, tr("Error"), tr("Failed."), "error")
+
+        run_in_thread(work, on_result=ok, on_error=err)
 
     def toggle_favorite(self):
         records = self._require_selection("favorite")
         if not records:
             return
-        try:
-            self._sync_before_db_operation(force=True)
-            target = not all(bool(r.get("favorite")) for r in records)
-            for record in records:
-                self.db_adapter.update_word(record["ID"], {'favorite': target})
+        self._sync_before_db_operation(force=True)
+        target = not all(bool(r.get("favorite")) for r in records)
+
+        def work():
+            return self.db_adapter.update_words_bulk(
+                [r["ID"] for r in records], {'favorite': target})
+
+        def done(result):
+            updated, failed = result
             self.load_data()
+            # The count is what actually landed, so a partial run reports itself
+            # honestly; the warning tint is the only extra signal needed.
+            level = "warning" if failed else "success"
             if target:
                 show_toast(self, tr("Favorites"),
-                           tr("{count} word(s) added to favorites.").format(count=len(records)), "success")
+                           tr("{count} word(s) added to favorites.").format(count=updated), level)
             else:
                 show_toast(self, tr("Favorites"),
-                           tr("{count} word(s) removed from favorites.").format(count=len(records)), "success")
-        except Exception as exc:
-            logging.error(f"Error toggling favorite: {exc}")
+                           tr("{count} word(s) removed from favorites.").format(count=updated), level)
+            if failed:
+                logging.warning(f"Favorite toggle skipped {len(failed)} word(s): {failed[:5]}")
+
+        self._run_bulk(work, done)
 
     def open_tags(self):
         records = self._require_selection("tag")
@@ -2809,16 +2851,23 @@ class MainWindow(QMainWindow):
             return
         # map the localized label back to the canonical English status
         status = next((s for s in statuses if tr(s) == chosen), chosen)
-        for record in records:
-            try:
-                self.db_adapter.update_word(record["ID"], {'Status': status})
-            except Exception as exc:
-                logging.error(f"Error updating status: {exc}")
-        backup_database()
-        self.load_data()
-        show_toast(self, tr("Status"),
-                   tr("Status set to '{status}' for {count} word(s).").format(
-                       status=tr(status), count=len(records)), "success")
+
+        def work():
+            return self.db_adapter.update_words_bulk(
+                [r["ID"] for r in records], {'Status': status})
+
+        def done(result):
+            updated, failed = result
+            backup_database()
+            self.load_data()
+            show_toast(self, tr("Status"),
+                       tr("Status set to '{status}' for {count} word(s).").format(
+                           status=tr(status), count=updated),
+                       "warning" if failed else "success")
+            if failed:
+                logging.warning(f"Status change skipped {len(failed)} word(s): {failed[:5]}")
+
+        self._run_bulk(work, done)
 
     def view_definition(self):
         records = self._require_selection("view its definition")
