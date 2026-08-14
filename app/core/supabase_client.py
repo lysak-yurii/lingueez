@@ -540,6 +540,105 @@ class SupabaseClient:
             logging.error(f"Error updating word {word_id} in Supabase: {e}")
             return None
     
+    def upsert_words_bulk(self, rows: List[Dict[str, Any]]) -> Tuple[List[str], List[str]]:
+        """Upsert many words in one request; returns ``(pushed_ids, failed_ids)``.
+
+        The per-word :meth:`upsert_word` costs a round trip each, so a bulk UI
+        action (favourite/status on a selection) would otherwise block for
+        ``len(rows)`` × RTT. PostgREST takes the whole array in a single call.
+
+        Falls back to per-row upserts when a chunk fails, so one bad row (e.g. a
+        content collision that needs the id-adoption path) doesn't strand the
+        rest — failed ids are returned for the caller to queue.
+        """
+        if not self.client or not rows:
+            return [], [str(r.get('ID') or r.get('id')) for r in rows or []]
+
+        pushed, failed = [], []
+        chunk_size = 200
+        for start in range(0, len(rows), chunk_size):
+            chunk = rows[start:start + chunk_size]
+            payloads = [self._map_to_supabase_format(r) for r in chunk]
+            ids = [str(r.get('ID') or r.get('id')) for r in chunk]
+            try:
+                self.client.table('words').upsert(payloads, on_conflict='id').execute()
+                pushed.extend(ids)
+            except Exception as chunk_exc:
+                logging.warning(f"words chunk upsert failed, retrying per row: {chunk_exc}")
+                for row, word_id in zip(chunk, ids, strict=False):
+                    # Per-row goes through upsert_word so the content-collision
+                    # fallback (adopt the existing cloud row) still applies.
+                    try:
+                        if self.upsert_word(row):
+                            pushed.append(word_id)
+                        else:
+                            failed.append(word_id)
+                    except Exception as row_exc:
+                        logging.warning(f"words upsert failed for {word_id}: {row_exc}")
+                        failed.append(word_id)
+        return pushed, failed
+
+    def delete_words_bulk(self, word_ids: List[str]) -> Tuple[List[str], List[str]]:
+        """Soft-delete many words in one request; returns ``(deleted, failed)``."""
+        if not self.client or not word_ids:
+            return [], list(word_ids or [])
+        from datetime import datetime, timezone
+        stamp = datetime.now(timezone.utc).isoformat()
+        deleted, failed = [], []
+        chunk_size = 200
+        for start in range(0, len(word_ids), chunk_size):
+            chunk = [str(w) for w in word_ids[start:start + chunk_size]]
+            try:
+                self.client.table('words').update(
+                    {'deleted_at': stamp}).in_('id', chunk).execute()
+                deleted.extend(chunk)
+            except Exception as chunk_exc:
+                logging.warning(f"words chunk soft-delete failed, retrying per row: {chunk_exc}")
+                for word_id in chunk:
+                    if self.delete_word(word_id):
+                        deleted.append(word_id)
+                    else:
+                        failed.append(word_id)
+        return deleted, failed
+
+    def add_tags_to_words_bulk(self, links: List[Tuple[str, str]]) -> bool:
+        """Insert many (word_id, tag_id) link rows in one request.
+
+        Existing links are ignored rather than raising, so re-tagging a selection
+        that partly carries the tag already is a no-op for those rows.
+        """
+        if not self.client or not links:
+            return True
+        payloads = [{'word_id': str(w), 'tag_id': str(t)} for w, t in links]
+        ok = True
+        chunk_size = 200
+        for start in range(0, len(payloads), chunk_size):
+            chunk = payloads[start:start + chunk_size]
+            try:
+                self.client.table('word_tags').upsert(
+                    chunk, on_conflict='word_id,tag_id',
+                    ignore_duplicates=True).execute()
+            except Exception as exc:
+                logging.warning(f"word_tags bulk insert failed: {exc}")
+                ok = False
+        return ok
+
+    def remove_tags_from_words_bulk(self, word_ids: List[str], tag_id: str) -> bool:
+        """Delete the link between *tag_id* and each of *word_ids* in one request."""
+        if not self.client or not word_ids:
+            return True
+        ok = True
+        chunk_size = 200
+        for start in range(0, len(word_ids), chunk_size):
+            chunk = [str(w) for w in word_ids[start:start + chunk_size]]
+            try:
+                self.client.table('word_tags').delete().eq(
+                    'tag_id', str(tag_id)).in_('word_id', chunk).execute()
+            except Exception as exc:
+                logging.warning(f"word_tags bulk delete failed: {exc}")
+                ok = False
+        return ok
+
     def delete_word(self, word_id: int) -> bool:
         """Soft delete a word from Supabase (sets deleted_at timestamp)."""
         if not self.client:

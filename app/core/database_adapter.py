@@ -21,7 +21,7 @@
 
 import sqlite3
 from contextlib import contextmanager
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from app.core.supabase_client import get_supabase
 from app.core.db import new_id, rekey_progress
 from app.core.errors import DuplicateWordError
@@ -1119,6 +1119,155 @@ class DatabaseAdapter:
         except Exception as e:
             logging.error(f"Error re-keying word {old_id} -> {new_id}: {e}")
     
+    def update_words_bulk(self, word_ids: List[str],
+                          patch: Dict[str, Any]) -> Tuple[int, List[str]]:
+        """Apply the same field patch to many words. Returns (updated, failed_ids).
+
+        The single-word :meth:`update_word` costs two round trips each (the
+        cloud-newer pre-check plus the upsert), so applying a selection one word
+        at a time blocks for 2N × RTT. Here the local writes happen first, then
+        the whole set goes up in one bulk upsert.
+
+        The per-word cloud-newer pre-check is deliberately skipped: it would
+        reintroduce a round trip per word, and callers run a full pull
+        (_sync_before_db_operation) before a bulk action anyway. Anything that
+        fails to push is queued and retried like any other offline edit.
+        """
+        if not word_ids:
+            return 0, []
+
+        updated_rows, failed = [], []
+        for word_id in word_ids:
+            try:
+                row = self._update_word_sqlite(word_id, patch)
+                if row:
+                    updated_rows.append(row)
+                else:
+                    failed.append(word_id)
+            except Exception as exc:
+                logging.warning(f"Bulk update failed for word {word_id}: {exc}")
+                failed.append(word_id)
+
+        if updated_rows and self._use_cloud():
+            try:
+                pushed, push_failed = self.supabase.upsert_words_bulk(updated_rows)
+            except Exception as exc:
+                logging.warning(f"Bulk cloud push failed, queueing {len(updated_rows)}: {exc}")
+                pushed, push_failed = [], [str(r['ID']) for r in updated_rows]
+            if push_failed:
+                stranded = set(push_failed)
+                for row in updated_rows:
+                    if str(row['ID']) in stranded:
+                        self._queue_operation('UPDATE', 'words', row['ID'], row)
+                logging.warning(f"{len(push_failed)} word(s) queued after a failed bulk push")
+        elif updated_rows:
+            for row in updated_rows:
+                self._queue_operation('UPDATE', 'words', row['ID'], row)
+
+        return len(updated_rows), failed
+
+    def delete_words_bulk(self, word_ids: List[str]) -> Tuple[int, List[str]]:
+        """Delete many words locally and soft-delete them in the cloud in one
+        request. Returns (deleted, failed_ids). Bin capture and deletion tracking
+        are per-word exactly as in :meth:`delete_word`; only the cloud call is
+        batched."""
+        if not word_ids:
+            return 0, []
+
+        deleted, failed = [], []
+        for word_id in word_ids:
+            try:
+                word_data = self._get_word_sqlite(word_id)
+                if word_data:
+                    tag_names = [t.get('tag_name') for t in self._get_word_tags_sqlite(word_id)
+                                 if t.get('tag_name')]
+                    self._bin_capture('words', word_id, word_data, tag_names)
+                if self._delete_word_sqlite(word_id):
+                    self._track_deletion('words', word_id)
+                    deleted.append(word_id)
+                else:
+                    failed.append(word_id)
+            except Exception as exc:
+                logging.warning(f"Bulk delete failed for word {word_id}: {exc}")
+                failed.append(word_id)
+
+        if deleted and self._use_cloud():
+            try:
+                synced, _unsynced = self.supabase.delete_words_bulk(deleted)
+            except Exception as exc:
+                logging.warning(f"Bulk cloud soft-delete failed, deletions stay queued: {exc}")
+                synced = []
+            for word_id in synced:
+                self._mark_deletion_synced('words', word_id)
+
+        return len(deleted), failed
+
+    def add_tag_to_words(self, word_ids: List[str], tag_name: str) -> Tuple[int, List[str]]:
+        """Tag many words at once. Returns (tagged, failed_ids).
+
+        One cloud call for the whole selection instead of the two per word that
+        :meth:`add_tag_to_word` costs (word-exists probe + link insert).
+        """
+        if not word_ids:
+            return 0, []
+        tag_id = self._get_or_create_tag_sqlite(tag_name)
+        if not tag_id:
+            return 0, list(word_ids)
+
+        linked, failed = [], []
+        for word_id in word_ids:
+            try:
+                if self._add_tag_to_word_sqlite(word_id, tag_id):
+                    linked.append(word_id)
+                else:
+                    failed.append(word_id)
+            except Exception as exc:
+                logging.warning(f"Bulk tag failed for word {word_id}: {exc}")
+                failed.append(word_id)
+
+        if linked and self._use_cloud():
+            # The words themselves may not be in the cloud yet; the link insert
+            # would then trip an FK. Push the rows first (one request), so the
+            # links land against rows that exist.
+            rows = [r for r in (self._get_word_sqlite(w) for w in linked) if r]
+            if rows:
+                try:
+                    self.supabase.upsert_words_bulk(rows)
+                except Exception as exc:
+                    logging.warning(f"Could not pre-push words before tagging: {exc}")
+            if not self.supabase.add_tags_to_words_bulk(
+                    [(w, tag_id) for w in linked]):
+                # _sync_tags_incremental reconciles links wholesale each sync, so
+                # a failure here self-heals; no queue entry needed.
+                logging.warning(f"Tag '{tag_name}' links deferred to the next sync")
+
+        return len(linked), failed
+
+    def remove_tag_from_words(self, word_ids: List[str], tag_name: str) -> Tuple[int, List[str]]:
+        """Untag many words at once. Returns (untagged, failed_ids)."""
+        if not word_ids:
+            return 0, []
+        tag_id = self._get_tag_id_sqlite(tag_name)
+        if not tag_id:
+            return 0, list(word_ids)
+
+        unlinked, failed = [], []
+        for word_id in word_ids:
+            try:
+                if self._remove_tag_from_word_sqlite(word_id, tag_id):
+                    unlinked.append(word_id)
+                else:
+                    failed.append(word_id)
+            except Exception as exc:
+                logging.warning(f"Bulk untag failed for word {word_id}: {exc}")
+                failed.append(word_id)
+
+        if unlinked and self._use_cloud():
+            if not self.supabase.remove_tags_from_words_bulk(unlinked, tag_id):
+                logging.warning(f"Tag '{tag_name}' unlinks deferred to the next sync")
+
+        return len(unlinked), failed
+
     def delete_word(self, word_id: str) -> bool:
         """Delete a word locally and (soft-delete) in the cloud by its shared id."""
         # Get word data before deleting (for the local Bin snapshot).
