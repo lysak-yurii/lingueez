@@ -57,7 +57,9 @@ class SyncOperationQueueTests(unittest.TestCase):
         conn = sqlite3.connect(self.path)
         conn.execute(
             "INSERT INTO words (ID, Language1, Word1, Language2, Word2, Status) "
-            "VALUES (?, 'en', ?, 'de', ?, ?)", (wid, word1, word2, status))
+            "VALUES (?, 'en', ?, 'de', ?, ?)",
+            (wid, word1, word2, status),
+        )
         conn.commit()
         conn.close()
 
@@ -70,8 +72,14 @@ class SyncOperationQueueTests(unittest.TestCase):
         # -through worked again. Replaying the snapshot would push "Katze"/New
         # over the newer cloud row.
         self._insert_word(word2="Katze (edited)", status="Learning")
-        stale = {"ID": "w1", "Language1": "en", "Word1": "cat",
-                 "Language2": "de", "Word2": "Katze", "Status": "New"}
+        stale = {
+            "ID": "w1",
+            "Language1": "en",
+            "Word1": "cat",
+            "Language2": "de",
+            "Word2": "Katze",
+            "Status": "New",
+        }
 
         self.sm._sync_operation_queue([_op(1, "INSERT", "words", "w1", stale)])
 
@@ -81,8 +89,13 @@ class SyncOperationQueueTests(unittest.TestCase):
         self.sm.db_adapter._mark_operation_synced.assert_called_once_with(1)
 
     def test_falls_back_to_the_snapshot_when_the_row_is_gone(self):
-        stale = {"ID": "gone", "Language1": "en", "Word1": "cat",
-                 "Language2": "de", "Word2": "Katze"}
+        stale = {
+            "ID": "gone",
+            "Language1": "en",
+            "Word1": "cat",
+            "Language2": "de",
+            "Word2": "Katze",
+        }
 
         self.sm._sync_operation_queue([_op(1, "INSERT", "words", "gone", stale)])
 
@@ -103,28 +116,28 @@ class SyncOperationQueueTests(unittest.TestCase):
 
         self.sm._sync_operation_queue([_op(1, "INSERT", "words", "local-id", None)])
 
-        self.sm.db_adapter._rekey_word_sqlite.assert_called_once_with(
-            "local-id", "cloud-id")
+        self.sm.db_adapter._rekey_word_sqlite.assert_called_once_with("local-id", "cloud-id")
         self.sm.db_adapter._mark_operation_synced.assert_called_once_with(1)
 
     def test_texts_are_pushed_from_the_current_row(self):
         conn = sqlite3.connect(self.path)
-        conn.execute("INSERT INTO texts (ID, Title, Text, Language) "
-                     "VALUES ('t1', 'New title', 'body', 'en')")
+        conn.execute(
+            "INSERT INTO texts (ID, Title, Text, Language) "
+            "VALUES ('t1', 'New title', 'body', 'en')"
+        )
         conn.commit()
         conn.close()
 
         self.sm._sync_operation_queue(
-            [_op(1, "INSERT", "texts", "t1", {"ID": "t1", "Title": "Old title"})])
+            [_op(1, "INSERT", "texts", "t1", {"ID": "t1", "Title": "Old title"})]
+        )
 
-        self.assertEqual(
-            self.sm.supabase.upsert_text.call_args[0][0]["Title"], "New title")
+        self.assertEqual(self.sm.supabase.upsert_text.call_args[0][0]["Title"], "New title")
 
     def test_word_tags_operation_is_cleared_not_stranded(self):
         # _sync_tags_incremental reconciles link rows wholesale; this drain has no
         # way to push one, so leaving it unsynced would strand it permanently.
-        self.sm._sync_operation_queue(
-            [_op(1, "INSERT", "word_tags", "w1", {"tag_id": "t-1"})])
+        self.sm._sync_operation_queue([_op(1, "INSERT", "word_tags", "w1", {"tag_id": "t-1"})])
 
         self.sm.db_adapter._mark_operation_synced.assert_called_once_with(1)
 
@@ -140,10 +153,12 @@ class SyncOperationQueueTests(unittest.TestCase):
         self.sm.supabase.restore_word.return_value = True
         self.sm.supabase.hard_delete_text.return_value = True
 
-        self.sm._sync_operation_queue([
-            _op(1, "RESTORE", "words", "w1", None),
-            _op(2, "HARD_DELETE", "texts", "t1", None),
-        ])
+        self.sm._sync_operation_queue(
+            [
+                _op(1, "RESTORE", "words", "w1", None),
+                _op(2, "HARD_DELETE", "texts", "t1", None),
+            ]
+        )
 
         self.sm.supabase.restore_word.assert_called_once_with("w1")
         self.sm.supabase.hard_delete_text.assert_called_once_with("t1")

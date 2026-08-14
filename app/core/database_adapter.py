@@ -1150,10 +1150,10 @@ class DatabaseAdapter:
 
         if updated_rows and self._use_cloud():
             try:
-                pushed, push_failed = self.supabase.upsert_words_bulk(updated_rows)
+                _pushed, push_failed = self.supabase.upsert_words_bulk(updated_rows)
             except Exception as exc:
                 logging.warning(f"Bulk cloud push failed, queueing {len(updated_rows)}: {exc}")
-                pushed, push_failed = [], [str(r['ID']) for r in updated_rows]
+                push_failed = [str(r['ID']) for r in updated_rows]
             if push_failed:
                 stranded = set(push_failed)
                 for row in updated_rows:

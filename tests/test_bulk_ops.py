@@ -39,8 +39,7 @@ class BulkOpsTests(unittest.TestCase):
         self.a.set_local_db(self.path)
         # Enable the cloud path with a recorder standing in for Supabase.
         self.sb = MagicMock()
-        self.sb.upsert_words_bulk.side_effect = lambda rows: (
-            [str(r["ID"]) for r in rows], [])
+        self.sb.upsert_words_bulk.side_effect = lambda rows: ([str(r["ID"]) for r in rows], [])
         self.sb.delete_words_bulk.side_effect = lambda ids: (list(ids), [])
         self.sb.add_tags_to_words_bulk.return_value = True
         self.sb.remove_tags_from_words_bulk.return_value = True
@@ -57,8 +56,8 @@ class BulkOpsTests(unittest.TestCase):
 
     def _insert(self, word1, word2):
         row = self.a._insert_word_sqlite(
-            {"Language1": "en", "Word1": word1, "Language2": "de", "Word2": word2,
-             "Status": "New"})
+            {"Language1": "en", "Word1": word1, "Language2": "de", "Word2": word2, "Status": "New"}
+        )
         return row["ID"]
 
     def _rows(self):
@@ -70,8 +69,7 @@ class BulkOpsTests(unittest.TestCase):
 
     def _pending(self):
         conn = sqlite3.connect(self.path)
-        n = conn.execute(
-            "SELECT COUNT(*) FROM sync_queue WHERE synced_at IS NULL").fetchone()[0]
+        n = conn.execute("SELECT COUNT(*) FROM sync_queue WHERE synced_at IS NULL").fetchone()[0]
         conn.close()
         return n
 
@@ -92,12 +90,13 @@ class BulkOpsTests(unittest.TestCase):
         rejected = {self.ids[1], self.ids[3]}
         self.sb.upsert_words_bulk.side_effect = lambda rows: (
             [str(r["ID"]) for r in rows if str(r["ID"]) not in rejected],
-            [str(r["ID"]) for r in rows if str(r["ID"]) in rejected])
+            [str(r["ID"]) for r in rows if str(r["ID"]) in rejected],
+        )
 
         updated, failed = self.a.update_words_bulk(self.ids, {"Status": "Learning"})
 
         self.assertEqual((updated, failed), (5, []))  # all landed locally
-        self.assertEqual(self._pending(), 2)          # only the rejected two queued
+        self.assertEqual(self._pending(), 2)  # only the rejected two queued
         self.assertTrue(all(r["Status"] == "Learning" for r in self._rows()))
 
     def test_bulk_update_queues_everything_when_the_push_raises(self):
@@ -120,7 +119,8 @@ class BulkOpsTests(unittest.TestCase):
         # One bad id must not strand the rest — the old loop bailed on the first
         # exception and left the remaining words untouched.
         updated, failed = self.a.update_words_bulk(
-            [self.ids[0], "no-such-id", self.ids[1]], {"favorite": True})
+            [self.ids[0], "no-such-id", self.ids[1]], {"favorite": True}
+        )
 
         self.assertEqual(updated, 2)
         self.assertEqual(failed, ["no-such-id"])
@@ -144,7 +144,8 @@ class BulkOpsTests(unittest.TestCase):
 
         conn = sqlite3.connect(self.path)
         binned = conn.execute(
-            "SELECT record_id FROM bin_items WHERE table_name = 'words'").fetchall()
+            "SELECT record_id FROM bin_items WHERE table_name = 'words'"
+        ).fetchall()
         conn.close()
         self.assertEqual([r[0] for r in binned], [self.ids[0]])
 
@@ -154,8 +155,9 @@ class BulkOpsTests(unittest.TestCase):
         self.a.delete_words_bulk(self.ids[:2])
 
         conn = sqlite3.connect(self.path)
-        n = conn.execute(
-            "SELECT COUNT(*) FROM sync_deletions WHERE synced_at IS NULL").fetchone()[0]
+        n = conn.execute("SELECT COUNT(*) FROM sync_deletions WHERE synced_at IS NULL").fetchone()[
+            0
+        ]
         conn.close()
         self.assertEqual(n, 2)
 

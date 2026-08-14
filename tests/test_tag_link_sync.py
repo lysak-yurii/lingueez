@@ -44,8 +44,10 @@ class TagLinkSyncTests(unittest.TestCase):
 
         conn = sqlite3.connect(self.path)
         for i in range(3):
-            conn.execute("INSERT INTO words (ID, Word1, Word2) VALUES (?, ?, ?)",
-                         (f"w{i}", f"cat{i}", f"Katze{i}"))
+            conn.execute(
+                "INSERT INTO words (ID, Word1, Word2) VALUES (?, ?, ?)",
+                (f"w{i}", f"cat{i}", f"Katze{i}"),
+            )
         conn.execute("INSERT INTO tags (tag_id, tag_name) VALUES (?, 'animals')", (TAG,))
         conn.commit()
         conn.close()
@@ -55,8 +57,7 @@ class TagLinkSyncTests(unittest.TestCase):
         self.sm.supabase = MagicMock()
         self.sm.db_adapter = DatabaseAdapter(use_cloud=False)
         self.sm.db_adapter.set_local_db(self.path)
-        self.sm.supabase.get_tags.return_value = [
-            {"tag_id": TAG, "tag_name": "animals"}]
+        self.sm.supabase.get_tags.return_value = [{"tag_id": TAG, "tag_name": "animals"}]
         self.sm.supabase.add_tags_to_words_bulk.return_value = True
 
     def tearDown(self):
@@ -68,20 +69,21 @@ class TagLinkSyncTests(unittest.TestCase):
         conn = sqlite3.connect(self.path)
         conn.execute(
             "INSERT OR REPLACE INTO word_tags (word_id, tag_id, synced) VALUES (?, ?, ?)",
-            (word_id, TAG, 1 if synced else 0))
+            (word_id, TAG, 1 if synced else 0),
+        )
         conn.commit()
         conn.close()
 
     def _links(self):
         conn = sqlite3.connect(self.path)
-        rows = {r[0]: r[1] for r in
-                conn.execute("SELECT word_id, synced FROM word_tags")}
+        rows = {r[0]: r[1] for r in conn.execute("SELECT word_id, synced FROM word_tags")}
         conn.close()
         return rows
 
     def _cloud(self, *word_ids):
         self.sm.supabase.get_all_word_tags.return_value = [
-            {"word_id": w, "tag_id": TAG} for w in word_ids]
+            {"word_id": w, "tag_id": TAG} for w in word_ids
+        ]
 
     # --- the regression --------------------------------------------------
 
@@ -122,9 +124,9 @@ class TagLinkSyncTests(unittest.TestCase):
     # --- removals still propagate ----------------------------------------
 
     def test_synced_link_missing_from_cloud_is_removed(self):
-        self._link("w0", synced=True)   # previously in the cloud
+        self._link("w0", synced=True)  # previously in the cloud
         self._link("w1", synced=True)
-        self._cloud("w1")               # w0 was untagged on another device
+        self._cloud("w1")  # w0 was untagged on another device
 
         self.sm._sync_tags_incremental(None)
 
@@ -151,8 +153,7 @@ class TagLinkSyncTests(unittest.TestCase):
         # after the migration pushes them instead of deleting them.
         conn = sqlite3.connect(self.path)
         for i in range(3):
-            conn.execute("INSERT INTO word_tags (word_id, tag_id) VALUES (?, ?)",
-                         (f"w{i}", TAG))
+            conn.execute("INSERT INTO word_tags (word_id, tag_id) VALUES (?, ?)", (f"w{i}", TAG))
         conn.commit()
         conn.close()
         self._cloud("w0")  # cloud only knows one of them
@@ -168,8 +169,10 @@ class TagLinkSchemaTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "old.db")
             conn = sqlite3.connect(path)
-            conn.execute("CREATE TABLE word_tags (word_id TEXT NOT NULL, "
-                         "tag_id TEXT NOT NULL, PRIMARY KEY (word_id, tag_id))")
+            conn.execute(
+                "CREATE TABLE word_tags (word_id TEXT NOT NULL, "
+                "tag_id TEXT NOT NULL, PRIMARY KEY (word_id, tag_id))"
+            )
             conn.execute("INSERT INTO word_tags VALUES ('w0', 't1')")
             conn.commit()
             conn.close()
@@ -178,8 +181,7 @@ class TagLinkSchemaTests(unittest.TestCase):
 
             conn = sqlite3.connect(path)
             cols = {r[1] for r in conn.execute("PRAGMA table_info(word_tags)")}
-            synced = conn.execute(
-                "SELECT synced FROM word_tags WHERE word_id = 'w0'").fetchone()[0]
+            synced = conn.execute("SELECT synced FROM word_tags WHERE word_id = 'w0'").fetchone()[0]
             conn.close()
             self.assertIn("synced", cols)
             self.assertEqual(synced, 0, "existing links migrate in as unsynced")
