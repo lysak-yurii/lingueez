@@ -1250,10 +1250,11 @@ class SyncManager:
         """Promote words.Status from cloud-merged cumulative listen counts.
 
         Listens made on other devices must move the ladder here too, not just
-        local playback (main_window._on_word_completed). Plain SQLite write
-        that bumps edited_at, so the words watermark pushes the promotion on
-        the next incremental sync; db_adapter.update_word is avoided because
-        it re-enters cloud logic mid-pull.
+        local playback (main_window._on_word_completed). The status change is a
+        plain SQLite write — db_adapter.update_word is avoided because it re-enters
+        the pull path mid-sync — and is pushed explicitly afterwards: there is no
+        watermark-based push for words, so a local-only write would never leave
+        this device.
         """
         if not counts:
             return
@@ -1266,9 +1267,9 @@ class SyncManager:
             get_int(settings, "playback_learning_listens", 15),
             get_int(settings, "playback_mastered_listens", 100))
         conn = sqlite3.connect(self.local_db)
+        promoted = []
         try:
             cursor = conn.cursor()
-            promoted = 0
             for word_id, listen_count in counts:
                 cursor.execute("SELECT Status FROM words WHERE ID = ?", (word_id,))
                 row = cursor.fetchone()
@@ -1279,12 +1280,27 @@ class SyncManager:
                     cursor.execute(
                         "UPDATE words SET Status = ?, edited_at = ? WHERE ID = ?",
                         (target, datetime.now(timezone.utc).isoformat(), word_id))
-                    promoted += 1
+                    promoted.append(word_id)
             conn.commit()
             if promoted:
-                logging.info(f"Promoted {promoted} word(s) from synced listen counts")
+                logging.info(f"Promoted {len(promoted)} word(s) from synced listen counts")
         finally:
             conn.close()
+
+        # Push the promotions. We're already inside the sync lock, so upserting
+        # here is safe — and unlike db_adapter.update_word it doesn't re-enter the
+        # pull path. On failure fall back to the sync queue so the promotion is
+        # retried like any other edit made while offline, rather than being lost.
+        for word_id in promoted:
+            row = self._live_row('words', word_id)
+            if not row:
+                continue
+            try:
+                if self.supabase.upsert_word(row):
+                    continue
+            except Exception as exc:
+                logging.warning(f"Could not push promotion for word {word_id}: {exc}")
+            self.db_adapter._queue_operation('UPDATE', 'words', word_id, row)
 
     def _should_run_cleanup(self) -> bool:
         """Check if cleanup should run (once per day)."""

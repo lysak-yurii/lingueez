@@ -319,7 +319,42 @@ class SyncWordProgressTests(unittest.TestCase):
         self.sm._sync_word_progress()
         status, edited_at = self._word_state()
         self.assertEqual(status, "Reviewing")
-        self.assertIsNotNone(edited_at)  # bumped so word sync pushes it
+        self.assertIsNotNone(edited_at)
+
+    def test_promotion_is_pushed_to_the_cloud(self):
+        # The status write bypasses db_adapter (it must not re-enter the pull path
+        # mid-sync), and words have no watermark-based push — so without an
+        # explicit upsert the promotion would never leave this device.
+        self._set_status("New")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+
+        self.sm._sync_word_progress()
+
+        self.sm.supabase.upsert_word.assert_called_once()
+        pushed = self.sm.supabase.upsert_word.call_args[0][0]
+        self.assertEqual(pushed["ID"], "w1")
+        self.assertEqual(pushed["Status"], "Reviewing")
+
+    def test_failed_promotion_push_falls_back_to_the_queue(self):
+        self._set_status("New")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+        self.sm.supabase.upsert_word.side_effect = RuntimeError("offline")
+
+        self.sm._sync_word_progress()
+
+        self.assertEqual(self._word_state()[0], "Reviewing")  # local write stands
+        self.sm.db_adapter._queue_operation.assert_called_once()
+        args = self.sm.db_adapter._queue_operation.call_args[0]
+        self.assertEqual(args[:3], ("UPDATE", "words", "w1"))
+
+    def test_nothing_is_pushed_when_no_word_is_promoted(self):
+        self._set_status("Reviewing")
+        self.sm.supabase.get_word_progress_changes.return_value = [_row("w1", listen_count=3)]
+
+        self.sm._sync_word_progress()
+
+        self.sm.supabase.upsert_word.assert_not_called()
+        self.sm.db_adapter._queue_operation.assert_not_called()
 
     def test_synced_count_never_demotes(self):
         self._set_status("Mastered")
