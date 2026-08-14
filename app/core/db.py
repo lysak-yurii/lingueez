@@ -199,10 +199,20 @@ def _create_tags(cursor):
 
 
 def _create_word_tags(cursor):
+    """Word-tag links.
+
+    ``synced`` is local-only bookkeeping (it has no cloud counterpart): 1 once
+    the link is known to exist in the cloud, 0 while it is a local-only addition.
+    Without it the sync engine cannot tell a link *created* locally from one
+    *deleted* remotely — both simply read as "absent from the cloud" — and the
+    old code did both at once, deleting local links it then pushed. New rows
+    default to 0, so a link is never removed before it has reached the cloud.
+    """
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_tags (
             word_id TEXT NOT NULL,
             tag_id TEXT NOT NULL,
+            synced INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (word_id) REFERENCES words(ID),
             FOREIGN KEY (tag_id) REFERENCES tags(tag_id),
             PRIMARY KEY (word_id, tag_id)
@@ -233,6 +243,10 @@ def initialize_database(db_path=None):
     _ensure_column(cursor, 'texts', 'Level', 'TEXT')
     _create_tags(cursor)
     _create_word_tags(cursor)
+    # Existing links migrate in as unsynced: the first sync afterwards pushes
+    # them (an idempotent, duplicate-ignoring insert) and marks them synced,
+    # rather than risking the deletion of a link that never reached the cloud.
+    _ensure_column(cursor, 'word_tags', 'synced', 'INTEGER NOT NULL DEFAULT 0')
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sync_deletions (

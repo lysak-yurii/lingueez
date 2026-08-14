@@ -1235,10 +1235,11 @@ class DatabaseAdapter:
                     self.supabase.upsert_words_bulk(rows)
                 except Exception as exc:
                     logging.warning(f"Could not pre-push words before tagging: {exc}")
-            if not self.supabase.add_tags_to_words_bulk(
-                    [(w, tag_id) for w in linked]):
-                # _sync_tags_incremental reconciles links wholesale each sync, so
-                # a failure here self-heals; no queue entry needed.
+            if self.supabase.add_tags_to_words_bulk([(w, tag_id) for w in linked]):
+                self._mark_word_tags_synced((w, tag_id) for w in linked)
+            else:
+                # The links stay unsynced, so the next sync pushes them instead
+                # of mistaking them for links deleted on another device.
                 logging.warning(f"Tag '{tag_name}' links deferred to the next sync")
 
         return len(linked), failed
@@ -1787,7 +1788,9 @@ class DatabaseAdapter:
             if cloud_word_id:
                 # Use cloud_id for Supabase tag addition
                 cloud_success = self.supabase.add_tag_to_word(cloud_word_id, tag_id)
-                if not cloud_success:
+                if cloud_success:
+                    self._mark_word_tags_synced([(cloud_word_id, tag_id)])
+                else:
                     logging.warning("Failed to sync tag addition to cloud, but added locally")
             else:
                 # Word not in Supabase, queue tag operation for later sync
@@ -1830,13 +1833,31 @@ class DatabaseAdapter:
         return tag_id
     
     def _add_tag_to_word_sqlite(self, word_id: int, tag_id: int) -> bool:
-        """Add tag to word in SQLite."""
+        """Add tag to word in SQLite. The link starts unsynced — see
+        _create_word_tags — and is marked synced once it reaches the cloud."""
         conn = sqlite3.connect(self.local_db)
         cursor = conn.cursor()
-        cursor.execute("INSERT OR IGNORE INTO word_tags (word_id, tag_id) VALUES (?, ?)", (word_id, tag_id))
+        cursor.execute(
+            "INSERT OR IGNORE INTO word_tags (word_id, tag_id, synced) VALUES (?, ?, 0)",
+            (word_id, tag_id))
         conn.commit()
         conn.close()
         return True
+
+    def _mark_word_tags_synced(self, links):
+        """Flag (word_id, tag_id) links as present in the cloud."""
+        links = list(links)
+        if not links:
+            return
+        try:
+            with self._write() as conn:
+                conn.executemany(
+                    "UPDATE word_tags SET synced = 1 WHERE word_id = ? AND tag_id = ?",
+                    [(str(w), str(t)) for w, t in links])
+        except sqlite3.Error as exc:
+            # Only bookkeeping: an unsynced-but-present link is re-pushed next
+            # sync (a duplicate-ignoring insert), never deleted.
+            logging.warning(f"Could not mark {len(links)} word_tag(s) synced: {exc}")
     
     def remove_tag_from_word(self, word_id: int, tag_name: str) -> bool:
         """Remove a tag from a word."""

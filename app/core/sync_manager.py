@@ -1458,28 +1458,48 @@ class SyncManager:
                                  (cloud_tag_id, tag_name))
                     logging.info(f"Added tag {tag_name} from cloud")
             
-            # Sync word_tags from cloud to local
+            # Sync word_tags from cloud to local. A link that came from the
+            # cloud is synced by definition, and one that already exists locally
+            # is now confirmed present in the cloud — mark both.
             for cloud_wt in cloud_word_tags:
                 word_id = cloud_wt.get('word_id')
                 tag_id = cloud_wt.get('tag_id')
                 key = (word_id, tag_id)
-                
+
                 if key not in local_wt_set:
-                    cursor.execute("INSERT OR IGNORE INTO word_tags (word_id, tag_id) VALUES (?, ?)",
-                                 (word_id, tag_id))
+                    cursor.execute(
+                        "INSERT OR IGNORE INTO word_tags (word_id, tag_id, synced) VALUES (?, ?, 1)",
+                        (word_id, tag_id))
                     logging.debug(f"Added word_tag relationship: word {word_id}, tag {tag_id}")
-            
-            # Remove word_tags that exist locally but not in cloud
-            for local_wt in local_word_tags:
-                word_id = local_wt.get('word_id')
-                tag_id = local_wt.get('tag_id')
-                key = (word_id, tag_id)
-                
-                if key not in cloud_wt_set:
-                    cursor.execute("DELETE FROM word_tags WHERE word_id = ? AND tag_id = ?",
-                                 (word_id, tag_id))
-                    logging.debug(f"Removed word_tag relationship: word {word_id}, tag {tag_id}")
-            
+                else:
+                    cursor.execute(
+                        "UPDATE word_tags SET synced = 1 WHERE word_id = ? AND tag_id = ?",
+                        (word_id, tag_id))
+
+            # Remove word_tags the cloud no longer has — but only those we had
+            # previously seen there (synced = 1). An unsynced link is a local
+            # addition that hasn't been pushed yet, not a remote removal; the old
+            # code could not tell the two apart and deleted local additions it
+            # then pushed in the same run.
+            if cloud_word_tags or not local_word_tags:
+                for local_wt in local_word_tags:
+                    word_id = local_wt.get('word_id')
+                    tag_id = local_wt.get('tag_id')
+                    key = (word_id, tag_id)
+
+                    if key not in cloud_wt_set and local_wt.get('synced'):
+                        cursor.execute("DELETE FROM word_tags WHERE word_id = ? AND tag_id = ?",
+                                     (word_id, tag_id))
+                        logging.debug(f"Removed word_tag relationship: word {word_id}, tag {tag_id}")
+            else:
+                # get_all_word_tags() returns [] on any error (network, RLS), so an
+                # empty cloud set against a non-empty local one is far more likely
+                # a failed request than a genuine wipe. Same guard as
+                # _detect_missing_records applies to words.
+                logging.warning(
+                    f"Cloud returned no word_tags but local has {len(local_word_tags)} — "
+                    f"treating as a connection issue, skipping link removal")
+
             conn.commit()
             
             # Push local-only tags to cloud
@@ -1495,19 +1515,20 @@ class SyncManager:
                     except Exception as e:
                         logging.warning(f"Failed to push tag {tag_name} to cloud: {e}")
             
-            # Push local-only word_tags to cloud
-            for local_wt in local_word_tags:
-                word_id = local_wt.get('word_id')
-                tag_id = local_wt.get('tag_id')
-                key = (word_id, tag_id)
-                
-                if key not in cloud_wt_set:
-                    try:
-                        success = self.supabase.add_tag_to_word(word_id, tag_id)
-                        if success:
-                            logging.debug(f"Pushed word_tag relationship to cloud: word {word_id}, tag {tag_id}")
-                    except Exception as e:
-                        logging.warning(f"Failed to push word_tag to cloud: {e}")
+            # Push local-only word_tags to cloud, in one request rather than one
+            # per link, and mark them synced so a later remote removal can be
+            # told apart from a fresh local addition.
+            to_push = [(wt.get('word_id'), wt.get('tag_id')) for wt in local_word_tags
+                       if (wt.get('word_id'), wt.get('tag_id')) not in cloud_wt_set]
+            if to_push:
+                try:
+                    if self.supabase.add_tags_to_words_bulk(to_push):
+                        self.db_adapter._mark_word_tags_synced(to_push)
+                        logging.info(f"Pushed {len(to_push)} word_tag link(s) to cloud")
+                    else:
+                        logging.warning(f"{len(to_push)} word_tag link(s) deferred to the next sync")
+                except Exception as e:
+                    logging.warning(f"Failed to push word_tags to cloud: {e}")
             
             conn.close()
             logging.info("Tags and word_tags sync completed")
