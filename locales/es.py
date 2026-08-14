@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Buscar textos por título, contenido o palabras…",
     "Search scope": "Alcance de búsqueda",
     "Search scope…": "Alcance de búsqueda…",
+    "Nothing to practice yet": "Aún no hay nada que practicar",
+    "Add words to your vocabulary and they show up here.":
+        "Añade palabras a tu vocabulario y aparecerán aquí.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Vuelve cuando haya tarjetas pendientes o practica ahora las palabras más recientes.",
+    "Practice newest words": "Practicar las más recientes",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Elige otro mazo arriba o ajusta los filtros en la página Palabras.",
+    "You're all caught up": "Estás al día",
     "Add word": "Añadir palabra",
     "Copy a word in any app, then press:":
         "Copia una palabra en cualquier app y pulsa:",

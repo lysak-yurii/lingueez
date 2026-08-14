@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Pretraži tekstove po naslovu, sadržaju ili riječima…",
     "Search scope": "Opseg pretraživanja",
     "Search scope…": "Opseg pretraživanja…",
+    "Nothing to practice yet": "Još nema ničega za vježbanje",
+    "Add words to your vocabulary and they show up here.":
+        "Dodajte riječi u svoj rječnik i pojavit će se ovdje.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Vratite se kad kartice dospiju ili sada vježbajte najnovije riječi.",
+    "Practice newest words": "Vježbaj najnovije riječi",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Odaberite drugi špil iznad ili prilagodite filtre na stranici Riječi.",
+    "You're all caught up": "Sve ste odradili",
     "Add word": "Dodaj riječ",
     "Copy a word in any app, then press:":
         "Kopirajte riječ u bilo kojoj aplikaciji i pritisnite:",

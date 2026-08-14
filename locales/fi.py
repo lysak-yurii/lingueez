@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Hae tekstejä otsikon, sisällön tai sanojen mukaan…",
     "Search scope": "Hakualue",
     "Search scope…": "Hakualue…",
+    "Nothing to practice yet": "Ei vielä harjoiteltavaa",
+    "Add words to your vocabulary and they show up here.":
+        "Lisää sanoja sanastoosi, niin ne ilmestyvät tähän.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Palaa, kun kortteja on kerrattavana, tai harjoittele nyt uusimpia sanoja.",
+    "Practice newest words": "Harjoittele uusimpia sanoja",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Valitse yllä toinen pakka tai muuta suodattimia Sanat-sivulla.",
+    "You're all caught up": "Olet ajan tasalla",
     "Add word": "Lisää sana",
     "Copy a word in any app, then press:":
         "Kopioi sana missä tahansa sovelluksessa ja paina:",

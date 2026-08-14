@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Keresés szövegekben cím, tartalom vagy szavak alapján…",
     "Search scope": "Keresési tartomány",
     "Search scope…": "Keresési tartomány…",
+    "Nothing to practice yet": "Még nincs mit gyakorolni",
+    "Add words to your vocabulary and they show up here.":
+        "Vegyen fel szavakat a szótárába, és itt fognak megjelenni.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Térjen vissza, amikor esedékes kártyák lesznek, vagy gyakorolja most a legújabb szavakat.",
+    "Practice newest words": "Legújabb szavak gyakorlása",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Válasszon fent másik paklit, vagy módosítsa a szűrőket a Szavak oldalon.",
+    "You're all caught up": "Mindennel végzett",
     "Add word": "Szó hozzáadása",
     "Copy a word in any app, then press:":
         "Másoljon ki egy szót bármelyik alkalmazásban, majd nyomja meg:",

@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Sök texter efter titel, innehåll eller ord…",
     "Search scope": "Sökscope",
     "Search scope…": "Sökscope…",
+    "Nothing to practice yet": "Inget att öva på än",
+    "Add words to your vocabulary and they show up here.":
+        "Lägg till ord i ditt ordförråd så dyker de upp här.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Kom tillbaka när kort ska repeteras, eller öva på de nyaste orden nu.",
+    "Practice newest words": "Öva på de nyaste orden",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Välj en annan kortlek ovan eller justera filtren på Ord-sidan.",
+    "You're all caught up": "Du är ikapp",
     "Add word": "Lägg till ord",
     "Copy a word in any app, then press:":
         "Kopiera ett ord i valfri app och tryck:",

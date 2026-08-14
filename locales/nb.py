@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Søk etter tekster etter tittel, innhold eller ord…",
     "Search scope": "Søkeområde",
     "Search scope…": "Søkeområde…",
+    "Nothing to practice yet": "Ingenting å øve på ennå",
+    "Add words to your vocabulary and they show up here.":
+        "Legg til ord i ordforrådet ditt, så dukker de opp her.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Kom tilbake når kort skal repeteres, eller øv på de nyeste ordene nå.",
+    "Practice newest words": "Øv på de nyeste ordene",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Velg en annen kortstokk over, eller juster filtrene på Ord-siden.",
+    "You're all caught up": "Du er ajour",
     "Add word": "Legg til ord",
     "Copy a word in any app, then press:":
         "Kopier et ord i en app, og trykk:",

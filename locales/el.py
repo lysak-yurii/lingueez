@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Αναζήτηση κειμένων βάσει τίτλου, περιεχομένου ή λέξεων…",
     "Search scope": "Εύρος αναζήτησης",
     "Search scope…": "Εύρος αναζήτησης…",
+    "Nothing to practice yet": "Δεν υπάρχει ακόμη τίποτα για εξάσκηση",
+    "Add words to your vocabulary and they show up here.":
+        "Προσθέστε λέξεις στο λεξιλόγιό σας και θα εμφανιστούν εδώ.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Επιστρέψτε όταν υπάρχουν κάρτες για επανάληψη ή εξασκηθείτε τώρα στις νεότερες λέξεις.",
+    "Practice newest words": "Εξάσκηση στις νεότερες λέξεις",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Επιλέξτε άλλη τράπουλα παραπάνω ή αλλάξτε τα φίλτρα στη σελίδα Λέξεις.",
+    "You're all caught up": "Είστε πλήρως ενημερωμένοι",
     "Add word": "Προσθήκη λέξης",
     "Copy a word in any app, then press:":
         "Αντιγράψτε μια λέξη σε οποιαδήποτε εφαρμογή και πατήστε:",

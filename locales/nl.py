@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Zoek teksten op titel, inhoud of woorden…",
     "Search scope": "Zoekbereik",
     "Search scope…": "Zoekbereik…",
+    "Nothing to practice yet": "Nog niets om te oefenen",
+    "Add words to your vocabulary and they show up here.":
+        "Voeg woorden toe aan je woordenschat, dan verschijnen ze hier.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Kom terug wanneer er kaarten klaarstaan, of oefen nu de nieuwste woorden.",
+    "Practice newest words": "Oefen de nieuwste woorden",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Kies hierboven een ander deck of pas je filters aan op de pagina Woorden.",
+    "You're all caught up": "Je bent helemaal bij",
     "Add word": "Woord toevoegen",
     "Copy a word in any app, then press:":
         "Kopieer een woord in een app en druk op:",

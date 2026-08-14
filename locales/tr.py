@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Başlık, içerik veya kelimelere göre metin ara…",
     "Search scope": "Arama kapsamı",
     "Search scope…": "Arama kapsamı…",
+    "Nothing to practice yet": "Henüz çalışılacak bir şey yok",
+    "Add words to your vocabulary and they show up here.":
+        "Sözlüğünüze kelime ekleyin, burada görünecekler.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Kartların zamanı geldiğinde geri dönün ya da şimdi en yeni kelimeleri çalışın.",
+    "Practice newest words": "En yeni kelimeleri çalış",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Yukarıdan başka bir deste seçin veya Kelimeler sayfasındaki filtreleri değiştirin.",
+    "You're all caught up": "Her şeyi tamamladınız",
     "Add word": "Kelime ekle",
     "Copy a word in any app, then press:":
         "Herhangi bir uygulamada bir kelime kopyalayın, sonra basın:",

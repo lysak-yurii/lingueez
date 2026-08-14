@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Пошук текстів за заголовком, вмістом або словами…",
     "Search scope": "Область пошуку",
     "Search scope…": "Область пошуку…",
+    "Nothing to practice yet": "Ще немає що повторювати",
+    "Add words to your vocabulary and they show up here.":
+        "Додайте слова до словника — вони з'являться тут.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Поверніться, коли картки будуть готові до повторення, або потренуйте найновіші слова зараз.",
+    "Practice newest words": "Повторити найновіші слова",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Оберіть іншу колоду вище або змініть фільтри на сторінці «Слова».",
+    "You're all caught up": "Усе повторено",
     "Add word": "Додати слово",
     "Copy a word in any app, then press:":
         "Скопіюйте слово в будь-якій програмі й натисніть:",

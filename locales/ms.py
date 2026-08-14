@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Cari teks mengikut tajuk, kandungan atau perkataan…",
     "Search scope": "Skop carian",
     "Search scope…": "Skop carian…",
+    "Nothing to practice yet": "Belum ada apa-apa untuk dilatih",
+    "Add words to your vocabulary and they show up here.":
+        "Tambah perkataan ke dalam perbendaharaan kata anda dan ia akan muncul di sini.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Kembali apabila ada kad untuk diulang kaji, atau latih perkataan terbaharu sekarang.",
+    "Practice newest words": "Latih perkataan terbaharu",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Pilih dek lain di atas, atau laraskan penapis anda di halaman Perkataan.",
+    "You're all caught up": "Semuanya sudah selesai",
     "Add word": "Tambah perkataan",
     "Copy a word in any app, then press:":
         "Salin perkataan dalam mana-mana apl, kemudian tekan:",

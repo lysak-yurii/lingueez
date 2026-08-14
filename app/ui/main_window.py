@@ -1194,6 +1194,7 @@ class MainWindow(QMainWindow):
         self.flashcards_page.player_stop_requested.connect(self.word_player.stop)
         self.flashcards_page.player_config_requested.connect(
             lambda: self._open_playback_settings(self.flashcards_page.config_btn))
+        self.flashcards_page.add_word_requested.connect(self.open_add_word)
 
         # The quiz reuses the flashcards deck provider verbatim — the same four
         # deck kinds mean the same thing here — and adds a pool provider, since

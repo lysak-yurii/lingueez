@@ -898,6 +898,7 @@ class FlashcardsPage(QWidget):
     player_next_requested = Signal()
     player_stop_requested = Signal()
     player_config_requested = Signal()          # open the playback pacing popup
+    add_word_requested = Signal()               # empty deck -> Add Word dialog
 
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
@@ -1095,8 +1096,7 @@ class FlashcardsPage(QWidget):
         self.preview_scroll.verticalScrollBar().valueChanged.connect(
             self._on_preview_scrolled)
         pk.addWidget(self.preview_scroll, 1)
-        self.preview_empty = QLabel(tr("No words to practice."),
-                                    alignment=Qt.AlignCenter)
+        self.preview_empty = self._build_preview_empty()
         self.preview_empty.setVisible(False)
         pk.addWidget(self.preview_empty, 1)
         self._stack.addWidget(picker)
@@ -1308,6 +1308,66 @@ class FlashcardsPage(QWidget):
                 return kind
         return "due"
 
+    def _build_preview_empty(self):
+        """Stand-in for the preview grid when the chosen deck has no cards, in
+        the shape the Words page uses: glyph, headline, one line of guidance and
+        at most one action."""
+        wrap = QWidget()
+        col = QVBoxLayout(wrap)
+        col.setContentsMargins(24, 24, 24, 24)
+        col.setSpacing(6)
+        col.addStretch(1)
+        self.preview_empty_icon = QLabel(alignment=Qt.AlignCenter)
+        col.addWidget(self.preview_empty_icon)
+        col.addSpacing(10)
+        self.preview_empty_title = QLabel(alignment=Qt.AlignCenter)
+        col.addWidget(self.preview_empty_title)
+        self.preview_empty_sub = QLabel(alignment=Qt.AlignCenter)
+        self.preview_empty_sub.setWordWrap(True)
+        col.addWidget(self.preview_empty_sub)
+        col.addSpacing(16)
+        self._empty_action = None
+        self.preview_empty_btn = QPushButton(objectName="primaryButton")
+        self.preview_empty_btn.setCursor(Qt.PointingHandCursor)
+        self.preview_empty_btn.setStyleSheet("padding: 9px 18px; border-radius: 8px;")
+        self.preview_empty_btn.clicked.connect(self._preview_empty_clicked)
+        col.addWidget(self.preview_empty_btn, 0, Qt.AlignHCenter)
+        col.addStretch(1)
+        return wrap
+
+    def _update_preview_empty(self):
+        """Say why this deck is empty and what to do about it."""
+        # "newest" ignores filters and selection, so it answers "are there any
+        # words at all?" without a second data source.
+        if not self._fetch_deck("newest", 1):
+            glyph, action = "book-open", "add"
+            title = tr("Nothing to practice yet")
+            sub = tr("Add words to your vocabulary and they show up here.")
+            label = tr("Add your first word")
+        elif self._checked_deck_kind() == "due":
+            glyph, action = "check", "newest"
+            title = tr("You're all caught up")   # the picker line already says why
+            sub = tr("Come back when cards are due, or practice the newest words now.")
+            label = tr("Practice newest words")
+        else:
+            glyph, action, label = "cards", None, ""
+            title = tr("No words to practice.")
+            sub = tr("Pick another deck above, or adjust your filters on the Words page.")
+        self._empty_action = action
+        self._empty_glyph = glyph
+        self.preview_empty_icon.setPixmap(
+            icons.pixmap(glyph, self._colors["accent"], 48))
+        self.preview_empty_title.setText(title)
+        self.preview_empty_sub.setText(sub)
+        self.preview_empty_btn.setText(label)
+        self.preview_empty_btn.setVisible(bool(label))
+
+    def _preview_empty_clicked(self):
+        if self._empty_action == "add":
+            self.add_word_requested.emit()
+        elif self._empty_action == "newest":
+            self._deck_chips["newest"].setChecked(True)  # reloads the preview
+
     def _refresh_picker(self):
         self._refresh_picker_chips()
         self._refresh_picker_info()
@@ -1336,8 +1396,10 @@ class FlashcardsPage(QWidget):
             if due:
                 text = tr("{n} cards ready to review").format(
                     n="500+" if due >= 500 else due)
-            else:
+            elif self._fetch_deck("newest", 1):
                 text = tr("No cards due — great job!")
+            else:
+                text = ""   # nothing to congratulate: the library is empty
         elif kind == "selected":
             n = len(self._fetch_deck("selected", 200))
             text = tr("{n} selected words").format(n=n)
@@ -1426,6 +1488,8 @@ class FlashcardsPage(QWidget):
         n = len(records)
         self.preview_count.setText(tr("{n} cards").format(n=n) if n else "")
         self.preview_scroll.setVisible(bool(batch))
+        if not batch:
+            self._update_preview_empty()
         self.preview_empty.setVisible(not batch)
         self._maybe_backfill()
 
@@ -2016,7 +2080,13 @@ class FlashcardsPage(QWidget):
             f"color:{c['text']};background:transparent;"
             f"font-size:{theme.font_pt('body_lg')}pt;font-weight:700;")
         self.preview_count.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
-        self.preview_empty.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
+        if getattr(self, "_empty_glyph", None):
+            self.preview_empty_icon.setPixmap(
+                icons.pixmap(self._empty_glyph, c["accent"], 48))
+        self.preview_empty_title.setStyleSheet(
+            f"color:{c['text']};background:transparent;"
+            f"font-size:{theme.font_pt('body_lg')}pt;font-weight:700;")
+        self.preview_empty_sub.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         self.preview_scroll.setStyleSheet(
             "QScrollArea{background:transparent;}"
             "QScrollArea > QWidget > QWidget{background:transparent;}")

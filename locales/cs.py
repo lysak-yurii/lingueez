@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Hledat texty podle názvu, obsahu nebo slov…",
     "Search scope": "Rozsah hledání",
     "Search scope…": "Rozsah hledání…",
+    "Nothing to practice yet": "Zatím není co procvičovat",
+    "Add words to your vocabulary and they show up here.":
+        "Přidejte slova do slovníku a objeví se tady.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Vraťte se, až budou karty na řadě, nebo si teď procvičte nejnovější slova.",
+    "Practice newest words": "Procvičit nejnovější slova",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Zvolte výše jiný balíček nebo upravte filtry na stránce Slova.",
+    "You're all caught up": "Máte vše hotovo",
     "Add word": "Přidat slovo",
     "Copy a word in any app, then press:":
         "Zkopírujte slovo v jakékoli aplikaci a stiskněte:",

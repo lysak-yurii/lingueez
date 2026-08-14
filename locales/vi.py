@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Tìm kiếm văn bản theo tiêu đề, nội dung hoặc từ…",
     "Search scope": "Phạm vi tìm kiếm",
     "Search scope…": "Phạm vi tìm kiếm…",
+    "Nothing to practice yet": "Chưa có gì để luyện tập",
+    "Add words to your vocabulary and they show up here.":
+        "Thêm từ vào vốn từ của bạn và chúng sẽ xuất hiện ở đây.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Quay lại khi có thẻ đến hạn, hoặc luyện tập các từ mới nhất ngay bây giờ.",
+    "Practice newest words": "Luyện các từ mới nhất",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Chọn bộ thẻ khác ở trên, hoặc điều chỉnh bộ lọc ở trang Từ vựng.",
+    "You're all caught up": "Bạn đã hoàn thành hết",
     "Add word": "Thêm từ",
     "Copy a word in any app, then press:":
         "Sao chép một từ trong ứng dụng bất kỳ, rồi nhấn:",

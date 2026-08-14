@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "Caută texte după titlu, conținut sau cuvinte…",
     "Search scope": "Domeniul căutării",
     "Search scope…": "Domeniul căutării…",
+    "Nothing to practice yet": "Încă nu ai ce exersa",
+    "Add words to your vocabulary and they show up here.":
+        "Adaugă cuvinte în vocabular și vor apărea aici.",
+    "Come back when cards are due, or practice the newest words now.":
+        "Revino când ai cartonașe de recapitulat sau exersează acum cele mai noi cuvinte.",
+    "Practice newest words": "Exersează cele mai noi cuvinte",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "Alege alt pachet mai sus sau ajustează filtrele în pagina Cuvinte.",
+    "You're all caught up": "Ești la zi",
     "Add word": "Adaugă cuvânt",
     "Copy a word in any app, then press:":
         "Copiază un cuvânt în orice aplicație, apoi apasă:",

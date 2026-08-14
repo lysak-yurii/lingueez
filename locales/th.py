@@ -67,6 +67,15 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "ค้นหาข้อความด้วยชื่อเรื่อง, เนื้อหา หรือคำ…",
     "Search scope": "ขอบเขตการค้นหา",
     "Search scope…": "ขอบเขตการค้นหา…",
+    "Nothing to practice yet": "ยังไม่มีอะไรให้ฝึก",
+    "Add words to your vocabulary and they show up here.":
+        "เพิ่มคำเข้าคลังคำศัพท์ แล้วคำจะปรากฏที่นี่",
+    "Come back when cards are due, or practice the newest words now.":
+        "กลับมาเมื่อถึงเวลาทบทวน หรือฝึกคำล่าสุดตอนนี้เลย",
+    "Practice newest words": "ฝึกคำล่าสุด",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "เลือกชุดอื่นด้านบน หรือปรับตัวกรองในหน้าคำศัพท์",
+    "You're all caught up": "ทบทวนครบแล้ว",
     "Add word": "เพิ่มคำศัพท์",
     "Copy a word in any app, then press:":
         "คัดลอกคำจากแอปใดก็ได้ แล้วกด:",

@@ -67,6 +67,14 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "제목, 내용 또는 단어로 텍스트 검색…",
     "Search scope": "검색 범위",
     "Search scope…": "검색 범위…",
+    "Nothing to practice yet": "아직 연습할 것이 없습니다",
+    "Add words to your vocabulary and they show up here.": "단어를 추가하면 여기에 표시됩니다.",
+    "Come back when cards are due, or practice the newest words now.":
+        "복습할 카드가 생기면 다시 오거나, 지금 최신 단어를 연습해 보세요.",
+    "Practice newest words": "최신 단어 연습",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "위에서 다른 덱을 고르거나 단어 페이지에서 필터를 조정하세요.",
+    "You're all caught up": "모두 완료했습니다",
     "Add word": "단어 추가",
     "Copy a word in any app, then press:":
         "어떤 앱에서든 단어를 복사한 뒤 누르세요:",

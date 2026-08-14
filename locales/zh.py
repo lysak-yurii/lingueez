@@ -67,6 +67,13 @@ TRANSLATIONS: dict[str, str] = {
     "Search texts by title, content or words…": "通过标题、内容或单词搜索文本…",
     "Search scope": "搜索范围",
     "Search scope…": "搜索范围…",
+    "Nothing to practice yet": "暂时没有可练习的内容",
+    "Add words to your vocabulary and they show up here.": "把单词添加到词汇表后，它们会显示在这里。",
+    "Come back when cards are due, or practice the newest words now.": "等到卡片到期时再来，或者现在练习最新添加的单词。",
+    "Practice newest words": "练习最新单词",
+    "Pick another deck above, or adjust your filters on the Words page.":
+        "在上方选择其他卡组，或在单词页面调整筛选条件。",
+    "You're all caught up": "全部复习完了",
     "Add word": "添加单词",
     "Copy a word in any app, then press:":
         "在任意应用中复制单词，然后按：",
