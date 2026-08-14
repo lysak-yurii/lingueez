@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 
 from PySide6.QtCore import (QAbstractAnimation, QEasingCurve,
                             QEvent, QPoint, QPropertyAnimation, QSize, Qt,
-                            QTimer, Signal)
+                            QTimer, QVariantAnimation, Signal)
 from PySide6.QtNetwork import QLocalServer
 from PySide6.QtGui import (
     QAction, QDesktopServices, QFont, QFontMetrics, QGuiApplication, QIcon,
@@ -514,6 +514,10 @@ class MainWindow(QMainWindow):
         self._themed_icons.append((target, name, color_key, size))
 
     # ---------------------------------------------------------------- sidebar
+    # Long enough to read as movement, short enough that a deliberate click
+    # never waits on it.
+    NAV_ANIM_MS = 180
+
     def _measure_expanded_width(self):
         """Width the rail needs to fit its longest label, once.
 
@@ -533,7 +537,39 @@ class MainWindow(QMainWindow):
             return theme.SIDEBAR_W_COLLAPSED
         return self._nav_expanded_w or theme.SIDEBAR_W_COLLAPSED
 
-    def _apply_nav_expanded(self):
+    def _set_sidebar_width(self, target, animate):
+        """Resize the rail, gliding to the new width when asked.
+
+        One animation driving setFixedWidth is the whole effect: the labels are
+        already in place before it starts, so widening simply uncovers them and
+        collapsing lets the icons drift back to centre. Nothing is repainted
+        that a plain drag-resize of the window wouldn't repaint."""
+        if self._nav_anim is not None:
+            self._nav_anim.stop()      # DeleteWhenStopped disposes of it
+            self._nav_anim = None
+        current = self.sidebar.width()
+        if not animate or not self.isVisible() or current == target:
+            self.sidebar.setFixedWidth(target)
+            self._on_sidebar_settled()
+            return
+        anim = QVariantAnimation(self)
+        anim.setDuration(self.NAV_ANIM_MS)
+        anim.setEasingCurve(QEasingCurve.OutCubic)
+        anim.setStartValue(current)
+        anim.setEndValue(target)
+        anim.valueChanged.connect(lambda w: self.sidebar.setFixedWidth(int(w)))
+        anim.finished.connect(self._on_sidebar_settled)
+        self._nav_anim = anim
+        anim.start(QVariantAnimation.DeleteWhenStopped)
+
+    def _on_sidebar_settled(self):
+        # Re-measure once the geometry has caught up: the responsive-column
+        # pass caches the window-minus-viewport overhead, which the rail's new
+        # width just changed.
+        self._nav_anim = None
+        QTimer.singleShot(0, self._apply_responsive_columns)
+
+    def _apply_nav_expanded(self, animate=False):
         """Show or hide the nav labels and resize the rail to match."""
         expanded = self._nav_expanded
         # drives the text-align/padding switch in the stylesheet
@@ -552,7 +588,7 @@ class MainWindow(QMainWindow):
             btn.setToolTip("" if expanded and tooltip == label else tooltip)
         # Labels and padding are in place, so the buttons can now be measured.
         self._nav_expanded_w = self._measure_expanded_width() if expanded else 0
-        self.sidebar.setFixedWidth(self._sidebar_width())
+        self._set_sidebar_width(self._sidebar_width(), animate)
         self._set_icon(self.nav_toggle,
                        "chevron-left" if expanded else "chevron-right",
                        "text_dim", 18)
@@ -563,7 +599,7 @@ class MainWindow(QMainWindow):
         self._nav_expanded = not self._nav_expanded
         self.settings["sidebar_expanded"] = str(self._nav_expanded)
         save_settings(self.settings)
-        self._apply_nav_expanded()
+        self._apply_nav_expanded(animate=True)
         self._apply_responsive_columns()  # the rail's width changed the content area
 
     def _refresh_icons(self):
@@ -693,6 +729,7 @@ class MainWindow(QMainWindow):
         self._nav_expanded = get_bool(self.settings, "sidebar_expanded", False)
         self._nav_buttons = []   # (button, label, tooltip); labels show when expanded
         self._nav_expanded_w = 0  # measured on first expand, from the labels
+        self._nav_anim = None     # running width animation, if any
         sidebar.setFixedWidth(self._sidebar_width())
         sb = QVBoxLayout(sidebar)
         sb.setContentsMargins(0, 10, 0, 10)
