@@ -729,10 +729,10 @@ class MainWindow(QMainWindow):
         self.nav_words = nav_button("book-open", tr("Words"),
                                     lambda: self.switch_page(PAGE_WORDS),
                                     checkable=True, checked=True)
-        self.nav_flash = nav_button("layers", tr("Flashcards"),
+        self.nav_flash = nav_button("cards", tr("Flashcards"),
                                     lambda: self.switch_page(PAGE_FLASHCARDS),
                                     checkable=True)
-        self.nav_texts = nav_button("file-text", tr("Texts"),
+        self.nav_texts = nav_button("text-page", tr("Texts"),
                                     lambda: self.switch_page(PAGE_TEXTS),
                                     checkable=True)
         self.nav_stats = nav_button("bar-chart", tr("Statistics"),
@@ -2105,8 +2105,8 @@ class MainWindow(QMainWindow):
         while words-only controls (Add Word, search scope) hide elsewhere and
         search itself is disabled on the dashboard."""
         for btn, page, icon in ((self.nav_words, PAGE_WORDS, "book-open"),
-                                (self.nav_flash, PAGE_FLASHCARDS, "layers"),
-                                (self.nav_texts, PAGE_TEXTS, "file-text"),
+                                (self.nav_flash, PAGE_FLASHCARDS, "cards"),
+                                (self.nav_texts, PAGE_TEXTS, "text-page"),
                                 (self.nav_stats, PAGE_STATS, "bar-chart")):
             btn.setChecked(index == page)
             self._set_icon(btn, icon, "text" if index == page else "text_dim")

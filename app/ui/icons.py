@@ -80,11 +80,18 @@ ICONS = {
     "file-text": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
                  '<polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>'
                  '<line x1="16" y1="17" x2="8" y2="17"/>',
+    # A page of prose rather than a file: no dog-ear, lines running the width
+    # of the page and trailing off like a paragraph.
+    "text-page": '<rect x="4" y="3" width="16" height="18" rx="2.5"/>'
+                 '<line x1="8" y1="8" x2="16" y2="8"/>'
+                 '<line x1="8" y1="12.5" x2="16" y2="12.5"/>'
+                 '<line x1="8" y1="17" x2="13" y2="17"/>',
     "bar-chart": '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/>'
                  '<line x1="6" y1="20" x2="6" y2="16"/>',
-    "layers": '<polygon points="12 2 2 7 12 12 22 7 12 2"/>'
-              '<polyline points="2 17 12 22 22 17"/>'
-              '<polyline points="2 12 12 17 22 12"/>',
+    # A deck seen edge-on — the front card with the rest of the pile receding
+    # behind it. Offset rectangles would read as the "copy" glyph instead.
+    "cards": '<rect x="9" y="3" width="12" height="18" rx="2.5"/>'
+             '<path d="M5.5 6v12"/><path d="M2 8.5v7"/>',
     "archive": '<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/>'
                '<line x1="10" y1="12" x2="14" y2="12"/>',
     "sliders": '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>'
