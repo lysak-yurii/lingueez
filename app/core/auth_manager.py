@@ -582,3 +582,20 @@ def get_auth_manager() -> AuthManager:
         if _shared_auth is None:
             _shared_auth = AuthManager(get_supabase())
         return _shared_auth
+
+
+def cloud_backend_active() -> bool:
+    """Whether writes should go to a cloud backend at all: a signed-in account
+    (built-in mode) OR a configured personal own-Supabase server (anonymous custom
+    mode). An active offline profile forces it off regardless.
+
+    The single source of truth for every ``DatabaseAdapter(use_cloud=...)``
+    decision — checking only ``is_logged_in()`` silently demotes personal-server
+    users to local-only writes, so their edits sit in the sync queue until the
+    next startup sync instead of being written through immediately.
+    """
+    from app.core.supabase_client import is_custom_server
+    auth = get_auth_manager()
+    if auth.is_local_active():
+        return False
+    return auth.is_logged_in() or is_custom_server()

@@ -337,9 +337,9 @@ def _split_title_text(content):
 # ------------------------------------------------------------- db helpers
 
 def _make_db_adapter():
-    # Cloud sync follows the login state (signed in ⇒ sync on).
-    from app.core.auth_manager import get_auth_manager
-    return DatabaseAdapter(use_cloud=get_auth_manager().is_logged_in())
+    # Cloud writes follow the backend identity (account *or* personal server).
+    from app.core.auth_manager import cloud_backend_active
+    return DatabaseAdapter(use_cloud=cloud_backend_active())
 
 
 def update_definition_in_db(word, language1, language2, word_field, word_id):

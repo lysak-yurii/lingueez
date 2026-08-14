@@ -59,9 +59,10 @@ class AddWordDialog(FramelessDialog):
         self._suppress_lang_signal = False
 
         settings = load_settings()
-        # Cloud sync follows the login state (signed in ⇒ sync on).
-        from app.core.auth_manager import get_auth_manager
-        self.db_adapter = DatabaseAdapter(use_cloud=get_auth_manager().is_logged_in())
+        # Cloud writes follow the backend identity (account *or* personal server),
+        # so a new word is pushed as it's saved instead of queued for later.
+        from app.core.auth_manager import cloud_backend_active
+        self.db_adapter = DatabaseAdapter(use_cloud=cloud_backend_active())
         colors = self.colors
 
         languages = sorted(TRANSLATION_CODES)

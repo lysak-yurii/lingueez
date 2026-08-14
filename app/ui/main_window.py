@@ -54,7 +54,7 @@ from app.core.database_adapter import DatabaseAdapter
 from app.core.errors import DuplicateWordError
 from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager, SyncError
-from app.core.auth_manager import get_auth_manager
+from app.core.auth_manager import cloud_backend_active, get_auth_manager
 from app.core.supabase_client import is_custom_server
 from app.core.data_management import open_words_from_excel
 from app.ui import icons, theme
@@ -329,7 +329,7 @@ class MainWindow(QMainWindow):
         # then just confirms it — without this, local words flash up before the
         # restore repoints us to the account file.
         self._preselect_active_db()
-        self.db_adapter = DatabaseAdapter(use_cloud=self.auth.is_logged_in() or is_custom_server())
+        self.db_adapter = DatabaseAdapter(use_cloud=cloud_backend_active())
         self.sync_manager = SyncManager()
 
         self.word_filter = WordFilter()
@@ -458,9 +458,7 @@ class MainWindow(QMainWindow):
         mode) OR a configured personal own-Supabase server (anonymous custom mode) ⇒
         sync on. An active offline profile forces it off regardless. Read-only — there
         is no separate enable/disable toggle."""
-        if self.auth.is_local_active():
-            return False
-        return self.auth.is_logged_in() or is_custom_server()
+        return cloud_backend_active()
 
     # ------------------------------------------------------------------ UI
 
