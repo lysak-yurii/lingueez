@@ -744,6 +744,10 @@ class MainWindow(QMainWindow):
         self.menu_btn.clicked.connect(lambda: self.app_menu.exec(
             self.menu_btn.mapToGlobal(QPoint(self.menu_btn.width(), 0))))
         sb.addWidget(self.menu_btn)
+        # Named alongside the destinations in the expanded rail — it would
+        # otherwise be the one bare icon there. It stays out of the checkable
+        # group: it opens a menu, it never becomes the current page.
+        self._nav_buttons.append((self.menu_btn, tr("Menu"), tr("Menu")))
         sb.addSpacing(12)
 
         def nav_button(icon_name, label, slot, checkable=False, checked=False,
