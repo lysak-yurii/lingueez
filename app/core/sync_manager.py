@@ -2162,6 +2162,27 @@ class SyncManager:
         
         logging.info(f"Synced {synced_count} deletions, {failed_count} failed")
     
+    def _live_row(self, table_name: str, record_id) -> Optional[Dict[str, Any]]:
+        """The current local row behind a queued operation, or None if it's gone.
+
+        Read straight from SQLite rather than through db_adapter so this stays a
+        plain local lookup with no cloud logic behind it.
+        """
+        if table_name not in ('words', 'texts'):
+            return None
+        try:
+            conn = sqlite3.connect(self.local_db)
+            conn.row_factory = sqlite3.Row
+            try:
+                row = conn.execute(
+                    f"SELECT * FROM {table_name} WHERE ID = ?", (record_id,)).fetchone()
+            finally:
+                conn.close()
+            return dict(row) if row else None
+        except sqlite3.Error as exc:
+            logging.warning(f"Could not re-read {table_name} {record_id}: {exc}")
+            return None
+
     def _sync_operation_queue(self, operations: List[Dict[str, Any]]):
         """Sync pending INSERT/UPDATE operations to cloud (upsert on the shared id)."""
         synced_count = 0
@@ -2186,20 +2207,40 @@ class SyncManager:
                     # Durable permanent delete of a soft-deleted cloud row.
                     success = (self.supabase.hard_delete_word(record_id) if table_name == 'words'
                                else self.supabase.hard_delete_text(record_id))
-                elif table_name == 'words' and op_data:
-                    # op_data carries the row's UUID id, so a single upsert handles
-                    # both INSERT and UPDATE. On a content collision the cloud keeps
-                    # a different id — converge the local row to it.
-                    op_data.setdefault('ID', record_id)
-                    result = self.supabase.upsert_word(op_data)
-                    if result:
+                elif table_name in ('words', 'texts'):
+                    # Push the row as it stands *now*, falling back to the queued
+                    # snapshot only if it has since left the local table. Replaying
+                    # the snapshot would undo any edit made after queueing: an add
+                    # made offline, then edited once back online, would have its
+                    # write-through overwritten by the stale INSERT on the next sync.
+                    # A single upsert covers both INSERT and UPDATE, since the row's
+                    # UUID id is the same on both sides.
+                    payload = self._live_row(table_name, record_id) or op_data
+                    if not payload:
+                        # Nothing left to push (row hard-deleted out from under the
+                        # queue). Drop the operation instead of retrying it forever.
                         success = True
-                        result_id = result.get('ID') or result.get('id')
-                        if result_id and result_id != record_id:
-                            self.db_adapter._rekey_word_sqlite(record_id, result_id)
-                elif table_name == 'texts' and op_data:
-                    op_data.setdefault('ID', record_id)
-                    success = self.supabase.upsert_text(op_data) is not None
+                        logging.info(f"Dropping queued {op_type} for missing {table_name} record {record_id}")
+                    elif table_name == 'words':
+                        payload.setdefault('ID', record_id)
+                        result = self.supabase.upsert_word(payload)
+                        if result:
+                            success = True
+                            # On a content collision the cloud keeps a different id —
+                            # converge the local row to it.
+                            result_id = result.get('ID') or result.get('id')
+                            if result_id and result_id != record_id:
+                                self.db_adapter._rekey_word_sqlite(record_id, result_id)
+                    else:
+                        payload.setdefault('ID', record_id)
+                        success = self.supabase.upsert_text(payload) is not None
+                elif table_name == 'word_tags':
+                    # Link rows are reconciled wholesale by _sync_tags_incremental
+                    # (a full set difference, both ways, every sync), so this entry is
+                    # only a hint that one is outstanding. Clear it either way: nothing
+                    # here can push it, so leaving it pending would strand it in the
+                    # queue — and in the 'Pending' badge — permanently.
+                    success = True
 
                 if success:
                     self.db_adapter._mark_operation_synced(queue_id)
@@ -2268,7 +2309,7 @@ class SyncManager:
                 cloud_edited = word.get('edited_at') or word.get('created_at')
                 local_ops = operation_ids[key]
                 for local_op in local_ops:
-                    local_data = local_op.get('operation_data', {})
+                    local_data = local_op.get('operation_data') or {}
                     local_edited = local_data.get('edited_at') or local_data.get('created_at')
                     if cloud_edited and local_edited:
                         conflicts.append({
@@ -2288,7 +2329,7 @@ class SyncManager:
                 cloud_edited = text.get('edited_at') or text.get('created_at')
                 local_ops = operation_ids[key]
                 for local_op in local_ops:
-                    local_data = local_op.get('operation_data', {})
+                    local_data = local_op.get('operation_data') or {}
                     local_edited = local_data.get('edited_at') or local_data.get('created_at')
                     if cloud_edited and local_edited:
                         conflicts.append({
