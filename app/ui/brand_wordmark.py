@@ -99,6 +99,13 @@ class BrandWordmark(QWidget):
         # a little slack on width covers the transient tracking spread
         return QSize(int(self._text_w + 2), int(self._text_h + 4))
 
+    def minimumSizeHint(self):  # noqa: N802
+        # A bare QWidget reports no minimum, so the title bar's layout is free to
+        # compress this to a few pixels when the window is short — the wordmark
+        # then paints from its own ascent and is clipped to a sliver. There is no
+        # smaller size that shows the text, so the hint is the minimum.
+        return self.sizeHint()
+
     # --- animatable properties ------------------------------------------
     def _g_spacing(self):
         return self._spacing
