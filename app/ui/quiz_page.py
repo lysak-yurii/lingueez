@@ -43,7 +43,7 @@ from collections import Counter
 from datetime import datetime
 
 from PySide6.QtCore import (
-    QEasingCurve, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal,
+    QEasingCurve, QEvent, QRectF, QSize, Qt, QTimer, QVariantAnimation, Signal,
 )
 from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
@@ -82,6 +82,15 @@ AUTO_ADVANCE_STALL_MS = 10000
 COUNT_ANIM_MS = 400
 RING_ANIM_MS = 700
 OPTION_ANIM_MS = 200
+OPTION_HOVER_MS = 110
+#: Breathing room under the question block, inside the scrolled area.
+SESSION_PAD = 6
+
+
+def _towards(color, other, t):
+    """Blend one colour toward another — for states painted by hand."""
+    return QColor(*(round(a + (b - a) * t) for a, b in
+                    zip(color.getRgb(), other.getRgb())))
 
 
 def _verdict_color(verdict, colors):
@@ -239,6 +248,11 @@ class _OptionRow(QWidget):
         self._anim.setDuration(OPTION_ANIM_MS)
         self._anim.setEasingCurve(QEasingCurve.OutCubic)
         self._anim.valueChanged.connect(self._set_t)
+        self._hover = 0.0
+        self._hover_anim = QVariantAnimation(self)
+        self._hover_anim.setDuration(OPTION_HOVER_MS)
+        self._hover_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._hover_anim.valueChanged.connect(self._set_hover)
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumHeight(48)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -273,12 +287,35 @@ class _OptionRow(QWidget):
             self._t = target
         self.setCursor(Qt.ArrowCursor if state != "idle"
                        else Qt.PointingHandCursor)
+        if state != "idle":
+            self._fade_hover(0.0)
         self._apply_styles()
         self.update()
 
     def _set_t(self, value):
         self._t = float(value)
         self.update()
+
+    def _set_hover(self, value):
+        self._hover = float(value)
+        self.update()
+
+    def _fade_hover(self, target):
+        self._hover_anim.stop()
+        if target == self._hover:
+            return
+        self._hover_anim.setStartValue(float(self._hover))
+        self._hover_anim.setEndValue(float(target))
+        self._hover_anim.start()
+
+    def enterEvent(self, event):  # noqa: N802
+        if self._state == "idle":
+            self._fade_hover(1.0)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):  # noqa: N802
+        self._fade_hover(0.0)
+        super().leaveEvent(event)
 
     def _accent(self):
         if self._state == "correct":
@@ -332,12 +369,19 @@ class _OptionRow(QWidget):
         p.setBrush(base)
         p.setPen(Qt.NoPen)
         p.drawRoundedRect(rect, 12, 12)
+        if self._hover > 0:
+            wash = QColor(c["accent"])
+            wash.setAlpha(round(20 * self._hover))
+            p.setBrush(wash)
+            p.drawRoundedRect(rect, 12, 12)
         if self._t > 0:
             p.setBrush(fill)
             p.drawRoundedRect(rect, 12, 12)
         edge = QColor(accent if self._t > 0 else QColor(c["border"]))
         if self._state == "dimmed":
             edge.setAlpha(90)
+        elif self._hover > 0:
+            edge = _towards(edge, QColor(c["accent"]), self._hover * 0.7)
         p.setBrush(Qt.NoBrush)
         p.setPen(QPen(edge, 2 if self._t > 0 else 1))
         p.drawRoundedRect(rect, 12, 12)
@@ -564,6 +608,7 @@ class QuizPage(QWidget):
         self._count_anim.finished.connect(
             lambda: self.count_value.setText(str(self._preview_total)))
 
+        self._recentring = False
         self.setFocusPolicy(Qt.StrongFocus)
         self._build_ui()
         self._apply_styles()
@@ -808,12 +853,19 @@ class QuizPage(QWidget):
         body = QWidget()
         body.setAutoFillBackground(False)
         col_row = QHBoxLayout(body)
-        col_row.setContentsMargins(0, 18, 0, 6)
+        col_row.setContentsMargins(0, 18, 0, SESSION_PAD)
         col_row.addStretch(1)
         column = QVBoxLayout()
         column.setSpacing(10)
         col_row.addLayout(column, 6)
         col_row.addStretch(1)
+        self._session_body = body
+        # A measured spacer, not a stretch: a stretch would recentre the whole
+        # column the moment the feedback block appears and yank the card upward
+        # mid-answer. _recentre_question sizes this one instead.
+        self._question_spacer = QWidget()
+        self._question_spacer.setFixedHeight(0)
+        column.addWidget(self._question_spacer)
 
         self.prompt_card = _PromptCard(self._colors)
         self.prompt_card.speak_clicked.connect(self._speak_prompt)
@@ -880,12 +932,18 @@ class QuizPage(QWidget):
         column.addStretch(1)
 
         self.session_scroll.setWidget(body)
+        self.session_scroll.viewport().installEventFilter(self)
+        body.installEventFilter(self)
         sv.addWidget(self.session_scroll, 1)
 
+        # Stacked, not shown and hidden: a stacked layout is always as tall as
+        # its tallest page, so the question area above keeps one height whether
+        # the footer is empty, counting down, or offering Next.
         self.footer = QWidget()
-        footer = QVBoxLayout(self.footer)
-        footer.setContentsMargins(0, 0, 0, 0)
-        footer.setSpacing(4)
+        self.footer_stack = QStackedLayout(self.footer)
+        self.footer_stack.setContentsMargins(0, 0, 0, 0)
+        self.footer_blank = QWidget()
+        self.footer_stack.addWidget(self.footer_blank)
         self.drain_host = QWidget()
         drain = QVBoxLayout(self.drain_host)
         drain.setContentsMargins(0, 6, 0, 0)
@@ -896,16 +954,59 @@ class QuizPage(QWidget):
                                     alignment=Qt.AlignCenter)
         drain.addWidget(self.drain_bar)
         drain.addWidget(self.drain_caption)
-        self.drain_host.setVisible(False)
-        footer.addWidget(self.drain_host)
+        self.footer_stack.addWidget(self.drain_host)
         self.next_btn = QPushButton(tr("Next"), objectName="primaryButton")
         self.next_btn.setCursor(Qt.PointingHandCursor)
         self.next_btn.setMinimumHeight(48)
         self.next_btn.clicked.connect(self._next_question)
-        self.next_btn.setVisible(False)
-        footer.addWidget(self.next_btn)
+        self.footer_stack.addWidget(self.next_btn)
+        self.footer_stack.setCurrentWidget(self.footer_blank)
         sv.addWidget(self.footer)
         return session
+
+    def _recentre_question(self):
+        """Sit the prompt and answers in the middle of the question area.
+
+        Measured from the laid-out geometry instead of being centred by
+        stretches, so the block keeps its place when the feedback grows below
+        it. Only feedback too tall to fit moves it, and only as far as it must.
+        """
+        body = getattr(self, "_session_body", None)
+        if body is None or not body.isVisible() or self._recentring:
+            return
+        # Resizing the spacer can bring a scroll bar in or out, which resizes
+        # the viewport, which lands back here.
+        self._recentring = True
+        try:
+            self._measure_question(body)
+        finally:
+            self._recentring = False
+
+    def _measure_question(self, body):
+        body.layout().activate()
+        viewport = self.session_scroll.viewport().height()
+        host = (self.options_host if self.options_host.isVisibleTo(body)
+                else self.typing_host)
+        top = self.prompt_card.y()
+        lead = top - self._question_spacer.height()  # margin above the spacer
+        group = host.y() + host.height() - top
+        want = (viewport - group) // 2 - lead
+        if self.feedback.isVisibleTo(body):
+            tail = self.feedback.y() + self.feedback.height() - top - group
+            want = min(want, viewport - lead - group - tail - SESSION_PAD)
+        self._question_spacer.setFixedHeight(max(0, want))
+
+    def eventFilter(self, obj, event):  # noqa: N802
+        # Recentre when the question area settles, not when the page resizes:
+        # the block's own height is only final a layout pass after its options
+        # are swapped in, and the viewport's only after the animated page swap.
+        if obj is self.session_scroll.viewport():
+            if event.type() == QEvent.Resize:
+                self._recentre_question()
+        elif obj is self._session_body:
+            if event.type() == QEvent.LayoutRequest:
+                self._recentre_question()
+        return super().eventFilter(obj, event)
 
     def _build_complete(self):
         complete = QWidget()
@@ -1012,6 +1113,7 @@ class QuizPage(QWidget):
         for row in self._option_rows:
             row.refresh_theme(colors)
         self._apply_styles()
+        self._recentre_question()
 
     def _apply_styles(self):
         c = self._colors
@@ -1329,8 +1431,7 @@ class QuizPage(QWidget):
         self._advance_timer.stop()
         self._stall_timer.stop()
         self.drain_bar.stop()
-        self.drain_host.setVisible(False)
-        self.next_btn.setVisible(False)
+        self.footer_stack.setCurrentWidget(self.footer_blank)
         self.feedback.setVisible(False)
         self.promotion_label.setVisible(False)
         self.definition_label.setVisible(False)
@@ -1360,6 +1461,7 @@ class QuizPage(QWidget):
             fade_swap(self.prompt_card)
         self.prompt_card.set_question(question)
         self._refresh_session_header()
+        self._recentre_question()
         self.session_scroll.verticalScrollBar().setValue(0)
         # Choices are answered with the number keys, which the page handles
         # itself; typing needs the field to have focus for the very first key.
@@ -1415,7 +1517,7 @@ class QuizPage(QWidget):
         self._refresh_session_header()
         advancing = quiz.is_correct(verdict) and self.advance_btn.isChecked()
         if advancing:
-            self.drain_host.setVisible(True)
+            self.footer_stack.setCurrentWidget(self.drain_host)
             # Held full, not draining: the countdown to the next question only
             # starts once the answer has actually been heard.
             self.drain_bar.hold()
@@ -1425,7 +1527,7 @@ class QuizPage(QWidget):
             self.next_btn.setText(tr("See results")
                                   if self._index >= len(self._questions) - 1
                                   else tr("Next"))
-            self.next_btn.setVisible(True)
+            self.footer_stack.setCurrentWidget(self.next_btn)
         # Kicked off last, and given the countdown as its completion callback:
         # a fixed timer running alongside the audio cut long answers off
         # mid-word, because how long a word takes to say is not a constant.
@@ -1524,6 +1626,7 @@ class QuizPage(QWidget):
         self.definition_label.setText(definition)
         self.definition_label.setVisible(bool(definition))
         self.feedback.setVisible(True)
+        self._recentre_question()
 
     def _definition_for(self, record):
         wid = record.get("ID")
