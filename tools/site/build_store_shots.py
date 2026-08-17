@@ -389,7 +389,7 @@ def teaser(theme: str) -> str:
 # give. Letterboxing with black bars looks like a mistake; cropping loses the
 # chrome that says "this is a real Windows app". Instead the window floats,
 # shadowed, on the teaser's own light backdrop — the aspect mismatch becomes
-# margin, and the six frames read as one set because the canvas never moves.
+# margin, and the frames read as one set because the canvas never moves.
 # These do not use 16:9, and that is the point. 16:9 is what the Store
 # *recommends*; what it requires is >=1366x768 PNG. Forcing a 1.4264 window into
 # a 1.7778 frame costs ~13% dead canvas down each side that no amount of
@@ -418,11 +418,15 @@ SHADOW_DY, SHADOW_BLUR = 8, 9
 PLAIN_BG = "#d7e1f0"
 
 SHOTS = [
-    ("02-words",      "shots/words",      "Your whole vocabulary in one searchable table."),
-    ("03-review",     "shots/review",     "Spaced-repetition review that schedules itself."),
-    ("04-flashcards", "shots/flashcards", "Build decks from the words you actually saved."),
-    ("05-stats",      "shots/stats",      "See what is sticking and what needs work."),
-    ("06-texts",      "shots/texts",      "Read real texts and save words as you go."),
+    ("02-words",      "shots/words",        "Your whole vocabulary in one searchable table."),
+    ("03-review",     "shots/review",       "Spaced-repetition review that schedules itself."),
+    ("04-flashcards", "shots/flashcards",   "Build decks from the words you actually saved."),
+    ("05-quiz",       "shots/quiz-choices", "Quiz yourself on your own words — multiple choice, "
+                                            "in either direction."),
+    ("06-quiz-typed", "shots/quiz-typing",  "Or type the answer and have it checked, with the "
+                                            "definition and an example when you are right."),
+    ("07-stats",      "shots/stats",        "See what is sticking and what needs work."),
+    ("08-texts",      "shots/texts",        "Read real texts and save words as you go."),
 ]
 
 CAPTIONS = {

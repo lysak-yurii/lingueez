@@ -30,16 +30,24 @@
 
   <screenshots>
     <screenshot type="default">
-      <caption>Dashboard</caption>
-      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/dashboard.png</image>
+      <caption>Your vocabulary</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/docs/assets/shots/words-light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Quiz</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/docs/assets/shots/quiz-choices-light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Flashcard review</caption>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/docs/assets/shots/review-light.png</image>
     </screenshot>
     <screenshot>
       <caption>Learning statistics</caption>
-      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/statistics.png</image>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/docs/assets/shots/stats-light.png</image>
     </screenshot>
     <screenshot>
       <caption>Reading texts</caption>
-      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/screenshots/texts.png</image>
+      <image>https://raw.githubusercontent.com/lysak-yurii/lingueez/main/docs/assets/shots/texts-light.png</image>
     </screenshot>
   </screenshots>
 

@@ -8,5 +8,7 @@ why no copy is baked into the artwork. 200 characters max.
 - **02-words.png** — Your whole vocabulary in one searchable table.
 - **03-review.png** — Spaced-repetition review that schedules itself.
 - **04-flashcards.png** — Build decks from the words you actually saved.
-- **05-stats.png** — See what is sticking and what needs work.
-- **06-texts.png** — Read real texts and save words as you go.
+- **05-quiz.png** — Quiz yourself on your own words — multiple choice, in either direction.
+- **06-quiz-typed.png** — Or type the answer and have it checked, with the definition and an example when you are right.
+- **07-stats.png** — See what is sticking and what needs work.
+- **08-texts.png** — Read real texts and save words as you go.

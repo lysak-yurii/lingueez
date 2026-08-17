@@ -12,10 +12,25 @@ A desktop app for building, studying, and remembering vocabulary across language
 
 Add words and they translate automatically; listen to them on repeat and watch each
 one climb from *New* to *Mastered* as you do; review them with spaced-repetition
-flashcards; read whole texts with side-by-side translations and synced audio; and
-keep everything in sync across devices.
+flashcards or quiz yourself on them; read whole texts with side-by-side
+translations and synced audio; and keep everything in sync across devices.
 
-![Lingueez vocabulary view](screenshots/dashboard.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/shots/words-dark.png">
+  <img alt="Lingueez vocabulary view" src="docs/assets/shots/words-light.png">
+</picture>
+
+## Get Lingueez
+
+| | |
+|---|---|
+| **Windows** | [Microsoft Store](https://apps.microsoft.com/detail/9pkdjkgvzt6v) (`winget install 9PKDJKGVZT6V`), or the installer from [Releases](https://github.com/lysak-yurii/lingueez/releases/latest) |
+| **Linux** | AppImage or Flatpak bundle from [Releases](https://github.com/lysak-yurii/lingueez/releases/latest) |
+| **Android** | [Google Play](https://play.google.com/store/apps/details?id=app.lingueez.mobile) — the companion app, syncing the same vocabulary |
+| **Browser** | [web.lingueez.app](https://web.lingueez.app/) |
+| **E-reader** | [KOReader plugin](https://lingueez.app/koreader/) — long-press a word while you read and it lands in your vocabulary |
+
+All of it is free, and nothing needs an account: sign in only if you want sync.
 
 ## Features
 
@@ -25,7 +40,11 @@ keep everything in sync across devices.
   as you listen, with configurable listen thresholds.
 - **Flashcards** — spaced-repetition review (SM-2): build a deck from due cards, a
   filter, or selected words; grade yourself *Hard / Good / Easy* with scheduled-interval
-  previews — or play the deck as audio and let the cards flip in sync with the voice.
+  previews — or play the deck as audio and let the cards flip in sync with the voice
+  ([screenshot](docs/assets/shots/flashcards-light.png)).
+- **Quiz** — test yourself on your own words: multiple choice or a typed answer,
+  in either direction, with the definition and an example when you get it right
+  ([screenshot](docs/assets/shots/quiz-choices-light.png)).
 - **Search & filters** — live search across words, translations, and tags; filter by
   language, status, tag, or favorites.
 - **Translation** — Google Translate, with optional DeepL integration.
@@ -36,9 +55,9 @@ keep everything in sync across devices.
   export, and a floating mini-player when the window is minimized.
 - **Texts reader** — import from files, the web, Wikipedia, or RSS; read with a
   side-by-side translation and word highlighting synced to playback
-  ([screenshot](screenshots/texts.png)).
+  ([screenshot](docs/assets/shots/texts-light.png)).
 - **Statistics** — a dashboard with status distribution, streaks, definition
-  coverage, and progress over time ([screenshot](screenshots/statistics.png)).
+  coverage, and progress over time ([screenshot](docs/assets/shots/stats-light.png)).
 - **Import & export** — Excel import with duplicate detection; export to PDF, Excel,
   CSV, **Anki**-friendly TXT and MP3.
 - **Sync & backups** — two-way cloud sync, a bin to restore deleted items, and
