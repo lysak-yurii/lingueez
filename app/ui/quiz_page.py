@@ -61,7 +61,8 @@ from app.ui import icons, theme
 from app.ui.animations import AnimatedStackedWidget, fade_swap
 from app.ui.charts import FlowLayout
 from app.ui.flashcards_page import (
-    PICKER_LOGO_SCALE, _DeckLogo, _Panel, _SlimBar, _snippet, _soft,
+    HOVER_EDGE_MIX, HOVER_MS, HOVER_WASH_ALPHA, PICKER_LOGO_SCALE, _DeckLogo,
+    _Panel, _SlimBar, _mix, _snippet, _soft,
 )
 from app.ui.toast import show_toast
 from app.ui.widgets import ElidedLabel
@@ -82,15 +83,8 @@ AUTO_ADVANCE_STALL_MS = 10000
 COUNT_ANIM_MS = 400
 RING_ANIM_MS = 700
 OPTION_ANIM_MS = 200
-OPTION_HOVER_MS = 110
 #: Breathing room under the question block, inside the scrolled area.
 SESSION_PAD = 6
-
-
-def _towards(color, other, t):
-    """Blend one colour toward another — for states painted by hand."""
-    return QColor(*(round(a + (b - a) * t) for a, b in
-                    zip(color.getRgb(), other.getRgb())))
 
 
 def _verdict_color(verdict, colors):
@@ -250,7 +244,7 @@ class _OptionRow(QWidget):
         self._anim.valueChanged.connect(self._set_t)
         self._hover = 0.0
         self._hover_anim = QVariantAnimation(self)
-        self._hover_anim.setDuration(OPTION_HOVER_MS)
+        self._hover_anim.setDuration(HOVER_MS)
         self._hover_anim.setEasingCurve(QEasingCurve.OutCubic)
         self._hover_anim.valueChanged.connect(self._set_hover)
         self.setCursor(Qt.PointingHandCursor)
@@ -371,7 +365,7 @@ class _OptionRow(QWidget):
         p.drawRoundedRect(rect, 12, 12)
         if self._hover > 0:
             wash = QColor(c["accent"])
-            wash.setAlpha(round(20 * self._hover))
+            wash.setAlpha(round(HOVER_WASH_ALPHA * self._hover))
             p.setBrush(wash)
             p.drawRoundedRect(rect, 12, 12)
         if self._t > 0:
@@ -381,7 +375,7 @@ class _OptionRow(QWidget):
         if self._state == "dimmed":
             edge.setAlpha(90)
         elif self._hover > 0:
-            edge = _towards(edge, QColor(c["accent"]), self._hover * 0.7)
+            edge = _mix(edge, c["accent"], HOVER_EDGE_MIX * self._hover)
         p.setBrush(Qt.NoBrush)
         p.setPen(QPen(edge, 2 if self._t > 0 else 1))
         p.drawRoundedRect(rect, 12, 12)

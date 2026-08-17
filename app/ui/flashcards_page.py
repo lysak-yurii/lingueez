@@ -76,6 +76,11 @@ DECK_KINDS = ("due", "filtered", "newest", "selected")
 PICKER_LOGO_SCALE = 0.62
 FLIP_MS = 220
 FLIP_MS_AUTOPLAY = 160
+#: The hover wash shared with the Quiz page's answers, so a tile under the
+#: cursor and an answer under the cursor read as the same gesture.
+HOVER_MS = 110
+HOVER_WASH_ALPHA = 20
+HOVER_EDGE_MIX = 0.7
 
 
 def _soft(color_hex, alpha=36):
@@ -507,7 +512,11 @@ class _PreviewCard(QWidget):
         self._record = record
         self._colors = colors
         self._due_key = due_key
-        self._hover = False
+        self._hover = 0.0
+        self._hover_anim = QVariantAnimation(self)
+        self._hover_anim.setDuration(HOVER_MS)
+        self._hover_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._hover_anim.valueChanged.connect(self._set_hover)
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(tr("Definition — {word}").format(
             word=str(record.get("Word1") or "")))
@@ -577,14 +586,24 @@ class _PreviewCard(QWidget):
             self._pref_h = pref
             self.updateGeometry()
 
-    def enterEvent(self, event):  # noqa: N802
-        self._hover = True
+    def _set_hover(self, value):
+        self._hover = float(value)
         self.update()
+
+    def _fade_hover(self, target):
+        self._hover_anim.stop()
+        if target == self._hover:
+            return
+        self._hover_anim.setStartValue(float(self._hover))
+        self._hover_anim.setEndValue(float(target))
+        self._hover_anim.start()
+
+    def enterEvent(self, event):  # noqa: N802
+        self._fade_hover(1.0)
         super().enterEvent(event)
 
     def leaveEvent(self, event):  # noqa: N802
-        self._hover = False
-        self.update()
+        self._fade_hover(0.0)
         super().leaveEvent(event)
 
     def mouseReleaseEvent(self, event):  # noqa: N802
@@ -630,13 +649,21 @@ class _PreviewCard(QWidget):
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 14))
 
     def paintEvent(self, _event):  # noqa: N802
+        c = self._colors
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
-        p.setBrush(QColor(self._colors["surface"]))
-        border = (self._colors["accent"] if self._hover
-                  else self._colors["border"])
-        p.setPen(QPen(QColor(border), 1))
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(c["surface"]))
+        p.drawRoundedRect(rect, 12, 12)
+        if self._hover > 0:
+            wash = QColor(c["accent"])
+            wash.setAlpha(round(HOVER_WASH_ALPHA * self._hover))
+            p.setBrush(wash)
+            p.drawRoundedRect(rect, 12, 12)
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(_mix(c["border"], c["accent"],
+                           HOVER_EDGE_MIX * self._hover), 1))
         p.drawRoundedRect(rect, 12, 12)
         p.end()
 
