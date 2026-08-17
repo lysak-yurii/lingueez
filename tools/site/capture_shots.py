@@ -112,6 +112,18 @@ PAGES = ("words", "flashcards", "texts", "stats",
 REVIEW_GRADES = ("good", "easy", "hard", "good", "good",
                  "good", "easy", "good", "good", "good")
 
+# The card the review shot stops on, matched against either side of the record.
+# The deck is drawn by due date, so whatever lands in this slot is arbitrary —
+# and a word whose definition runs to a second line plus a bullet example fills
+# the card to its edges. This one is a single line.
+REVIEW_CARD = "el consejo"
+
+# The word the vocabulary shot reads aloud, matched against the Word column.
+# The player bar sizes itself to the word it is on, and the filter chips are the
+# first thing the toolbar drops to the shelf under the table when the top row
+# runs out of room — a long word is enough to push them down there.
+PLAY_WORD = "neighborhood"
+
 # How many questions each quiz shot answers before the one it photographs. Two
 # is enough to part-fill the trail and put "2 correct" in the header, and cheap
 # enough that review still opens on a nearly full deck.
@@ -475,20 +487,38 @@ def reset_library() -> tuple:
     return words, texts + 1
 
 
-def start_reading(window, app, rows=(1, 2, 3)) -> None:
+def row_of(model, word: str) -> int:
+    """The row showing *word*, or -1. Rows are read through the model rather
+    than the DataFrame, so this follows whatever sort the table is under."""
+    from app.ui.word_model import COL_WORD1, COL_WORD2
+
+    for row in range(model.rowCount()):
+        for col in (COL_WORD1, COL_WORD2):
+            if str(model.index(row, col).data() or "") == word:
+                return row
+    return -1
+
+
+def start_reading(window, app, span_rows: int = 3) -> None:
     """Select a few words and start reading them aloud.
 
     This is what the hand-made original showed, and it is the vocabulary page
     at its most characteristic: the selection's action bar on one side, the
-    player on the other, and the queue highlighted in the table. Rows are
-    0-indexed, so (1, 2, 3) is the 2nd to 4th word.
+    player on the other, and the queue highlighted in the table. The selection
+    starts on PLAY_WORD, which is therefore the word the player bar is on.
     """
     from PySide6.QtCore import QItemSelection, QItemSelectionModel
 
     table = window.table
     model = table.model()
-    if model is None or model.rowCount() <= max(rows):
+    if model is None or model.rowCount() < span_rows:
         return
+    first = row_of(model, PLAY_WORD)
+    if first < 0:
+        print(f"    [words] {PLAY_WORD!r} is not in the library", flush=True)
+        first = 0
+    first = min(first, model.rowCount() - span_rows)
+    rows = (first, first + span_rows - 1)
     span = QItemSelection(model.index(min(rows), 0),
                           model.index(max(rows), model.columnCount() - 1))
     table.selectionModel().select(
@@ -503,6 +533,38 @@ def start_reading(window, app, rows=(1, 2, 3)) -> None:
     pump(app, 0.8)
 
 
+def deal_card(page, word: str, position: int) -> None:
+    """Move the card carrying *word* to *position* in the live deck.
+
+    The deck comes out of the database in due-date order, so which word the
+    session stops on is otherwise an accident of the demo library's schedule.
+    The card is only moved, never inserted, so the deck stays exactly the one
+    the picker resolved."""
+    deck = page._deck
+    if position >= len(deck):
+        return
+    found = next((i for i, rec in enumerate(deck)
+                  if word in (rec.get("Word1"), rec.get("Word2"))), -1)
+    if found < 0:
+        print(f"    [review] {word!r} is not in the deck", flush=True)
+        return
+    deck.insert(position, deck.pop(found))
+    page._show_card(0, animate=False)     # the move may have changed card 1
+
+
+def dismiss_toasts(app) -> None:
+    """Take down any toast still on screen.
+
+    Grading a card promotes the word behind it, and the promotion toast then
+    sits in the corner of the review shot for its four seconds — product news
+    about the demo library, in a picture of the product."""
+    from app.ui.toast import Toast
+
+    for toast in list(Toast._active):
+        toast._close()          # not close(): _active must drop it too
+    pump(app, 0.2)
+
+
 def run_review_session(window, app) -> None:
     """Drive a flashcard session far enough to photograph it mid-review.
 
@@ -514,6 +576,8 @@ def run_review_session(window, app) -> None:
     page = window.flashcards_page
     page._start_clicked()
     pump(app, 1.2)
+    deal_card(page, REVIEW_CARD, len(REVIEW_GRADES))
+    pump(app, 0.4)
     for grade in REVIEW_GRADES:
         if not page._deck:
             return
@@ -645,6 +709,7 @@ def capture(theme: str, pages, app, settings, width, scaling):
             page.listing.setCurrentRow(row)
             pump(app, 1.2)
             open_word_popup(window, app)
+        dismiss_toasts(app)
         path = OUT / f"{name}-{theme.lower()}.png"
         grab(window, app).save(str(path))
         close_popups(window, app)      # nothing leaks into the next page
