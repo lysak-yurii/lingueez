@@ -106,6 +106,25 @@ hiddenimports = [
 # which static analysis can't see — collect them explicitly so the Ukrainian
 # translation is actually bundled instead of silently falling back to English.
 hiddenimports += collect_submodules("locales")
+# The WinRT projection behind the Store build's login autostart
+# (app/system/startup_task.py) is imported lazily inside functions, so analysis
+# never sees it. Hard-fail rather than ship an MSIX whose autostart is dead.
+if sys.platform == "win32":
+    _winrt_mods = ["winrt.runtime", "winrt.system",
+                   "winrt.windows.applicationmodel",
+                   "winrt.windows.applicationmodel.activation",
+                   "winrt.windows.foundation"]
+    for _mod in _winrt_mods:
+        try:
+            __import__(_mod)
+        except ImportError as exc:
+            raise SystemExit(
+                f"lingueez.spec: {_mod} is not importable ({exc}) — the Microsoft "
+                "Store build's 'start on login' would be dead. Install the winrt-* "
+                "requirements before building."
+            )
+    hiddenimports += _winrt_mods
+
 # The X11 global-hotkey agent (app/system/hotkey_agent.py) is never imported —
 # it's launched as a subprocess — so analysis misses it and pynput. Frozen builds
 # re-invoke themselves with --hotkey-agent, which imports it, so bundle both.

@@ -193,7 +193,11 @@ def main():
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication, QMessageBox
 
-    start_hidden = "--minimized" in sys.argv
+    # The Store build's startup task can't pass --minimized (a startup task takes
+    # no arguments), so on that build ask Windows how we were activated instead.
+    # Must happen early: the activation arguments are readable only once.
+    from app.system.startup_task import launched_at_startup
+    start_hidden = "--minimized" in sys.argv or launched_at_startup()
     # Capture the desktop's xdg-activation token BEFORE QApplication starts (Qt
     # consumes/clears XDG_ACTIVATION_TOKEN on init). Used to focus the Add-Word
     # dialog when launched from the Wayland global hotkey.

@@ -16,8 +16,9 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="uap desktop rescap">
 
   <Identity
     Name="Lingueez.Lingueez"
@@ -99,6 +100,24 @@
           Square71x71Logo="Assets\Square71x71Logo.png"
           Square310x310Logo="Assets\Square310x310Logo.png" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- "Start automatically on login". A packaged app CANNOT use the
+             HKCU\...\Run key the .exe build writes: MSIX copies every HKCU write
+             into the package's private hive, so the value reads back fine and
+             Windows never sees it. TaskId is the handle the WinRT StartupTask API
+             uses and must match TASK_ID in app/system/startup_task.py.
+             Enabled="true" turns it on at the app's first launch (matching the
+             .exe build's first-run default); afterwards the state belongs to the
+             user — a switch-off in Settings -> Apps -> Startup is final and the
+             app cannot re-enable it. -->
+        <desktop:Extension Category="windows.startupTask"
+                           Executable="Lingueez.exe"
+                           EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="LingueezAutostart"
+                               Enabled="true"
+                               DisplayName="Lingueez" />
+        </desktop:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

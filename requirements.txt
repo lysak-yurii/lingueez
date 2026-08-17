@@ -41,6 +41,13 @@ cryptography>=41.0.0     # encrypts the local session fallback when no keychain
 # System Integration
 keyboard>=0.13.5; sys_platform == "win32"
 pynput>=1.7.0
+# WinRT projection, used only by the Microsoft Store (MSIX) build: login autostart
+# goes through Windows.ApplicationModel.StartupTask there, because a packaged app's
+# registry Run-key writes are virtualized away (app/system/startup_task.py).
+winrt-runtime>=3.2.1; sys_platform == "win32"
+winrt-Windows.ApplicationModel>=3.2.1; sys_platform == "win32"
+winrt-Windows.ApplicationModel.Activation>=3.2.1; sys_platform == "win32"
+winrt-Windows.Foundation>=3.2.1; sys_platform == "win32"
 
 # Audio Processing
 pygame>=2.1.0

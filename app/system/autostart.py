@@ -22,12 +22,18 @@
 """OS autostart entry management (Linux .desktop / Windows registry).
 
 Uses its own app name so it never clashes with the legacy app's entry.
+
+The Microsoft Store build is the exception: a packaged app cannot use the
+registry Run key at all, and goes through the manifest's startup task instead —
+see :mod:`app.system.startup_task`.
 """
 import logging
 import os
 import sys
 
+from app.system import startup_task
 from app.system.hotkey_env import is_flatpak
+from app.system.package_env import is_msix
 
 _APP_NAME = "Lingueez"
 _DISPLAY_NAME = "Lingueez"
@@ -50,7 +56,9 @@ def _get_app_command_and_workdir():
 
 
 def set_autostart(enabled: bool):
-    if sys.platform == 'win32':
+    if is_msix():
+        startup_task.set_enabled(enabled)
+    elif sys.platform == 'win32':
         _set_autostart_windows(enabled)
     elif is_flatpak():
         _set_autostart_portal(enabled)
@@ -59,6 +67,8 @@ def set_autostart(enabled: bool):
 
 
 def get_autostart_enabled() -> bool:
+    if is_msix():
+        return startup_task.is_enabled()
     if sys.platform == 'win32':
         return _get_autostart_windows()
     if is_flatpak():
@@ -76,6 +86,8 @@ def sync_autostart_path():
     """
     if is_flatpak():
         return  # the portal owns the entry; the flatpak command never goes stale
+    if is_msix():
+        return  # the manifest owns the entry; it records no executable path
     if not get_autostart_enabled():
         return
     exec_cmd, _ = _get_app_command_and_workdir()

@@ -848,6 +848,23 @@ class SettingsDialog(FramelessDialog):
         self.autostart_check.setChecked(get_autostart_enabled())
         form.addRow(self.autostart_check)
 
+        # On the Store build Windows owns this setting: once the user switches the
+        # entry off under Settings > Apps > Startup, the app can no longer turn it
+        # back on. Send them there rather than leave a toggle that does nothing.
+        from app.system import startup_task
+        if startup_task.is_locked():
+            self.autostart_check.setChecked(False)
+            self.autostart_check.setEnabled(False)
+            startup_note = QLabel(tr("Starting on login is turned off for Lingueez in "
+                                     "Windows Settings, so it can't be switched on here."))
+            startup_note.setObjectName("dimLabel")
+            startup_note.setWordWrap(True)
+            form.addRow(startup_note)
+            open_startup = QPushButton(tr("Open Windows startup settings"))
+            open_startup.clicked.connect(
+                lambda: QDesktopServices.openUrl(QUrl("ms-settings:startupapps")))
+            form.addRow(open_startup)
+
         self.hotkey_edit = QKeySequenceEdit(
             QKeySequence(self.settings.get("hotkey", "Ctrl+Shift+V")))
         try:
@@ -1566,7 +1583,17 @@ class SettingsDialog(FramelessDialog):
                 ai.reset_clients()
 
         try:
-            set_autostart(self.autostart_check.isChecked())
+            wanted = self.autostart_check.isChecked()
+            set_autostart(wanted)
+            # Enabling the Store build's startup task is a *request* Windows may
+            # refuse; read the state back so a refusal isn't silent.
+            from app.system.package_env import is_msix
+            if (is_msix() and self.autostart_check.isEnabled()
+                    and get_autostart_enabled() != wanted):
+                QMessageBox.warning(
+                    self, tr("Autostart"),
+                    tr("Windows did not apply this change. You can turn Lingueez on or "
+                       "off yourself under Settings > Apps > Startup."))
         except Exception as exc:
             QMessageBox.warning(self, tr("Autostart"), tr("Could not update autostart entry:\n{error}").format(error=exc))
 

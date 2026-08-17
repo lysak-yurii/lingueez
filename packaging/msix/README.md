@@ -35,6 +35,40 @@ resolves each to a qualified file beside it — `.scale-200`, `.targetsize-32`,
 `assets/icons/icon.png` (currently 549px) would fill in the remaining large
 tiles.
 
+## Start on login (startup task)
+
+The `.exe` build registers autostart under
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. **A packaged app cannot.**
+MSIX copies every `HKCU` write into the package's own private hive, so the value
+is written, reads back intact, and Windows never sees it at logon — the toggle
+looks like it works and nothing starts. (Pointing a Run entry at
+`C:\Program Files\WindowsApps\…\Lingueez.exe` would not help either: launched by
+path, the process has no package identity.)
+
+The manifest therefore declares a `windows.startupTask` extension, and
+`app/system/startup_task.py` drives it through the `Windows.ApplicationModel`
+`StartupTask` WinRT API (the `winrt-*` requirements, Windows-only).
+`app/system/autostart.py` routes to it whenever `package_env.is_msix()`;
+every other build keeps the path it had.
+
+Three consequences worth knowing:
+
+- **The user has the last word.** Switching the entry off under Settings → Apps →
+  Startup moves it to `DisabledByUser`, after which `RequestEnableAsync` is a
+  no-op forever. Settings → System shows that state instead of a dead checkbox.
+- **`Enabled="true"` applies on the app's first launch**, not at install — matching
+  the `.exe` build's first-run default. Enabling it at install time needs
+  `rescap5:ImmediateRegistration` plus a custom capability we don't have.
+- **A startup task takes no arguments**, so `--minimized` cannot be passed. At
+  launch the app asks `AppInstance.GetActivatedEventArgs()` whether the
+  activation kind was `StartupTask` and hides itself to the tray if so. Those
+  arguments are readable only on the *first* call in a process, which is why
+  `main.py` asks early and the answer is cached.
+
+`TaskId` is what the API looks the task up by; it must match
+`startup_task.TASK_ID`, and `tests/test_msix_startup_task.py` fails the build if
+the two drift.
+
 ## Store listing images
 
 `store-listing/` holds the screenshots uploaded in Partner Center → Store
@@ -149,3 +183,5 @@ Add-AppxPackage "Lingueez-2.0.6.msix"
 - Justify the `runFullTrust` restricted capability: the global Add-Word shortcut
   installs a system-wide low-level keyboard hook, available only to a full-trust
   desktop app.
+- Mention in the Store listing that the app starts with Windows (minimized to
+  the tray) and can be switched off under Settings → Apps → Startup.
