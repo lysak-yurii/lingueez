@@ -87,6 +87,7 @@ Add a word from any app: Добавляйте слова из любого пр�
 Translated the moment you save it: Перевод в момент сохранения
 AI-assisted definitions: Определения с помощью ИИ
 Review with flashcards: Повторение по карточкам
+Quiz yourself — choices or typing: Проверьте себя — выбор или ввод
 Read real articles in the app: Чтение реальных статей в приложении
 New: Новое
 Reviewing: На повторении
@@ -109,6 +110,9 @@ Practise: Практика
 Turning a word you have seen into one you know: Превращение знакомого слова в освоенное
 Flashcards &amp; spaced repetition: Карточки и интервальные повторения
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Создавайте колоды с любыми фильтрами и повторяйте их по системе интервальных повторений — слово появится прямо перед тем, как вы успеете его забыть.
+Quiz &amp; recall practice: Тест и проверка памяти
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Отвечайте, а не оценивайте себя — выберите слово из четырёх вариантов или введите его. Опечатки и диакритика прощаются, а каждый ответ идёт в те же интервальные повторения.
 Read-aloud &amp; MP3: Озвучка и MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Закрепляйте слова на слух с настраиваемым количеством повторов, темпом и экспортом в MP3.
 Progress &amp; statistics: Прогресс и статистика
@@ -125,6 +129,11 @@ Import &amp; export: Импорт и экспорт
 Practise with flashcards: Практика с помощью карточек
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Каждое сохраненное слово превращается в карточку. Создавайте колоды по любому фильтру — статусу, языку или тегу — и повторяйте их по системе интервальных повторений.
+Answer it, don’t just recognise it: Ответьте, а не просто узнайте
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Тест сначала спрашивает и только потом отвечает. Выберите верное слово из четырёх вариантов или введите его — испытание сложнее и потому честнее. Вы решаете, какую сторону видеть и сколько вопросов взять; при ошибке появится правильный ответ с определением, а каждый ответ идёт в те же интервальные повторения, что и ваши карточки.
+Multiple choice: Выбор из вариантов
+Type the answer: Введите ответ
 Read real texts — or ones written for you: Читайте реальные тексты — или созданные для вас
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Импортируйте статьи, веб-страницы, Википедию и RSS-ленты, читайте их в приложении с синхронным переводом и озвучкой, сохраняя слова прямо на ходу. ИИ также может написать короткий текст из слов, которые вы учите прямо сейчас, чтобы вы встретили их снова в контексте — в предложениях, которых ещё не читали.

@@ -87,6 +87,7 @@ Add a word from any app: Lisää sana mistä tahansa sovelluksesta
 Translated the moment you save it: Käännetty sillä hetkellä, kun tallennat sen
 AI-assisted definitions: Tekoälyn kirjoittamat selitykset
 Review with flashcards: Kertaus muistikorteilla
+Quiz yourself — choices or typing: Testaa itsesi — valinta vai kirjoitus
 Read real articles in the app: Lue oikeita artikkeleita sovelluksessa
 New: Uusi
 Reviewing: Kerrattava
@@ -109,6 +110,9 @@ Practise: Harjoittele
 Turning a word you have seen into one you know: Näin nähdystä sanasta tulee osattu sana
 Flashcards &amp; spaced repetition: Muistikortit ja välistetty kertaus
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Kokoa pakka millä tahansa suodattimella ja kertaa se välistetysti niin, että jokainen sana palaa juuri ennen kuin unohtaisit sen.
+Quiz &amp; recall practice: Tietovisa ja muistista palauttaminen
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Vastaa sen sijaan että arvioisit itseäsi — valitse sana neljästä vaihtoehdosta tai kirjoita se. Lyöntivirheet ja tarkkeet annetaan anteeksi, ja jokainen vastaus syöttää samaa välistettyä kertausta.
 Read-aloud &amp; MP3: Ääneen luku ja MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Vahvista sanastoa kuuntelemalla — toistokerrat, tahti ja MP3-vienti oman mielesi mukaan.
 Progress &amp; statistics: Edistyminen ja tilastot
@@ -125,6 +129,11 @@ Import &amp; export: Tuonti ja vienti
 Practise with flashcards: Harjoittele muistikorteilla
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Jokaisesta tallentamastasi sanasta tulee muistikortti. Kokoa pakka millä tahansa suodattimella — tilan, kielen tai tunnisteen mukaan — ja kertaa se sitten välistetysti niin, että jokainen sana palaa juuri ennen kuin olisit unohtanut sen.
+Answer it, don’t just recognise it: Vastaa siihen, älä vain tunnista sitä
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Tietovisa kysyy ennen kuin kertoo. Valitse oikea sana neljästä vaihtoehdosta tai kirjoita se — vaikeampi ja parempi koe. Sinä valitset, kumman puolen näet ja montako kysymystä otat; väärän vastauksen kohdalla näytetään oikea ja sen määritelmä, ja jokainen vastaus syöttää samaa välistettyä kertausta kuin muistikorttisi.
+Multiple choice: Monivalinta
+Type the answer: Kirjoita vastaus
 Read real texts — or ones written for you: Lue oikeita tekstejä — tai sinulle kirjoitettuja
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Tuo artikkeleita, verkkosivuja, Wikipedia-artikkeleita ja RSS-syötteitä, ja lue ne sovelluksessa käännöksen ja äänen kulkiessa rinnalla — tallentaen minkä tahansa sanan suoraan tekstistä lukiessasi. Tekoäly osaa lisäksi kirjoittaa lyhyen tekstin niistä sanoista, joita juuri nyt opettelet, jotta kohtaat ne uudelleen asiayhteydessä, lauseissa joita et ole ennen lukenut.

@@ -87,6 +87,7 @@ Add a word from any app: किसी भी ऐप से शब्द जो�
 Translated the moment you save it: आपके द्वारा सहेजे जाते ही अनूदित
 AI-assisted definitions: एआई-सहायता प्राप्त परिभाषाएं
 Review with flashcards: फ़्लैशकार्ड के साथ समीक्षा करें
+Quiz yourself — choices or typing: स्वयं को परखें — विकल्प या टाइपिंग
 Read real articles in the app: ऐप में वास्तविक लेख पढ़ें
 New: नया
 Reviewing: समीक्षा जारी
@@ -109,6 +110,9 @@ Practise: अभ्यास
 Turning a word you have seen into one you know: देखे गए शब्द को जाने हुए शब्द में बदलना
 Flashcards &amp; spaced repetition: फ़्लैशकार्ड और अंतराल दोहराव (Spaced Repetition)
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: किसी भी फ़िल्टर से एक डेक बनाएं और अंतराल दोहराव के साथ इसकी समीक्षा करें जो प्रत्येक शब्द को आपके भूलने से ठीक पहले वापस लाता है।
+Quiz &amp; recall practice: प्रश्नोत्तरी और याद करने का अभ्यास
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: स्वयं को आँकने के बजाय उत्तर दें — चार विकल्पों में से शब्द चुनें या उसे लिखें। टाइपिंग की छोटी गलतियाँ और मात्राएँ क्षम्य हैं, और हर उत्तर उसी अंतराल दोहराव को आगे बढ़ाता है।
 Read-aloud &amp; MP3: रीड-अलाउड और एमपी3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: अनुकूलन योग्य दोहराव, गति और एमपी3 निर्यात के साथ ऑडियो के माध्यम से शब्दावली को सुदृढ़ करें।
 Progress &amp; statistics: प्रगति और आँकड़े
@@ -125,6 +129,11 @@ Import &amp; export: आयात और निर्यात
 Practise with flashcards: फ़्लैशकार्ड के साथ अभ्यास करें
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : आपके द्वारा सहेजा गया प्रत्येक शब्द एक फ़्लैशकार्ड बन जाता है। किसी भी फ़िल्टर — स्थिति, भाषा या टैग — से एक डेक बनाएं, फिर अंतराल दोहराव के साथ उसकी समीक्षा करें जो प्रत्येक शब्द को आपके भूलने से ठीक पहले वापस लाता है।
+Answer it, don’t just recognise it: उसे पहचानें ही नहीं, उत्तर दें
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: प्रश्नोत्तरी बताने से पहले पूछती है। चार विकल्पों में से सही शब्द चुनें या उसे लिखें — कठिन, पर बेहतर परीक्षा। आप तय करते हैं कि कौन सा पक्ष दिखे और कितने प्रश्न हों; गलत उत्तर पर सही उत्तर उसकी परिभाषा के साथ दिखता है, और हर उत्तर आपके फ़्लैशकार्ड जैसा ही अंतराल दोहराव आगे बढ़ाता है।
+Multiple choice: बहुविकल्पीय
+Type the answer: उत्तर लिखें
 Read real texts — or ones written for you: वास्तविक पाठ पढ़ें — या आपके लिए लिखे गए पाठ
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : लेख, वेब पेज, विकिपीडिया प्रविष्टियाँ और आरएसएस फ़ीड आयात करें, फिर उन्हें ऐप में सिंक्रनाइज़ किए गए अनुवाद और ऑडियो के साथ पढ़ें — पढ़ते समय सीधे पाठों से कोई भी शब्द सहेजें। एआई आपके द्वारा अभी सीखे जा रहे शब्दों से एक छोटा पाठ भी लिख सकता है, ताकि आप उन्हें नए वाक्यों और संदर्भ में फिर से देख सकें।

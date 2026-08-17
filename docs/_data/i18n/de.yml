@@ -87,6 +87,7 @@ Add a word from any app: Wort aus jeder beliebigen App hinzufügen
 Translated the moment you save it: Sofort beim Speichern übersetzt
 AI-assisted definitions: KI-unterstützte Definitionen
 Review with flashcards: Mit Karteikarten wiederholen
+Quiz yourself — choices or typing: Testen Sie sich — Auswahl oder Eingabe
 Read real articles in the app: Echte Artikel in der App lesen
 New: Neu
 Reviewing: Wiederholen
@@ -109,6 +110,9 @@ Practise: Üben
 Turning a word you have seen into one you know: Ein gesehenes Wort in ein beherrschtes Wort verwandeln
 Flashcards &amp; spaced repetition: Karteikarten & Spaced Repetition
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Erstellen Sie ein Deck aus jedem Filter und wiederholen Sie es mit vertilter Wiederholung (Spaced Repetition), die jedes Wort kurz vor dem Vergessen zurückholt.
+Quiz &amp; recall practice: Quiz & Abfrage aus dem Gedächtnis
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Antworten statt sich selbst bewerten — wählen Sie das Wort aus vier Optionen oder tippen Sie es ein. Tippfehler und Akzente werden verziehen, und jede Antwort fließt in dieselbe Spaced Repetition ein.
 Read-aloud &amp; MP3: Vorlesen & MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Festigen Sie Ihr Vokabular durch Audio mit anpassbarer Wiederholung, Tempo und MP3-Export.
 Progress &amp; statistics: Fortschritt & Statistiken
@@ -125,6 +129,11 @@ Import &amp; export: Import & Export
 Practise with flashcards: Mit Karteikarten üben
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Jedes gespeicherte Wort wird zu einer Karteikarte. Erstellen Sie ein Deck aus jedem Filter – Status, Sprache oder Tag – und wiederholen Sie es mit Spaced Repetition kurz vor dem Vergessen.
+Answer it, don’t just recognise it: Antworten, nicht nur wiedererkennen
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Ein Quiz fragt, bevor es verrät. Wählen Sie das richtige Wort aus vier Optionen oder tippen Sie es ein — die härtere und bessere Prüfung. Sie entscheiden, welche Seite Sie sehen und wie viele Fragen Sie nehmen; bei einer falschen Antwort erscheint die richtige samt Definition, und jede Antwort fließt in dieselbe Spaced Repetition wie bei Ihren Karteikarten ein.
+Multiple choice: Multiple Choice
+Type the answer: Antwort eingeben
 Read real texts — or ones written for you: Echte Texte lesen – oder speziell für Sie geschriebene
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importieren Sie Artikel, Webseiten, Wikipedia-Einträge und RSS-Feeds und lesen Sie sie in der App mit synchronisierten Übersetzungen und Audio — und speichern Sie jedes Wort direkt aus dem Text heraus. Die KI kann auch kurze Texte aus Ihren aktuellen Lernwörtern schreiben, sodass Sie ihnen erneut im Zusammenhang begegnen, in Sätzen, die Sie noch nie gelesen haben.

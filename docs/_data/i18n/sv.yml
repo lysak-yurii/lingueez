@@ -87,6 +87,7 @@ Add a word from any app: Lägg till ett ord från vilken app som helst
 Translated the moment you save it: Översätts i samma stund som du sparar det
 AI-assisted definitions: AI-assisterade definitioner
 Review with flashcards: Repetera med flashkort
+Quiz yourself — choices or typing: Testa dig själv — alternativ eller skriva
 Read real articles in the app: Läs riktiga artiklar i appen
 New: Nya
 Reviewing: Repeteras
@@ -109,6 +110,9 @@ Practise: Öva
 Turning a word you have seen into one you know: Förvandla ett ord du har sett till ett ord du kan
 Flashcards &amp; spaced repetition: Flashkort &amp; repeterad inlärning (Spaced Repetition)
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Skapa en kortlek från valfritt filter och repetera med spaced repetition som tar tillbaka varje ord precis innan du glömmer det.
+Quiz &amp; recall practice: Quiz &amp; återkallningsövning
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Svara i stället för att bedöma dig själv — välj ordet bland fyra alternativ eller skriv det. Stavfel och accenter förlåts, och varje svar går in i samma repeterade inlärning.
 Read-aloud &amp; MP3: Uppläsning &amp; MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Stärk ordförrådet genom ljud med anpassningsbar repetition, tempo och MP3-export.
 Progress &amp; statistics: Framsteg &amp; statistik
@@ -125,6 +129,11 @@ Import &amp; export: Import &amp; export
 Practise with flashcards: Öva med flashkort
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Varje ord du sparar blir ett flashkort. Skapa en kortlek från vilket filter som helst — status, språk eller tagg — och repetera sedan med spaced repetition som påminner dig om ordet precis innan du skulle ha glömt det.
+Answer it, don’t just recognise it: Svara på det, känn inte bara igen det
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Ett quiz frågar innan det berättar. Välj rätt ord bland fyra alternativ, eller skriv det — det svårare och bättre provet. Du bestämmer vilken sida du ser och hur många frågor du tar; ett fel svar visar det rätta tillsammans med definitionen, och varje svar går in i samma repeterade inlärning som dina flashkort.
+Multiple choice: Flervalsfråga
+Type the answer: Skriv svaret
 Read real texts — or ones written for you: Läs riktiga texter — eller texter skrivna för dig
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importera artiklar, webbsidor, Wikipedia-artiklar och RSS-flöden, och läs dem i appen med synkroniserade översättningar och ljud — och spara ord direkt från texten medan du läser. AI kan också skriva en kort text utifrån de ord du lär dig just nu, så att du möter dem igen i kontext, i meningar du inte läst tidigare.

@@ -102,6 +102,9 @@ SCREENS = {
         ("words",      "Your vocabulary",   "Ваш словник",             "shots/words"),
         ("flashcards", "Build a deck",      "Створіть колоду",         "shots/flashcards"),
         ("review",     "Practise a deck",   "Практика колоди",          "shots/review"),
+        # Same label as the phone's quiz screen, which is the point: keys collapse
+        # on their English text, so this costs no new translation.
+        ("quiz",       "Test yourself",     "Перевірте себе",           "shots/quiz-choices"),
         ("texts",      "Read real texts",   "Читайте справжні тексти",  "shots/texts"),
         ("stats",      "See your progress", "Дивіться свій прогрес",    "shots/stats"),
     ],

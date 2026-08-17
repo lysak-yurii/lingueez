@@ -511,6 +511,165 @@
     }
   });
 
+  /* ── feature rails ──────────────────────────────────────────────────────
+     Each feature group lays its cards out as a horizontal track. Three of them
+     measure exactly the track's width, so most groups never overflow and get no
+     controls at all — this only wakes up for a group that carries more, and
+     then it adds dots into the group heading, marks which edges have more behind
+     them, and cycles so the extra cards are met rather than waited for.
+
+     Two things keep the movement from being rude. It stops dead while the
+     pointer or the keyboard focus is on the rail, because these cards are prose
+     someone may be halfway through reading — unlike the showcase shots, which
+     are one feature photographed twice. And it turns round at the ends instead
+     of wrapping: rewinding four cards in one sweep reads as a jolt, where
+     reversing reads as the same calm drift going the other way. */
+  var RAIL_DWELL=3400;   // shorter than the showcase's 5200 — a card, not a page
+  document.querySelectorAll('.fgroup > .grid').forEach(function(track){
+    var head=track.parentNode.querySelector('h3');
+    var cards=Array.prototype.slice.call(track.querySelectorAll('.card'));
+    var dots=null, lead=[], at=0, queued=false;
+    var timer=null, hot=false, seen=false, dir=1;
+
+    /* Pages are counted in cards, not in viewport widths: the track carries a
+       gap between cards, so scrollWidth/clientWidth is not a whole number of
+       screens and rounding it strands an extra dot that scrolls nowhere. */
+    function measure(){
+      if(!cards.length || limit() <= 1) return [];
+      var step=cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft
+                                : cards[0].offsetWidth;
+      var per=Math.max(1, Math.round(track.clientWidth / step));
+      var out=[], last=-1;
+      for(var i=0; i<cards.length; i+=per){
+        // A last page holding fewer than a full view cannot scroll its card to
+        // the left edge — it stops at the end of the track. Two pages that land
+        // on the same place are one page.
+        var target=Math.min(offsetOf(cards[i]), limit());
+        if(target - last < 1) continue;
+        out.push(cards[i]);
+        last=target;
+      }
+      return out;
+    }
+    function offsetOf(card){ return card.offsetLeft - cards[0].offsetLeft; }
+    function limit(){ return track.scrollWidth - track.clientWidth; }
+    /* Where page *i* actually comes to rest. Everything compares against this
+       rather than the card's own offset: the browser clamps a scroll to the end
+       of the track, so a final page asked for further than that would be read
+       back as some earlier page and the rail would deadlock there. */
+    function targetOf(i){ return Math.min(offsetOf(lead[i]), limit()); }
+
+    function edges(){
+      track.classList.toggle('has-prev', track.scrollLeft > 1);
+      track.classList.toggle('has-next', track.scrollLeft < limit() - 1);
+    }
+
+    function mark(){
+      var best=0, dist=Infinity;
+      lead.forEach(function(card, i){
+        var d=Math.abs(targetOf(i) - track.scrollLeft);
+        if(d < dist){ dist=d; best=i; }
+      });
+      at=best;
+      if(!dots) return;
+      Array.prototype.forEach.call(dots.children, function(d, i){
+        d.classList.toggle('is-on', i===at);
+        d.setAttribute('aria-pressed', String(i===at));
+      });
+    }
+
+    function go(i){
+      track.scrollTo({left:targetOf(i), behavior:reduced ? 'auto' : 'smooth'});
+    }
+
+    /* A chained timeout rather than setInterval: each step is armed only once
+       the last has been taken, so a rail that was paused mid-dwell does not
+       fire the moment it is released. */
+    function stop(){ if(timer){ clearTimeout(timer); timer=null; } }
+    function start(){
+      stop();
+      if(reduced || hot || !seen || lead.length < 2) return;
+      timer=setTimeout(function(){
+        if(at + dir >= lead.length || at + dir < 0) dir=-dir;
+        go(at + dir);
+        start();
+      }, RAIL_DWELL);
+    }
+
+    /* One dot per page, labelled with the card that page opens on — already
+       translated in the markup, so the control needs no string of its own. */
+    function build(){
+      var next=measure();
+      var same=dots && next.length === lead.length
+               && next.every(function(c, i){ return c === lead[i]; });
+      lead=next;
+      if(same){ mark(); edges(); return; }
+      if(dots){ dots.remove(); dots=null; }
+      if(lead.length < 2 || !head){
+        // A resize can widen a rail back into a plain row — nothing left to
+        // advance to, so the clock has to be stopped and not just left armed.
+        stop();
+        track.classList.remove('has-prev', 'has-next');
+        return;
+      }
+      dots=document.createElement('span');
+      dots.className='screen-dots';
+      dots.setAttribute('role', 'group');
+      lead.forEach(function(card, i){
+        var name=(card.querySelector('h3')||{}).textContent || '';
+        var d=document.createElement('button');
+        d.type='button';
+        d.className='screen-dot';
+        d.setAttribute('aria-pressed', 'false');
+        if(name) d.setAttribute('aria-label', name.trim());
+        d.addEventListener('click', function(){
+          // Step where asked, and carry on from there in the same direction.
+          dir=i >= at ? 1 : -1;
+          go(i);
+          start();                             // a manual step restarts the dwell
+        });
+        dots.appendChild(d);
+      });
+      head.appendChild(dots);
+      mark();
+      edges();
+      start();
+    }
+
+    // Arrow keys and Home/End come free once the track can hold focus.
+    track.tabIndex=0;
+    track.setAttribute('role', 'group');
+    track.addEventListener('scroll', function(){
+      if(queued) return;
+      queued=true;
+      requestAnimationFrame(function(){ queued=false; mark(); edges(); });
+    });
+
+    /* Hovering or focusing the rail holds it still — and keeps holding it, so a
+       visitor reading the fourth card is never carried off it. Touch counts as
+       hover until the finger leaves, which is what a drag wants too. */
+    function hold(){ hot=true; stop(); }
+    function release(){ hot=false; start(); }
+    track.addEventListener('pointerenter', hold);
+    track.addEventListener('pointerleave', release);
+    track.addEventListener('focusin', hold);
+    track.addEventListener('focusout', release);
+
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          seen=e.isIntersecting;
+          if(seen) start(); else stop();
+        });
+      },{threshold:.25}).observe(track);
+    } else {
+      seen=true;
+    }
+    if('ResizeObserver' in window) new ResizeObserver(build).observe(track);
+    else window.addEventListener('resize', build);
+    build();
+  });
+
   /* ── reveal on scroll ───────────────────────────────────────────────────
      [data-stagger] promotes its children to individually revealed items, so
      a grid fans in instead of appearing as one slab. */

@@ -87,6 +87,7 @@ Add a word from any app: Herhangi bir uygulamadan kelime ekleyin
 Translated the moment you save it: Kaydettiğiniz anda çevrilir
 AI-assisted definitions: Yapay zeka destekli tanımlar
 Review with flashcards: Bilgi kartlarıyla tekrar yapın
+Quiz yourself — choices or typing: Kendinizi test edin — seçenek ya da yazma
 Read real articles in the app: Uygulamada gerçek makaleler okuyun
 New: Yeni
 Reviewing: Tekrar ediliyor
@@ -109,6 +110,9 @@ Practise: Pratik yapın
 Turning a word you have seen into one you know: Gördüğünüz bir kelimeyi bildiğiniz bir kelimeye dönüştürün
 Flashcards &amp; spaced repetition: Bilgi Kartları ve Aralıklı Tekrar
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Herhangi bir filtreden bir deste oluşturun ve unutmak üzere olduğunuz an her kelimeyi geri getiren aralıklı tekrar yöntemiyle gözden geçirin.
+Quiz &amp; recall practice: Test ve hatırlama alıştırması
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Kendinizi puanlamak yerine yanıtlayın — kelimeyi dört seçenek arasından seçin ya da yazın. Yazım hataları ve şapkalı harfler bağışlanır ve her yanıt aynı aralıklı tekrarı besler.
 Read-aloud &amp; MP3: Sesli Okuma ve MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Ayarlanabilir tekrar, hız ve MP3 dışa aktarma özellikli sesli içeriklerle kelime bilginizi pekiştirin.
 Progress &amp; statistics: İlerleme ve İstatistikler
@@ -125,6 +129,11 @@ Import &amp; export: İçe ve Dışa Aktarma
 Practise with flashcards: Bilgi kartlarıyla pratik yapın
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Kaydettiğiniz her kelime bir bilgi kartına dönüşür. Durum, dil veya etiket gibi herhangi bir filtreden bir deste oluşturun ve unutmak üzere olduğunuz an her kelimeyi geri getiren aralıklı tekrar yöntemiyle gözden geçirin.
+Answer it, don’t just recognise it: Tanımakla kalmayın, yanıtlayın
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Test söylemeden önce sorar. Doğru kelimeyi dört seçenek arasından seçin ya da yazın — daha zor, o yüzden daha iyi bir sınama. Hangi tarafı göreceğinize ve kaç soru alacağınıza siz karar verirsiniz; yanlış yanıtta doğrusu tanımıyla birlikte görünür ve her yanıt bilgi kartlarınızla aynı aralıklı tekrarı besler.
+Multiple choice: Çoktan seçmeli
+Type the answer: Yanıtı yazın
 Read real texts — or ones written for you: Gerçek metinler okuyun — veya sizin için yazılmış olanları
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Makaleleri, web sayfalarını, Wikipedia girdilerini ve RSS akışlarını içe aktarın, ardından senkronize çeviriler ve seslerle uygulama içinde okuyun — okudukça metinlerden doğrudan kelimeler kaydedin. Yapay zeka ayrıca şu anda öğrendiğiniz kelimelerden kısa bir metin yazabilir, böylece onları daha önce okumadığınız cümlelerde, bağlam içinde tekrar görürsünüz.

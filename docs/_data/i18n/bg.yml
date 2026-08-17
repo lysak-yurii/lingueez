@@ -87,6 +87,7 @@ Add a word from any app: Добавете дума от кое да е прил�
 Translated the moment you save it: Преведена в мига, в който я запазите
 AI-assisted definitions: Тълкувания с помощта на ИИ
 Review with flashcards: Преговор с флаш карти
+Quiz yourself — choices or typing: Проверете се — избор или писане
 Read real articles in the app: Четете истински статии в приложението
 New: Ново
 Reviewing: Преговаряне
@@ -109,6 +110,9 @@ Practise: Упражняване
 Turning a word you have seen into one you know: Как видяната дума става позната дума
 Flashcards &amp; spaced repetition: Флаш карти и интервално повторение
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Съставете тесте по кой да е филтър и го преговаряйте с интервално повторение, което връща всяка дума точно преди да сте я забравили.
+Quiz &amp; recall practice: Тест и упражнение за припомняне
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Отговаряйте, вместо да оценявате себе си — изберете думата от четири възможности или я напишете. Дребните печатни грешки и диакритичните знаци се прощават, а всеки отговор захранва същото интервално повторение.
 Read-aloud &amp; MP3: Четене на глас и MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Затвърждавайте думите на слух — с повторения, темпо по ваш вкус и износ в MP3.
 Progress &amp; statistics: Напредък и статистика
@@ -125,6 +129,11 @@ Import &amp; export: Внасяне и изнасяне
 Practise with flashcards: Упражнявайте се с флаш карти
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Всяка запазена дума става флаш карта. Съставете тесте по кой да е филтър — статус, език или етикет — и го преговаряйте с интервално повторение, което връща всяка дума точно преди да сте я забравили.
+Answer it, don’t just recognise it: Отговорете, а не просто разпознайте
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Тестът първо пита и едва после казва. Изберете правилната дума от четири възможности или я напишете — по-трудното и по-доброто изпитание. Вие решавате коя страна виждате и колко въпроса да получите; при грешен отговор се показва верният заедно с определението му, а всеки отговор захранва същото интервално повторение като флаш картите ви.
+Multiple choice: Избор от отговори
+Type the answer: Напишете отговора
 Read real texts — or ones written for you: Четете истински текстове — или написани специално за вас
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Внасяйте статии, уеб страници, статии от Уикипедия и RSS емисии и ги четете в приложението със синхронен превод и озвучаване, като запазвате всяка дума направо от текста в движение. ИИ може и сам да ви напише кратък текст от думите, които учите точно сега, за да ги срещнете отново в контекст — в изречения, които не сте чели преди.

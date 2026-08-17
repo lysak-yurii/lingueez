@@ -87,6 +87,7 @@ Add a word from any app: Προσθήκη λέξης από οποιαδήποτ
 Translated the moment you save it: Μεταφράζεται τη στιγμή που την αποθηκεύετε
 AI-assisted definitions: Ορισμοί με τη βοήθεια AI
 Review with flashcards: Επανάληψη με κάρτες flashcard
+Quiz yourself — choices or typing: Δοκιμάστε τις γνώσεις σας — επιλογή ή πληκτρολόγηση
 Read real articles in the app: Διαβάστε πραγματικά άρθρα στην εφαρμογή
 New: Νέες
 Reviewing: Σε επανάληψη
@@ -109,6 +110,9 @@ Practise: Εξάσκηση
 Turning a word you have seen into one you know: Μετατρέψτε μια λέξη που έχετε δει σε μια λέξη που γνωρίζετε
 Flashcards &amp; spaced repetition: Κάρτες flashcard &amp; επανάληψη σε διαστήματα
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Δημιουργήστε ένα σετ καρτών από οποιοδήποτε φίλτρο και κάντε επανάληψη με διαστήματα που επαναφέρει κάθε λέξη μόλις πριν την ξεχάσετε.
+Quiz &amp; recall practice: Κουίζ &amp; εξάσκηση ανάκλησης
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Απαντήστε αντί να βαθμολογείτε τον εαυτό σας — διαλέξτε τη λέξη από τέσσερις επιλογές ή πληκτρολογήστε την. Τα ορθογραφικά λάθη και οι τόνοι συγχωρούνται, και κάθε απάντηση τροφοδοτεί την ίδια επανάληψη σε διαστήματα.
 Read-aloud &amp; MP3: Μεγαφωνική ανάγνωση &amp; MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Ενισχύστε το λεξιλόγιο μέσω ήχου με προσαρμόσιμη επανάληψη, ρυθμό και εξαγωγή MP3.
 Progress &amp; statistics: Πρόοδος &amp; στατιστικά
@@ -125,6 +129,11 @@ Import &amp; export: Εισαγωγή &amp; Εξαγωγή
 Practise with flashcards: Εξάσκηση με κάρτες flashcards
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Κάθε λέξη που αποθηκεύετε γίνεται μια κάρτα flashcard. Δημιουργήστε ένα σετ καρτών από οποιοδήποτε φίλτρο — κατάσταση, γλώσσα ή ετικέτα — και μετά κάντε επανάληψη με διαστήματα, που επαναφέρει κάθε λέξη λίγο πριν την ξεχάσετε.
+Answer it, don’t just recognise it: Απαντήστε, μην την αναγνωρίζετε απλώς
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Το κουίζ ρωτά πριν αποκαλύψει. Διαλέξτε τη σωστή λέξη από τέσσερις επιλογές ή πληκτρολογήστε την — η δυσκολότερη και καλύτερη δοκιμασία. Εσείς επιλέγετε ποια πλευρά βλέπετε και πόσες ερωτήσεις θα πάρετε· σε λάθος απάντηση εμφανίζεται η σωστή μαζί με τον ορισμό της, και κάθε απάντηση τροφοδοτεί την ίδια επανάληψη σε διαστήματα με τις κάρτες flashcard σας.
+Multiple choice: Πολλαπλή επιλογή
+Type the answer: Πληκτρολογήστε την απάντηση
 Read real texts — or ones written for you: Διαβάστε πραγματικά κείμενα — ή κείμενα γραμμένα για εσάς
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Εισαγάγετε άρθρα, ιστοσελίδες, καταχωρίσεις Wikipedia και ροές RSS, στη συνέχεια διαβάστε τα στην εφαρμογή με συγχρονισμένη μετάφραση και ήχο — αποθηκεύοντας οποιαδήποτε λέξη κατευθείαν από το κείμενο καθώς προχωράτε. Η AI μπορεί επίσης να γράψει ένα μικρό κείμενο από τις λέξεις που μαθαίνετε τώρα, ώστε να τις συναντήσετε ξανά μέσα σε συμφραζόμενα, σε προτάσεις που δεν έχετε ξαναδιαβάσει.

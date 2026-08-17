@@ -87,6 +87,7 @@ Add a word from any app: 모든 앱에서 단어 추가
 Translated the moment you save it: 저장하는 즉시 번역
 AI-assisted definitions: AI 기반 단어 정의
 Review with flashcards: 플래시카드로 복습
+Quiz yourself — choices or typing: 스스로 시험하기 — 선택 또는 입력
 Read real articles in the app: 앱에서 실제 기사 읽기
 New: 신규
 Reviewing: 복습 중
@@ -109,6 +110,9 @@ Practise: 연습
 Turning a word you have seen into one you know: 눈으로 본 단어를 아는 단어로 변환
 Flashcards &amp; spaced repetition: 플래시카드 및 간격 반복
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: 필터를 통해 덱을 만들고, 단어를 잊어버리기 직전에 다시 보여주는 간격 반복 시스템으로 복습하세요.
+Quiz &amp; recall practice: 퀴즈 및 인출 연습
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: 스스로 채점하는 대신 직접 답하세요. 네 개의 보기에서 고르거나 직접 입력합니다. 오타와 악센트는 넘어가고, 모든 답은 같은 간격 반복에 반영됩니다.
 Read-aloud &amp; MP3: 음성 읽기 및 MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: 사용자 맞춤 반복, 속도 조절, MP3 내보내기 기능을 갖춘 오디오로 어휘를 강화하세요.
 Progress &amp; statistics: 진도 및 통계
@@ -125,6 +129,11 @@ Import &amp; export: 가져오기 및 내보내기
 Practise with flashcards: 플래시카드로 연습하기
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : 저장하는 모든 단어가 플래시카드가 됩니다. 상태, 언어, 태그 등 원하는 필터로 덱을 만든 후, 단어를 잊기 직전에 다시 불러오는 간격 반복으로 복습하세요.
+Answer it, don’t just recognise it: 알아보는 것이 아니라, 답할 수 있는가
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: 퀴즈는 알려주기 전에 먼저 묻습니다. 네 개의 보기에서 정답을 고르거나 직접 입력하세요. 입력이 더 어렵고, 그만큼 더 정확한 시험입니다. 어느 쪽을 보여줄지, 몇 문제를 풀지는 직접 정합니다. 틀리면 정답과 뜻이 바로 표시되고, 모든 답은 플래시카드와 같은 간격 반복에 반영됩니다.
+Multiple choice: 선택형
+Type the answer: 답을 입력하세요
 Read real texts — or ones written for you: 실제 텍스트 또는 맞춤형 글 읽기
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : 기사, 웹페이지, 위키백과 항목, RSS 피드를 가져와 앱에서 동기화된 번역 및 오디오와 함께 읽고, 읽는 동안 단어를 즉시 저장하세요. AI가 현재 배우고 있는 단어로 단문을 작성해 주어 새로운 문맥에서 단어를 재복습할 수 있습니다.

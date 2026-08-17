@@ -87,6 +87,7 @@ Add a word from any app: あらゆるアプリから単語を追加
 Translated the moment you save it: 保存した瞬間に自動翻訳
 AI-assisted definitions: AI による定義サポート
 Review with flashcards: 単語カードで復習
+Quiz yourself — choices or typing: 自分をテスト — 選択か入力か
 Read real articles in the app: アプリ内で実際の記事を読む
 New: 新規
 Reviewing: 復習中
@@ -109,6 +110,9 @@ Practise: 練習
 Turning a word you have seen into one you know: 見たことがある単語を「知っている単語」へ
 Flashcards &amp; spaced repetition: 単語カードと分散学習
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: 任意のフィルターでデッキを作成し、忘れそうになる直前に単語を再提示する分散学習システムで復習。
+Quiz &amp; recall practice: クイズと思い出す練習
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: 自己採点ではなく、実際に答えます。4つの選択肢から選ぶか、自分で入力しましょう。打ち間違いやアクセント記号は許容され、どの解答も同じ分散学習に反映されます。
 Read-aloud &amp; MP3: 読み上げ機能と MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: 再生回数やスピードを調整できる音声機能や MP3 エクスポートで、リスニングから語彙を定着。
 Progress &amp; statistics: 進捗と統計
@@ -125,6 +129,11 @@ Import &amp; export: インポートとエクスポート
 Practise with flashcards: 単語カードで練習
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : 保存したすべての単語が単語カードになります。ステータス・言語・タグなどのフィルターでデッキを作成し、忘れそうになる絶妙なタイミングで復習しましょう。
+Answer it, don’t just recognise it: 見覚えではなく、答えられるかどうか
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: クイズは教える前に問いかけます。4つの選択肢から正しい語を選ぶか、自分で入力する——後者のほうが難しく、そのぶん確かなテストです。どちら側を出題するか、何問解くかは自由に選べます。間違えれば正解と定義がその場に表示され、どの解答も単語カードと同じ分散学習に反映されます。
+Multiple choice: 選択式
+Type the answer: 答えを入力
 Read real texts — or ones written for you: 実際の文章を読む — またはあなた専用に作成された文章を読む
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : 記事、Web ページ、Wikipedia、RSS フィードをインポートし、同期された翻訳と音声を使ってアプリ内で閲覧。読みながら直接単語を保存できます。また、AI が現在学習中の単語を使って短い文章を作成するため、初見の文脈で自然に再会できます。

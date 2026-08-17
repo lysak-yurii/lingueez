@@ -78,9 +78,16 @@ SCALING = 1.5
 # the showcase width of 950 puts the preview at 1309 and tips into five columns
 # by three pixels, which is both too small to read and too fragile to keep — a
 # font change would silently drop it back to four. 850 gives 4 x 3.
+#
+# The two quiz shots are one centred column like review, and want the same 700
+# for the same reason: the block is a prompt card plus four short option rows,
+# and every pixel of window past what that needs becomes margin around it. The
+# aspect then fixes the height, so widening is what empties these two shots —
+# not what fills them.
 SHOWCASE_CONTENT = 950
 PAGE_CONTENT = {"texts": SHOWCASE_CONTENT, "stats": SHOWCASE_CONTENT,
-                "flashcards": 850, "review": 700}
+                "flashcards": 850, "review": 700,
+                "quiz-choices": 700, "quiz-typing": 700}
 # Height is derived, not chosen: the hero's laptop screen rect is 552x387 SVG
 # units (1.4264:1), so a capture at exactly that aspect drops into it with
 # nothing cropped and nothing letterboxed.
@@ -88,16 +95,27 @@ ASPECT = 552 / 387
 SCALE = "2"          # device pixel ratio; 2x keeps the shots crisp when zoomed
 
 THEMES = ("Light", "Dark")
-# "review" is last on purpose: it grades cards, which writes SRS state, review
-# events and status promotions. Any shot taken after it would show a library
-# that had been studied. capture() also reinstalls the library per theme, so
-# light and dark both start from the same untouched copy.
-PAGES = ("words", "flashcards", "texts", "stats", "review")
+# The three studying shots come last on purpose: answering grades cards, which
+# writes SRS state, review events and status promotions. Any shot taken after
+# them would show a library that had been studied. capture() also reinstalls the
+# library per theme, so light and dark both start from the same untouched copy.
+#
+# They are not reset from each other, so the order inside that tail matters too:
+# the quiz pages answer QUIZ_ANSWERS questions each and review wants a full due
+# deck, so review stays at the very end and the quiz pages answer as few
+# questions as the shot needs.
+PAGES = ("words", "flashcards", "texts", "stats",
+         "quiz-choices", "quiz-typing", "review")
 
 # A fixed grade sequence, so the trail across the top of the review shot has the
 # same colours every run rather than whatever the deck happened to produce.
 REVIEW_GRADES = ("good", "easy", "hard", "good", "good",
                  "good", "easy", "good", "good", "good")
+
+# How many questions each quiz shot answers before the one it photographs. Two
+# is enough to part-fill the trail and put "2 correct" in the header, and cheap
+# enough that review still opens on a nearly full deck.
+QUIZ_ANSWERS = 2
 
 def cut_off_the_cloud():
     """Sever every path that reaches the real server. MUST run before the
@@ -507,6 +525,50 @@ def run_review_session(window, app) -> None:
     pump(app, 1.0)
 
 
+def run_quiz_session(window, app, fmt) -> None:
+    """Drive a quiz far enough to photograph it mid-session in *fmt*.
+
+    Both shots want a question the visitor could answer themselves, not one
+    already resolved: the choices shot shows four live options with nothing
+    greyed, and the typing shot shows an answer typed but not yet checked. So:
+    answer a few questions correctly to colour the trail and the counter, then
+    stop on the next one.
+    """
+    page = window.quiz_page
+    page._format_chips[fmt].setChecked(True)
+    pump(app, 0.8)              # the picker's preview timer recounts the deck
+    page._start_clicked()
+    pump(app, 1.2)
+
+    def answer(question):
+        if fmt == "choices":
+            page._answer_choice(question.correct_index)
+        else:
+            page.answer_edit.setText(question.answer)
+            page._submit_typed()
+        pump(app, 0.9)
+
+    for _ in range(QUIZ_ANSWERS):
+        question = page._current()
+        if question is None:
+            return
+        answer(question)
+        page._next_question()
+        pump(app, 0.9)
+
+    # Where the two shots part company. Choices stops on an unanswered question,
+    # because four live options is what the format *is* — answering greys two of
+    # them out. Typing has no options to show, and _measure_question keeps room
+    # below the prompt for the feedback that an answer brings; left unanswered
+    # that room is simply empty, so this one is graded and the verdict, the
+    # promotion line and the definition fill it.
+    if fmt == "typing":
+        question = page._current()
+        if question is not None:
+            answer(question)
+    pump(app, 1.0)
+
+
 def capture(theme: str, pages, app, settings, width, scaling):
     """Build a window under `theme` and shoot each page.
 
@@ -542,6 +604,8 @@ def capture(theme: str, pages, app, settings, width, scaling):
         "texts": mw.PAGE_TEXTS,
         "stats": mw.PAGE_STATS,
         "review": mw.PAGE_FLASHCARDS,
+        "quiz-choices": mw.PAGE_QUIZ,
+        "quiz-typing": mw.PAGE_QUIZ,
     }
     for name in pages:
         # A page that needs more room gets it, at the same widget scaling.
@@ -560,6 +624,12 @@ def capture(theme: str, pages, app, settings, width, scaling):
             fit_whole_rows(window, app)
         if name == "review":
             run_review_session(window, app)
+        if name.startswith("quiz-"):
+            # The second quiz shot arrives with the page still in the first
+            # one's session — switch_page() does not reset it.
+            window.quiz_page._show_picker()
+            pump(app, 0.6)
+            run_quiz_session(window, app, name.split("-", 1)[1])
         if name == "words":
             start_reading(window, app)
         if name == "texts":
@@ -636,6 +706,7 @@ def main():
             # Every page has its own first-visit tour, and its overlay outlives
             # the page switch — one missing flag greys out an unrelated shot.
             "tour_words_seen": "True", "tour_flashcards_seen": "True",
+            "tour_quiz_seen": "True",
             "tour_texts_seen": "True", "tour_stats_seen": "True",
             "tour_completed": "True",
             "auto_check_updates": "False",
@@ -648,6 +719,15 @@ def main():
             # read_words_action() would otherwise jump to the Flashcards page
             # to follow the audio, and the words shot wants to stay put.
             "flashcards_autoswitch": "False",
+            # Auto-advance would carry the question away from under the grab a
+            # second or so after it is answered, and auto-pronounce makes the
+            # countdown wait on speech that cut_off_the_cloud() has stubbed to
+            # never finish. Neither is visible in a still.
+            "quiz_auto_advance": "False",
+            "quiz_pronounce": "False",
+            # Fewer than the library, so the header reads "Question 3 of 12"
+            # rather than a number long enough to look like homework.
+            "quiz_deck_size": "12",
         })
         save_settings(settings)
         set_language("en")

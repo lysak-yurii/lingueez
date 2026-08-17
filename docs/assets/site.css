@@ -177,6 +177,36 @@
   .section-head p{ color:var(--text-dim); margin:0; }
 
   .grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s-4); }
+
+  /* The feature groups on the home page turn that row into a rail — and only
+     they do. .grid is generic (the download page's four OS cards override it to
+     two columns, the KOReader page takes it as-is), so the scrolling belongs on
+     .fgroup > .grid: grid-auto-flow:column here would place their cards into
+     implicit columns and size them from grid-auto-columns instead of the
+     template, which is how the download page ends up with two narrow cards and
+     two wide ones.
+
+     Three cards of (100% - 2 gaps)/3 measure exactly 100%, so a three-card
+     group never scrolls and renders as it always did; a group that has gained a
+     fourth becomes swipeable instead of orphaning it onto a line of its own.
+
+     overflow-x:auto forces overflow-y to compute to auto, which would clip the
+     card's hover lift and its shadow and raise a vertical scrollbar. The
+     padding/negative-margin pair is net-zero for layout and gives that overflow
+     somewhere to live — including the 16px translateY that .stagger-item
+     animates in from — and overflow-y:hidden then clips it silently. */
+  .fgroup > .grid{
+    --rail-bleed:24px;
+    grid-auto-flow:column;
+    grid-template-columns:none;
+    grid-auto-columns:calc((100% - 2 * var(--s-4)) / 3);
+    overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    padding-block:var(--rail-bleed); margin-block:calc(-1 * var(--rail-bleed));
+    scrollbar-width:none;
+  }
+  .fgroup > .grid::-webkit-scrollbar{ display:none; }
+  .fgroup > .grid > .card{ scroll-snap-align:start; }
   .show{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s-7);
     align-items:center; }
   .show + .show{ margin-top:var(--s-7); }
@@ -726,6 +756,15 @@
     }
     .lede{ max-width:none; }
     .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    /* grid-template-columns:none has to be repeated per breakpoint: @layer
+       responsive is declared after the layer the rail lives in, so the generic
+       .grid rule above wins on layer order whatever its specificity, and an
+       explicit template plus grid-auto-flow:column puts the later cards into
+       implicit columns of a different width. */
+    .fgroup > .grid{
+      grid-template-columns:none;
+      grid-auto-columns:calc((100% - var(--s-4)) / 2);
+    }
     .show{ grid-template-columns:1fr; gap:var(--s-5); }
     .show.flip .copy{ order:0; }
     .nav-desktop{ display:none; }
@@ -750,6 +789,9 @@
   }
   @media (max-width:560px){
     .grid{ grid-template-columns:1fr; }
+    /* One card per view: on a phone the rail replaces a stack of ten tall cards
+       the visitor would otherwise have to scroll past to reach the next group. */
+    .fgroup > .grid{ grid-template-columns:none; grid-auto-columns:100%; }
     .foot-grid{ grid-template-columns:1fr; }
     /* On a phone the button is not near the right edge — in the footer it wraps
        onto its own line at the left — so a panel hung off the button runs past

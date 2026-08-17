@@ -87,6 +87,7 @@ Add a word from any app: Додајте реч из било које аплик
 Translated the moment you save it: Преведена чим је сачувате
 AI-assisted definitions: Дефиниције уз помоћ вештачке интелигенције
 Review with flashcards: Понављање уз флеш-картице
+Quiz yourself — choices or typing: Проверите се — избор или куцање
 Read real articles in the app: Читајте праве чланке у самој апликацији
 New: Ново
 Reviewing: Понављање
@@ -109,6 +110,9 @@ Practise: Вежбајте
 Turning a word you have seen into one you know: Како реч коју сте видели постаје реч коју знате
 Flashcards &amp; spaced repetition: Флеш-картице и понављање у размацима
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Саставите шпил по било ком филтеру и понављајте га у размацима који сваку реч враћају таман пре него што бисте је заборавили.
+Quiz &amp; recall practice: Квиз и вежба присећања
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Одговарајте уместо да оцењујете себе — изаберите реч од четири могућности или је упишите. Грешке у куцању и дијакритика се не кажњавају, а сваки одговор напаја исто понављање у размацима.
 Read-aloud &amp; MP3: Читање наглас и MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Учврстите речи слушањем — уз број понављања и темпо по својој мери и извоз у MP3.
 Progress &amp; statistics: Напредак и статистика
@@ -125,6 +129,11 @@ Import &amp; export: Увоз и извоз
 Practise with flashcards: Вежбајте уз флеш-картице
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Свака сачувана реч постаје флеш-картица. Саставите шпил по било ком филтеру — статусу, језику или ознаци — па га понављајте у размацима који сваку реч враћају таман пре него што бисте је заборавили.
+Answer it, don’t just recognise it: Одговорите, немојте само препознати
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Квиз прво пита, а тек онда каже. Изаберите праву реч од четири могућности или је упишите — тежа и боља провера. Ви одлучујете коју страну видите и колико питања узимате; код погрешног одговора приказује се тачан заједно са дефиницијом, а сваки одговор напаја исто понављање у размацима као и ваше флеш-картице.
+Multiple choice: Вишеструки избор
+Type the answer: Упишите одговор
 Read real texts — or ones written for you: Читајте праве текстове — или оне написане баш за вас
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Увезите чланке, веб странице, одреднице са Википедије и RSS канале, па их читајте у апликацији уз усклађени превод и звук — чувајући било коју реч право из текста док читате. AI вам уз то може написати кратак текст од речи које управо учите, да их поново сретнете у контексту, у реченицама које још нисте прочитали.

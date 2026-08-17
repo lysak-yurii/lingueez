@@ -87,6 +87,7 @@ Add a word from any app: Legg til et ord fra hvilken som helst app
 Translated the moment you save it: Oversatt i samme øyeblikk du lagrer det
 AI-assisted definitions: Forklaringer skrevet med KI
 Review with flashcards: Repetisjon med flash-kort
+Quiz yourself — choices or typing: Test deg selv — valg eller skriving
 Read real articles in the app: Les ekte artikler inne i appen
 New: Ny
 Reviewing: Repeterer
@@ -109,6 +110,9 @@ Practise: Øv
 Turning a word you have seen into one you know: Slik blir et ord du har sett til et ord du kan
 Flashcards &amp; spaced repetition: Flash-kort og intervallrepetisjon
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Sett sammen en bunke ut fra et hvilket som helst filter, og repeter den med intervaller som henter hvert ord tilbake like før du ville glemt det.
+Quiz &amp; recall practice: Quiz og gjenkallingsøvelse
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Svar i stedet for å vurdere deg selv — velg ordet blant fire alternativer, eller skriv det. Skrivefeil og aksenter tilgis, og hvert svar mates inn i den samme intervallrepetisjonen.
 Read-aloud &amp; MP3: Opplesing og MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Få ordene til å sitte gjennom lyd — med antall repetisjoner, tempo og MP3-eksport helt som du vil ha det.
 Progress &amp; statistics: Framgang og statistikk
@@ -125,6 +129,11 @@ Import &amp; export: Import og eksport
 Practise with flashcards: Øv med flash-kort
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Hvert ord du lagrer, blir til et flash-kort. Sett sammen en bunke ut fra et hvilket som helst filter — status, språk eller etikett — og repeter den så med intervaller som henter hvert ord tilbake like før du ville glemt det.
+Answer it, don’t just recognise it: Svar på det — ikke bare kjenn det igjen
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: En quiz spør før den forteller. Velg det riktige ordet blant fire alternativer, eller skriv det — den vanskeligere og bedre prøven. Du velger hvilken side du ser og hvor mange spørsmål du tar; et galt svar viser det riktige sammen med definisjonen, og hvert svar mates inn i den samme intervallrepetisjonen som flash-kortene dine.
+Multiple choice: Flervalg
+Type the answer: Skriv svaret
 Read real texts — or ones written for you: Les ekte tekster — eller noen som er skrevet til deg
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importer artikler, nettsider, Wikipedia-oppslag og RSS-strømmer, og les dem i appen med oversettelse og lyd som følger med — og lagre hvilket som helst ord rett fra teksten mens du leser. KI kan i tillegg skrive en kort tekst ut fra ordene du holder på med akkurat nå, så du møter dem igjen i sammenheng, i setninger du ikke har lest før.

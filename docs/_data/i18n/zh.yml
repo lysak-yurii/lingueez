@@ -87,6 +87,7 @@ Add a word from any app: 从任意应用轻松添加生词
 Translated the moment you save it: 保存瞬间自动完成翻译
 AI-assisted definitions: AI 辅助智能释义
 Review with flashcards: 使用间隔复习卡片巩固
+Quiz yourself — choices or typing: 自我测试 —— 选择还是输入
 Read real articles in the app: 应用内阅读真实文章
 New: 生词
 Reviewing: 复习中
@@ -109,6 +110,9 @@ Practise: 练习
 Turning a word you have seen into one you know: 将一面之缘的词汇转化为熟练掌握的知识
 Flashcards &amp; spaced repetition: 记忆卡片与间隔复习
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: 按任意筛选条件生成词卡组，结合科学的间隔复习算法，在您即将遗忘的前一刻精准提醒复习。
+Quiz &amp; recall practice: 测验与回忆练习
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: 直接作答，而不是给自己打分——从四个选项中选出这个词，或者自己输入。拼写小错和变音符号都不算错，每次作答都会汇入同一套间隔复习。
 Read-aloud &amp; MP3: 语音朗读与 MP3 导出
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: 通过可自定义重复次数、语速的语音朗读强化记忆，并支持导出为 MP3 音频文件。
 Progress &amp; statistics: 进度与统计数据
@@ -125,6 +129,11 @@ Import &amp; export: 轻松导入与导出
 Practise with flashcards: 使用卡片高效练习
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : 保存的每一个单词都会自动生成一张抽词卡片。按状态、语言或标签灵活构建词卡组，利用间隔复习机制在遗忘临界点精准复习。
+Answer it, don’t just recognise it: 答得出来，而不只是看着眼熟
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: 测验先提问，再给答案。从四个选项中选出正确的词，或者自己输入——后者更难，也更能说明问题。出哪一面、做多少题都由你决定；答错时会当场显示正确答案及其释义，每次作答都会汇入与记忆卡片相同的间隔复习。
+Multiple choice: 选择题
+Type the answer: 输入答案
 Read real texts — or ones written for you: 阅读真实文章——或为您量身定制的文本
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : 一键导入新闻文章、网页、维基百科条目和 RSS 订阅，在应用内边看边听并查看同步翻译，随时点选摘录生词。AI 还能根据您正在学习的词汇撰写短文，让您在全新的语境和句子中再次复习它们。

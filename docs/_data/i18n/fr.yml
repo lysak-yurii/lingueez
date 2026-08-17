@@ -87,6 +87,7 @@ Add a word from any app: Ajoutez un mot depuis n'importe quelle application
 Translated the moment you save it: Traduit dès que vous l'enregistrez
 AI-assisted definitions: Définitions assistées par IA
 Review with flashcards: Révisez avec des cartes mémoire
+Quiz yourself — choices or typing: Testez-vous — choix ou saisie
 Read real articles in the app: Lisez de vrais articles dans l'application
 New: Nouveau
 Reviewing: En révision
@@ -109,6 +110,9 @@ Practise: S'entraîner
 Turning a word you have seen into one you know: Transformer un mot aperçu en un mot maîtrisé
 Flashcards &amp; spaced repetition: Cartes mémoire & répétition espacée
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Créez un paquet à partir de n'importe quel filtre et révisez-le avec la répétition espacée, qui ramène chaque mot juste avant que vous ne l'oubliiez.
+Quiz &amp; recall practice: Quiz & exercice de rappel
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Répondez au lieu de vous auto-évaluer — choisissez le mot parmi quatre propositions ou saisissez-le. Les fautes de frappe et les accents sont pardonnés, et chaque réponse alimente la même répétition espacée.
 Read-aloud &amp; MP3: Lecture à voix haute & MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Renforcez votre vocabulaire grâce à l'audio avec répétition personnalisable, rythme et export MP3.
 Progress &amp; statistics: Progrès & statistiques
@@ -125,6 +129,11 @@ Import &amp; export: Importation & exportation
 Practise with flashcards: S'entraîner avec des cartes mémoire
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Chaque mot enregistré devient una carte mémoire. Créez un paquet à partir de n'importe quel filtre — statut, langue ou étiquette — puis révisez-le avec la répétition espacée.
+Answer it, don’t just recognise it: Répondez, ne vous contentez pas de reconnaître
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: 'Un quiz interroge avant de révéler. Choisissez le bon mot parmi quatre propositions, ou saisissez-le : l’épreuve la plus exigeante, et la plus utile. À vous de décider quel côté vous voyez et combien de questions vous prenez ; une mauvaise réponse affiche la bonne avec sa définition, et chaque réponse alimente la même répétition espacée que vos cartes mémoire.'
+Multiple choice: Choix multiple
+Type the answer: Saisissez la réponse
 Read real texts — or ones written for you: Lisez de vrais textes — ou des textes rédigés pour vous
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importez des articles, pages web, entrées Wikipedia et flux RSS, puis lisez-les dans l'application avec traductions et audio synchronisés — en enregistrant n'importe quel mot directement depuis le texte au fil de la lecture. L'IA peut également rédiger un court texte à partir des mots que vous apprenez en ce moment, pour que vous les retrouviez en contexte, dans des phrases que vous n'avez jamais lues.

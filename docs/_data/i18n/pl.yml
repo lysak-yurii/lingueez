@@ -87,6 +87,7 @@ Add a word from any app: Dodaj słowo z dowolnej aplikacji
 Translated the moment you save it: Przetłumaczone w momencie zapisu
 AI-assisted definitions: Definicje wspomagane przez AI
 Review with flashcards: Powtarzaj za pomocą fiszek
+Quiz yourself — choices or typing: Sprawdź się — wybór albo wpisywanie
 Read real articles in the app: Czytaj prawdziwe artykuły w aplikacji
 New: Nowe
 Reviewing: W trakcie powtórek
@@ -109,6 +110,9 @@ Practise: Ćwicz
 Turning a word you have seen into one you know: Zamieniaj słowo, które widziałeś, w słowo, które naprawdę znasz
 Flashcards &amp; spaced repetition: Fiszki i powtórki odstępowe
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Stwórz talię na основе dowolnego filtra i powtarzaj ją za pomocą powtórek odstępowych, które przypominają każde słowo tuż przed tym, jak je zapomnisz.
+Quiz &amp; recall practice: Quiz i ćwiczenie przypominania
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Odpowiadaj, zamiast oceniać samego siebie — wybierz słowo z czterech opcji albo je wpisz. Literówki i znaki diakrytyczne są wybaczane, a każda odpowiedź napędza te same powtórki odstępowe.
 Read-aloud &amp; MP3: Lektor i pliki MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Utrwalaj słownictwo za pomocą nagrań audio z konfigurowalną liczbą powtórzeń, tempem i eksportem do MP3.
 Progress &amp; statistics: Postępy i statystyki
@@ -125,6 +129,11 @@ Import &amp; export: Import i eksport
 Practise with flashcards: Ćwicz z fiszkami
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Każde zapisane słowo staje się fiszką. Stwórz talię z dowolnego filtra — statusu, języka lub tagu — a następnie powtarzaj ją za pomocą powtórek odstępowych, które przypominają słowo tuż przed tym, jak byś je zapomniał.
+Answer it, don’t just recognise it: Odpowiedz, nie tylko rozpoznaj
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Quiz najpierw pyta, a dopiero potem mówi. Wybierz właściwe słowo z czterech opcji albo je wpisz — trudniejsza i lepsza próba. To Ty decydujesz, którą stronę widzisz i ile pytań bierzesz; przy błędnej odpowiedzi pokazuje się poprawna wraz z definicją, a każda odpowiedź napędza te same powtórki odstępowe co Twoje fiszki.
+Multiple choice: Wielokrotny wybór
+Type the answer: Wpisz odpowiedź
 Read real texts — or ones written for you: Czytaj prawdziwe teksty — lub napisane specjalnie dla Ciebie
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importuj artykuły, strony www, wpisy z Wikipedii i kanały RSS, a następnie czytaj je w aplikacji ze zsynchronizowanym tłumaczeniem i nagraniem audio — zapisując słowa bezpośrednio z tekstu. AI może również napisać krótki tekst ze słów, których się obecnie uczysz, abyś spotkał je ponownie w nowym kontekście.

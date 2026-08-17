@@ -87,6 +87,7 @@ Add a word from any app: Vegyél fel szót bármelyik alkalmazásból
 Translated the moment you save it: Lefordítva, abban a pillanatban, ahogy elmented
 AI-assisted definitions: MI-vel készült meghatározások
 Review with flashcards: Ismétlés tanulókártyákkal
+Quiz yourself — choices or typing: Tedd próbára magad — választás vagy gépelés
 Read real articles in the app: Olvass valódi cikkeket az alkalmazásban
 New: Új
 Reviewing: Áttekintés alatt
@@ -109,6 +110,9 @@ Practise: Gyakorlás
 Turning a word you have seen into one you know: Így lesz a látott szóból tudott szó
 Flashcards &amp; spaced repetition: Tanulókártyák és szakaszos ismétlés
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Állíts össze paklit bármelyik szűrő alapján, és ismételd szakaszos ismétléssel, amely minden szót épp azelőtt hoz vissza, hogy elfelejtenéd.
+Quiz &amp; recall practice: Kvíz és a felidézés gyakorlása
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Válaszolj ahelyett, hogy magadat osztályozod — válaszd ki a szót négy lehetőség közül, vagy írd be. Az elütéseket és az ékezeteket elnézi, és minden válasz ugyanabba a szakaszos ismétlésbe folyik be.
 Read-aloud &amp; MP3: Felolvasás és MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Rögzítsd a szavakat hallás után — tetszőleges ismétlésszámmal, tempóval és MP3-exporttal.
 Progress &amp; statistics: Haladás és statisztika
@@ -125,6 +129,11 @@ Import &amp; export: Importálás és exportálás
 Practise with flashcards: Gyakorolj tanulókártyákkal
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Minden elmentett szóból tanulókártya lesz. Állíts össze paklit bármelyik szűrő alapján — állapot, nyelv vagy címke szerint —, majd ismételd szakaszos ismétléssel, amely minden szót épp azelőtt hoz vissza, hogy elfelejtetted volna.
+Answer it, don’t just recognise it: Válaszolj rá, ne csak ismerd fel
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: A kvíz előbb kérdez, és csak azután mond. Válaszd ki a helyes szót négy lehetőség közül, vagy írd be — ez a nehezebb és jobb próba. Te döntöd el, melyik oldalt látod és hány kérdést kapsz; hibás válasznál megjelenik a helyes a meghatározásával együtt, és minden válasz ugyanabba a szakaszos ismétlésbe folyik be, mint a tanulókártyáidnál.
+Multiple choice: Feleletválasztás
+Type the answer: Írja be a választ
 Read real texts — or ones written for you: Olvass valódi szövegeket — vagy olyanokat, amelyek neked készültek
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Importálj cikkeket, weboldalakat, Wikipédia-szócikkeket és RSS-hírfolyamokat, majd olvasd őket az alkalmazásban együtt futó fordítással és hanggal — és ments bármelyik szót egyenesen a szövegből, menet közben. Az MI ráadásul rövid szöveget is ír neked azokból a szavakból, amiket épp most tanulsz, hogy szövegkörnyezetben találkozz velük újra, olyan mondatokban, amiket még nem olvastál.

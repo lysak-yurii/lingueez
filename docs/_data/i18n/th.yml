@@ -87,6 +87,7 @@ Add a word from any app: เพิ่มคำจากแอปไหนก็�
 Translated the moment you save it: แปลให้ทันทีที่คุณกดบันทึก
 AI-assisted definitions: คำนิยามที่ AI ช่วยเขียน
 Review with flashcards: ทบทวนด้วยแฟลชการ์ด
+Quiz yourself — choices or typing: ทดสอบตัวเอง — เลือกตอบหรือพิมพ์
 Read real articles in the app: อ่านบทความจริงได้ในแอป
 New: ใหม่
 Reviewing: กำลังทบทวน
@@ -109,6 +110,9 @@ Practise: ฝึกฝน
 Turning a word you have seen into one you know: เปลี่ยนคำที่เคยเห็นให้กลายเป็นคำที่คุณรู้จริง
 Flashcards &amp; spaced repetition: แฟลชการ์ดและการทบทวนแบบเว้นระยะ
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: สร้างชุดการ์ดจากตัวกรองใดก็ได้ แล้วทบทวนแบบเว้นระยะ ซึ่งจะดึงแต่ละคำกลับมาพอดีก่อนที่คุณจะลืม
+Quiz &amp; recall practice: แบบทดสอบและการฝึกนึกคำ
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: ตอบเองแทนที่จะให้คะแนนตัวเอง — เลือกคำจากสี่ตัวเลือกหรือพิมพ์เอง ระบบยกโทษให้การพิมพ์ผิดเล็กน้อยและเครื่องหมายเสริมสัทอักษร และทุกคำตอบจะป้อนเข้าการทบทวนแบบเว้นระยะเดียวกัน
 Read-aloud &amp; MP3: อ่านออกเสียงและ MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: ตอกย้ำคำศัพท์ด้วยเสียง ปรับจำนวนครั้ง จังหวะ และส่งออกเป็น MP3 ได้ตามใจ
 Progress &amp; statistics: ความคืบหน้าและสถิติ
@@ -125,6 +129,11 @@ Import &amp; export: นำเข้าและส่งออก
 Practise with flashcards: ฝึกด้วยแฟลชการ์ด
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : ทุกคำที่คุณบันทึกจะกลายเป็นแฟลชการ์ด สร้างชุดการ์ดจากตัวกรองใดก็ได้ — สถานะ ภาษา หรือแท็ก — แล้วทบทวนแบบเว้นระยะ ซึ่งจะดึงแต่ละคำกลับมาพอดีก่อนที่คุณจะลืมมันไป
+Answer it, don’t just recognise it: ตอบให้ได้ ไม่ใช่แค่จำหน้าตาได้
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: แบบทดสอบจะถามก่อนบอก เลือกคำที่ถูกจากสี่ตัวเลือก หรือพิมพ์เอง — ยากกว่าแต่วัดผลได้ดีกว่า คุณเลือกได้ว่าจะเห็นด้านไหนและทำกี่ข้อ เมื่อตอบผิดจะเห็นคำตอบที่ถูกพร้อมคำนิยาม และทุกคำตอบจะป้อนเข้าการทบทวนแบบเว้นระยะเดียวกับแฟลชการ์ดของคุณ
+Multiple choice: ปรนัย
+Type the answer: พิมพ์คำตอบ
 Read real texts — or ones written for you: อ่านข้อความจริง — หรือข้อความที่เขียนขึ้นเพื่อคุณ
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : นำเข้าบทความ หน้าเว็บ บทความ Wikipedia และฟีด RSS แล้วอ่านในแอปพร้อมคำแปลและเสียงที่เดินไปด้วยกัน โดยบันทึกคำใดก็ได้จากตัวข้อความระหว่างอ่าน นอกจากนี้ AI ยังแต่งข้อความสั้น ๆ จากคำที่คุณกำลังเรียนอยู่ตอนนี้ให้ได้ เพื่อให้คุณเจอคำเหล่านั้นอีกครั้งในบริบท ในประโยคที่คุณยังไม่เคยอ่าน

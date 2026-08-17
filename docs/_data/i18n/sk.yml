@@ -87,6 +87,7 @@ Add a word from any app: Pridajte slovo z hociktorej aplikácie
 Translated the moment you save it: Preložené v okamihu uloženia
 AI-assisted definitions: Definície s pomocou AI
 Review with flashcards: Opakovanie s kartičkami
+Quiz yourself — choices or typing: Vyskúšajte sa — výber alebo písanie
 Read real articles in the app: Čítajte skutočné články priamo v aplikácii
 New: Nové
 Reviewing: Opakuje sa
@@ -109,6 +110,9 @@ Practise: Precvičiť
 Turning a word you have seen into one you know: Ako sa zo slova, ktoré ste videli, stane slovo, ktoré viete
 Flashcards &amp; spaced repetition: Kartičky a opakovanie s odstupom
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Zostavte balíček podľa ľubovoľného filtra a opakujte ho s odstupmi, ktoré slovo vrátia presne chvíľu predtým, než by ste ho zabudli.
+Quiz &amp; recall practice: Kvíz a precvičovanie vybavovania
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Odpovedajte namiesto toho, aby ste sa hodnotili — vyberte slovo zo štyroch možností alebo ho napíšte. Preklepy a diakritika sa prehliadnu a každá odpoveď sa zapisuje do toho istého opakovania s odstupom.
 Read-aloud &amp; MP3: Čítanie nahlas a MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Upevňujte si slovíčka počúvaním — s vlastným počtom opakovaní, tempom a exportom do MP3.
 Progress &amp; statistics: Pokrok a štatistiky
@@ -125,6 +129,11 @@ Import &amp; export: Import a export
 Practise with flashcards: Precvičujte s kartičkami
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Z každého uloženého slova sa stane kartička. Zostavte balíček podľa ľubovoľného filtra — stavu, jazyka alebo štítku — a potom ho opakujte s odstupmi, ktoré slovo vrátia presne chvíľu predtým, než by ste ho zabudli.
+Answer it, don’t just recognise it: Odpovedzte, nielen poznajte
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Kvíz sa najprv spýta a až potom prezradí. Vyberte správne slovo zo štyroch možností alebo ho napíšte — náročnejšia a lepšia skúška. Vy určíte, ktorú stranu vidíte a koľko otázok dostanete; pri nesprávnej odpovedi sa zobrazí tá správna aj s definíciou a každá odpoveď sa zapisuje do toho istého opakovania s odstupom ako vaše kartičky.
+Multiple choice: Výber z možností
+Type the answer: Napíšte odpoveď
 Read real texts — or ones written for you: Čítajte skutočné texty — alebo také, čo vzniknú pre vás
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Naimportujte články, webové stránky, heslá z Wikipédie aj RSS kanály a čítajte ich v aplikácii so synchronizovaným prekladom a zvukom — a ukladajte si slová rovno z textu, ako čítate. AI vám navyše dokáže napísať krátky text zo slov, ktoré sa učíte práve teraz, aby ste ich stretli znova v kontexte, vo vetách, ktoré ste ešte nečítali.

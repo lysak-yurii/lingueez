@@ -87,6 +87,7 @@ Add a word from any app: Thêm từ từ bất kỳ ứng dụng nào
 Translated the moment you save it: Được dịch ngay khoảnh khắc bạn lưu
 AI-assisted definitions: Định nghĩa hỗ trợ bởi AI
 Review with flashcards: Ôn tập với thẻ ghi nhớ
+Quiz yourself — choices or typing: Tự kiểm tra — chọn đáp án hay gõ chữ
 Read real articles in the app: Đọc các bài báo thực tế trong ứng dụng
 New: Mới
 Reviewing: Đang ôn tập
@@ -109,6 +110,9 @@ Practise: Luyện tập
 Turning a word you have seen into one you know: Biến một từ bạn từng gặp thành từ bạn thực sự làm chủ
 Flashcards &amp; spaced repetition: Thẻ ghi nhớ &amp; Lặp lại ngắt quãng (Spaced repetition)
 Build a deck from any filter and review it with spaced repetition that brings each word back just before you forget it.: Tạo bộ thẻ từ bất kỳ bộ lọc nào và ôn tập với phương pháp lặp lại ngắt quãng, nhắc lại từ ngay trước khi bạn kịp quên.
+Quiz &amp; recall practice: Trắc nghiệm &amp; luyện nhớ lại
+? Answer instead of rating yourself — pick the word from four options or type it out. Typos and accents are forgiven, and every answer feeds the same spaced repetition.
+: Trả lời thay vì tự đánh giá — chọn từ trong bốn đáp án hoặc tự gõ ra. Lỗi gõ nhỏ và dấu thanh được bỏ qua, và mọi câu trả lời đều dồn vào cùng một lịch lặp lại ngắt quãng.
 Read-aloud &amp; MP3: Đọc thành tiếng &amp; Xuất MP3
 Reinforce vocabulary through audio with customizable repetition, pacing, and MP3 export.: Củng cố từ vựng qua âm thanh với tùy chỉnh lặp lại, tốc độ và xuất tệp MP3.
 Progress &amp; statistics: Tiến trình &amp; Thống kê
@@ -125,6 +129,11 @@ Import &amp; export: Nhập &amp; Xuất dữ liệu
 Practise with flashcards: Luyện tập với thẻ ghi nhớ
 ? Every word you save becomes a flashcard. Build a deck from any filter — status, language or tag — then review it with spaced repetition that brings each word back just before you would have forgotten it.
 : Mỗi từ bạn lưu sẽ trở thành một thẻ ghi nhớ. Tạo bộ thẻ từ bất kỳ bộ lọc nào — trạng thái, ngôn ngữ hoặc thẻ nhãn — sau đó ôn tập với phương pháp lặp lại ngắt quãng.
+Answer it, don’t just recognise it: Hãy trả lời được, đừng chỉ nhận ra
+? A quiz asks before it tells. Pick the right word from four options, or type it out — the harder, better test. Choose which side you are shown and how many questions to take; a wrong answer shows the right one with its definition, and every answer feeds the same spaced repetition as your flashcards.
+: Trắc nghiệm hỏi trước khi nói. Chọn từ đúng trong bốn đáp án, hoặc tự gõ ra — cách khó hơn và cũng chính xác hơn. Bạn quyết định xem mặt nào và làm bao nhiêu câu; trả lời sai sẽ hiện đáp án đúng kèm định nghĩa, và mọi câu trả lời đều dồn vào cùng một lịch lặp lại ngắt quãng như thẻ ghi nhớ của bạn.
+Multiple choice: Nhiều lựa chọn
+Type the answer: Nhập câu trả lời
 Read real texts — or ones written for you: Đọc văn bản thực tế — hoặc văn bản được viết riêng cho bạn
 ? Import articles, web pages, Wikipedia entries and RSS feeds, then read them in the app with synchronized translations and audio — saving any word straight from the texts as you go. AI can also write a short text from the words you are learning right now, so you meet them again in context, in sentences you have not read before.
 : Nhập bài báo, trang web, bài viết Wikipedia và nguồn RSS, sau đó đọc ngay trong ứng dụng với bản dịch và âm thanh đồng bộ — lưu từ trực tiếp trong khi đọc. AI cũng có thể viết một đoạn văn ngắn dựa trên các từ bạn đang học, để bạn gặp lại chúng trong ngữ cảnh, trong những câu bạn chưa từng đọc.

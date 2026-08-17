@@ -304,24 +304,60 @@
     border-top:1px solid var(--border); border-bottom:1px solid var(--border);
   }
   .ladder{
-    display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap;
+    display:flex; align-items:center; justify-content:center; gap:0;
     --fill:0;   /* 0 → 1, driven by scroll; see the animation at the end */
   }
-  .ladder .pill{ font-size:.92rem; padding:.4em .9em; }
+  /* Each arrow fills over its own slice of the 0→1 progress. The three slices
+     stop at .90 rather than 1 so the run ends on Mastered's own bloom instead of
+     on the rail: a pill needs progress *past* its stop to light, and a stop at 1
+     is a stop that never arrives. */
   .ladder .arrow{
     position:relative; width:3.2em; height:2px; margin:0 .55em; flex:0 0 auto;
     background:var(--border); border-radius:2px; overflow:hidden;
   }
-  /* Each arrow is a quarter of the run, so it fills over its own slice of the
-     0→1 progress: arrow n spans (n-1)/3 … n/3. */
   .ladder .arrow::after{
     content:""; position:absolute; inset:0; transform-origin:left center;
-    transform:scaleX(clamp(0, (var(--fill) - var(--from)) * 3, 1));
+    transform:scaleX(clamp(0, (var(--fill) - var(--from)) * 3.3333, 1));
     background:linear-gradient(90deg, var(--a), var(--b));
   }
-  .ladder .arrow:nth-of-type(1){ --from:0;      --a:var(--st-new); --b:var(--st-rev); }
-  .ladder .arrow:nth-of-type(2){ --from:.3333;  --a:var(--st-rev); --b:var(--st-lrn); }
-  .ladder .arrow:nth-of-type(3){ --from:.6667;  --a:var(--st-lrn); --b:var(--st-mas); }
+  /* nth-child, not nth-of-type: every child here is a <span>, so "of-type"
+     counts the pills too — it numbered the arrows 2, 4, 6 and left two of the
+     three with no --from and no colours at all, which is a rail that cannot
+     fill. The ladder is pill, arrow, pill, arrow, pill, arrow, pill. */
+  .ladder .arrow:nth-child(2){ --from:0;   --a:var(--st-new); --b:var(--st-rev); }
+  .ladder .arrow:nth-child(4){ --from:.30; --a:var(--st-rev); --b:var(--st-lrn); }
+  .ladder .arrow:nth-child(6){ --from:.60; --a:var(--st-lrn); --b:var(--st-mas); }
+
+  /* Each status waits for the rail to reach it. --at is where its own arrow
+     lands: below that the pill is dim, and as the fill crosses it the pill comes
+     up to full and blooms once — --peak rises with the rail and then decays as it
+     moves past, which is a flare and a settle rather than a light switch.
+
+     Both are plain functions of the inherited --fill, so there is no timer to
+     keep in step and scrolling back up unwinds the whole ladder.
+
+     Mastered keeps part of its bloom at rest, and that is deliberate: --fill
+     stops at 1 and so never travels far enough past .90 for the flare to decay.
+     The run ends with the destination still lit. */
+  .ladder .pill{
+    font-size:.92rem; padding:.4em .9em;
+    --lit:clamp(0, (var(--fill) - var(--at)) * 14, 1);
+    --rise:clamp(0, (var(--fill) - var(--at)) * 26, 1);
+    --settle:clamp(0, 1 - (var(--fill) - var(--at) - .035) * 6, 1);
+    --peak:min(var(--rise), var(--settle));
+    opacity:calc(.4 + var(--lit) * .6);
+    box-shadow:0 0 calc(var(--peak) * 15px) calc(var(--peak) * 1px)
+               color-mix(in srgb, var(--st) calc(var(--peak) * 42%), transparent);
+  }
+  /* The dot swells with the bloom and keeps a little of it — the pill's own
+     "this rung is reached" mark once the glow has gone. */
+  .ladder .pill .dot{
+    transform:scale(calc(.74 + var(--lit) * .26 + var(--peak) * .3));
+  }
+  .ladder .pill.new{ --at:0;   }
+  .ladder .pill.rev{ --at:.30; }
+  .ladder .pill.lrn{ --at:.60; }
+  .ladder .pill.mas{ --at:.90; }
   .prog .cap{
     text-align:center; color:var(--text-dim); margin:var(--s-4) auto 0; max-width:48ch;
   }
@@ -376,6 +412,33 @@
     content:""; flex:1 0 40px; height:1px; background:var(--border);
     transform:translateY(-.25em);
   }
+  /* A group with more cards than fit becomes a rail. Its dots ride at the right
+     end of the group heading, past the hairline, so steering one costs the page
+     no vertical space and reads as belonging to that group rather than to the
+     section. site.js adds them only when the track really overflows, so the
+     three-card groups look exactly as they did. */
+  /* order:1 puts them after the hairline — the ::after is a flex item too, and
+     both default to 0, so appending to the DOM alone lands them mid-line. */
+  .fgroup > h3 .screen-dots{ order:1; flex:0 0 auto; transform:translateY(-.15em); }
+  /* Which way there is more to go. A mask rather than a gradient overlay: the
+     cards sit on the page background, not on a panel, so anything painted over
+     the edge would have to match a background that changes with the theme.
+
+     --rail-fade is a shade over .card's own var(--s-5) side padding, so the
+     softened band falls in the card's margin and its border, never on the text.
+     A wider, more obvious fade dims real words at every breakpoint — the card
+     at the edge is a full-width card, not a sliver of the next one. */
+  .grid{ --rail-fade:1.75rem; }
+  .grid.has-next{
+    mask-image:linear-gradient(to right, #000 calc(100% - var(--rail-fade)), transparent);
+  }
+  .grid.has-prev{
+    mask-image:linear-gradient(to right, transparent, #000 var(--rail-fade));
+  }
+  .grid.has-prev.has-next{
+    mask-image:linear-gradient(to right, transparent, #000 var(--rail-fade),
+                               #000 calc(100% - var(--rail-fade)), transparent);
+  }
 
   /* Pointer-tracked hairline: the border brightens nearest the cursor. Purely
      a border effect — no glow, no blob. */
@@ -394,7 +457,39 @@
   }
   @media (max-width:560px){
     .pcard{ padding:var(--s-5) var(--s-4); }
-    .ladder .arrow{ width:1.8em; margin:0 .35em; }
+  }
+  /* Below ~660px the four pills and their three rails stop fitting on one line
+     (measured: the run needs ~612px of content, which .wrap gives at a 660px
+     viewport). Wrapping them breaks the thing they draw — a row ending on a
+     connector that points at nothing, and a next row starting on a pill with
+     nothing leading into it — and standing the ladder up costs 250px of a phone
+     screen to say what one line says.
+
+     So the pills shed their chrome and become what they were always drawing: a
+     rail with four stops on it, each named underneath. The rails take the leftover
+     width (flex:1 1 0) instead of a fixed 3.2em, which is what makes this fit at
+     any width and any label length — there is no measurement left to outgrow. */
+  @media (max-width:660px){
+    .ladder{ align-items:flex-start; }
+    .ladder .pill{
+      flex:0 1 auto; min-width:0;
+      flex-direction:column; gap:.4em;
+      padding:0; border-color:transparent; background:none;
+      font-size:.72rem; line-height:1.25; text-align:center;
+      text-wrap:balance;
+      box-shadow:none;                 /* the glow moves to the dot below */
+    }
+    /* Fixed px, so the rail can be aligned to the dot's centre deterministically
+       rather than through a chain of em maths that a font change would shift. */
+    .ladder .pill .dot{
+      width:9px; height:9px; flex:0 0 auto;
+      box-shadow:0 0 calc(var(--peak) * 9px) calc(var(--peak) * 2px)
+                 color-mix(in srgb, var(--st) calc(var(--peak) * 70%), transparent);
+    }
+    .ladder .arrow{
+      flex:1 1 0; width:auto; min-width:.5em;
+      margin:3.5px .3em 0;             /* 9px dot: centre 4.5px, less 1px of rail */
+    }
   }
 }
 
@@ -406,7 +501,11 @@
     .prog .ladder{
       animation:ladder-fill linear both;
       animation-timeline:view();
-      animation-range:entry 55% cover 55%;
+      /* Starts as the band clears the fold and finishes a little past centre, so
+         the climb happens where it can be watched. Ending at cover 55% rather
+         than on the way out matters: the last thing the scroll does is light
+         Mastered, and it should land while the ladder is still in front of you. */
+      animation-range:entry 30% cover 55%;
     }
     @keyframes ladder-fill{ from{ --fill:0; } to{ --fill:1; } }
   }
