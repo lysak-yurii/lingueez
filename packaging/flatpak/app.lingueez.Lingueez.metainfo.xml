@@ -44,6 +44,13 @@
   </screenshots>
 
   <releases>
+    <release version="2.0.8" date="2026-08-17">
+      <description>
+        <p>A new Quiz page tests your vocabulary with multiple-choice or typed answers.</p>
+        <p>Flashcards carry playback controls in the transport row, and a word can be set aside without leaving the session.</p>
+        <p>The navigation rail expands to show labels, and syncing keeps edits, tags and listen counts in step across devices.</p>
+      </description>
+    </release>
     <release version="2.0.7" date="2026-08-07">
       <description>
         <p>The interface is now available in 32 languages, and the Windows installer speaks them too.</p>
