@@ -168,9 +168,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y zsync
       - name: Build AppImage
         run: |
-          curl -L -o appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          curl -fL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
-          ./appimagetool --appimage-extract-and-run \
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run \
             -u "gh-releases-zsync|lysak-yurii|lingueez|latest|Lingueez-*-x86_64.AppImage.zsync" \
             AppDir \
             "Lingueez-${{ needs.version.outputs.version }}-x86_64.AppImage"
