@@ -230,7 +230,6 @@ class TourController(QObject):
         self._key = "words"
         self._auto_selected = False
         self._demo = set()        # page keys we injected demo data for this run
-        self._saved_df = None     # real words DataFrame, restored after the tour
         self._saved_text = None   # real current text record, restored after the tour
         # Registry of named tours: each is an ordered list of resolver methods
         # returning (widget, title, body); a resolver may perform a small
@@ -591,14 +590,12 @@ class TourController(QObject):
         if key == "words":
             df = win.df
             if df is None or getattr(df, "empty", True):
-                self._saved_df = win.df
                 win.df = _demo_words_df()
                 win.refresh_display()
                 self._demo.add("words")
         elif key == "flashcards":
             fp = win.flashcards_page
             if win.df is None or getattr(win.df, "empty", True):
-                self._saved_df = win.df
                 win.df = _demo_words_df()
                 win.refresh_display()
                 self._demo.add("words")  # restored via the Words demo path
@@ -615,7 +612,6 @@ class TourController(QObject):
         elif key == "quiz":
             qz = win.quiz_page
             if win.df is None or getattr(win.df, "empty", True):
-                self._saved_df = win.df
                 win.df = _demo_words_df()
                 win.refresh_display()
                 self._demo.add("words")  # restored via the Words demo path
@@ -648,12 +644,18 @@ class TourController(QObject):
                 win.stats_page._apply(demo)
                 self._demo.add("stats")
 
+    def owns_words_display(self):
+        """True while demo rows stand in for the real ones on the Words page, so a
+        background reload defers to the tour instead of painting over it."""
+        return "words" in self._demo
+
     def _exit_demo(self):
         win = self.win
-        if "words" in self._demo:
-            win.df = self._saved_df
-            self._saved_df = None
-            win.refresh_display()
+        # Re-read rather than restoring a snapshot: on a first launch that signs in,
+        # the tour starts while the cloud pull is still running, so a df captured at
+        # _enter_demo is stale by the time the tour ends and restoring it hides words
+        # that did arrive. The demo never writes to the database.
+        reload_words = "words" in self._demo
         if "texts" in self._demo:
             tp = win.texts_page
             tp.current = self._saved_text
@@ -678,6 +680,8 @@ class TourController(QObject):
         if {"words", "quiz"} & self._demo:
             win.quiz_page._refresh_picker_info()
         self._demo.clear()
+        if reload_words:
+            win.load_data()  # after clear(), so load_data's tour guard stands down
 
     # ------------------------------------------------------------------ fade
     @staticmethod

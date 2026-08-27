@@ -2312,6 +2312,11 @@ class MainWindow(QMainWindow):
 
     def load_data(self):
         try:
+            tour = getattr(self, "_tour", None)
+            if tour is not None and tour.owns_words_display():
+                # Demo rows are on screen; overwriting them mid-tour flashes the real
+                # library and defeats the demo. The tour re-reads when it ends.
+                return
             words = self.db_adapter.get_words()
             self.df = words_to_dataframe(words)
             # Cache the text count (cheap COUNT) for the local-only sync nudge, so
