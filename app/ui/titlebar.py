@@ -22,7 +22,7 @@
 """Client-side window decorations: integrated min/max/close controls,
 drag-to-move header and frameless edge resizing."""
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QWidget
 
 from app.i18n import tr
 from app.ui import icons
@@ -118,6 +118,26 @@ class FramelessResizer(QObject):
         super().__init__(window)
         self._window = window
         self._cursor_overridden = False
+        self._cursor_shape = None
+
+    def _apply_cursor(self, cursor):
+        """Push, reshape or pop the application-wide override cursor.
+
+        Qt keeps override cursors on a stack, so every set needs exactly one
+        restore; track the active shape rather than a bare flag, or moving from a
+        left edge to a top edge keeps showing the horizontal arrow."""
+        if cursor is None:
+            if self._cursor_overridden:
+                QApplication.restoreOverrideCursor()
+                self._cursor_overridden = False
+                self._cursor_shape = None
+            return
+        if not self._cursor_overridden:
+            QApplication.setOverrideCursor(cursor)
+            self._cursor_overridden = True
+        elif self._cursor_shape != cursor:
+            QApplication.changeOverrideCursor(cursor)
+        self._cursor_shape = cursor
 
     def _edges_at(self, global_pos):
         if self._window.isMaximized() or self._window.isFullScreen():
@@ -175,16 +195,20 @@ class FramelessResizer(QObject):
             elif etype == QEvent.MouseMove and not event.buttons():
                 widget = obj if hasattr(obj, 'window') and callable(obj.window) else None
                 if widget is not None and widget.window() is self._window:
-                    edges = self._edges_at(event.globalPosition().toPoint())
-                    cursor = self._cursor_for(edges)
-                    from PySide6.QtWidgets import QApplication
-                    if cursor is not None:
-                        if not self._cursor_overridden:
-                            QApplication.setOverrideCursor(cursor)
-                            self._cursor_overridden = True
-                    elif self._cursor_overridden:
-                        QApplication.restoreOverrideCursor()
-                        self._cursor_overridden = False
+                    self._apply_cursor(
+                        self._cursor_for(self._edges_at(event.globalPosition().toPoint())))
+                else:
+                    # Pointer moved onto another window; ours no longer owns the shape.
+                    self._apply_cursor(None)
+            elif etype in (QEvent.WindowDeactivate, QEvent.Hide, QEvent.Close):
+                # A modal dialog opening over an edge (sign-in is the usual one), the
+                # window losing focus, or it being hidden all steal the pointer without
+                # ever delivering the MouseMove that would pop the override — leaving
+                # the resize arrow stuck across the whole app until restart.
+                if obj is self._window:
+                    self._apply_cursor(None)
+            elif etype == QEvent.Leave and obj is self._window:
+                self._apply_cursor(None)
         except Exception:
             return False
         return False
