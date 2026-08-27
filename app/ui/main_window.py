@@ -2482,7 +2482,7 @@ class MainWindow(QMainWindow):
         self._empty_shortcut_caption = ElidedLabel(min_width=0)
         self._empty_shortcut_caption.setObjectName("dimLabel")
         self._empty_shortcut_keys = ShortcutKeys()
-        self._empty_shortcut_btn = link_button(self.open_settings)
+        self._empty_shortcut_btn = link_button(self._open_hotkey_settings)
         for w in (self._empty_shortcut_caption, self._empty_shortcut_keys,
                   self._empty_shortcut_btn):
             shortcut.addWidget(w, 0, Qt.AlignVCenter)
@@ -4643,10 +4643,19 @@ class MainWindow(QMainWindow):
     # (expensive) full-app restyle when they change.
     _APPEARANCE_KEYS = ("appearance_mode", "widget_scaling", "table_density")
 
-    def open_settings(self):
+    def _open_hotkey_settings(self):
+        """The empty-state link is about the hotkey, so land on the tab that holds
+        it rather than the dialog's default first page."""
+        from app.ui.dialogs.settings_dialog import PAGE_BEHAVIOR
+        self.open_settings(page=PAGE_BEHAVIOR)
+
+    def open_settings(self, *, page=None):
+        """*page* deep-links to a sub-tab (settings_dialog.PAGE_*). Keyword-only:
+        clicked.connect() hands a positional `checked` bool to its slot, which a
+        plain parameter would swallow as the page."""
         from app.ui.dialogs.settings_dialog import SettingsDialog
         before = {k: self.settings.get(k) for k in self._APPEARANCE_KEYS}
-        dialog = SettingsDialog(self)
+        dialog = SettingsDialog(self, page=page)
         if dialog.exec():
             self.settings = load_settings()
             # A server connect/disconnect closes the dialog without saving any other

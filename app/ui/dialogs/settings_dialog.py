@@ -77,8 +77,13 @@ def _scrollable(widget):
     return scroll
 
 
+# Deep-link targets for callers that open Settings on a specific sub-tab (the
+# empty-state hotkey link). Keys, not indices — the tab order is free to change.
+PAGE_BEHAVIOR = "behavior"
+
+
 class SettingsDialog(FramelessDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, page=None):
         super().__init__(parent, title=tr("Settings"))
         self.setMinimumSize(720, 560)
         self.settings = load_settings()
@@ -100,6 +105,8 @@ class SettingsDialog(FramelessDialog):
         self.tabs.addTab(self._data_tab(), tr("Data"))
         self.tabs.addTab(self._sync_tab(), tr("Sync"))
         layout.addWidget(self.tabs, 1)
+        if page:
+            self._select_page(page)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
@@ -216,11 +223,20 @@ class SettingsDialog(FramelessDialog):
 
     # -------------------------------------------------------------- tabs
 
+    def _select_page(self, page):
+        """Reveal the sub-tab *page* names. Resolves widgets, not indices, so
+        reordering the tabs above cannot silently send callers to the wrong one."""
+        if page == PAGE_BEHAVIOR:
+            self.tabs.setCurrentWidget(self._general_tabs)
+            self._general_tabs.setCurrentWidget(self._behavior_page)
+
     def _general_tab(self):
         """Look & feel + app behavior (startup, hotkey, updates)."""
         tabs = QTabWidget()
         tabs.addTab(self._appearance_tab(), tr("Appearance"))
-        tabs.addTab(self._system_tab(), tr("Behavior"))
+        self._behavior_page = self._system_tab()
+        tabs.addTab(self._behavior_page, tr("Behavior"))
+        self._general_tabs = tabs
         return tabs
 
     def _read_aloud_tab(self):

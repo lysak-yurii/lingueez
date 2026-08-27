@@ -11,6 +11,9 @@ grade: stable
 confinement: strict
 compression: lzo
 icon: packaging/flatpak/app.lingueez.Lingueez.png
+website: https://lingueez.app
+contact: https://github.com/lysak-yurii/lingueez/issues
+issues: https://github.com/lysak-yurii/lingueez/issues
 platforms:
   amd64:
 
@@ -33,6 +36,9 @@ apps:
       - network                     # sync, auth, translation/TTS, RSS, articles
       - network-bind                # the 127.0.0.1:53682 OAuth redirect listener
       - password-manager-service    # keyring for the auth session; NOT auto-connected
+      # `home` stops at $HOME, so import/export against a drive under /media (or
+      # /mnt) is denied without this. NOT auto-connected either.
+      - removable-media
 
 parts:
   # Python dependencies. PySide6 wheels bundle their own Qt, so the runtime comes
@@ -40,16 +46,41 @@ parts:
   deps:
     plugin: python
     source: .
-    python-requirements: [requirements-snap.txt]
+    # The full PySide6 wheel, not PySide6-Essentials: app/ui/reader.py imports
+    # QtMultimedia at module scope, and that ships in PySide6-Addons. Essentials
+    # alone builds and packs fine, then dies at startup with ModuleNotFoundError.
+    python-requirements: [requirements.txt]
     override-pull: |
       craftctl default
-      # PySide6-Essentials in place of the full wheel: nothing here uses WebEngine
-      # or Charts, and the addons roughly double the installed size. QtMultimedia
-      # (app/ui/reader.py) is part of Essentials.
-      grep -v '^PySide6' requirements.txt > requirements-snap.txt
-      echo 'PySide6-Essentials>=6.6.0' >> requirements-snap.txt
+      # The plugin ends with `[ -f setup.py ] || [ -f pyproject.toml ] && pip
+      # install .`. Ours only configures ruff, so setuptools falls into flat-layout
+      # autodiscovery and aborts on the repo's many top-level directories. Swap in an
+      # empty project so that install is a no-op — deleting the file instead would
+      # leave that line exiting non-zero, which fails the step under `set -e`.
+      cat > pyproject.toml <<'PYPROJECT'
+      [build-system]
+      requires = ["setuptools"]
+      build-backend = "setuptools.build_meta"
+
+      [project]
+      name = "lingueez-snap-deps"
+      version = "0"
+
+      [tool.setuptools]
+      py-modules = []
+      PYPROJECT
     build-packages:
       - python3-dev             # evdev (pulled in by pynput) builds from sdist
+    override-prime: |
+      craftctl default
+      # ffmpeg/ffprobe link libblas.so.3 and liblapack.so.3, whose top-level SONAME
+      # symlinks are created by update-alternatives on a normal system and so never
+      # exist in a snap — only blas/ and lapack/ subdirs get staged. Without them
+      # ffprobe dies at load time, and pydub parsing its empty output as JSON is what
+      # the user sees as "Failed to save audio: Expecting value: line 1 column 1".
+      cd $CRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+      ln -sf blas/libblas.so.3 libblas.so.3
+      ln -sf lapack/liblapack.so.3 liblapack.so.3
     stage-packages:
       - ffmpeg                  # pydub shells out to it; $SNAP/usr/bin is on PATH
       - libxcb-cursor0          # Qt 6 xcb platform plugin hard-requires it

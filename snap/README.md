@@ -5,6 +5,11 @@ nothing else. It does not list Flathub, and its Debian support covers only packa
 from the Ubuntu archive. Publishing here is the only way to appear in the store that
 ships on every Ubuntu desktop.
 
+Use the **full `PySide6` wheel**, not `PySide6-Essentials`: `app/ui/reader.py`
+imports QtMultimedia at module scope and that module ships in PySide6-Addons.
+Essentials builds and packs without complaint, then the app dies at startup with
+`ModuleNotFoundError: No module named 'PySide6.QtMultimedia'`.
+
 `snapcraft.yaml` builds from the local checkout (like the Flatpak's
 `app.lingueez.Lingueez.yml`), reusing the repo-root `meson.build` install — the same
 app tree, desktop entry, icon and AppStream metadata the Flatpak ships. Only the
@@ -35,7 +40,12 @@ until then — see `app/core/secure_store.py`):
 ```bash
 sudo snap install --dangerous ./lingueez_*.snap
 sudo snap connect lingueez:password-manager-service
+sudo snap connect lingueez:removable-media
 ```
+
+`removable-media` is the second manual one: `home` grants only `$HOME`, so importing
+or exporting against a drive mounted under `/media` or `/mnt` fails with EACCES
+without it.
 
 ## Verify confinement
 

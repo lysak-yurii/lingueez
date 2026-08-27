@@ -88,4 +88,8 @@ def is_snap():
     snap = os.environ.get("SNAP")
     if not snap:
         return False
-    return os.path.abspath(__file__).startswith(os.path.join(snap, ""))
+    # realpath both sides: $SNAP is the revisioned mount (/snap/<name>/x2) while the
+    # app is often reached through /snap/<name>/current, a symlink to it. Comparing
+    # unresolved paths reports False from inside our own snap.
+    here = os.path.realpath(__file__)
+    return here.startswith(os.path.join(os.path.realpath(snap), ""))

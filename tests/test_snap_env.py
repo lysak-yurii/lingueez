@@ -69,6 +69,24 @@ class IsSnapTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertFalse(package_env.is_snap())
 
+    def test_true_when_reached_through_the_current_symlink(self):
+        # /snap/<name>/current symlinks to the revision dir; $SNAP names the
+        # revision. Comparing the two unresolved reports False from inside the snap.
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            rev = os.path.join(tmp, "x2")
+            os.makedirs(os.path.join(rev, "usr", "lingueez", "app", "system"))
+            os.symlink(rev, os.path.join(tmp, "current"))
+            through_symlink = os.path.join(
+                tmp, "current", "usr", "lingueez", "app", "system", "package_env.py"
+            )
+            with (
+                mock.patch.dict(os.environ, {"SNAP": rev}, clear=False),
+                mock.patch.object(package_env, "__file__", through_symlink),
+            ):
+                self.assertTrue(package_env.is_snap())
+
     def test_false_when_a_snapped_parent_leaked_its_env(self):
         # Launching the AppImage or the source tree from a snapped terminal must
         # not put the app into snap mode.
