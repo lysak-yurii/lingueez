@@ -820,7 +820,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Phím tắt Thêm từ toàn cục không khả dụng trong môi trường này. Xem Cài đặt ▸ Hệ thống để biết thêm tùy chọn.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Phím tắt Thêm từ toàn cục không khả dụng trong môi trường cách ly Flatpak trên Wayland.",
+    "{sandbox} sandbox on Wayland.": "Phím tắt Thêm từ toàn cục không khả dụng trong môi trường cách ly {sandbox} trên Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Phím tắt Thêm từ toàn cục chưa được hỗ trợ trên màn hình nền Wayland này.",
     "To enable it, use any one of these:": "Để bật tính năng này, hãy sử dụng một trong các cách sau:",

@@ -909,9 +909,9 @@ TRANSLATIONS: dict[str, str] = {
         "środowisku. Zobacz Ustawienia ▸ System, aby sprawdzić opcje."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "Globalny skrót klawiszowy „Dodaj słowo” nie jest dostępny w piaskownicy "
-        "Flatpak w środowisku Wayland."
+        "{sandbox} w środowisku Wayland."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

@@ -816,7 +816,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Küresel Kelime Ekle kısayol tuşu bu ortamda kullanılamaz. Seçenekler için Ayarlar ▸ Sistem bölümüne bakın.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Küresel Kelime Ekle kısayol tuşu, Wayland'deki Flatpak korumalı alanında (sandbox) kullanılamaz.",
+    "{sandbox} sandbox on Wayland.": "Küresel Kelime Ekle kısayol tuşu, Wayland'deki {sandbox} korumalı alanında (sandbox) kullanılamaz.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Küresel Kelime Ekle kısayol tuşu bu Wayland masaüstünde henüz desteklenmiyor.",
     "To enable it, use any one of these:": "Etkinleştirmek için şu yöntemlerden birini kullanın:",

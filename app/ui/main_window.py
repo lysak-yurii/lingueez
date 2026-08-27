@@ -172,14 +172,19 @@ from app.system.hotkey_env import (  # noqa: E402
     desktop_is_gnome as _desktop_is_gnome,
     global_shortcuts_portal_available as _global_shortcuts_portal_available,
     hotkey_capability,
-    is_flatpak as _is_flatpak,
+    is_sandboxed as _is_sandboxed,
     is_wayland as _is_wayland,
 )
-# On the Microsoft Store (MSIX) build, updates are delivered by the Store and its
-# certification frowns on steering users to off-Store downloads, so the in-app
-# (GitHub-based) update affordances are hidden. Same binary as the .exe, so this
-# is a runtime check.
-from app.system.package_env import is_msix as _is_msix  # noqa: E402
+# On the Microsoft Store (MSIX) build and in the snap, updates are delivered by the
+# store itself and MSIX certification frowns on steering users to off-store
+# downloads, so the in-app (GitHub-based) update affordances are hidden. The same
+# binary ships as the plain .exe, so this is a runtime check.
+from app.system.package_env import is_msix as _is_msix, is_snap as _is_snap  # noqa: E402
+
+
+def _store_managed_updates():
+    """True where the packaging channel updates the app itself."""
+    return _is_msix() or _is_snap()
 
 
 # Local-socket name the running instance listens on; a second launch with
@@ -1867,7 +1872,7 @@ class MainWindow(QMainWindow):
             return True
         if _global_shortcuts_portal_available() and self._apply_portal_hotkey(hotkey):
             return True                           # GNOME 48+/KDE
-        if _desktop_is_gnome() and not _is_flatpak():
+        if _desktop_is_gnome() and not _is_sandboxed():
             # Native/AppImage on GNOME Wayland: register with the desktop itself.
             self._apply_gnome_gsettings_hotkey(hotkey)
             return self._gsettings_active
@@ -4692,8 +4697,8 @@ class MainWindow(QMainWindow):
 
     def _maybe_check_for_updates(self):
         """Startup check: respect the user's preference and the daily throttle."""
-        if self._quitting or _is_msix():
-            return  # the Microsoft Store handles updates for the packaged build
+        if self._quitting or _store_managed_updates():
+            return  # the Store/snapd handles updates for the packaged builds
         if not get_bool(self.settings, "auto_check_updates", True):
             return
         from app.core import updater
@@ -4884,10 +4889,10 @@ class MainWindow(QMainWindow):
         dialog.content_layout.addLayout(btns)
 
         # --- Actions: check for updates / Close ---
-        # On the Store (MSIX) build there is no in-app update check — the Store
-        # delivers updates — so the button is omitted entirely there.
+        # On the Store (MSIX) and snap builds there is no in-app update check —
+        # the store delivers updates — so the button is omitted entirely there.
         row = QHBoxLayout()
-        if not _is_msix():
+        if not _store_managed_updates():
             check = QPushButton(tr("Check for updates"))
             check.setCursor(Qt.PointingHandCursor)
             check.clicked.connect(lambda: self._check_for_updates(manual=True))
@@ -4977,15 +4982,22 @@ class MainWindow(QMainWindow):
         from app.core.updater import GITHUB_URL
         from app.core.diagnostics import build_diagnostics_zip, system_info
 
-        # In the Flatpak sandbox /tmp is private to the app, so a diagnostics file
-        # written there is invisible to the user and to the browser uploading it.
-        # Write it to Downloads (granted via --filesystem=xdg-download) so the path
-        # shown in the issue body actually resolves on the host.
+        # Both sandboxes give the app a private /tmp, so a diagnostics file written
+        # there is invisible to the user and to the browser uploading it. Write it to
+        # Downloads (Flatpak: --filesystem=xdg-download; snap: the home interface)
+        # so the path shown in the issue body actually resolves on the host.
         dest_dir = None
-        if _is_flatpak():
+        if _is_sandboxed():
             from PySide6.QtCore import QStandardPaths
             dest_dir = QStandardPaths.writableLocation(
                 QStandardPaths.DownloadLocation) or None
+            # snapd remaps HOME to $SNAP_USER_DATA, so Qt resolves Downloads inside
+            # the snap's own data dir — invisible to the host. SNAP_REAL_HOME is the
+            # user's actual home, which the home interface grants.
+            real_home = os.environ.get("SNAP_REAL_HOME") if _is_snap() else None
+            if real_home:
+                real_downloads = os.path.join(real_home, "Downloads")
+                dest_dir = real_downloads if os.path.isdir(real_downloads) else None
         zip_path = None
         try:
             zip_path = build_diagnostics_zip(dest_dir=dest_dir)

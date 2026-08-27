@@ -913,8 +913,8 @@ TRANSLATIONS: dict[str, str] = {
         "Možnosti naleznete v Nastavení ▸ Systém."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
-        "Globální klávesová zkratka Přidat slovo není k dispozici ve Flatpak "
+    "{sandbox} sandbox on Wayland.": (
+        "Globální klávesová zkratka Přidat slovo není k dispozici ve {sandbox} "
         "sandboxu na Waylandu."
     ),
     "The global Add-Word hotkey isn't supported on this "

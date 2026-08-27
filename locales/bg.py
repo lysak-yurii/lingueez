@@ -908,9 +908,9 @@ TRANSLATIONS: dict[str, str] = {
         "среда. Вижте Настройки ▸ Система за опции."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "Глобалната клавишна комбинация за добавяне на дума не е налична в пясъчника "
-        "на Flatpak под Wayland."
+        "на {sandbox} под Wayland."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

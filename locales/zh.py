@@ -820,7 +820,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "全局“添加单词”快捷键在此环境中不可用。请参阅“设置 ▸ 系统”了解选项。",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "全局“添加单词”快捷键在 Wayland 的 Flatpak 沙盒中不可用。",
+    "{sandbox} sandbox on Wayland.": "全局“添加单词”快捷键在 Wayland 的 {sandbox} 沙盒中不可用。",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "此 Wayland 桌面尚不支持全局“添加单词”快捷键。",
     "To enable it, use any one of these:": "要启用它，请使用以下方法之一：",

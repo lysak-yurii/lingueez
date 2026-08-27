@@ -839,8 +839,8 @@ TRANSLATIONS: dict[str, str] = {
     "environment. See Settings ▸ System for options.": "Scurtătura globală Adaugă cuvânt nu este disponibilă în acest "
     "mediu. Vezi Setări ▸ Sistem pentru opțiuni.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Scurtătura globală Adaugă cuvânt nu este disponibilă în sandbox-ul "
-    "Flatpak pe Wayland.",
+    "{sandbox} sandbox on Wayland.": "Scurtătura globală Adaugă cuvânt nu este disponibilă în sandbox-ul "
+    "{sandbox} pe Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Scurtătura globală Adaugă cuvânt nu este acceptată pe acest "
     "desktop Wayland încă.",

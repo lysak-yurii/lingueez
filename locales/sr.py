@@ -820,7 +820,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Глобална пречица није доступна у овом окружењу.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Глобална пречица није доступна у Flatpak сендбоксу на Wayland-у.",
+    "{sandbox} sandbox on Wayland.": "Глобална пречица није доступна у {sandbox} сендбоксу на Wayland-у.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Глобална пречица још није подржана на овом Wayland десктопу.",
     "To enable it, use any one of these:": "Да је омогућите, користите било шта од овог:",

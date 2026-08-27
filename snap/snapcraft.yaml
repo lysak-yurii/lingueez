@@ -1,0 +1,76 @@
+# Snap package for Lingueez, targeting Ubuntu's App Center (which lists the Snap
+# Store; it does not list Flathub). Build with:  snapcraft
+#
+# The app tree, launcher, desktop entry, icon and AppStream metadata are installed
+# by meson.build at the repo root — the same install the Flatpak uses. Only the
+# launcher differs, because the in-sandbox prefix does (/app vs $SNAP/usr).
+name: lingueez
+base: core24
+adopt-info: lingueez        # version/summary/description/license from the metainfo
+grade: stable
+confinement: strict
+compression: lzo
+icon: packaging/flatpak/app.lingueez.Lingueez.png
+platforms:
+  amd64:
+
+apps:
+  lingueez:
+    command: usr/bin/lingueez
+    extensions: [gnome]     # Qt/GTK runtime, fonts, themes, portals; also supplies
+                            # the desktop, desktop-legacy, gsettings, opengl,
+                            # wayland and x11 plugs (x11 is what lets the pynput
+                            # hotkey agent grab keys on X11 sessions).
+    common-id: app.lingueez.Lingueez
+    desktop: usr/share/applications/app.lingueez.Lingueez.desktop
+    # The app writes this file into $SNAP_USER_DATA/.config/autostart when the user
+    # enables autostart; snapd only honours it if the name matches (see
+    # app/system/autostart.py, _APP_NAME).
+    autostart: Lingueez.desktop
+    plugs:
+      - audio-playback              # read-aloud
+      - home                        # import/export files the user picks
+      - network                     # sync, auth, translation/TTS, RSS, articles
+      - network-bind                # the 127.0.0.1:53682 OAuth redirect listener
+      - password-manager-service    # keyring for the auth session; NOT auto-connected
+
+parts:
+  # Python dependencies. PySide6 wheels bundle their own Qt, so the runtime comes
+  # from pip rather than from the platform snap.
+  deps:
+    plugin: python
+    source: .
+    python-requirements: [requirements-snap.txt]
+    override-pull: |
+      craftctl default
+      # PySide6-Essentials in place of the full wheel: nothing here uses WebEngine
+      # or Charts, and the addons roughly double the installed size. QtMultimedia
+      # (app/ui/reader.py) is part of Essentials.
+      grep -v '^PySide6' requirements.txt > requirements-snap.txt
+      echo 'PySide6-Essentials>=6.6.0' >> requirements-snap.txt
+    build-packages:
+      - python3-dev             # evdev (pulled in by pynput) builds from sdist
+    stage-packages:
+      - ffmpeg                  # pydub shells out to it; $SNAP/usr/bin is on PATH
+      - libxcb-cursor0          # Qt 6 xcb platform plugin hard-requires it
+      # Drop python3-venv if a build shows core24 already provides python3.12.
+      - python3-venv
+
+  lingueez:
+    after: [deps]
+    plugin: meson
+    source: .
+    meson-parameters: [--prefix=/usr]
+    parse-info: [usr/share/metainfo/app.lingueez.Lingueez.metainfo.xml]
+    override-build: |
+      craftctl default
+      # meson installs the Flatpak launcher, which hardcodes /app. Replace it with
+      # the snap's prefix and the venv interpreter the deps part staged.
+      cat > $CRAFT_PART_INSTALL/usr/bin/lingueez <<'EOF'
+      #!/bin/sh
+      exec "$SNAP/bin/python3" "$SNAP/usr/lingueez/main.py" "$@"
+      EOF
+      chmod 755 $CRAFT_PART_INSTALL/usr/bin/lingueez
+      # snapd resolves ${SNAP} in Icon=, but not a bare theme name from a snap.
+      sed -i 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/app.lingueez.Lingueez.png|' \
+        $CRAFT_PART_INSTALL/usr/share/applications/app.lingueez.Lingueez.desktop

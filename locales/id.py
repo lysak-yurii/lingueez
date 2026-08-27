@@ -909,9 +909,9 @@ TRANSLATIONS: dict[str, str] = {
         "Lihat Pengaturan ▸ Sistem untuk opsi."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "Pintasan global Tambah Kata tidak tersedia di kotak pasir "
-        "Flatpak pada Wayland."
+        "{sandbox} pada Wayland."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

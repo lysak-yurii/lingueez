@@ -820,7 +820,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Den globala genvägen för Lägg till ord är inte tillgänglig i den här miljön. Se Inställningar ▸ System för alternativ.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Den globala genvägen för Lägg till ord är inte tillgänglig i Flatpak-sandlådan på Wayland.",
+    "{sandbox} sandbox on Wayland.": "Den globala genvägen för Lägg till ord är inte tillgänglig i {sandbox}-sandlådan på Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Den globala genvägen för Lägg till ord stöds inte på det här Wayland-skrivbordet än.",
     "To enable it, use any one of these:": "För att aktivera den, använd något av följande:",

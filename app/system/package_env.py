@@ -33,6 +33,7 @@ users to off-Store downloads, so the UI uses this to hide the (GitHub-based)
 update affordances when running from the Store. Mirrors the style of
 ``hotkey_env.is_flatpak()``.
 """
+import os
 import sys
 
 # Win32 AppModel error returned by GetCurrentPackageFullName when the calling
@@ -72,3 +73,19 @@ def is_msix():
 
     _msix_cache = packaged
     return packaged
+
+
+def is_snap():
+    """True when running from *our* snap package.
+
+    ``SNAP`` holds the read-only mount of the running revision, and child processes
+    inherit it — anything started from a snapped terminal (VS Code ships as one)
+    sees it too, so the variable alone would misfire for a user running the AppImage
+    or the source tree from such a shell. Confirm this module actually lives inside
+    that mount. Mirrors ``hotkey_env.is_flatpak()``, whose ``/.flatpak-info`` probe
+    is immune for the same reason.
+    """
+    snap = os.environ.get("SNAP")
+    if not snap:
+        return False
+    return os.path.abspath(__file__).startswith(os.path.join(snap, ""))

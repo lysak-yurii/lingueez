@@ -817,7 +817,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Globálna klávesová skratka na pridanie slova nie je v tomto prostredí dostupná. Možnosti nájdete v Nastavenia ▸ Systém.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Globálna klávesová skratka na pridanie slova nie je dostupná v pieskovisku Flatpak v prostredí Wayland.",
+    "{sandbox} sandbox on Wayland.": "Globálna klávesová skratka na pridanie slova nie je dostupná v pieskovisku {sandbox} v prostredí Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Globálna klávesová skratka na pridanie slova zatiaľ nie je v tomto prostredí Wayland podporovaná.",
     "To enable it, use any one of these:": "Ak ju chcete povoliť, použite niektorý z nasledujúcich spôsobov:",

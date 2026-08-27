@@ -906,8 +906,8 @@ TRANSLATIONS: dict[str, str] = {
         "विकल्पों के लिए सेटिंग्स ▸ सिस्टम देखें।"
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
-        "Wayland पर Flatpak सैंडबॉक्स में ग्लोबल ऐड-वर्ड हॉटकी उपलब्ध नहीं है।"
+    "{sandbox} sandbox on Wayland.": (
+        "Wayland पर {sandbox} सैंडबॉक्स में ग्लोबल ऐड-वर्ड हॉटकी उपलब्ध नहीं है।"
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

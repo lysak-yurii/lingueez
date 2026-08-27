@@ -905,8 +905,8 @@ TRANSLATIONS: dict[str, str] = {
         "「設定 ▸ システム」のオプションを参照してください。"
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
-        "WaylandのFlatpakサンドボックス内では、グローバル「単語を追加」ショートカットが利用できません。"
+    "{sandbox} sandbox on Wayland.": (
+        "Waylandの{sandbox}サンドボックス内では、グローバル「単語を追加」ショートカットが利用できません。"
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

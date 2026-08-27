@@ -908,9 +908,9 @@ TRANSLATIONS: dict[str, str] = {
         "Umgebung nicht verfügbar. Siehe Einstellungen ▸ System für Optionen."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "Das globale Tastenkürzel „Wort hinzufügen“ ist in der "
-        "Flatpak-Sandbox unter Wayland nicht verfügbar."
+        "{sandbox}-Sandbox unter Wayland nicht verfügbar."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

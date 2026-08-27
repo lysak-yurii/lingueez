@@ -818,7 +818,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "De globale sneltoets 'Woord toevoegen' is niet beschikbaar in deze omgeving. Zie Instellingen ▸ Systeem voor opties.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "De globale sneltoets 'Woord toevoegen' is niet beschikbaar in de Flatpak-sandbox op Wayland.",
+    "{sandbox} sandbox on Wayland.": "De globale sneltoets 'Woord toevoegen' is niet beschikbaar in de {sandbox}-sandbox op Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "De globale sneltoets 'Woord toevoegen' wordt nog niet ondersteund op dit Wayland-bureaublad.",
     "To enable it, use any one of these:": "Gebruik een van de volgende opties om dit in te schakelen:",

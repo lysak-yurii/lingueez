@@ -907,9 +907,9 @@ TRANSLATIONS: dict[str, str] = {
         "ympäristössä. Katso vaihtoehdot kohdasta Asetukset ▸ Järjestelmä."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "Globaali Lisää sana -pikanäppäin ei ole käytettävissä "
-        "Flatpak-hiekkalaatikossa Waylandissa."
+        "{sandbox}-hiekkalaatikossa Waylandissa."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

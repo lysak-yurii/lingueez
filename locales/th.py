@@ -819,7 +819,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "คีย์ลัดเพิ่มคำศัพท์ทั่วทั้งระบบไม่สามารถใช้งานได้ในสภาพแวดล้อมนี้ ดูตัวเลือกได้ที่ ตั้งค่า ▸ ระบบ",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "คีย์ลัดเพิ่มคำศัพท์ทั่วทั้งระบบไม่สามารถใช้งานได้ในแซนด์บ็อกซ์ Flatpak บน Wayland",
+    "{sandbox} sandbox on Wayland.": "คีย์ลัดเพิ่มคำศัพท์ทั่วทั้งระบบไม่สามารถใช้งานได้ในแซนด์บ็อกซ์ {sandbox} บน Wayland",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "คีย์ลัดเพิ่มคำศัพท์ทั่วทั้งระบบยังไม่รองรับบนเดสก์ท็อป Wayland นี้",
     "To enable it, use any one of these:": "หากต้องการเปิดใช้งาน ให้ใช้วิธีใดวิธีหนึ่งเหล่านี้:",

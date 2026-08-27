@@ -822,7 +822,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "이 환경에서는 전역 단어 추가 단축키를 사용할 수 없습니다. 설정 ▸ 시스템에서 옵션을 확인하세요.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Wayland의 Flatpak 샌드박스 환경에서는 전역 단어 추가 단축키를 사용할 수 없습니다.",
+    "{sandbox} sandbox on Wayland.": "Wayland의 {sandbox} 샌드박스 환경에서는 전역 단어 추가 단축키를 사용할 수 없습니다.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "이 Wayland 데스크톱에서는 전역 단어 추가 단축키가 아직 지원되지 않습니다.",
     "To enable it, use any one of these:": "활성화하려면 다음 방법 중 하나를 사용하세요:",

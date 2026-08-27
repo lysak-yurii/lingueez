@@ -819,7 +819,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Hotkunci Tambah Perkataan global tidak tersedia dalam persekitaran ini. Lihat Tetapan ▸ Sistem untuk pilihan.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Hotkunci Tambah Perkataan global tidak tersedia dalam kotak pasir Flatpak pada Wayland.",
+    "{sandbox} sandbox on Wayland.": "Hotkunci Tambah Perkataan global tidak tersedia dalam kotak pasir {sandbox} pada Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Hotkunci Tambah Perkataan global belum disokong pada desktop Wayland ini.",
     "To enable it, use any one of these:": "Untuk mendayakannya, gunakan mana-mana satu daripada ini:",

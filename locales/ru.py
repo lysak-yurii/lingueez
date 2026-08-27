@@ -820,7 +820,7 @@ TRANSLATIONS: dict[str, str] = {
     "The global Add-Word hotkey isn't available in this "
     "environment. See Settings ▸ System for options.": "Глобальная горячая клавиша «Добавить слово» недоступна в этой среде. Дополнительные параметры см. в разделе Настройки ▸ Система.",
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": "Глобальная горячая клавиша «Добавить слово» недоступна в песочнице Flatpak в среде Wayland.",
+    "{sandbox} sandbox on Wayland.": "Глобальная горячая клавиша «Добавить слово» недоступна в песочнице {sandbox} в среде Wayland.",
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": "Глобальная горячая клавиша «Добавить слово» пока не поддерживается в этой среде Wayland.",
     "To enable it, use any one of these:": "Чтобы включить ее, используйте один из следующих способов:",

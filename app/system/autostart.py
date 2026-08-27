@@ -33,7 +33,7 @@ import sys
 
 from app.system import startup_task
 from app.system.hotkey_env import is_flatpak
-from app.system.package_env import is_msix
+from app.system.package_env import is_msix, is_snap
 
 _APP_NAME = "Lingueez"
 _DISPLAY_NAME = "Lingueez"
@@ -43,7 +43,27 @@ _DISPLAY_NAME = "Lingueez"
 _FLATPAK_AUTOSTART_MARKER = ".autostart_enabled"
 
 
+def _autostart_dir():
+    """Directory the session reads autostart entries from.
+
+    Snap: the home interface denies ~/.config (hidden dirs are not granted), so
+    snapd reads entries from $SNAP_USER_DATA/.config/autostart instead and matches
+    them against the app's ``autostart:`` key — keep the filename in step with the
+    one declared in snap/snapcraft.yaml.
+    """
+    user_data = os.environ.get("SNAP_USER_DATA") if is_snap() else None
+    if user_data:
+        return os.path.join(user_data, ".config", "autostart")
+    return os.path.expanduser("~/.config/autostart")
+
+
 def _get_app_command_and_workdir():
+    if is_snap():
+        # $SNAP carries the revision number and changes on every refresh, so record
+        # the stable wrapper instead — otherwise the entry goes stale each update.
+        # snapd runs the app's own command wrapper and only reuses Exec='s arguments.
+        instance = os.environ.get("SNAP_INSTANCE_NAME", "lingueez")
+        return f"/snap/bin/{instance}", os.environ.get("SNAP_USER_COMMON", os.path.expanduser("~"))
     if getattr(sys, 'frozen', False):
         exe = os.path.abspath(sys.executable)
         return exe, os.path.dirname(exe)
@@ -108,7 +128,7 @@ def _current_autostart_command():
 
 
 def _read_autostart_command_linux():
-    path = os.path.expanduser(f"~/.config/autostart/{_APP_NAME}.desktop")
+    path = os.path.join(_autostart_dir(), f"{_APP_NAME}.desktop")
     try:
         with open(path) as fh:
             for line in fh:
@@ -136,7 +156,7 @@ def _read_autostart_command_windows():
 
 
 def _set_autostart_linux(enabled: bool):
-    autostart_dir = os.path.expanduser("~/.config/autostart")
+    autostart_dir = _autostart_dir()
     desktop_file = os.path.join(autostart_dir, f"{_APP_NAME}.desktop")
     if enabled:
         os.makedirs(autostart_dir, exist_ok=True)
@@ -158,7 +178,7 @@ def _set_autostart_linux(enabled: bool):
 
 
 def _get_autostart_linux() -> bool:
-    return os.path.exists(os.path.expanduser(f"~/.config/autostart/{_APP_NAME}.desktop"))
+    return os.path.exists(os.path.join(_autostart_dir(), f"{_APP_NAME}.desktop"))
 
 
 def _set_autostart_portal(enabled: bool):

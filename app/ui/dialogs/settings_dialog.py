@@ -907,8 +907,10 @@ class SettingsDialog(FramelessDialog):
             # so "switch to a portal desktop" is NOT offered.
             options = [tr("Log in to an X11 session instead of Wayland")]
             if reason == CAP_WAYLAND_SANDBOXED:
+                from app.system.package_env import is_snap
                 intro = tr("The global Add-Word hotkey isn't available in the "
-                           "Flatpak sandbox on Wayland.")
+                           "{sandbox} sandbox on Wayland.").format(
+                    sandbox="Snap" if is_snap() else "Flatpak")
                 options.append(
                     tr("Install the AppImage version — it runs outside the sandbox"))
             else:  # CAP_WAYLAND_NO_PORTAL
@@ -929,11 +931,11 @@ class SettingsDialog(FramelessDialog):
                     lambda: QDesktopServices.openUrl(QUrl(f"{updater.GITHUB_URL}/releases")))
                 form.addRow(get_appimage)
 
-        # The Microsoft Store (MSIX) build gets its updates from the Store, so the
-        # in-app startup check is disabled there — hide its toggle rather than show
-        # a dead switch to Store users.
-        from app.system.package_env import is_msix
-        if not is_msix():
+        # The Microsoft Store (MSIX) build and the snap get their updates from the
+        # store itself, so the in-app startup check is disabled there — hide its
+        # toggle rather than show a dead switch to those users.
+        from app.system.package_env import is_msix, is_snap
+        if not (is_msix() or is_snap()):
             form.addRow(self._check("auto_check_updates", True,
                                     tr("Check for updates on startup")))
             updates_note = QLabel(tr("Checks once a day for a newer version and lets you know; "

@@ -908,9 +908,9 @@ TRANSLATIONS: dict[str, str] = {
         "környezetben. Lásd a Beállítások ▸ Rendszer menüpontot a lehetőségekért."
     ),
     "The global Add-Word hotkey isn't available in the "
-    "Flatpak sandbox on Wayland.": (
+    "{sandbox} sandbox on Wayland.": (
         "A globális „Szó hozzáadása” gyorsbillentyű nem érhető el a "
-        "Flatpak homokozóban Wayland alatt."
+        "{sandbox} homokozóban Wayland alatt."
     ),
     "The global Add-Word hotkey isn't supported on this "
     "Wayland desktop yet.": (

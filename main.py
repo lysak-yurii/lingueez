@@ -25,12 +25,25 @@ import os
 import sys
 
 
+def _in_our_snap():
+    """True only inside our own snap — never merely because a snapped parent
+    process (VS Code ships as one) leaked its SNAP_* variables to us."""
+    from app.system.package_env import is_snap
+    return is_snap() and bool(os.environ.get('SNAP_USER_COMMON'))
+
+
 def _user_data_dir(app_id):
     """OS-standard per-user, writable data directory for the app."""
     if sys.platform == 'win32':
         root = os.environ.get('APPDATA') or os.path.expanduser('~')
     elif sys.platform == 'darwin':
         root = os.path.expanduser('~/Library/Application Support')
+    elif _in_our_snap():
+        # Under snap, XDG_DATA_HOME points into the *revisioned* $SNAP_USER_DATA,
+        # which snapd copies wholesale on every refresh — the database, backups/
+        # and the seeded assets would be duplicated per update. SNAP_USER_COMMON
+        # is the revision-independent counterpart and survives refresh in place.
+        return os.path.join(os.environ['SNAP_USER_COMMON'], app_id)
     else:
         root = os.environ.get('XDG_DATA_HOME') or os.path.expanduser('~/.local/share')
     return os.path.join(root, app_id)
@@ -209,7 +222,11 @@ def main():
     # in the installed .desktop file for proper dock/taskbar association
     app.setApplicationName(APP_ID)
     app.setApplicationDisplayName(APP_NAME)
-    app.setDesktopFileName(APP_ID)
+    # Wayland matches the window to its launcher by desktop-file name. Snapcraft
+    # installs ours as <snap-instance>_<app>.desktop, so APP_ID would not resolve
+    # there and the shell falls back to a generic icon.
+    snap_instance = os.environ.get('SNAP_INSTANCE_NAME') if _in_our_snap() else None
+    app.setDesktopFileName(f"{snap_instance}_lingueez" if snap_instance else APP_ID)
     app.setWindowIcon(QIcon("assets/icons/icon.png"))
     app.setQuitOnLastWindowClosed(False)  # we live in the tray
 

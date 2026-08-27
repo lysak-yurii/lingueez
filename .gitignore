@@ -61,3 +61,6 @@ docs/_preview/
 
 # LibreOffice lock files
 .~lock.*#
+
+# Generated during the snap build (see snap/snapcraft.yaml)
+requirements-snap.txt

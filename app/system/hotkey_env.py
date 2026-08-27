@@ -36,10 +36,12 @@ import logging
 import os
 import sys
 
+from app.system.package_env import is_snap
+
 # Reason keys returned alongside availability. The UI maps these to localized
 # explanations + remedies; keep them stable, they are not user-facing strings.
 CAP_OK = "ok"
-# Flatpak sandbox on a Wayland session that lacks the GlobalShortcuts portal
+# Flatpak/snap sandbox on a Wayland session that lacks the GlobalShortcuts portal
 # (e.g. GNOME < 48): the portal isn't there and the sandbox can't reach the host's
 # gsettings, so there is no mechanism at all. Remedies: X11 session, GNOME 48+/KDE,
 # or the (unsandboxed) AppImage.
@@ -64,6 +66,15 @@ def is_wayland():
 def is_flatpak():
     """True when running inside a Flatpak sandbox."""
     return bool(os.environ.get("FLATPAK_ID")) or os.path.exists("/.flatpak-info")
+
+
+def is_sandboxed():
+    """True inside any sandbox that cuts the app off from the host's gsettings.
+
+    Snap's AppArmor profile confines dconf the same way Flatpak's does, so the
+    GNOME keybinding fallback is unavailable in both.
+    """
+    return is_flatpak() or is_snap()
 
 
 def desktop_is_gnome():
@@ -115,7 +126,7 @@ def hotkey_capability():
     # must NOT report the portal as a working mechanism — otherwise portal-capable
     # desktops (e.g. KDE Plasma Wayland) would claim the hotkey works when it can't
     # register. Re-add a global_shortcuts_portal_available() check once that lands.
-    if is_flatpak():
+    if is_sandboxed():
         return False, CAP_WAYLAND_SANDBOXED      # sandbox can't reach host gsettings
     if desktop_is_gnome():
         return True, CAP_OK                      # native/AppImage: gsettings keybinding
