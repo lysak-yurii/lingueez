@@ -1195,6 +1195,8 @@ class MainWindow(QMainWindow):
             self._apply_status_change)
         self.flashcards_page.ignore_requested.connect(self._ignore_word)
         self.flashcards_page.relearn_requested.connect(self._mark_to_learn)
+        self.flashcards_page.favorite_requested.connect(self._set_favorite)
+        self.flashcards_page.tag_requested.connect(self._tag_session_words)
         self.flashcards_page.player_toggle_requested.connect(
             self.word_player.toggle_pause)
         self.flashcards_page.player_prev_requested.connect(self.word_player.prev)
@@ -1216,6 +1218,8 @@ class MainWindow(QMainWindow):
         self.quiz_page.status_change_requested.connect(self._apply_status_change)
         self.quiz_page.ignore_requested.connect(self._ignore_word)
         self.quiz_page.relearn_requested.connect(self._mark_to_learn)
+        self.quiz_page.favorite_requested.connect(self._set_favorite)
+        self.quiz_page.tag_requested.connect(self._tag_session_words)
 
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
@@ -3406,6 +3410,46 @@ class MainWindow(QMainWindow):
             toast=(tr("Ignored"),
                    tr("'{word}' won't come up again").format(word=word_label),
                    "info"))
+
+    def _set_favorite(self, wid, value, word_label=""):
+        """Toggle one word's favorite flag from inside a running session.
+
+        No toast: the star on the card is the confirmation, and a popup for
+        every tap would fight the session. The write goes to a worker for the
+        same reason ``_apply_status_change``'s does — update_word costs two
+        round trips and stuttered playback on the GUI thread.
+        """
+        value = bool(value)
+        try:
+            run_in_thread(
+                lambda: self.db_adapter.update_word(wid, {'favorite': value}),
+                on_error=lambda exc: logging.error(
+                    f"Favorite toggle for {wid} failed to save: {exc}"))
+            if self.df is not None:
+                # The column is int64 — assigning a Python bool raises
+                # "Invalid value 'True' for dtype 'int64'" and the table would
+                # keep the stale star until the next full reload.
+                self.df.loc[self.df['ID'] == wid, 'favorite'] = int(value)
+            self.model.update_favorite(wid, value)
+        except Exception as exc:
+            logging.error(f"Favorite toggle failed: {exc}")
+
+    def _tag_session_words(self, records, suggested_name=""):
+        """Open the tag dialog over the words a session just flagged.
+
+        ``suggested_name`` prefills the new-tag box (dated, so a day's sessions
+        collect in one tag) but the dialog is the normal one, so attaching to a
+        tag that already exists is the same two clicks it always was.
+        """
+        records = [r for r in records if r.get("ID") is not None]
+        if not records:
+            return
+        from app.ui.dialogs.tags import TagDialog
+        dialog = TagDialog(self, [r["ID"] for r in records], self.db_adapter,
+                           suggested_name=suggested_name)
+        dialog.exec()
+        self.update_filter_combos()
+        self.refresh_display()
 
     def _lapse_schedule(self, word_id):
         """Pull one word's SM-2 schedule back so a relearn flag actually bites.

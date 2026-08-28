@@ -34,7 +34,7 @@ from app.ui.dialogs.base import FramelessDialog
 
 
 class TagDialog(FramelessDialog):
-    def __init__(self, parent, word_ids, db_adapter):
+    def __init__(self, parent, word_ids, db_adapter, suggested_name=""):
         super().__init__(parent, title=tr("Tags — {count} word(s)").format(count=len(word_ids)))
         self.word_ids = word_ids
         self.db_adapter = db_adapter
@@ -56,6 +56,11 @@ class TagDialog(FramelessDialog):
         self.tag_input = QLineEdit()
         self.tag_input.setPlaceholderText(tr("New tag name…"))
         self.tag_input.returnPressed.connect(self.add_tag)
+        if suggested_name:
+            # Prefilled and pre-selected: Enter accepts the suggestion, typing
+            # replaces it, and the list below still offers every existing tag.
+            self.tag_input.setText(suggested_name)
+            self.tag_input.selectAll()
         row.addWidget(self.tag_input, 1)
         add_btn = QPushButton(tr("Add Tag"), objectName="primaryButton")
         add_btn.clicked.connect(self.add_tag)

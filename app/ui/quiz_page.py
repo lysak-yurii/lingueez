@@ -65,7 +65,7 @@ from app.ui.flashcards_page import (
     _Panel, _SlimBar, _mix, _snippet, _soft,
 )
 from app.ui.toast import show_toast
-from app.ui.widgets import ElidedLabel
+from app.ui.widgets import ElidedLabel, SessionWordList, session_tag_name
 from app.ui.workers import run_in_thread
 
 DECK_KINDS = ("due", "filtered", "newest", "selected")
@@ -113,6 +113,7 @@ class _PromptCard(QWidget):
     speak_clicked = Signal()
     ignore_clicked = Signal()
     relearn_clicked = Signal()
+    favorite_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
@@ -160,6 +161,11 @@ class _PromptCard(QWidget):
         self.relearn_btn.setFixedSize(24, 24)
         self.relearn_btn.setToolTip(tr("Forgot this word — move it to To Learn"))
         self.relearn_btn.clicked.connect(self.relearn_clicked)
+        self.favorite_btn = QPushButton(self, objectName="iconButton")
+        self.favorite_btn.setCursor(Qt.PointingHandCursor)
+        self.favorite_btn.setIconSize(QSize(16, 16))
+        self.favorite_btn.setFixedSize(24, 24)
+        self.favorite_btn.clicked.connect(self.favorite_clicked)
         lay.addSpacing(2)
         lay.addLayout(speak_row)
         self.answer_hint = QLabel(alignment=Qt.AlignCenter)
@@ -180,6 +186,7 @@ class _PromptCard(QWidget):
         self._ignorable = progression.is_studiable(question.record.get("Status"))
         self.ignore_btn.setVisible(self._ignorable)
         self.refresh_relearn(question.record.get("Status"))
+        self.refresh_favorite(question.record.get("favorite"))
         self._apply_styles()
         self.update()
 
@@ -191,6 +198,21 @@ class _PromptCard(QWidget):
         """
         self._lapsable = progression.can_lapse(status)
         self.relearn_btn.setVisible(self._lapsable)
+        self._layout_corner_buttons()
+
+    def refresh_favorite(self, favorite):
+        """Re-read the star. Always offered: favouriting depends on nothing
+        about the question and removes nothing from the run."""
+        c = self._colors
+        favorite = bool(favorite)
+        # Amber when set — the ink the words table paints its favourite stripe
+        # with, so the two read as one marking.
+        self.favorite_btn.setIcon(icons.icon(
+            "star-filled" if favorite else "star",
+            c["warning"] if favorite else c["text_dim"], 16))
+        self.favorite_btn.setToolTip(
+            tr("Remove from favorites") if favorite else tr("Add to favorites"))
+        self.favorite_btn.setVisible(True)
         self._layout_corner_buttons()
 
     def set_ignorable(self, ignorable):
@@ -232,8 +254,11 @@ class _PromptCard(QWidget):
         leave a hole in the corner whenever one of them is hidden.
         """
         x = self.width() - 12
-        for button in (self.ignore_btn, self.relearn_btn):
-            if not button.isVisible():
+        for button in (self.ignore_btn, self.relearn_btn, self.favorite_btn):
+            # isVisibleTo, not isVisible: the latter is False while an ancestor
+            # is still hidden, which is exactly when a session is being built —
+            # every button would be skipped and none would ever be placed.
+            if not button.isVisibleTo(self):
                 continue
             x -= button.width()
             button.move(x, 12)
@@ -597,6 +622,8 @@ class QuizPage(QWidget):
     status_change_requested = Signal(str, str, str)  # word_id, status, label
     ignore_requested = Signal(str, str, str)         # word_id, previous, label
     relearn_requested = Signal(str, str, str)        # word_id, previous, label
+    favorite_requested = Signal(str, bool, str)      # word_id, value, label
+    tag_requested = Signal(list, str)                # records, suggested name
 
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
@@ -904,6 +931,7 @@ class QuizPage(QWidget):
         self.prompt_card.speak_clicked.connect(self._speak_prompt)
         self.prompt_card.ignore_clicked.connect(self._ignore_current)
         self.prompt_card.relearn_clicked.connect(self._relearn_current)
+        self.prompt_card.favorite_clicked.connect(self._toggle_favorite_current)
         column.addWidget(self.prompt_card)
 
         self.options_host = QWidget()
@@ -1085,10 +1113,8 @@ class QuizPage(QWidget):
         missed = QVBoxLayout(self.missed_panel)
         missed.setContentsMargins(18, 14, 18, 14)
         missed.setSpacing(4)
-        self.missed_title = QLabel(tr("Worth another look"))
-        missed.addWidget(self.missed_title)
-        self.missed_list = QLabel()
-        self.missed_list.setWordWrap(True)
+        self.missed_list = SessionWordList(self._colors)
+        self.missed_list.tag_requested.connect(self._tag_missed_words)
         missed.addWidget(self.missed_list)
         missed_row = QHBoxLayout()
         missed_row.addStretch(1)
@@ -1188,10 +1214,7 @@ class QuizPage(QWidget):
         self.ring_score.setStyleSheet(
             f"color:{c['text']};background:transparent;font-weight:700;"
             f"font-size:{theme.font_pt('title')}pt;")
-        self.missed_title.setStyleSheet(
-            f"color:{c['text']};background:transparent;font-weight:700;"
-            f"font-size:{theme.font_pt('body')}pt;")
-        self.missed_list.setStyleSheet(dim + body)
+        self.missed_list.refresh_theme(c)
         for (value, caption), key in ((self.tally_correct, "success"),
                                       (self.tally_missed, "danger")):
             value.setStyleSheet(
@@ -1686,6 +1709,27 @@ class QuizPage(QWidget):
             self._definitions[wid] = text
         return self._definitions[wid]
 
+    def _toggle_favorite_current(self):
+        """Star or unstar the word being asked about. Unlike ignoring, this is
+        allowed after the answer too: nothing leaves the run."""
+        if self._stack.currentIndex() != self.STATE_SESSION:
+            return
+        question = self._current()
+        if question is None:
+            return
+        rec = question.record
+        wid = rec.get("ID")
+        if wid is None:
+            return
+        value = not bool(rec.get("favorite"))
+        rec["favorite"] = value
+        self.favorite_requested.emit(
+            str(wid), value, str(rec.get("Word1") or ""))
+        self.prompt_card.refresh_favorite(value)
+
+    def _tag_missed_words(self):
+        self.tag_requested.emit(list(self._missed_deck), session_tag_name())
+
     def _relearn_current(self):
         """Flag the current question's word for relearning, keeping the question.
 
@@ -1833,12 +1877,8 @@ class QuizPage(QWidget):
         self.tally_correct[0].setText(str(correct))
         self.tally_missed[0].setText(str(missed))
 
-        rows = [f"{q.record.get('Word1') or ''} → {q.record.get('Word2') or ''}"
-                for i, q in enumerate(self._questions)
-                if i < len(self._answers)
-                and not quiz.is_correct(self._answers[i]["verdict"])]
-        self.missed_list.setText("\n".join(rows))
-        self.missed_panel.setVisible(bool(rows))
+        self.missed_list.set_words(self._missed_deck, tr("Worth another look"))
+        self.missed_panel.setVisible(bool(self._missed_deck))
         self.practice_btn.setText(
             tr("Practice missed") + f"  ·  {len(self._missed_deck)}")
         self.practice_btn.setVisible(bool(self._missed_deck))

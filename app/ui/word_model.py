@@ -263,6 +263,27 @@ class WordTableModel(QAbstractTableModel):
         self.dataChanged.emit(idx, idx, [Qt.DisplayRole, Qt.EditRole])
         return row
 
+    def update_favorite(self, word_id, value):
+        """Update one word's favorite flag in place, like :meth:`update_status`.
+
+        The star is painted as a decoration on the row-number column (see
+        ``_favorites``), so that is the cell the repaint has to be announced
+        against — not the columns the DataFrame edit touches.
+        """
+        row = self._row_for_id(word_id)
+        if row < 0:
+            return -1
+        value = bool(value)
+        try:
+            self._df.at[row, 'favorite'] = value
+        except Exception:
+            pass
+        if row < len(self._favorites):
+            self._favorites[row] = value
+        idx = self.index(row, COL_ROWNUM)
+        self.dataChanged.emit(idx, idx, [Qt.DecorationRole])
+        return row
+
     def dataframe(self):
         return self._df
 

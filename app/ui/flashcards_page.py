@@ -67,7 +67,7 @@ from app.ui.dialogs.definition import (
     DefinitionDialog, _runs_to_html, parse_markup,
 )
 from app.ui.charts import FlowLayout, status_color
-from app.ui.widgets import ProgressionMeter
+from app.ui.widgets import ProgressionMeter, SessionWordList, session_tag_name
 from app.ui.workers import run_in_thread
 
 DECK_KINDS = ("due", "filtered", "newest", "selected")
@@ -741,6 +741,7 @@ class FlashcardWidget(QWidget):
     speak_clicked = Signal()
     ignore_clicked = Signal()
     relearn_clicked = Signal()
+    favorite_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
@@ -779,10 +780,16 @@ class FlashcardWidget(QWidget):
         self.relearn_btn.setIconSize(QSize(16, 16))
         self.relearn_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
         self.relearn_btn.clicked.connect(self.relearn_clicked.emit)
+        self.favorite_btn = QPushButton(objectName="iconButton")
+        self.favorite_btn.setCursor(Qt.PointingHandCursor)
+        self.favorite_btn.setIconSize(QSize(16, 16))
+        self.favorite_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
+        self.favorite_btn.clicked.connect(self.favorite_clicked.emit)
         self.status_chip = QLabel()
         self.status_chip.setAlignment(Qt.AlignCenter)
         head.addWidget(self.caption)
         head.addStretch(1)
+        head.addWidget(self.favorite_btn)
         head.addWidget(self.relearn_btn)
         head.addWidget(self.ignore_btn)
         head.addWidget(self.speak_btn)
@@ -875,6 +882,7 @@ class FlashcardWidget(QWidget):
         self._style_status_chip()  # the ramp color changes with the card
         self.ignore_btn.setVisible(progression.is_studiable(status))
         self.relearn_btn.setVisible(progression.can_lapse(status))
+        self._style_favorite()
         # the answer side announces itself: caption + divider go accent
         self.caption.setStyleSheet(
             f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
@@ -904,6 +912,19 @@ class FlashcardWidget(QWidget):
         self.body.setVisible(bool(self.body.text()))
         self.hint.setVisible(bool(self.hint.text()))
 
+    def _style_favorite(self):
+        """Filled gold star when the word is a favourite, hollow outline when
+        it is not — the same two-state treatment the words table uses."""
+        favorite = bool(self._record.get("favorite"))
+        c = self._colors
+        # Amber when set: the same ink the table paints its favourite stripe
+        # with (word_model._fav_stripe), so the two read as one marking.
+        self.favorite_btn.setIcon(icons.icon(
+            "star-filled" if favorite else "star",
+            c["warning"] if favorite else c["text_dim"], 16))
+        self.favorite_btn.setToolTip(
+            tr("Remove from favorites") if favorite else tr("Add to favorites"))
+
     def _style_status_chip(self):
         """Paint the chip from the status ramp, so a word looks the same here
         as it does in the table, on its deck tile and in the donut."""
@@ -930,6 +951,7 @@ class FlashcardWidget(QWidget):
         # and the Ignored ramp is deliberately off to one side of the ladder.
         self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
         self.relearn_btn.setIcon(icons.icon("rotate-ccw", c["text_dim"], 16))
+        self._style_favorite()
 
     def paintEvent(self, _event):  # noqa: N802
         p = QPainter(self)
@@ -954,6 +976,8 @@ class FlashcardsPage(QWidget):
     status_change_requested = Signal(str, str, str)  # word_id, status, label
     ignore_requested = Signal(str, str, str)         # word_id, previous, label
     relearn_requested = Signal(str, str, str)        # word_id, previous, label
+    favorite_requested = Signal(str, bool, str)      # word_id, value, label
+    tag_requested = Signal(list, str)                # records, suggested name
     player_toggle_requested = Signal()          # pause/resume the word player
     player_prev_requested = Signal()
     player_next_requested = Signal()
@@ -1197,6 +1221,7 @@ class FlashcardsPage(QWidget):
         self.card.speak_clicked.connect(self._speak_current_clicked)
         self.card.ignore_clicked.connect(self._ignore_current)
         self.card.relearn_clicked.connect(self._relearn_current)
+        self.card.favorite_clicked.connect(self._toggle_favorite_current)
         self.card_stack = _CardStack(self.card, self._colors)
         # Bounded, not free-expanding: the stretches above and below centre the
         # card, but without a ceiling it grew to the full height of the page and
@@ -1304,6 +1329,11 @@ class FlashcardsPage(QWidget):
         cv.addSpacing(4)
         cv.addWidget(self.complete_breakdown)
         cv.addSpacing(14)
+        self.hard_list = SessionWordList(self._colors)
+        self.hard_list.tag_requested.connect(self._tag_hard_words)
+        self.hard_list.setVisible(False)
+        cv.addWidget(self.hard_list)
+        cv.addSpacing(8)
         done = QHBoxLayout()
         done.setSpacing(10)
         done.addStretch(1)
@@ -1956,6 +1986,21 @@ class FlashcardsPage(QWidget):
         else:
             self._complete()
 
+    def _toggle_favorite_current(self):
+        """Star or unstar the card on screen. Allowed at any point in the run —
+        nothing about it depends on the grade, and it drops no card."""
+        if self._stack.currentIndex() != self.STATE_SESSION or not self._deck:
+            return
+        rec = self._deck[self._index]
+        wid = rec.get("ID")
+        if wid is None:
+            return
+        value = not bool(rec.get("favorite"))
+        rec["favorite"] = value
+        self.favorite_requested.emit(
+            str(wid), value, str(rec.get("Word1") or ""))
+        self.card.refresh_status()
+
     def _relearn_current(self):
         """Flag the current word for relearning, keeping it in the run.
 
@@ -2073,12 +2118,16 @@ class FlashcardsPage(QWidget):
         self.hard_again_btn.setText(
             tr("Practice hard words") + f"  ·  {len(self._hard_deck)}")
         self.hard_again_btn.setVisible(bool(self._hard_deck))
+        self.hard_list.set_words(self._hard_deck, tr("Worth another look"))
         self.complete_title.setText(
             tr("Hard words cleared!") if self._drill and not self._hard_deck
             else tr("Session complete!"))
         self.continue_btn.setVisible(self._deck_kind == "due"
                                      and not self._autoplay_listened)
         self._stack.setCurrentIndex(self.STATE_COMPLETE)
+
+    def _tag_hard_words(self):
+        self.tag_requested.emit(list(self._hard_deck), session_tag_name())
 
     def _practice_hard_clicked(self):
         """Re-run just the Hard cards of the session that finished.
@@ -2201,6 +2250,7 @@ class FlashcardsPage(QWidget):
         self.slim_bar.refresh_theme(colors)
         self.picker_panel.refresh_theme(colors)
         self.complete_panel.refresh_theme(colors)
+        self.hard_list.refresh_theme(colors)
         self.logo.refresh_theme(colors)
         self._apply_styles()
         if self._autoplay:

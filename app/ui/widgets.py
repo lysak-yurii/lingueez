@@ -21,6 +21,7 @@
 
 """Small reusable widgets."""
 import re
+from datetime import date
 
 from PySide6.QtCore import (
     QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QRectF, QSize, Qt,
@@ -28,9 +29,9 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QColorDialog, QComboBox, QGridLayout, QHBoxLayout,
-    QLabel, QLayout, QLineEdit, QMenu, QPushButton, QSizePolicy, QStyle,
-    QStyleOptionComboBox, QToolButton, QWidget,
+    QApplication, QCheckBox, QColorDialog, QComboBox, QFrame, QGridLayout,
+    QHBoxLayout, QLabel, QLayout, QLineEdit, QMenu, QPushButton, QScrollArea,
+    QSizePolicy, QStyle, QStyleOptionComboBox, QToolButton, QVBoxLayout, QWidget,
 )
 
 from app.core import progression
@@ -685,3 +686,267 @@ class ColumnPicker(QWidget):
     def exclude_csv(self):
         return ",".join(internal for internal, _ in self._columns
                         if not self._checks[internal].isChecked())
+
+
+class _SessionWordRow(QWidget):
+    """One line of :class:`SessionWordList`: rung dot, term, translation, rung.
+
+    Reads as a row of the words table rather than a bullet list — the term
+    carries the weight, the translation stays quiet behind it, and the status
+    pill answers "how well did I know this one?" without a trip back to the
+    library, which is the question a list of stumbles actually raises.
+    """
+
+    DOT = 7
+    # Below this the pill is dropped and the two words take the space instead:
+    # the dot already carries the rung in the same ink, so nothing is lost but
+    # the word it spells out.
+    PILL_MIN_WIDTH = 300
+
+    def __init__(self, record, colors, parent=None):
+        super().__init__(parent)
+        self._record = record or {}
+        self._colors = colors
+
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(10, 0, 8, 0)
+        lay.setSpacing(8)
+
+        self.dot = QLabel()
+        self.dot.setFixedSize(self.DOT, self.DOT)
+        lay.addWidget(self.dot, 0, Qt.AlignVCenter)
+
+        # Both sides elide and both stretch: a plain QLabel term would claim its
+        # full natural width and leave the translation a few pixels and an
+        # ellipsis, which is what a narrow window used to show.
+        self.term = ElidedLabel(min_width=48)
+        self.term.set_full_text(str(self._record.get("Word1") or "").strip())
+        lay.addWidget(self.term, 0, Qt.AlignVCenter)
+
+        self.translation = ElidedLabel(min_width=48)
+        translation = str(self._record.get("Word2") or "").strip()
+        # The arrow travels with the translation so it disappears with it,
+        # rather than leaving a dangling "→" on a row with only one side filled.
+        self.translation.set_full_text(f"→  {translation}" if translation else "")
+        # Neither stretches: each takes its natural width when there is room and
+        # shrinks toward its min_width when there is not, so a short pair sits
+        # together at the left instead of being pushed apart by spare space.
+        # The slack goes here, between the words and the rung.
+        lay.addWidget(self.translation, 0, Qt.AlignVCenter)
+        lay.addStretch(1)
+
+        self.pill = QLabel()
+        lay.addWidget(self.pill, 0, Qt.AlignVCenter)
+
+        self.refresh_theme(colors)
+
+    def refresh_theme(self, colors):
+        self._colors = colors
+        c = colors
+        status = str(self._record.get("Status") or "").strip()
+        ink = theme.status_style(status)["ink"]
+        self.dot.setStyleSheet(
+            f"background:{ink};border-radius:{self.DOT // 2}px;")
+        self.term.setStyleSheet(
+            f"color:{c['text']};background:transparent;font-weight:600;"
+            f"font-size:{theme.font_pt('body')}pt;")
+        self.translation.setStyleSheet(
+            f"color:{c['text_dim']};background:transparent;"
+            f"font-size:{theme.font_pt('body')}pt;")
+        self.pill.setText(tr(status) if status else "")
+        self._has_status = bool(status)
+        self._fit_pill()
+        fill = QColor(ink)
+        fill.setAlpha(theme.status_style(status)["fill"])
+        self.pill.setStyleSheet(
+            f"color:{ink};"
+            f"background:rgba({fill.red()},{fill.green()},{fill.blue()},{fill.alpha()});"
+            f"padding:1px 7px;border-radius:7px;font-weight:600;"
+            f"font-size:{theme.font_pt('caption')}pt;")
+        self.update()
+
+    def _fit_pill(self):
+        self.pill.setVisible(
+            getattr(self, "_has_status", False) and self.width() >= self.PILL_MIN_WIDTH)
+
+    def resizeEvent(self, event):  # noqa: N802
+        super().resizeEvent(event)
+        self._fit_pill()
+
+    def paintEvent(self, _event):  # noqa: N802
+        """A quiet rounded slab per row, so the list reads as rows rather than
+        as a paragraph that happens to contain line breaks."""
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(self._colors["surface_alt"]))
+        p.drawRoundedRect(QRectF(self.rect()).adjusted(0, 0.5, 0, -0.5), 8, 8)
+        p.end()
+
+
+def session_tag_name(today=None):
+    """The tag a session offers to file its difficult words under.
+
+    ISO date on purpose: tag lists sort alphabetically here and on the phone,
+    so ``2026-08-28`` groups chronologically where a localised ``28.08.2026``
+    would scatter. One name for both practice modes, so a day's flashcard and
+    quiz stumbles collect in the same tag rather than two near-duplicates.
+    """
+    return f"{tr('Hard words')} - {(today or date.today()).isoformat()}"
+
+
+class SessionWordList(QWidget):
+    """The words a session singled out — Hard cards, missed questions — named
+    rather than counted, with an offer to tag them.
+
+    Collapsed to :attr:`PREVIEW_ROWS` because a 200-card session can leave a
+    list longer than the screen, and the buttons underneath a summary are what
+    the user actually came for. Expanding scrolls in place instead of growing
+    the page for the same reason.
+    """
+
+    PREVIEW_ROWS = 3
+    # What expanding aims for; it settles for less when the window is short.
+    EXPANDED_ROWS = 6
+    # Share of the window an expanded list may take before it stops growing
+    # and starts scrolling instead.
+    MAX_HEIGHT_FRACTION = 0.22
+
+    tag_requested = Signal()
+
+    def __init__(self, colors, parent=None):
+        super().__init__(parent)
+        self._colors = colors
+        self._records = []
+        self._expanded = False
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(6)
+
+        self.title = QLabel()
+        lay.addWidget(self.title)
+
+        self._rows_host = QWidget()
+        self._rows_lay = QVBoxLayout(self._rows_host)
+        self._rows_lay.setContentsMargins(0, 0, 0, 0)
+        self._rows_lay.setSpacing(2)
+        self._rows_lay.addStretch(1)
+
+        self.scroll = QScrollArea()
+        self.scroll.setWidget(self._rows_host)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # Collapsed, the list must not scroll: a scrollbar on three rows reads
+        # as broken. It is enabled only once expanded.
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        lay.addWidget(self.scroll)
+
+        footer = QHBoxLayout()
+        footer.setSpacing(10)
+        self.toggle_btn = QPushButton(objectName="chipButton")
+        self.toggle_btn.setCursor(Qt.PointingHandCursor)
+        self.toggle_btn.clicked.connect(self._toggle)
+        footer.addWidget(self.toggle_btn)
+        footer.addStretch(1)
+        self.tag_btn = QPushButton(tr("Tag these words…"), objectName="chipButton")
+        self.tag_btn.setCursor(Qt.PointingHandCursor)
+        self.tag_btn.clicked.connect(self.tag_requested.emit)
+        footer.addWidget(self.tag_btn)
+        lay.addLayout(footer)
+
+        self.refresh_theme(colors)
+
+    # ------------------------------------------------------------ public
+
+    def set_words(self, records, title=""):
+        """Fill the list. Returns whether there is anything to show."""
+        self._records = list(records or [])
+        self._expanded = False
+        heading = title
+        if title and len(self._records) > self.PREVIEW_ROWS:
+            heading = f"{title}  ·  {len(self._records)}"
+        self.title.setText(heading)
+        self.title.setVisible(bool(heading))
+        while self._rows_lay.count() > 1:
+            item = self._rows_lay.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.deleteLater()
+        for rec in self._records:
+            self._rows_lay.insertWidget(self._rows_lay.count() - 1,
+                                        self._make_row(rec))
+        self._apply_state()
+        self.setVisible(bool(self._records))
+        return bool(self._records)
+
+    def refresh_theme(self, colors):
+        self._colors = colors
+        c = colors
+        self.title.setStyleSheet(
+            f"color:{c['text_dim']};background:transparent;font-weight:600;"
+            f"letter-spacing:1.1px;font-size:{theme.font_pt('caption')}pt;")
+        self.scroll.setStyleSheet("QScrollArea{background:transparent;border:none;}")
+        self._rows_host.setStyleSheet("background:transparent;")
+        for row in self._rows_host.findChildren(_SessionWordRow):
+            row.refresh_theme(colors)
+        self._apply_state()
+
+    # ----------------------------------------------------------- internal
+
+    def _make_row(self, rec):
+        row = _SessionWordRow(rec, self._colors)
+        # Pinned so the collapsed height is exact arithmetic rather than an
+        # estimate — otherwise three rows' worth of pixels clips a sliver of the
+        # fourth, which reads as a rendering fault rather than as "there's more".
+        row.setFixedHeight(self._line_height())
+        return row
+
+    def _line_height(self):
+        """One row's height, from font metrics so it tracks the user's text
+        scale and does not shift once the layout settles."""
+        return self.fontMetrics().height() + 16
+
+    def _height_for(self, rows):
+        """Exact pixel height of ``rows`` pinned rows and the gaps between."""
+        gap = self._rows_lay.spacing()
+        return rows * self._line_height() + max(0, rows - 1) * gap
+
+    def _visible_rows(self):
+        """How many rows the box shows — the rest are reached by scrolling.
+
+        Expanding is capped by what the window can spare, snapped down to a
+        whole row: the summary panel sits between a stretch pair, so it only
+        ever gets its sizeHint, and a height the page cannot honour is drawn
+        straight over the buttons underneath instead of being clipped.
+        """
+        if not self._expanded:
+            return max(1, min(self.PREVIEW_ROWS, len(self._records)))
+        span = self._line_height() + self._rows_lay.spacing()
+        budget = int(self.window().height() * self.MAX_HEIGHT_FRACTION)
+        fits = (budget + self._rows_lay.spacing()) // span
+        return max(self.PREVIEW_ROWS,
+                   min(self.EXPANDED_ROWS, fits, len(self._records)))
+
+    def _apply_state(self):
+        if not self._records:
+            return
+        self.scroll.setFixedHeight(self._height_for(self._visible_rows()))
+        # A height change is invisible to the parent layout until the geometry
+        # is invalidated.
+        self.scroll.updateGeometry()
+        self.updateGeometry()
+        overflow = len(self._records) > self.PREVIEW_ROWS
+        self.scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarAsNeeded if self._expanded else Qt.ScrollBarAlwaysOff)
+        self.toggle_btn.setVisible(overflow)
+        self.toggle_btn.setText(
+            tr("Show less") if self._expanded
+            else tr("Show all {count}").format(count=len(self._records)))
+
+    def _toggle(self):
+        self._expanded = not self._expanded
+        if not self._expanded:
+            self.scroll.verticalScrollBar().setValue(0)
+        self._apply_state()
