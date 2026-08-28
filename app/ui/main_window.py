@@ -929,14 +929,16 @@ class MainWindow(QMainWindow):
         # Layouts flyout) only exist for a window with native frame styles, so
         # there the OS hit-tests the top bar instead of FramelessResizer.
         self._native_frame = None
-        self._frameless_resizer = None
         if sys.platform == 'win32':
             from app.ui.win_frame import install_native_frame
             self._native_frame = install_native_frame(
                 self, header, self.window_controls)
-        if self._native_frame is None:
-            self._frameless_resizer = FramelessResizer(self)
-            QApplication.instance().installEventFilter(self._frameless_resizer)
+        # Stays installed alongside the native frame: it acts on client-area
+        # mouse events only, and a live native frame turns the window edges into
+        # non-client area, so it never sees them unless the frame styles didn't
+        # take — in which case it is the only thing left that can resize.
+        self._frameless_resizer = FramelessResizer(self)
+        QApplication.instance().installEventFilter(self._frameless_resizer)
 
         root.addWidget(header)
         # Kept so a one-off strip can be slotted in directly under the title bar,

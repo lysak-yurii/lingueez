@@ -39,10 +39,18 @@ from PySide6.QtWidgets import QApplication, QLabel, QWidget
 from app.ui.titlebar import RESIZE_MARGIN
 
 GWL_STYLE = -16
+WS_POPUP = 0x80000000
 WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
+WS_SYSMENU = 0x00080000
 WS_MINIMIZEBOX = 0x00020000
 WS_MAXIMIZEBOX = 0x00010000
+# WS_MINIMIZEBOX/WS_MAXIMIZEBOX are inert without WS_SYSMENU, and the Snap
+# Layouts flyout is the maximize button's own shell UI: no effective maximize
+# box, no flyout. WS_THICKFRAME is what DefWindowProc requires before it will
+# start a sizing loop, so the window silently stops resizing without it.
+FRAME_STYLES = (WS_CAPTION | WS_THICKFRAME | WS_SYSMENU
+                | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)
 
 WM_NCCALCSIZE = 0x0083
 WM_NCHITTEST = 0x0084
@@ -50,6 +58,7 @@ WM_NCMOUSELEAVE = 0x02A2
 WM_NCLBUTTONDOWN = 0x00A1
 WM_NCLBUTTONUP = 0x00A2
 WM_NCLBUTTONDBLCLK = 0x00A3
+WM_WINDOWPOSCHANGED = 0x0047
 
 HTCLIENT = 1
 HTCAPTION = 2
@@ -214,6 +223,7 @@ class NativeFrame(QObject, QAbstractNativeEventFilter):
         self._drag_area = drag_area
         self._controls = controls
         self._hwnd = int(window.winId())
+        self._restyling = False
         window.installEventFilter(self)
 
     # ---------- native window setup ----------
@@ -222,8 +232,9 @@ class NativeFrame(QObject, QAbstractNativeEventFilter):
         """Put the native frame styles back on the current HWND."""
         hwnd = self._hwnd
         style = _get_window_long(hwnd, GWL_STYLE)
-        _set_window_long(hwnd, GWL_STYLE, style | WS_CAPTION | WS_THICKFRAME
-                         | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)
+        # WS_POPUP is what Qt gives a frameless window, and the shell leaves
+        # popups out of the snap features whatever else they carry.
+        _set_window_long(hwnd, GWL_STYLE, (style & ~WS_POPUP) | FRAME_STYLES)
         _user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
                              | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED)
         # WS_THICKFRAME makes Windows 11 round the corners, which would clip the
@@ -234,12 +245,36 @@ class NativeFrame(QObject, QAbstractNativeEventFilter):
                 wintypes.HWND(hwnd), DWMWA_WINDOW_CORNER_PREFERENCE,
                 ctypes.byref(preference), ctypes.sizeof(preference))
 
+    def ensure_styles(self):
+        """Re-apply the frame styles whenever something has dropped them.
+
+        Qt writes GWL_STYLE from its own cached flags (which still say
+        frameless) on show and on window-state changes, so the styles can't be
+        set once and trusted: they go missing without a single Qt-level event
+        to hang the re-apply on, and a window that merely lacks WS_THICKFRAME
+        still moves and paints normally — it just never resizes again.
+        """
+        if self._restyling:
+            return
+        style = _get_window_long(self._hwnd, GWL_STYLE)
+        if style & FRAME_STYLES == FRAME_STYLES and not style & WS_POPUP:
+            return
+        self._restyling = True   # apply_styles re-enters through SetWindowPos
+        try:
+            self.apply_styles()
+        finally:
+            self._restyling = False
+
     def eventFilter(self, obj, event):
+        if obj is not self._window:
+            return False
         # Qt destroys and recreates the HWND on some state changes; the styles
         # go with it, so re-apply them against the new handle.
-        if obj is self._window and event.type() == QEvent.WinIdChange:
+        if event.type() == QEvent.WinIdChange:
             self._hwnd = int(self._window.winId())
             self.apply_styles()
+        elif event.type() in (QEvent.Show, QEvent.WindowStateChange):
+            self.ensure_styles()
         return False
 
     # ---------- message handling ----------
@@ -264,6 +299,12 @@ class NativeFrame(QObject, QAbstractNativeEventFilter):
                 return False, 0
             self._controls.set_max_hover(hit == HTMAXBUTTON)
             return True, hit
+
+        if msg.message == WM_WINDOWPOSCHANGED:
+            # Fires after every show, move, resize and z-order change — the
+            # cheapest hook that covers whatever Qt restyles behind our back.
+            self.ensure_styles()
+            return False, 0
 
         if msg.message == WM_NCMOUSELEAVE:
             self._controls.set_max_hover(False)
