@@ -1237,6 +1237,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} sana(a) ei tule enää harjoituksiin.",
     "'{word}' is back in rotation": "'{word}' on taas mukana harjoituksissa",
     "'{word}' won't come up again": "'{word}' ei tule enää vastaan",
+    "Mark for relearning": "Merkitse uudelleen opeteltavaksi",
+    "Forgot this word — move it to To Learn": "Unohtui — siirrä kohtaan 'Opittava'",
+    "'{word}' is queued to learn again": "'{word}' on jonossa uudelleen opeteltavaksi",
+    "{count} word(s) queued to learn again.": "{count} sana(a) jonossa uudelleen opeteltavaksi.",
+    "Nothing here to relearn yet.": "Täällä ei ole vielä mitään opeteltavaa uudelleen.",
 
     # Table density
     "Compact": "Tiivis",

@@ -1086,6 +1086,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} ord kommer inte längre upp i övningar.",
     "'{word}' is back in rotation": "'{word}' är tillbaka i rotationen",
     "'{word}' won't come up again": "'{word}' dyker inte upp igen",
+    "Mark for relearning": "Markera för att lära om",
+    "Forgot this word — move it to To Learn": "Glömt detta ord — flytta till 'Att lära'",
+    "'{word}' is queued to learn again": "'{word}' står på tur att läras om",
+    "{count} word(s) queued to learn again.": "{count} ord står på tur att läras om.",
+    "Nothing here to relearn yet.": "Det finns inget att lära om här ännu.",
 
     # Table density
     "Compact": "Kompakt",

@@ -49,6 +49,13 @@ MAX_EASE = 2.5
 MIN_EASE = 1.3
 MAX_INTERVAL_DAYS = 3650
 
+# The ease a lapse pulls a word down *to* — just under the 2.0 gate in
+# ``status_from_progress``, so it maps to Reviewing whatever its counters say.
+# A ceiling rather than a fixed drop, because a lapse can follow a Hard grade
+# that has already taken 0.2 off: subtracting again would punish one click
+# twice. A word already below it is only rescheduled, not pushed lower.
+LAPSE_EASE = 1.9
+
 
 def apply_grade(card, grade: str, now: datetime | None = None) -> dict:
     """Return the next scheduling state after grading a card.
@@ -94,6 +101,43 @@ def apply_grade(card, grade: str, now: datetime | None = None) -> dict:
         "review_count": review_count,
         "correct_count": correct_count,
     }
+
+
+def lapse(card, now: datetime | None = None) -> dict:
+    """Return the scheduling state for a word the user says they have forgotten.
+
+    Due immediately, interval back to one day, and ease dropped below the
+    Learning gate so the word has to climb ``status_from_progress`` again
+    instead of snapping back to Mastered on its next correct grade.
+
+    The counters are deliberately left untouched. ``review_count`` and
+    ``correct_count`` are monotonic across devices — :func:`db.merge_progress_rows`
+    merges them by ``max`` — so zeroing them here would be undone by the next
+    sync pull. The scheduling fields travel as one group from the side with the
+    newer ``updated_at``, which is why the lapse has to work through ease.
+    """
+    now = now or datetime.now()
+    ease = float((card or {}).get("ease_factor") or INITIAL_EASE)
+    return {
+        "ease_factor": round(max(min(ease, LAPSE_EASE), MIN_EASE), 4),
+        "interval_days": 1,
+        "next_review": now.isoformat(timespec="seconds"),
+        "review_count": int((card or {}).get("review_count") or 0),
+        "correct_count": int((card or {}).get("correct_count") or 0),
+    }
+
+
+def lapses_on_grade(status, grade: str) -> bool:
+    """Whether ``grade`` on a word at ``status`` means "I have forgotten this".
+
+    Only a Hard grade on the top rung. That is the one case where the SM-2
+    mapping and the label disagree in a way worth acting on — the mapping keeps
+    saying Mastered because ``correct_count`` never falls, while the user has
+    just said the opposite. Lower rungs are left alone: the interval reset the
+    grade itself applied is already the right answer there.
+    """
+    return (grade == "hard"
+            and progression.rank(status) == len(progression.LADDER) - 1)
 
 
 def seconds_until_due(next_review, now: datetime | None = None) -> float | None:

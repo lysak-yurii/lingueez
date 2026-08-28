@@ -1249,6 +1249,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} дума(и) няма да се появява(т) в упражненията.",
     "'{word}' is back in rotation": "„{word}“ отново участва в упражненията",
     "'{word}' won't come up again": "„{word}“ повече няма да се появява",
+    "Mark for relearning": "Отбелязване за повторно учене",
+    "Forgot this word — move it to To Learn": "Забравих тази дума — премести в „За учене“",
+    "'{word}' is queued to learn again": "„{word}“ е в списъка за повторно учене",
+    "{count} word(s) queued to learn again.": "{count} дума(и) за повторно учене.",
+    "Nothing here to relearn yet.": "Тук още няма какво да се учи отново.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

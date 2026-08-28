@@ -728,30 +728,67 @@ def srs_get_many(word_ids, db_path=None):
     return rows
 
 
-def srs_upsert(word_id, fields, db_path=None):
+# Written by both srs_upsert and srs_upsert_many. ``?`` #1 is the touch flag:
+# a lapse reschedules a word without it having been reviewed, so it must not
+# advance last_reviewed (which feeds the review statistics).
+_SRS_UPSERT_SQL = '''
+    INSERT INTO srs_progress
+        (word_id, ease_factor, interval_days, next_review, last_reviewed,
+         review_count, correct_count, updated_at, synced_at)
+    VALUES (?, ?, ?, ?, CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE NULL END,
+            ?, ?, CURRENT_TIMESTAMP, NULL)
+    ON CONFLICT(word_id) DO UPDATE SET
+        ease_factor = excluded.ease_factor,
+        interval_days = excluded.interval_days,
+        next_review = excluded.next_review,
+        last_reviewed = CASE WHEN ? THEN CURRENT_TIMESTAMP
+                             ELSE srs_progress.last_reviewed END,
+        review_count = excluded.review_count,
+        correct_count = excluded.correct_count,
+        updated_at = CURRENT_TIMESTAMP,
+        synced_at = NULL
+'''
+
+
+def _srs_upsert_params(word_id, fields, touch_reviewed):
+    touch = 1 if touch_reviewed else 0
+    return (str(word_id), fields['ease_factor'], fields['interval_days'],
+            fields['next_review'], touch, fields['review_count'],
+            fields['correct_count'], touch)
+
+
+def srs_upsert(word_id, fields, db_path=None, touch_reviewed=True):
     """Insert or replace a word's SM-2 scheduling state.
 
-    ``fields`` is the dict returned by :func:`app.core.srs.apply_grade`.
+    ``fields`` is the dict returned by :func:`app.core.srs.apply_grade` (or
+    :func:`app.core.srs.lapse`, which passes ``touch_reviewed=False`` — see
+    ``_SRS_UPSERT_SQL``).
     """
     db_path = db_path or get_active_db_path()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO srs_progress
-            (word_id, ease_factor, interval_days, next_review, last_reviewed,
-             review_count, correct_count, updated_at, synced_at)
-        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, CURRENT_TIMESTAMP, NULL)
-        ON CONFLICT(word_id) DO UPDATE SET
-            ease_factor = excluded.ease_factor,
-            interval_days = excluded.interval_days,
-            next_review = excluded.next_review,
-            last_reviewed = CURRENT_TIMESTAMP,
-            review_count = excluded.review_count,
-            correct_count = excluded.correct_count,
-            updated_at = CURRENT_TIMESTAMP,
-            synced_at = NULL
-    ''', (str(word_id), fields['ease_factor'], fields['interval_days'],
-          fields['next_review'], fields['review_count'], fields['correct_count']))
+    cursor.execute(_SRS_UPSERT_SQL,
+                   _srs_upsert_params(word_id, fields, touch_reviewed))
+    conn.commit()
+    conn.close()
+
+
+def srs_upsert_many(rows, db_path=None, touch_reviewed=True):
+    """:func:`srs_upsert` for several words in one transaction.
+
+    ``rows`` maps word id to a scheduling dict. The bulk relearn path writes a
+    whole selection this way; one connection per word made a few hundred words
+    visibly slow.
+    """
+    if not rows:
+        return
+    db_path = db_path or get_active_db_path()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.executemany(
+        _SRS_UPSERT_SQL,
+        [_srs_upsert_params(wid, fields, touch_reviewed)
+         for wid, fields in rows.items()])
     conn.commit()
     conn.close()
 

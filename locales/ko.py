@@ -1090,6 +1090,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "단어 {count}개가 연습에 나오지 않습니다.",
     "'{word}' is back in rotation": "'{word}'이(가) 다시 연습에 포함됩니다",
     "'{word}' won't come up again": "'{word}'은(는) 더 이상 나오지 않습니다",
+    "Mark for relearning": "다시 학습으로 표시",
+    "Forgot this word — move it to To Learn": "이 단어를 잊었어요 — '학습 예정'(으)로 이동",
+    "'{word}' is queued to learn again": "'{word}'을(를) 다시 학습 목록에 추가했습니다",
+    "{count} word(s) queued to learn again.": "단어 {count}개를 다시 학습 목록에 추가했습니다.",
+    "Nothing here to relearn yet.": "아직 다시 학습할 항목이 없습니다.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

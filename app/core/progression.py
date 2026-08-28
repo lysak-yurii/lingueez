@@ -48,10 +48,23 @@ ALL_STATUSES = ["New", "To Learn", "Reviewing", "Learning", "Mastered", "Ignored
 # app do not agree with us on casing.
 IGNORED_STATUS = "Ignored"
 
+# The rung a word is parked on when the user says they have forgotten it. Off
+# the ladder like ``IGNORED_STATUS`` but with the opposite intent: it pulls a
+# word back into study rather than out of it. Writes use this exact string;
+# reads go through ``is_to_learn``, for the same reason ``is_ignored`` exists.
+TO_LEARN_STATUS = "To Learn"
+
 
 def rank(status):
-    """Zero-based position on the ladder, or ``None`` for anything off it."""
-    return _RANK.get((status or "").strip().title())
+    """Zero-based position on the ladder, or ``None`` for anything off it.
+
+    Non-strings are off the ladder: a blank status arrives as NaN once it has
+    been through a DataFrame, and NaN is truthy, so an ``or ""`` guard alone
+    would hand ``.strip()`` a float — see ``is_ignored``.
+    """
+    if not isinstance(status, str):
+        return None
+    return _RANK.get(status.strip().title())
 
 
 def is_ignored(status) -> bool:
@@ -63,6 +76,32 @@ def is_ignored(status) -> bool:
     if not isinstance(status, str):
         return False
     return status.strip().lower() == "ignored"
+
+
+def is_to_learn(status) -> bool:
+    """Whether ``status`` is the relearn rung, however another client cased it."""
+    if not isinstance(status, str):
+        return False
+    return status.strip().lower() == "to learn"
+
+
+# The lowest rung the relearn flag is offered on. Below it the flag has nothing
+# to do: a Reviewing word is already in short-interval rotation, its ease is
+# already under the gate ``srs.lapse`` pulls down to, and for one that is
+# due today the reset is a no-op — leaving a button that only relabels.
+LAPSABLE_FROM = "Learning"
+
+
+def can_lapse(status) -> bool:
+    """Whether "I have forgotten this" is a meaningful thing to say about a word.
+
+    Only from ``LAPSABLE_FROM`` up: those words have an interval worth pulling
+    back and a rung worth re-earning. New and Reviewing have neither, and
+    anything off the ladder (To Learn, Ignored, custom) is not a candidate.
+    Setting the status by hand stays available for the rest.
+    """
+    r = rank(status)
+    return r is not None and r >= _RANK[LAPSABLE_FROM]
 
 
 def is_studiable(status) -> bool:

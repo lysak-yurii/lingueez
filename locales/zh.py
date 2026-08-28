@@ -1075,6 +1075,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} 个单词将不再出现在练习中。",
     "'{word}' is back in rotation": "“{word}”已重新加入练习",
     "'{word}' won't come up again": "“{word}”将不再出现",
+    "Mark for relearning": "标记为重新学习",
+    "Forgot this word — move it to To Learn": "忘记了这个单词 — 移至“待学”",
+    "'{word}' is queued to learn again": "“{word}”已加入重新学习",
+    "{count} word(s) queued to learn again.": "{count} 个单词已加入重新学习。",
+    "Nothing here to relearn yet.": "这里还没有需要重新学习的内容。",
 
     "Compact": "紧凑",
     "Normal": "正常",

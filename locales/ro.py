@@ -1121,6 +1121,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} cuvânt/cuvinte nu va mai apărea la exersare.",
     "'{word}' is back in rotation": "„{word}” a revenit în exersare",
     "'{word}' won't come up again": "„{word}” nu va mai apărea",
+    "Mark for relearning": "Marchează pentru reînvățare",
+    "Forgot this word — move it to To Learn": "Am uitat cuvântul — mută în „De învățat”",
+    "'{word}' is queued to learn again": "„{word}” este la rând pentru reînvățare",
+    "{count} word(s) queued to learn again.": "{count} cuvânt/cuvinte la rând pentru reînvățare.",
+    "Nothing here to relearn yet.": "Încă nu e nimic de reînvățat aici.",
 
     # Table density (settings → Table size)
     "Compact": "Compact",

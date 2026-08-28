@@ -1086,6 +1086,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} từ sẽ không xuất hiện trong luyện tập nữa.",
     "'{word}' is back in rotation": "'{word}' đã trở lại luyện tập",
     "'{word}' won't come up again": "'{word}' sẽ không xuất hiện nữa",
+    "Mark for relearning": "Đánh dấu để học lại",
+    "Forgot this word — move it to To Learn": "Quên từ này — chuyển sang 'Cần học'",
+    "'{word}' is queued to learn again": "'{word}' đã vào hàng đợi để học lại",
+    "{count} word(s) queued to learn again.": "{count} từ đã vào hàng đợi để học lại.",
+    "Nothing here to relearn yet.": "Chưa có gì để học lại ở đây.",
 
     # Table density (settings → Table size)
     "Compact": "Gọn gàng",

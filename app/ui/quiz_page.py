@@ -112,12 +112,14 @@ class _PromptCard(QWidget):
 
     speak_clicked = Signal()
     ignore_clicked = Signal()
+    relearn_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
         self._colors = colors
         self._ink = colors["accent"]
         self._ignorable = False
+        self._lapsable = False
         self.setMinimumHeight(150)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
@@ -150,6 +152,14 @@ class _PromptCard(QWidget):
         self.ignore_btn.setFixedSize(24, 24)
         self.ignore_btn.setToolTip(tr("Ignore this word"))
         self.ignore_btn.clicked.connect(self.ignore_clicked)
+        # Sits inboard of Ignore, in the same unmanaged corner. It outlives the
+        # answer where Ignore does not, so the two are never both transient.
+        self.relearn_btn = QPushButton(self, objectName="iconButton")
+        self.relearn_btn.setCursor(Qt.PointingHandCursor)
+        self.relearn_btn.setIconSize(QSize(16, 16))
+        self.relearn_btn.setFixedSize(24, 24)
+        self.relearn_btn.setToolTip(tr("Forgot this word — move it to To Learn"))
+        self.relearn_btn.clicked.connect(self.relearn_clicked)
         lay.addSpacing(2)
         lay.addLayout(speak_row)
         self.answer_hint = QLabel(alignment=Qt.AlignCenter)
@@ -169,8 +179,19 @@ class _PromptCard(QWidget):
             question.prompt_language))
         self._ignorable = progression.is_studiable(question.record.get("Status"))
         self.ignore_btn.setVisible(self._ignorable)
+        self.refresh_relearn(question.record.get("Status"))
         self._apply_styles()
         self.update()
+
+    def refresh_relearn(self, status):
+        """Re-read whether the relearn flag still applies to this question.
+
+        Called again after flagging, since the button hides itself once the
+        word is on To Learn — there is no second lapse to take.
+        """
+        self._lapsable = progression.can_lapse(status)
+        self.relearn_btn.setVisible(self._lapsable)
+        self._layout_corner_buttons()
 
     def set_ignorable(self, ignorable):
         """Hide the ignore button once the question is answered.
@@ -181,6 +202,7 @@ class _PromptCard(QWidget):
         positionally.
         """
         self.ignore_btn.setVisible(bool(ignorable) and self._ignorable)
+        self._layout_corner_buttons()
 
     def refresh_theme(self, colors):
         self._colors = colors
@@ -200,10 +222,26 @@ class _PromptCard(QWidget):
             f"font-size:{theme.font_pt('caption')}pt;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 18))
         self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
+        self.relearn_btn.setIcon(icons.icon("rotate-ccw", c["text_dim"], 16))
+
+    def _layout_corner_buttons(self):
+        """Pack the visible corner buttons right-to-left.
+
+        Ignore disappears once the question is answered and relearn appears only
+        for a word that has a rung to lose, so a fixed slot per button would
+        leave a hole in the corner whenever one of them is hidden.
+        """
+        x = self.width() - 12
+        for button in (self.ignore_btn, self.relearn_btn):
+            if not button.isVisible():
+                continue
+            x -= button.width()
+            button.move(x, 12)
+            x -= 4
 
     def resizeEvent(self, event):  # noqa: N802
         super().resizeEvent(event)
-        self.ignore_btn.move(self.width() - self.ignore_btn.width() - 12, 12)
+        self._layout_corner_buttons()
 
     def paintEvent(self, _event):  # noqa: N802
         p = QPainter(self)
@@ -558,6 +596,7 @@ class QuizPage(QWidget):
 
     status_change_requested = Signal(str, str, str)  # word_id, status, label
     ignore_requested = Signal(str, str, str)         # word_id, previous, label
+    relearn_requested = Signal(str, str, str)        # word_id, previous, label
 
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
@@ -864,6 +903,7 @@ class QuizPage(QWidget):
         self.prompt_card = _PromptCard(self._colors)
         self.prompt_card.speak_clicked.connect(self._speak_prompt)
         self.prompt_card.ignore_clicked.connect(self._ignore_current)
+        self.prompt_card.relearn_clicked.connect(self._relearn_current)
         column.addWidget(self.prompt_card)
 
         self.options_host = QWidget()
@@ -1565,6 +1605,14 @@ class QuizPage(QWidget):
             logging.error(f"Recording quiz answer failed: {exc}")
             return None
         self._graded.add(wid)
+        if srs.lapses_on_grade(question.record.get("Status"), grade):
+            # Getting a Mastered word wrong is the user saying they have
+            # forgotten it — see FlashcardsPage._grade.
+            previous = question.record.get("Status")
+            question.record["Status"] = progression.TO_LEARN_STATUS
+            self.relearn_requested.emit(str(wid), previous, "")
+            self.prompt_card.refresh_relearn(question.record.get("Status"))
+            return progression.TO_LEARN_STATUS
         mapped = srs.status_from_progress(
             state["review_count"], state["ease_factor"], state["correct_count"])
         target = srs.promotion_target(question.record.get("Status"), mapped)
@@ -1637,6 +1685,29 @@ class QuizPage(QWidget):
                 logging.error(f"Definition lookup failed: {exc}")
             self._definitions[wid] = text
         return self._definitions[wid]
+
+    def _relearn_current(self):
+        """Flag the current question's word for relearning, keeping the question.
+
+        Nothing is dropped, so unlike ``_ignore_current`` this stays available
+        after the answer is revealed — ``_answers`` and ``_questions`` keep the
+        positional alignment the progress trail and missed deck read.
+        """
+        if self._stack.currentIndex() != self.STATE_SESSION:
+            return
+        question = self._current()
+        if question is None:
+            return
+        rec = question.record
+        wid = rec.get("ID")
+        if wid is None or not progression.can_lapse(rec.get("Status")):
+            return
+        previous = rec.get("Status")
+        rec["Status"] = progression.TO_LEARN_STATUS
+        self.relearn_requested.emit(
+            str(wid), previous if isinstance(previous, str) else "",
+            str(rec.get("Word1") or ""))
+        self.prompt_card.refresh_relearn(rec.get("Status"))
 
     def _ignore_current(self):
         """Park the current question's word on Ignored and drop the question.

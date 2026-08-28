@@ -1238,6 +1238,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} palabra(s) no aparecerá(n) en la práctica.",
     "'{word}' is back in rotation": "«{word}» vuelve a la rotación",
     "'{word}' won't come up again": "«{word}» no volverá a aparecer",
+    "Mark for relearning": "Marcar para volver a aprender",
+    "Forgot this word — move it to To Learn": "Olvidé esta palabra — mover a «Por aprender»",
+    "'{word}' is queued to learn again": "«{word}» está en la cola para volver a aprender",
+    "{count} word(s) queued to learn again.": "{count} palabra(s) en la cola para volver a aprender.",
+    "Nothing here to relearn yet.": "Aquí todavía no hay nada que volver a aprender.",
 
     "Compact": "Compacto",
     "Normal": "Normal",

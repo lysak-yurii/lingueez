@@ -1253,6 +1253,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} slovo/slova se už neobjeví v procvičování.",
     "'{word}' is back in rotation": "„{word}“ se vrací do procvičování",
     "'{word}' won't come up again": "„{word}“ se už neobjeví",
+    "Mark for relearning": "Označit k opětovnému učení",
+    "Forgot this word — move it to To Learn": "Zapomenuté slovo — přesunout do „K učení“",
+    "'{word}' is queued to learn again": "„{word}“ je zařazeno k opětovnému učení",
+    "{count} word(s) queued to learn again.": "{count} slovo/slova zařazeno k opětovnému učení.",
+    "Nothing here to relearn yet.": "Zatím tu není co se učit znovu.",
 
     # Table density
     "Compact": "Kompaktní",

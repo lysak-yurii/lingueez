@@ -1250,6 +1250,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} λέξη(εις) δεν θα εμφανίζονται στην εξάσκηση.",
     "'{word}' is back in rotation": "«{word}» επέστρεψε στην εξάσκηση",
     "'{word}' won't come up again": "«{word}» δεν θα εμφανιστεί ξανά",
+    "Mark for relearning": "Σήμανση για επανεκμάθηση",
+    "Forgot this word — move it to To Learn": "Ξέχασα αυτή τη λέξη — μετακίνηση σε «Προς εκμάθηση»",
+    "'{word}' is queued to learn again": "«{word}» μπήκε στη σειρά για επανεκμάθηση",
+    "{count} word(s) queued to learn again.": "{count} λέξη(εις) σε σειρά για επανεκμάθηση.",
+    "Nothing here to relearn yet.": "Δεν υπάρχει ακόμη κάτι για επανεκμάθηση.",
 
     # Table density
     "Compact": "Συμπαγές",

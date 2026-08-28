@@ -1074,6 +1074,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} คำจะไม่ปรากฏในการฝึกอีก",
     "'{word}' is back in rotation": "'{word}' กลับมาอยู่ในการฝึกแล้ว",
     "'{word}' won't come up again": "'{word}' จะไม่ปรากฏอีก",
+    "Mark for relearning": "ทำเครื่องหมายเพื่อเรียนใหม่",
+    "Forgot this word — move it to To Learn": "ลืมคำนี้ — ย้ายไปที่ 'ต้องเรียนรู้'",
+    "'{word}' is queued to learn again": "'{word}' อยู่ในคิวสำหรับเรียนใหม่",
+    "{count} word(s) queued to learn again.": "{count} คำอยู่ในคิวสำหรับเรียนใหม่",
+    "Nothing here to relearn yet.": "ยังไม่มีอะไรให้เรียนใหม่ที่นี่",
 
     "Compact": "กะทัดรัด",
     "Normal": "ปกติ",

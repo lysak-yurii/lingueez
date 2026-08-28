@@ -1250,6 +1250,13 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} слово(слів) більше не з'являтиметься у практиці.",
     "'{word}' is back in rotation": "«{word}» знову в ротації",
     "'{word}' won't come up again": "«{word}» більше не з'явиться",
+    # Relearning. The tooltip avoids a gendered past tense ("я забув/забула")
+    # by putting it on the word rather than the speaker.
+    "Mark for relearning": "Позначити для повторного вивчення",
+    "Forgot this word — move it to To Learn": "Слово забулося — перенести до «Вивчити»",
+    "'{word}' is queued to learn again": "«{word}» у черзі на повторне вивчення",
+    "{count} word(s) queued to learn again.": "{count} слово(слів) у черзі на повторне вивчення.",
+    "Nothing here to relearn yet.": "Тут поки немає чого вивчати знову.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

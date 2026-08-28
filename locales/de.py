@@ -1249,6 +1249,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} Wort/Wörter kommen beim Üben nicht mehr vor.",
     "'{word}' is back in rotation": "„{word}“ ist wieder im Umlauf",
     "'{word}' won't come up again": "„{word}“ kommt nicht mehr vor",
+    "Mark for relearning": "Zum Wiederholen markieren",
+    "Forgot this word — move it to To Learn": "Wort vergessen — nach „Zu lernen“ verschieben",
+    "'{word}' is queued to learn again": "„{word}“ wird noch einmal gelernt",
+    "{count} word(s) queued to learn again.": "{count} Wort/Wörter zum erneuten Lernen vorgemerkt.",
+    "Nothing here to relearn yet.": "Hier gibt es noch nichts zum Wiederholen.",
 
     # Table density (settings → Table size)
     "Compact": "Kompakt",

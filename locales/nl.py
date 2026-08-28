@@ -1065,6 +1065,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} woord(en) komt niet meer voor bij het oefenen.",
     "'{word}' is back in rotation": "'{word}' doet weer mee",
     "'{word}' won't come up again": "'{word}' komt niet meer voorbij",
+    "Mark for relearning": "Markeren om opnieuw te leren",
+    "Forgot this word — move it to To Learn": "Dit woord vergeten — verplaats naar 'Te leren'",
+    "'{word}' is queued to learn again": "'{word}' staat klaar om opnieuw te leren",
+    "{count} word(s) queued to learn again.": "{count} woord(en) staan klaar om opnieuw te leren.",
+    "Nothing here to relearn yet.": "Hier valt nog niets opnieuw te leren.",
 
     "Compact": "Compact",
     "Normal": "Normaal",

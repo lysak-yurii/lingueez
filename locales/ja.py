@@ -1244,6 +1244,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} 件の単語は練習に出てこなくなります。",
     "'{word}' is back in rotation": "「{word}」を練習に戻しました",
     "'{word}' won't come up again": "「{word}」はもう出てきません",
+    "Mark for relearning": "再学習にする",
+    "Forgot this word — move it to To Learn": "この単語を忘れた — 「未習得」へ移動",
+    "'{word}' is queued to learn again": "「{word}」を再学習に追加しました",
+    "{count} word(s) queued to learn again.": "{count} 件の単語を再学習に追加しました。",
+    "Nothing here to relearn yet.": "再学習するものはまだありません。",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

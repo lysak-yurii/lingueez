@@ -46,6 +46,7 @@ from app.config import get_bool, get_float, get_int, load_settings, save_setting
 from app.core import db as dbq
 from app.i18n import fill_lang_combo, ntr, tr
 from app.core import progression
+from app.core import srs
 from app.core import exporters
 from app.core import translator
 from app.core.audio import stop_playback
@@ -1193,6 +1194,7 @@ class MainWindow(QMainWindow):
         self.flashcards_page.status_change_requested.connect(
             self._apply_status_change)
         self.flashcards_page.ignore_requested.connect(self._ignore_word)
+        self.flashcards_page.relearn_requested.connect(self._mark_to_learn)
         self.flashcards_page.player_toggle_requested.connect(
             self.word_player.toggle_pause)
         self.flashcards_page.player_prev_requested.connect(self.word_player.prev)
@@ -1213,6 +1215,7 @@ class MainWindow(QMainWindow):
             settings_provider=lambda: self.settings)
         self.quiz_page.status_change_requested.connect(self._apply_status_change)
         self.quiz_page.ignore_requested.connect(self._ignore_word)
+        self.quiz_page.relearn_requested.connect(self._mark_to_learn)
 
         self.texts_page = TextsPage(self.db_adapter, self.colors)
         self.texts_page.counts_changed.connect(self._on_texts_counts)
@@ -3001,9 +3004,14 @@ class MainWindow(QMainWindow):
         # map the localized label back to the canonical English status
         status = next((s for s in statuses if tr(s) == chosen), chosen)
 
+        ids = [r["ID"] for r in records]
+
         def work():
-            return self.db_adapter.update_words_bulk(
-                [r["ID"] for r in records], {'Status': status})
+            if progression.is_to_learn(status):
+                # Same contract as mark_words_to_learn: the flag means "due now",
+                # so setting it by hand from this dialog cannot skip the reset.
+                self._lapse_schedules(ids)
+            return self.db_adapter.update_words_bulk(ids, {'Status': status})
 
         def done(result):
             updated, failed = result
@@ -3112,6 +3120,7 @@ class MainWindow(QMainWindow):
         menu.addAction(tr("Copy Translation"), lambda: self._copy_field(self.selected_records(), 'Word2'))
         menu.addSeparator()
         menu.addAction(tr("Toggle Favorite"), self.toggle_favorite)
+        menu.addAction(tr("Mark for relearning"), self.mark_words_to_learn)
         menu.addAction(tr("Ignore word"), self.ignore_words)
         menu.addAction(tr("Change Status…"), self.change_status)
         menu.addAction(tr("Add / Remove Tags…"), self.open_tags)
@@ -3327,7 +3336,7 @@ class MainWindow(QMainWindow):
             logging.error(f"Playback status update failed: {exc}")
 
     def _apply_status_change(self, wid, target, word_label="", undo_from=None,
-                             toast=None):
+                             toast=None, undo_srs=None):
         """Promote a word's status (playback listens or quiz/flashcard grading):
         synced DB update, DataFrame + table model refresh, and a toast.
 
@@ -3344,6 +3353,10 @@ class MainWindow(QMainWindow):
         overrides the default (title, message, type) triple. Undo restores the
         rung the word actually had, so ignoring a Mastered word and changing
         your mind gives Mastered back rather than a recomputed New.
+
+        ``undo_srs`` is the scheduling row to put back alongside the rung, for
+        the relearn path — which resets the schedule as well as the label, and
+        would otherwise leave the word due tomorrow after an Undo.
         """
         try:
             run_in_thread(
@@ -3361,7 +3374,7 @@ class MainWindow(QMainWindow):
                     self, title, message, kind, 5000,
                     action_text=tr("Undo") if undoable else None,
                     on_action=(lambda: self._undo_status_change(
-                        wid, undo_from, word_label)) if undoable else None)
+                        wid, undo_from, word_label, undo_srs)) if undoable else None)
             elif word_label:
                 show_toast(self, tr("Promoted"),
                            f"'{word_label}' → {target}", "success", 2500)
@@ -3386,13 +3399,107 @@ class MainWindow(QMainWindow):
                    tr("'{word}' won't come up again").format(word=word_label),
                    "info"))
 
-    def _undo_status_change(self, wid, previous, word_label=""):
+    def _lapse_schedule(self, word_id):
+        """Pull one word's SM-2 schedule back so a relearn flag actually bites.
+
+        Returns the row it replaced, for Undo. A word that was never graded has
+        no row and gets none: ``srs_due_word_ids`` already counts a missing or
+        NULL ``next_review`` as due, so there is nothing to reset.
+        """
+        previous = dbq.srs_get(word_id)
+        if not previous:
+            return None
+        dbq.srs_upsert(word_id, srs.lapse(previous), touch_reviewed=False)
+        return previous
+
+    def _mark_to_learn(self, wid, previous, word_label=""):
+        """Flag one word for relearning, from inside a flashcards/quiz session.
+
+        Two writes on two sync channels: the label rides the words write-through
+        (last-write-wins on edited_at), the schedule rides the dirty
+        ``word_progress`` row (scheduling group wins by newer ``updated_at``).
+        They can land apart, and either half alone is harmless — a label with no
+        reset just is not due yet, a reset with no label is due but reads as its
+        old rung — so the next sync closes the gap either way.
+        """
+        previous = previous if isinstance(previous, str) else ""
+        if not progression.can_lapse(previous):
+            return
+        try:
+            snapshot = self._lapse_schedule(wid)
+        except Exception as exc:
+            logging.error(f"Relearn reschedule for {wid} failed: {exc}")
+            snapshot = None
+        # An empty label means the caller shows the change in place — the quiz
+        # puts "Now To Learn" in its feedback block — so it gets no toast, and
+        # with it no Undo button. Same split ``_apply_status_change`` makes for
+        # promotions, and for the same reason: a toast there covers Next.
+        toast = None
+        if word_label:
+            toast = (tr("To Learn"),
+                     tr("'{word}' is queued to learn again").format(word=word_label),
+                     "info")
+        self._apply_status_change(
+            wid, progression.TO_LEARN_STATUS, word_label, undo_from=previous,
+            undo_srs=snapshot, toast=toast)
+
+    def mark_words_to_learn(self):
+        """Bulk relearn flag from the vocabulary table.
+
+        Mirrors ``ignore_words``: a mixed selection only counts the rows the
+        flag can act on, so words still on New (nothing to forget) and words
+        already flagged are left out of the total rather than reported as done.
+        """
+        records = self._require_selection("mark for relearning")
+        if not records:
+            return
+        pending = [r for r in records if progression.can_lapse(r.get("Status"))]
+        if not pending:
+            show_toast(self, tr("To Learn"),
+                       tr("Nothing here to relearn yet."), "info")
+            return
+        ids = [r["ID"] for r in pending]
+
+        def work():
+            self._lapse_schedules(ids)
+            return self.db_adapter.update_words_bulk(
+                ids, {'Status': progression.TO_LEARN_STATUS})
+
+        def done(result):
+            updated, failed = result
+            self.load_data()
+            show_toast(self, tr("To Learn"),
+                       tr("{count} word(s) queued to learn again.").format(
+                           count=updated),
+                       "warning" if failed else "success")
+            if failed:
+                logging.warning(f"Relearn skipped {len(failed)} word(s): {failed[:5]}")
+
+        self._run_bulk(work, done)
+
+    def _lapse_schedules(self, word_ids):
+        """``_lapse_schedule`` for a whole selection, in one transaction."""
+        try:
+            rows = dbq.srs_get_many(word_ids)
+            dbq.srs_upsert_many(
+                {wid: srs.lapse(row) for wid, row in rows.items()},
+                touch_reviewed=False)
+        except Exception as exc:
+            logging.error(f"Bulk relearn reschedule failed: {exc}")
+
+    def _undo_status_change(self, wid, previous, word_label="", srs_row=None):
         """Put a word back on ``previous`` and confirm it.
 
         Only the rung is restored, not the session: the card that was dropped
         stays dropped. Undo means "I did not mean to park this word", not
-        "replay that card".
+        "replay that card". ``srs_row`` additionally restores the scheduling
+        state a relearn flag reset.
         """
+        if srs_row:
+            try:
+                dbq.srs_upsert(wid, srs_row, touch_reviewed=False)
+            except Exception as exc:
+                logging.error(f"Restoring the schedule for {wid} failed: {exc}")
         self._apply_status_change(
             wid, previous, word_label,
             toast=(tr("Restored"),

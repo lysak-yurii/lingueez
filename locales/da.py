@@ -1249,6 +1249,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} ord vises ikke længere i øvelser.",
     "'{word}' is back in rotation": "«{word}» er tilbage i rotation",
     "'{word}' won't come up again": "«{word}» dukker ikke op igen",
+    "Mark for relearning": "Markér til at lære igen",
+    "Forgot this word — move it to To Learn": "Glemt dette ord — flyt til «Skal læres»",
+    "'{word}' is queued to learn again": "«{word}» er sat til at læres igen",
+    "{count} word(s) queued to learn again.": "{count} ord sat til at læres igen.",
+    "Nothing here to relearn yet.": "Der er ikke noget at lære igen endnu.",
     # "Learning" and "Mastered" translated in main blocks
 
     # Table density (settings → Table size)

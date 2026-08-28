@@ -1232,6 +1232,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} शब्द अब अभ्यास में नहीं आएंगे।",
     "'{word}' is back in rotation": "'{word}' फिर से अभ्यास में है",
     "'{word}' won't come up again": "'{word}' अब नहीं आएगा",
+    "Mark for relearning": "फिर से सीखने के लिए चिह्नित करें",
+    "Forgot this word — move it to To Learn": "भूला हुआ शब्द — 'सीखना है' में ले जाएँ",
+    "'{word}' is queued to learn again": "'{word}' फिर से सीखने की सूची में है",
+    "{count} word(s) queued to learn again.": "{count} शब्द फिर से सीखने की सूची में हैं।",
+    "Nothing here to relearn yet.": "यहाँ अभी फिर से सीखने के लिए कुछ नहीं है।",
 
     "Compact": "संक्षिप्त",
     "Normal": "सामान्य",

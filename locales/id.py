@@ -1250,6 +1250,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} kata tidak akan muncul lagi dalam latihan.",
     "'{word}' is back in rotation": "'{word}' kembali masuk latihan",
     "'{word}' won't come up again": "'{word}' tidak akan muncul lagi",
+    "Mark for relearning": "Tandai untuk dipelajari ulang",
+    "Forgot this word — move it to To Learn": "Lupa kata ini — pindahkan ke 'Untuk Dipelajari'",
+    "'{word}' is queued to learn again": "'{word}' masuk antrean untuk dipelajari ulang",
+    "{count} word(s) queued to learn again.": "{count} kata masuk antrean untuk dipelajari ulang.",
+    "Nothing here to relearn yet.": "Belum ada yang perlu dipelajari ulang di sini.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

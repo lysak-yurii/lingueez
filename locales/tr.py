@@ -1076,6 +1076,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} kelime artık alıştırmalarda çıkmayacak.",
     "'{word}' is back in rotation": "'{word}' yeniden alıştırmalarda",
     "'{word}' won't come up again": "'{word}' bir daha çıkmayacak",
+    "Mark for relearning": "Yeniden öğrenmek için işaretle",
+    "Forgot this word — move it to To Learn": "Bu kelimeyi unuttum — 'Öğrenilecek' listesine taşı",
+    "'{word}' is queued to learn again": "'{word}' yeniden öğrenilmek üzere sıraya alındı",
+    "{count} word(s) queued to learn again.": "{count} kelime yeniden öğrenilmek üzere sıraya alındı.",
+    "Nothing here to relearn yet.": "Burada yeniden öğrenilecek bir şey yok.",
 
     # Table density (settings → Table size)
     "Compact": "Kompakt",

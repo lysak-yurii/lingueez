@@ -1066,6 +1066,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} slovo/slová sa už neobjaví pri precvičovaní.",
     "'{word}' is back in rotation": "„{word}“ sa vracia do precvičovania",
     "'{word}' won't come up again": "„{word}“ sa už neobjaví",
+    "Mark for relearning": "Označiť na opätovné učenie",
+    "Forgot this word — move it to To Learn": "Zabudnuté slovo — presunúť do „Na učenie“",
+    "'{word}' is queued to learn again": "„{word}“ je zaradené na opätovné učenie",
+    "{count} word(s) queued to learn again.": "{count} slovo/slová zaradené na opätovné učenie.",
+    "Nothing here to relearn yet.": "Zatiaľ tu nie je čo učiť znova.",
 
     "Compact": "Kompaktný",
     "Normal": "Normálny",

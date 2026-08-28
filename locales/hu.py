@@ -1248,6 +1248,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} szó nem jelenik meg többé a gyakorlásban.",
     "'{word}' is back in rotation": "„{word}” ismét szerepel a gyakorlásban",
     "'{word}' won't come up again": "„{word}” nem jelenik meg többé",
+    "Mark for relearning": "Megjelölés újratanulásra",
+    "Forgot this word — move it to To Learn": "Elfelejtett szó — áthelyezés ide: „Megtanulandó”",
+    "'{word}' is queued to learn again": "„{word}” újratanulásra vár",
+    "{count} word(s) queued to learn again.": "{count} szó újratanulásra vár.",
+    "Nothing here to relearn yet.": "Itt még nincs mit újratanulni.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

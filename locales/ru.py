@@ -1090,6 +1090,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} слов(а) больше не появятся в практике.",
     "'{word}' is back in rotation": "«{word}» снова в ротации",
     "'{word}' won't come up again": "«{word}» больше не появится",
+    "Mark for relearning": "Отметить для повторного изучения",
+    "Forgot this word — move it to To Learn": "Слово забылось — переместить в «Выучить»",
+    "'{word}' is queued to learn again": "«{word}» в очереди на повторное изучение",
+    "{count} word(s) queued to learn again.": "{count} слов(а) в очереди на повторное изучение.",
+    "Nothing here to relearn yet.": "Здесь пока нечего учить заново.",
 
     # Table density
     "Compact": "Компактный",

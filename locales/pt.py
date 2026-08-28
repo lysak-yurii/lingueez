@@ -1251,6 +1251,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} palavra(s) não voltará(ão) a aparecer na prática.",
     "'{word}' is back in rotation": "'{word}' voltou à rotação",
     "'{word}' won't come up again": "'{word}' não voltará a aparecer",
+    "Mark for relearning": "Marcar para reaprender",
+    "Forgot this word — move it to To Learn": "Esqueci esta palavra — mover para 'A aprender'",
+    "'{word}' is queued to learn again": "'{word}' está na fila para reaprender",
+    "{count} word(s) queued to learn again.": "{count} palavra(s) na fila para reaprender.",
+    "Nothing here to relearn yet.": "Ainda não há nada para reaprender aqui.",
     # "Learning" and "Mastered" are translated above.
 
     # Table density (settings → Table size)

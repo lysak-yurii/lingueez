@@ -740,6 +740,7 @@ class FlashcardWidget(QWidget):
     clicked = Signal()
     speak_clicked = Signal()
     ignore_clicked = Signal()
+    relearn_clicked = Signal()
 
     def __init__(self, colors, parent=None):
         super().__init__(parent)
@@ -772,10 +773,17 @@ class FlashcardWidget(QWidget):
         self.ignore_btn.setIconSize(QSize(16, 16))
         self.ignore_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
         self.ignore_btn.clicked.connect(self.ignore_clicked.emit)
+        self.relearn_btn = QPushButton(objectName="iconButton")
+        self.relearn_btn.setToolTip(tr("Forgot this word — move it to To Learn"))
+        self.relearn_btn.setCursor(Qt.PointingHandCursor)
+        self.relearn_btn.setIconSize(QSize(16, 16))
+        self.relearn_btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
+        self.relearn_btn.clicked.connect(self.relearn_clicked.emit)
         self.status_chip = QLabel()
         self.status_chip.setAlignment(Qt.AlignCenter)
         head.addWidget(self.caption)
         head.addStretch(1)
+        head.addWidget(self.relearn_btn)
         head.addWidget(self.ignore_btn)
         head.addWidget(self.speak_btn)
         head.addSpacing(4)
@@ -818,8 +826,9 @@ class FlashcardWidget(QWidget):
     def refresh_status(self):
         """Re-read the status off the record already on screen.
 
-        For the autoplay case, where the card stays put after being ignored and
-        the chip and the button would otherwise keep the stale rung.
+        For the card staying put after being ignored under autoplay, or after
+        being flagged to relearn — the chip and the two buttons would otherwise
+        keep the stale rung.
         """
         self._refresh_faces()
 
@@ -865,6 +874,7 @@ class FlashcardWidget(QWidget):
         self.status_chip.setVisible(bool(status))
         self._style_status_chip()  # the ramp color changes with the card
         self.ignore_btn.setVisible(progression.is_studiable(status))
+        self.relearn_btn.setVisible(progression.can_lapse(status))
         # the answer side announces itself: caption + divider go accent
         self.caption.setStyleSheet(
             f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
@@ -919,6 +929,7 @@ class FlashcardWidget(QWidget):
         # Grey, not the danger red: parking a word is reversible bookkeeping,
         # and the Ignored ramp is deliberately off to one side of the ladder.
         self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
+        self.relearn_btn.setIcon(icons.icon("rotate-ccw", c["text_dim"], 16))
 
     def paintEvent(self, _event):  # noqa: N802
         p = QPainter(self)
@@ -942,6 +953,7 @@ class FlashcardsPage(QWidget):
     play_requested = Signal(list)               # records → start read-aloud
     status_change_requested = Signal(str, str, str)  # word_id, status, label
     ignore_requested = Signal(str, str, str)         # word_id, previous, label
+    relearn_requested = Signal(str, str, str)        # word_id, previous, label
     player_toggle_requested = Signal()          # pause/resume the word player
     player_prev_requested = Signal()
     player_next_requested = Signal()
@@ -1184,6 +1196,7 @@ class FlashcardsPage(QWidget):
         self.card.clicked.connect(self._card_clicked)
         self.card.speak_clicked.connect(self._speak_current_clicked)
         self.card.ignore_clicked.connect(self._ignore_current)
+        self.card.relearn_clicked.connect(self._relearn_current)
         self.card_stack = _CardStack(self.card, self._colors)
         # Bounded, not free-expanding: the stretches above and below centre the
         # card, but without a ceiling it grew to the full height of the page and
@@ -1329,6 +1342,7 @@ class FlashcardsPage(QWidget):
         bind(Qt.Key_Left, self._prev_card)
         bind(Qt.Key_Right, self._next_card_skip)
         bind(Qt.Key_I, self._ignore_current)
+        bind(Qt.Key_R, self._relearn_current)
 
     # -------------------------------------------------------------- deck
 
@@ -1917,13 +1931,23 @@ class FlashcardsPage(QWidget):
             label.setText("")  # the projection is spent once graded
         if grade in ("easy", "good"):
             self._correct += 1
-        mapped = srs.status_from_progress(
-            state["review_count"], state["ease_factor"], state["correct_count"])
-        target = srs.promotion_target(rec.get("Status"), mapped)
-        if target:
-            rec["Status"] = target
-            self.status_change_requested.emit(
-                str(wid), target, str(rec.get("Word1") or ""))
+        if srs.lapses_on_grade(rec.get("Status"), grade):
+            # Hard on a Mastered word is the user saying they have forgotten it.
+            # The flag re-reads the row this grade just wrote, so the lapse
+            # lands on top of it rather than alongside it.
+            previous = rec.get("Status")
+            rec["Status"] = progression.TO_LEARN_STATUS
+            self.relearn_requested.emit(
+                str(wid), previous, str(rec.get("Word1") or ""))
+            self.card.refresh_status()
+        else:
+            mapped = srs.status_from_progress(
+                state["review_count"], state["ease_factor"], state["correct_count"])
+            target = srs.promotion_target(rec.get("Status"), mapped)
+            if target:
+                rec["Status"] = target
+                self.status_change_requested.emit(
+                    str(wid), target, str(rec.get("Word1") or ""))
         self._refresh_session_header()
         if self._autoplay:
             self._update_controls()  # stay on the card; the player owns position
@@ -1931,6 +1955,28 @@ class FlashcardsPage(QWidget):
             self._show_card(self._index + 1)
         else:
             self._complete()
+
+    def _relearn_current(self):
+        """Flag the current word for relearning, keeping it in the run.
+
+        Unlike ignoring, this does not drop the card — the point is to study the
+        word now — so it needs none of ``_ignore_current``'s guards: the deck
+        and the index-keyed ``_grade_history`` are left alone, and it stays
+        available after grading, for the card you got right by guessing.
+        """
+        if self._stack.currentIndex() != self.STATE_SESSION or not self._deck:
+            return
+        rec = self._deck[self._index]
+        wid = rec.get("ID")
+        if wid is None or not progression.can_lapse(rec.get("Status")):
+            return
+        previous = rec.get("Status")
+        rec["Status"] = progression.TO_LEARN_STATUS
+        self.relearn_requested.emit(
+            str(wid), previous if isinstance(previous, str) else "",
+            str(rec.get("Word1") or ""))
+        self.card.refresh_status()
+        self._refresh_session_header()
 
     def _ignore_current(self):
         """Park the current word on Ignored and take it out of the run.

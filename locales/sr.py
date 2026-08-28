@@ -1074,6 +1074,11 @@ TRANSLATIONS: dict[str, str] = {
     "{count} word(s) won't come up in practice.": "{count} реч(и) се више неће појављивати у вежбању.",
     "'{word}' is back in rotation": "'{word}' се враћа у вежбање",
     "'{word}' won't come up again": "'{word}' се више неће појавити",
+    "Mark for relearning": "Означи за поновно учење",
+    "Forgot this word — move it to To Learn": "Заборављена реч — премести у 'За учење'",
+    "'{word}' is queued to learn again": "'{word}' је на реду за поновно учење",
+    "{count} word(s) queued to learn again.": "{count} реч(и) на реду за поновно учење.",
+    "Nothing here to relearn yet.": "Овде још нема шта да се учи поново.",
 
     "Compact": "Компактно",
     "Normal": "Нормално",
