@@ -1970,7 +1970,12 @@ class FlashcardsPage(QWidget):
             self.relearn_requested.emit(
                 str(wid), previous, str(rec.get("Word1") or ""))
             self.card.refresh_status()
-        else:
+        elif grade != "hard":
+            # A wrong answer never promotes. The rungs come from cumulative
+            # SM-2 state, which one Hard barely moves, so a word whose state had
+            # run ahead of its label used to be "caught up" — promoted by
+            # getting it wrong. What it has earned still stands; the next
+            # correct grade applies it.
             mapped = srs.status_from_progress(
                 state["review_count"], state["ease_factor"], state["correct_count"])
             target = srs.promotion_target(rec.get("Status"), mapped)

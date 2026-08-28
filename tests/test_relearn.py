@@ -267,6 +267,33 @@ class ImmediateProgressPushTests(unittest.TestCase):
             self.assertEqual(mgr.push_progress_now(), 0)
 
 
+class WrongAnswerNeverPromotesTests(unittest.TestCase):
+    """A word whose SM-2 state has run ahead of its label used to be promoted
+    by getting it *wrong*: one Hard barely moves cumulative counters, so the
+    mapping still read higher than the rung and promotion_target applied it."""
+
+    def test_the_mapping_can_outrun_the_label(self):
+        # The setup that made this reachable: ease still high, plenty correct,
+        # but the word is only labelled Learning.
+        graded = srs.apply_grade(
+            {"ease_factor": 2.5, "interval_days": 30,
+             "review_count": 25, "correct_count": 20}, "hard", NOW)
+        mapped = srs.status_from_progress(
+            graded["review_count"], graded["ease_factor"], graded["correct_count"])
+        self.assertEqual(mapped, "Mastered")
+        # promotion_target is pure and still says "yes" — the grade is what the
+        # pages now refuse to promote on, so the rule lives at the call site.
+        self.assertEqual(srs.promotion_target("Learning", mapped), "Mastered")
+
+    def test_pages_do_not_promote_on_hard(self):
+        import inspect
+        from app.ui import flashcards_page, quiz_page
+        self.assertIn('elif grade != "hard":',
+                      inspect.getsource(flashcards_page.FlashcardsPage._grade))
+        self.assertIn('if grade == "hard":',
+                      inspect.getsource(quiz_page.QuizPage._grade))
+
+
 class LapseStorageTests(unittest.TestCase):
     def setUp(self):
         fd, self.db_path = tempfile.mkstemp(suffix=".db")

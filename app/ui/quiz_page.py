@@ -1636,6 +1636,9 @@ class QuizPage(QWidget):
             self.relearn_requested.emit(str(wid), previous, "")
             self.prompt_card.refresh_relearn(question.record.get("Status"))
             return progression.TO_LEARN_STATUS
+        if grade == "hard":
+            # A wrong answer never promotes — see FlashcardsPage._grade.
+            return None
         mapped = srs.status_from_progress(
             state["review_count"], state["ease_factor"], state["correct_count"])
         target = srs.promotion_target(question.record.get("Status"), mapped)
