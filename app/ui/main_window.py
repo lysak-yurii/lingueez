@@ -923,8 +923,18 @@ class MainWindow(QMainWindow):
         self.window_controls = WindowControls(self, self.colors)
         h.addWidget(self.window_controls, 0, Qt.AlignVCenter)
 
-        self._frameless_resizer = FramelessResizer(self)
-        QApplication.instance().installEventFilter(self._frameless_resizer)
+        # On Windows the frame behaviours (drag-to-snap, Snap Assist, the Snap
+        # Layouts flyout) only exist for a window with native frame styles, so
+        # there the OS hit-tests the top bar instead of FramelessResizer.
+        self._native_frame = None
+        self._frameless_resizer = None
+        if sys.platform == 'win32':
+            from app.ui.win_frame import install_native_frame
+            self._native_frame = install_native_frame(
+                self, header, self.window_controls)
+        if self._native_frame is None:
+            self._frameless_resizer = FramelessResizer(self)
+            QApplication.instance().installEventFilter(self._frameless_resizer)
 
         root.addWidget(header)
         # Kept so a one-off strip can be slotted in directly under the title bar,

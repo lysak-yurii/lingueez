@@ -21,7 +21,7 @@
 
 """Client-side window decorations: integrated min/max/close controls,
 drag-to-move header and frameless edge resizing."""
-from PySide6.QtCore import QEvent, QObject, QSize, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QWidget
 
 from app.i18n import tr
@@ -43,7 +43,7 @@ class WindowControls(QWidget):
         layout.setSpacing(0)
 
         self.min_btn = self._button("win-min", tr("Minimize"), window.showMinimized)
-        self.max_btn = self._button("win-max", tr("Maximize"), self._toggle_maximize)
+        self.max_btn = self._button("win-max", tr("Maximize"), self.toggle_maximize)
         self.close_btn = self._button("x", tr("Close"), window.close, close=True)
 
         window.windowHandle() and None  # noqa: B018 - handle created lazily
@@ -70,11 +70,29 @@ class WindowControls(QWidget):
             "win-restore" if maximized else "win-max", colors["text_dim"], 16))
         self.close_btn.setIcon(icons.icon("x", colors["text_dim"], 16))
 
-    def _toggle_maximize(self):
+    def toggle_maximize(self):
         if self._window.isMaximized():
             self._window.showNormal()
         else:
             self._window.showMaximized()
+
+    def max_button_rect(self):
+        """The maximize button in top-level window coordinates."""
+        return QRect(self.max_btn.mapTo(self._window, QPoint(0, 0)),
+                     self.max_btn.size())
+
+    def set_max_hover(self, hovered):
+        """Drive the maximize button's hover look from outside Qt.
+
+        On Windows the shell owns that button's rectangle (so it can offer Snap
+        Layouts), which means Qt never sees enter/leave for it and the QSS
+        :hover state never fires; #winBtn[ncHover] mirrors it.
+        """
+        if bool(self.max_btn.property("ncHover")) == bool(hovered):
+            return
+        self.max_btn.setProperty("ncHover", bool(hovered))
+        self.max_btn.style().unpolish(self.max_btn)
+        self.max_btn.style().polish(self.max_btn)
 
     def eventFilter(self, obj, event):
         if obj is self._window and event.type() == QEvent.WindowStateChange:

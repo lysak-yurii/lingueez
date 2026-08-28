@@ -276,10 +276,13 @@ class WrongAnswerNeverPromotesTests(unittest.TestCase):
         # The setup that made this reachable: ease still high, plenty correct,
         # but the word is only labelled Learning.
         graded = srs.apply_grade(
-            {"ease_factor": 2.5, "interval_days": 30,
-             "review_count": 25, "correct_count": 20}, "hard", NOW)
+            {"ease_factor": 2.5, "interval_days": 30, "review_count": 25, "correct_count": 20},
+            "hard",
+            NOW,
+        )
         mapped = srs.status_from_progress(
-            graded["review_count"], graded["ease_factor"], graded["correct_count"])
+            graded["review_count"], graded["ease_factor"], graded["correct_count"]
+        )
         self.assertEqual(mapped, "Mastered")
         # promotion_target is pure and still says "yes" — the grade is what the
         # pages now refuse to promote on, so the rule lives at the call site.
@@ -288,10 +291,11 @@ class WrongAnswerNeverPromotesTests(unittest.TestCase):
     def test_pages_do_not_promote_on_hard(self):
         import inspect
         from app.ui import flashcards_page, quiz_page
-        self.assertIn('elif grade != "hard":',
-                      inspect.getsource(flashcards_page.FlashcardsPage._grade))
-        self.assertIn('if grade == "hard":',
-                      inspect.getsource(quiz_page.QuizPage._grade))
+
+        self.assertIn(
+            'elif grade != "hard":', inspect.getsource(flashcards_page.FlashcardsPage._grade)
+        )
+        self.assertIn('if grade == "hard":', inspect.getsource(quiz_page.QuizPage._grade))
 
 
 class LapseStorageTests(unittest.TestCase):

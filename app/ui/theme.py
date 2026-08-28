@@ -726,7 +726,9 @@ QPushButton#winBtn, QPushButton#winBtnClose {{
     border-radius: 6px;
     padding: 7px 13px;
 }}
-QPushButton#winBtn:hover {{ background: {c['surface_alt']}; }}
+QPushButton#winBtn:hover, QPushButton#winBtn[ncHover="true"] {{
+    background: {c['surface_alt']};
+}}
 QPushButton#winBtnClose:hover {{ background: {c['danger']}; }}
 QMainWindow {{
     border: 1px solid {c['border']};
