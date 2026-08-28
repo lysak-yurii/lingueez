@@ -2882,6 +2882,14 @@ class MainWindow(QMainWindow):
             try:
                 self._sync_before_db_operation()
                 self.db_adapter.update_word(record["ID"], updated)
+                # Choosing "To Learn" by hand here has to reset the schedule
+                # too, or the rung is inert: the word keeps its old interval and
+                # never comes up. Same contract every other route into the rung
+                # honours — and unlike the one-click flag this is not gated on
+                # can_lapse, because the user picked the status explicitly.
+                if (progression.is_to_learn(updated.get('Status'))
+                        and not progression.is_to_learn(record.get('Status'))):
+                    self._lapse_schedule(record["ID"])
                 backup_database()
                 self.load_data()
                 show_toast(self, tr("Saved"), tr("'{word}' updated.").format(word=updated.get('Word1', '')), "success")
