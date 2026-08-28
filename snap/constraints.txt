@@ -1,0 +1,107 @@
+# Exact versions of the dependency set that was built and verified end to end.
+#
+# requirements.txt deliberately stays loose (>=) for development, which means an
+# unconstrained snap build resolves whatever is current on the day: the first
+# verified build shipped PySide6 6.11.2 / numpy 2.5.2 while the dev venv had
+# 6.11.1 / 2.4.6. Store users would then run a combination nobody tested. This
+# file is the snap's answer to the Flatpak's pinned python3-deps.json.
+#
+# Regenerate after a deliberate dependency bump, from a snap you have actually
+# tested:  snap run --shell lingueez -c '$SNAP/bin/python3 -m pip freeze'
+# Build tooling (pip/setuptools/wheel) and the SDK's own GObject stack are left
+# out on purpose — the plugin installs those itself, outside these constraints.
+annotated-types==0.8.0
+anyio==4.14.2
+babel==2.18.0
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.1
+click==8.1.8
+courlan==1.4.0
+cryptography==50.0.1
+dateparser==1.4.2
+deprecation==2.1.0
+distro==1.9.0
+et_xmlfile==2.0.0
+evdev==2.0.0
+feedparser==6.0.14
+feedparser-sgmllib==2.1.0
+google-api-core==2.34.0
+googleapis-common-protos==1.75.2
+google-auth==2.57.0
+google-cloud-texttospeech==2.37.0
+google-genai==2.20.0
+grpcio==1.83.0
+grpcio-status==1.83.0
+gTTS==2.5.4
+h11==0.16.0
+h2==4.4.1
+hpack==4.2.0
+htmldate==1.10.0
+httpcore==1.0.9
+httpcore2==2.12.0
+httpx==0.28.1
+httpx2==2.12.0
+hyperframe==6.1.0
+idna==3.19
+jaraco.classes==3.4.0
+jaraco.context==6.1.2
+jaraco.functools==4.6.0
+jeepney==0.9.0
+jiter==0.16.0
+jusText==3.0.2
+keyring==25.7.0
+lxml==6.1.2
+lxml_html_clean==0.4.5
+more-itertools==11.1.0
+multidict==6.7.1
+numpy==2.5.2
+openai==3.5.0
+openpyxl==3.1.5
+packaging==24.0
+pandas==3.0.5
+pillow==12.3.0
+postgrest==2.31.0
+propcache==0.5.2
+protobuf==7.36.0
+proto-plus==1.28.4
+pyasn1==0.6.4
+pyasn1_modules==0.4.2
+pycparser==3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+pydub==0.25.1
+pygame==2.6.1
+PyJWT==2.13.0
+pynput==1.8.2
+PySide6==6.11.2
+PySide6_Addons==6.11.2
+PySide6_Essentials==6.11.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.3
+python-xlib==0.33
+pytz==2026.3.post1
+realtime==2.31.0
+regex==2026.7.19
+reportlab==5.0.1
+requests==2.34.2
+SecretStorage==3.5.0
+segno==1.6.6
+shiboken6==6.11.2
+six==1.17.0
+sniffio==1.3.1
+storage3==2.31.0
+StrEnum==0.4.15
+supabase==2.31.0
+supabase-auth==2.31.0
+supabase-functions==2.31.0
+tenacity==9.1.4
+tld==0.13.2
+trafilatura==2.2.0
+truststore==0.10.4
+typing_extensions==4.16.0
+typing-inspection==0.4.4
+tzlocal==5.4.4
+urllib3==2.7.0
+websockets==15.0.1
+yarl==1.24.5

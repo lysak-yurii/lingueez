@@ -50,6 +50,9 @@ parts:
     # QtMultimedia at module scope, and that ships in PySide6-Addons. Essentials
     # alone builds and packs fine, then dies at startup with ModuleNotFoundError.
     python-requirements: [requirements.txt]
+    # requirements.txt is loose (>=) for development; the snap pins the exact set
+    # that was tested, so two builds a week apart ship the same libraries.
+    python-constraints: [snap/constraints.txt]
     override-pull: |
       craftctl default
       # The plugin ends with `[ -f setup.py ] || [ -f pyproject.toml ] && pip

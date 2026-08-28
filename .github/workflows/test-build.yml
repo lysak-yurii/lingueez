@@ -183,6 +183,21 @@ jobs:
             Lingueez-${{ needs.version.outputs.version }}-x86_64.AppImage
             Lingueez-${{ needs.version.outputs.version }}-x86_64.AppImage.zsync
 
+  build-snap:
+    # The snap is what Ubuntu's App Center lists (it carries the Snap Store, not
+    # Flathub), so it needs the same pre-release smoke build as the others.
+    # snapcraft reads snap/snapcraft.yaml and takes its version from the AppStream
+    # metainfo, so this job needs no version input.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
   build-flatpak:
     runs-on: ubuntu-latest
     container:
