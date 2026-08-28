@@ -18,6 +18,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from unittest import mock
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -198,6 +199,72 @@ class ReclimbTests(unittest.TestCase):
         # Passive audio must not clear a relearn flag — only studying may.
         thresholds = progression.normalize_thresholds()
         self.assertIsNone(progression.next_status(progression.TO_LEARN_STATUS, 10_000, thresholds))
+
+
+class ImmediateProgressPushTests(unittest.TestCase):
+    """The label reaches the cloud synchronously; the ease drop must chase it.
+
+    Left to the normal sync cycle the schedule waits for app close or next
+    startup, and in that window a second device sees "To Learn" against the
+    pre-lapse ease — one correct grade there maps to Mastered and erases the
+    flag. These pin the push, not the network.
+    """
+
+    def setUp(self):
+        from app.ui.main_window import MainWindow
+
+        self.win = MainWindow.__new__(MainWindow)  # no Qt init: pure logic
+        self.pushes = 0
+
+        class _Sync:
+            def is_sync_enabled(_self):
+                return True
+
+            def push_progress_now(_self):
+                self.pushes += 1
+                return 1
+
+        self.win.sync_manager = _Sync()
+
+    def test_the_bulk_path_pushes_after_writing(self):
+        with (
+            mock.patch.object(db, "srs_get_many", return_value={"w1": _mastered_card()}),
+            mock.patch.object(db, "srs_upsert_many") as write,
+        ):
+            self.win._lapse_schedules(["w1"])
+        self.assertEqual(write.call_count, 1)
+        self.assertEqual(self.pushes, 1)
+
+    def test_a_failed_write_does_not_push_a_half_state(self):
+        with (
+            mock.patch.object(db, "srs_get_many", return_value={"w1": _mastered_card()}),
+            mock.patch.object(db, "srs_upsert_many", side_effect=RuntimeError("disk")),
+        ):
+            self.win._lapse_schedules(["w1"])  # swallowed and logged
+        self.assertEqual(self.pushes, 0)
+
+    def test_push_is_skipped_when_sync_is_off(self):
+        from app.core.sync_manager import SyncManager
+
+        mgr = SyncManager.__new__(SyncManager)
+        with (
+            mock.patch.object(SyncManager, "is_sync_enabled", return_value=False),
+            mock.patch.object(SyncManager, "_push_dirty_word_progress") as push,
+        ):
+            self.assertEqual(mgr.push_progress_now(), 0)
+        push.assert_not_called()
+
+    def test_a_push_failure_is_swallowed_for_the_next_sync(self):
+        from app.core.sync_manager import SyncManager
+
+        mgr = SyncManager.__new__(SyncManager)
+        with (
+            mock.patch.object(SyncManager, "is_sync_enabled", return_value=True),
+            mock.patch.object(
+                SyncManager, "_push_dirty_word_progress", side_effect=OSError("offline")
+            ),
+        ):
+            self.assertEqual(mgr.push_progress_now(), 0)
 
 
 class LapseStorageTests(unittest.TestCase):

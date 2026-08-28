@@ -3410,6 +3410,12 @@ class MainWindow(QMainWindow):
         if not previous:
             return None
         dbq.srs_upsert(word_id, srs.lapse(previous), touch_reviewed=False)
+        # The label reaches the cloud synchronously via update_word, so the ease
+        # drop has to chase it — see SyncManager.push_progress_now for what the
+        # gap costs on a second device.
+        run_in_thread(self.sync_manager.push_progress_now,
+                      on_error=lambda exc: logging.warning(
+                          f"Progress push after relearn flag failed: {exc}"))
         return previous
 
     def _mark_to_learn(self, wid, previous, word_label=""):
@@ -3478,12 +3484,17 @@ class MainWindow(QMainWindow):
         self._run_bulk(work, done)
 
     def _lapse_schedules(self, word_ids):
-        """``_lapse_schedule`` for a whole selection, in one transaction."""
+        """``_lapse_schedule`` for a whole selection, in one transaction.
+
+        Always called from a ``_run_bulk`` worker, so the push below is already
+        off the GUI thread and runs inline.
+        """
         try:
             rows = dbq.srs_get_many(word_ids)
             dbq.srs_upsert_many(
                 {wid: srs.lapse(row) for wid, row in rows.items()},
                 touch_reviewed=False)
+            self.sync_manager.push_progress_now()
         except Exception as exc:
             logging.error(f"Bulk relearn reschedule failed: {exc}")
 
@@ -3498,6 +3509,9 @@ class MainWindow(QMainWindow):
         if srs_row:
             try:
                 dbq.srs_upsert(wid, srs_row, touch_reviewed=False)
+                run_in_thread(self.sync_manager.push_progress_now,
+                              on_error=lambda exc: logging.warning(
+                                  f"Progress push after undo failed: {exc}"))
             except Exception as exc:
                 logging.error(f"Restoring the schedule for {wid} failed: {exc}")
         self._apply_status_change(

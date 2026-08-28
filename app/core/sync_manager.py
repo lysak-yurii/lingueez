@@ -1170,6 +1170,28 @@ class SyncManager:
     # word must reach the cloud before its progress row can.
     # ------------------------------------------------------------------ #
 
+    def push_progress_now(self) -> int:
+        """Push dirty progress rows straight away, outside a full sync cycle.
+
+        For writes whose *meaning* depends on the schedule reaching the other
+        devices with the label: a relearn flag sets ``words.Status`` through the
+        synchronous cloud write-through but drops ease on the local
+        ``srs_progress`` row, and there is no periodic sync — the push would
+        otherwise wait for app close or next startup. In that window another
+        client sees "To Learn" against the pre-lapse ease and re-promotes the
+        word to Mastered on its first correct grade, erasing the flag.
+
+        Best-effort and safe to call when sync is off; failures stay dirty for
+        the next cycle. Does network I/O, so keep it off the GUI thread.
+        """
+        if not self.is_sync_enabled():
+            return 0
+        try:
+            return self._push_dirty_word_progress()
+        except Exception as exc:
+            logging.warning(f"Immediate progress push failed (will retry on sync): {exc}")
+            return 0
+
     def _push_dirty_word_progress(self) -> int:
         """Push locally-changed progress rows (synced_at IS NULL) to the cloud.
 
