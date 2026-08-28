@@ -9,7 +9,11 @@ base: core24
 adopt-info: lingueez        # version/summary/description/license from the metainfo
 grade: stable
 confinement: strict
-compression: lzo
+# xz over the default-ish lzo: measured on this app, xz packs 373.8 MB vs 478.3 MB
+# (-22%) and costs ~1.2s more only on a cold page cache — first launch after install
+# or reboot. Warm launches are identical, and the download size is what every
+# visitor sees next to the install button.
+compression: xz
 icon: packaging/flatpak/app.lingueez.Lingueez.png
 website: https://lingueez.app
 contact: https://github.com/lysak-yurii/lingueez/issues
