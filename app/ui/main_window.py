@@ -916,8 +916,10 @@ class MainWindow(QMainWindow):
         self.sync_button.setToolTip(tr("Cloud sync: idle"))
         self.sync_button.setCursor(Qt.PointingHandCursor)
         self.sync_button.clicked.connect(self.show_sync_info)
-        self._update_sync_button_visibility()
         h.addWidget(self.sync_button, 0, Qt.AlignVCenter)
+        # Only once the layout has adopted it: showing a still-parentless widget
+        # makes Qt map it as a real top-level window (see tests/test_no_stray_windows).
+        self._update_sync_button_visibility()
 
         h.addSpacing(8)
         self.window_controls = WindowControls(self, self.colors)
