@@ -359,6 +359,53 @@ def _definition_html(text, colors):
     return "".join(out)
 
 
+class _ScrollBody(QScrollArea):
+    """Scroll host for the definition on the back of a card.
+
+    Qt sizes a scroll area from its widget's sizeHint, and for a wrapped QLabel
+    that hint describes the text as a single line — the height has to come from
+    heightForWidth instead. Under that hint the card's layout is free to squeeze
+    this down, which is what turns a definition too tall for the card into a
+    scroll rather than a clip.
+    """
+
+    def __init__(self, label, parent=None):
+        super().__init__(parent)
+        self._label = label
+        # The card flips on click, so the text must not swallow the press.
+        label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setWidget(label)
+        self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.NoFrame)
+        self.setFocusPolicy(Qt.NoFocus)  # Space stays the flip key
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.viewport().setAutoFillBackground(False)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+
+    def sizeHint(self):  # noqa: N802
+        width = self.viewport().width() or self.width()
+        height = self._label.heightForWidth(width) if width > 0 else 0
+        return QSize(self._label.sizeHint().width(), max(0, height))
+
+    def minimumSizeHint(self):  # noqa: N802
+        # Claim no floor: the card decides what is left over, and anything
+        # larger here would grow the card instead of scrolling inside it.
+        return QSize(0, 0)
+
+    def resizeEvent(self, event):  # noqa: N802
+        super().resizeEvent(event)
+        # Only on a width change — re-measuring on every height change would
+        # feed the new hint straight back into the layout that just set it.
+        if event.oldSize().width() != event.size().width():
+            self.updateGeometry()
+
+    def refresh(self):
+        """Re-measure after the text changed, and start from the top."""
+        self.verticalScrollBar().setValue(0)
+        self.updateGeometry()
+
+
 class _ClampedLabel(QLabel):
     """Word-wrapped text that stops on a whole line and elides what is cut.
 
@@ -804,13 +851,14 @@ class FlashcardWidget(QWidget):
         self.divider.setFixedSize(120, 1)
         self.body = QLabel(alignment=Qt.AlignCenter)
         self.body.setWordWrap(True)
+        self.body_scroll = _ScrollBody(self.body)
         lay.addWidget(self.word)
         div_row = QHBoxLayout()
         div_row.addStretch(1)
         div_row.addWidget(self.divider)
         div_row.addStretch(1)
         lay.addLayout(div_row)
-        lay.addWidget(self.body)
+        lay.addWidget(self.body_scroll)
         lay.addStretch(1)
 
         self.hint = QLabel(alignment=Qt.AlignCenter)
@@ -909,7 +957,8 @@ class FlashcardWidget(QWidget):
                               if self._definition else "")
             self.hint.setText("")
         self.divider.setVisible(self._side == 1 and bool(self.body.text()))
-        self.body.setVisible(bool(self.body.text()))
+        self.body_scroll.setVisible(bool(self.body.text()))
+        self.body_scroll.refresh()
         self.hint.setVisible(bool(self.hint.text()))
 
     def _style_favorite(self):
@@ -941,6 +990,9 @@ class FlashcardWidget(QWidget):
         self.body.setStyleSheet(
             f"color:{c['text_dim']};background:transparent;"
             f"font-size:{theme.font_pt('body_lg')}pt;")
+        self.body_scroll.setStyleSheet(
+            "QScrollArea{background:transparent;}"
+            "QScrollArea > QWidget > QWidget{background:transparent;}")
         self.hint.setStyleSheet(
             f"color:{_soft(c['text_dim'], 150)};background:transparent;"
             f"font-size:{theme.font_pt('caption')}pt;")
