@@ -15,7 +15,10 @@ Essentials builds and packs without complaint, then the app dies at startup with
 app tree, desktop entry, icon and AppStream metadata the Flatpak ships. Only the
 launcher differs: the Flatpak's hardcodes `/app`, the snap's points at `$SNAP/usr`.
 
-## Build
+## Build locally
+
+Releases come off the build service (below). Build here to test confinement, or to
+try a change before it reaches `main`.
 
 ```bash
 sudo snap install snapcraft --classic
@@ -25,10 +28,11 @@ snapcraft
 
 Build from a **clean worktree**, not the working tree: `source: .` copies the whole
 directory per part, and `ffmpeg/` plus `backups/` push that past 1.3 GB even though
-both are gitignored. Tracked content is ~150 MB.
+both are gitignored. Tracked content is ~150 MB. Launchpad starts from a fresh clone,
+so this bites locally and nowhere else.
 
 ```bash
-git worktree add /tmp/lingueez-snap v2.0.8 && cd /tmp/lingueez-snap && snapcraft
+git worktree add /tmp/lingueez-snap v2.0.9 && cd /tmp/lingueez-snap && snapcraft
 ```
 
 ## Install and connect
@@ -98,11 +102,38 @@ no snapd needed.
 
 ## Publish
 
+The repo is connected at <https://snapcraft.io/lingueez/builds>. Snapcraft finds
+`snap/snapcraft.yaml` by itself, builds on Launchpad for the single architecture in
+`platforms:`, and drops the result on **edge**. Registration is the one step that
+still happens from a terminal, and only ever once:
+
 ```bash
 snapcraft login
-snapcraft register lingueez          # once
-snapcraft upload --release=edge lingueez_*.snap
+snapcraft register lingueez
+```
+
+Builds fire on a push to `main`, not on a tag — the reverse of `release.yml`, which
+waits for `v*`. That difference is the whole trap. Version comes from the metainfo
+through `adopt-info`, so every build between one release commit and the next reports
+the same version; edge ends up holding several revisions that all call themselves
+2.0.9 and differ only in whatever was on `main` at the time.
+
+So promote a revision, checked against the commit the Builds tab lists beside it.
+Never promote whatever happens to be newest:
+
+```bash
+snapcraft list-revisions lingueez
 snapcraft release lingueez <rev> stable
+```
+
+Pushing the release commit on its own, and letting its build finish before the tag
+goes out, keeps that choice obvious.
+
+Uploading by hand still works, for a locally built snap or anything the service
+cannot produce:
+
+```bash
+snapcraft upload --release=edge lingueez_*.snap
 ```
 
 Then fill the store listing at <https://snapcraft.io/lingueez/listing> — App Center

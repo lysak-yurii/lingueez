@@ -52,6 +52,13 @@
   </screenshots>
 
   <releases>
+    <release version="2.0.9" date="2026-08-29">
+      <description>
+        <p>Words you have forgotten can be flagged for relearning, and a review session lets you tag, name and favourite the ones giving you trouble.</p>
+        <p>Learning schedules are more accurate: a wrong answer no longer promotes a word, and moving a word back to To Learn resets its schedule.</p>
+        <p>On Windows the window resizes and snaps as it should, and no longer flashes on startup. Lingueez is now on the Snap Store, and the AppImage no longer needs libfuse2.</p>
+      </description>
+    </release>
     <release version="2.0.8" date="2026-08-17">
       <description>
         <p>A new Quiz page tests your vocabulary with multiple-choice or typed answers.</p>
