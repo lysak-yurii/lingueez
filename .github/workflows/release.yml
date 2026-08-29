@@ -232,6 +232,24 @@ jobs:
             Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage
             Lingueez-${{ needs.validate.outputs.version }}-x86_64.AppImage.zsync
 
+  # The snap is what Ubuntu's App Center lists (it carries the Snap Store, not
+  # Flathub). Built here so the uploaded snap comes from exactly the tagged commit
+  # rather than whatever the build service last saw on main. snapcraft reads
+  # snap/snapcraft.yaml and takes its version from the AppStream metainfo, so this
+  # job needs no version input. Like the MSIX, it stays a CI artifact for manual
+  # upload and is kept off the public Release below.
+  build-snap:
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
   # Build the offline, Flathub-style Flatpak bundle and attach it to the release as a
   # direct download. It's content-identical to what Flathub publishes (same manifest)
   # and acts as a build-time check that the manifest still works. Flathub itself builds
@@ -258,17 +276,18 @@ jobs:
           cache-key: flatpak-builder-${{ github.sha }}
 
   release:
-    needs: [validate, build-windows, build-linux, build-flatpak]
+    needs: [validate, build-windows, build-linux, build-snap, build-flatpak]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Exclude the MSIX from Release assets
-        # The unsigned Store MSIX won't install outside the Microsoft Store, so it
-        # must not be a public Release download — it stays available as the
-        # build-windows CI artifact for manual upload to Partner Center.
-        run: rm -rf artifacts/windows-msix
+      - name: Exclude the store-only packages from Release assets
+        # Neither is a usable public download: the unsigned Store MSIX won't install
+        # outside the Microsoft Store, and a snap is installed from the Snap Store
+        # rather than a file. Both stay available as CI artifacts for manual upload
+        # to Partner Center and snapcraft respectively.
+        run: rm -rf artifacts/windows-msix artifacts/linux-snap
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:

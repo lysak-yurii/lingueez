@@ -17,8 +17,7 @@ launcher differs: the Flatpak's hardcodes `/app`, the snap's points at `$SNAP/us
 
 ## Build locally
 
-Releases come off the build service (below). Build here to test confinement, or to
-try a change before it reaches `main`.
+Releases are built by CI on the tag (below); build here to test confinement.
 
 ```bash
 sudo snap install snapcraft --classic
@@ -28,8 +27,7 @@ snapcraft
 
 Build from a **clean worktree**, not the working tree: `source: .` copies the whole
 directory per part, and `ffmpeg/` plus `backups/` push that past 1.3 GB even though
-both are gitignored. Tracked content is ~150 MB. Launchpad starts from a fresh clone,
-so this bites locally and nowhere else.
+both are gitignored. Tracked content is ~150 MB.
 
 ```bash
 git worktree add /tmp/lingueez-snap v2.0.9 && cd /tmp/lingueez-snap && snapcraft
@@ -102,39 +100,21 @@ no snapd needed.
 
 ## Publish
 
-The repo is connected at <https://snapcraft.io/lingueez/builds>. Snapcraft finds
-`snap/snapcraft.yaml` by itself, builds on Launchpad for the single architecture in
-`platforms:`, and drops the result on **edge**. Registration is the one step that
-still happens from a terminal, and only ever once:
+`release.yml` builds the snap on every `v*` tag and leaves it as the `linux-snap` CI
+artifact, not a Release asset — same as the Store MSIX. Upload the artifact from the
+tag's run:
 
 ```bash
 snapcraft login
-snapcraft register lingueez
-```
-
-Builds fire on a push to `main`, not on a tag — the reverse of `release.yml`, which
-waits for `v*`. That difference is the whole trap. Version comes from the metainfo
-through `adopt-info`, so every build between one release commit and the next reports
-the same version; edge ends up holding several revisions that all call themselves
-2.0.9 and differ only in whatever was on `main` at the time.
-
-So promote a revision, checked against the commit the Builds tab lists beside it.
-Never promote whatever happens to be newest:
-
-```bash
-snapcraft list-revisions lingueez
+snapcraft register lingueez          # once
+snapcraft upload --release=edge lingueez_*.snap
 snapcraft release lingueez <rev> stable
 ```
 
-Pushing the release commit on its own, and letting its build finish before the tag
-goes out, keeps that choice obvious.
-
-Uploading by hand still works, for a locally built snap or anything the service
-cannot produce:
-
-```bash
-snapcraft upload --release=edge lingueez_*.snap
-```
+Snapcraft's own build service (the Builds tab) triggers on a push to `main`, not on a
+tag. Version comes from the metainfo via `adopt-info`, so edge would fill with
+revisions all reporting the same version, differing only in what sat on `main` at the
+time. Building on the tag avoids matching revisions back to commits by hand.
 
 Then fill the store listing at <https://snapcraft.io/lingueez/listing> — App Center
 renders it verbatim, including the screenshots (use the same set as the Flathub and
