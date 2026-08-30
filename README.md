@@ -25,7 +25,7 @@ translations and synced audio; and keep everything in sync across devices.
 | | |
 |---|---|
 | **Windows** | [Microsoft Store](https://apps.microsoft.com/detail/9pkdjkgvzt6v) (`winget install 9PKDJKGVZT6V`), or the installer from [Releases](https://github.com/lysak-yurii/lingueez/releases/latest) |
-| **Linux** | AppImage or Flatpak bundle from [Releases](https://github.com/lysak-yurii/lingueez/releases/latest) |
+| **Linux** | [Snap Store](https://snapcraft.io/lingueez) (`sudo snap install lingueez`, also in Ubuntu's App Center), or the AppImage or Flatpak bundle from [Releases](https://github.com/lysak-yurii/lingueez/releases/latest) |
 | **Android** | [Google Play](https://play.google.com/store/apps/details?id=app.lingueez.mobile) — the companion app, syncing the same vocabulary |
 | **Browser** | [web.lingueez.app](https://web.lingueez.app/) |
 | **E-reader** | [KOReader plugin](https://lingueez.app/koreader/) — long-press a word while you read and it lands in your vocabulary |

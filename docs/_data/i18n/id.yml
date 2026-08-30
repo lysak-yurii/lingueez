@@ -62,6 +62,7 @@ Same package from the terminal.: Paket yang sama dari terminal.
 Installer (.exe): Pemasang (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: Pembaruan manual. Windows mungkin memperingatkan bahwa penerbit tidak dikenal.
 x86_64 · Any modern distribution: x86_64 · Distribusi modern apa pun
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Terinstal dan diperbarui secara otomatis — dan tersedia di App Center Ubuntu.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Satu berkas — tandai sebagai dapat dieksekusi dan jalankan. Memperbarui dirinya sendiri secara langsung.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — bangun kosakata yang m
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : Aplikasi desktop gratis dan sumber terbuka untuk membangun, mempelajari, dan mengingat kosakata dalam berbagai bahasa. Tambahkan kata yang diterjemahkan secara otomatis dan lihat setiap kata naik dari “Baru” ke “Dikuasai”.
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Unduh Lingueez — Windows, Linux, Android, browser, dan e-reader
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Dapatkan Lingueez gratis di Microsoft Store, Google Play, atau sebagai penginstal Windows, AppImage Linux, maupun Flatpak. Atau baca dan simpan kata langsung di e-reader KOReader Anda.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Dapatkan Lingueez gratis di Snap Store, Microsoft Store, Google Play, atau sebagai penginstal Windows, AppImage Linux, maupun Flatpak. Atau baca dan simpan kata langsung di e-reader KOReader Anda.
 Lingueez for Android — your vocabulary in your pocket: Lingueez untuk Android — kosakata Anda dalam saku
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Aplikasi Lingueez untuk Android membawa kosakata Anda ke ponsel — kartu kilat dengan pengulangan berkala, kuis, dan mendengarkan tanpa menyentuh layar, semuanya di perangkat. Bekerja offline dan tersinkronisasi dengan perangkat Anda yang lain melalui akun Lingueez Anda.

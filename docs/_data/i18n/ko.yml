@@ -62,6 +62,7 @@ Same package from the terminal.: 터미널에서 동일한 패키지 설치.
 Installer (.exe): 설치 프로그램 (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: 수동으로 업데이트합니다. Windows에서 неизвестный издатель 경고가 표시될 수 있습니다.
 x86_64 · Any modern distribution: x86_64 · 모든 최신 배포판
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: 자동으로 설치되고 최신 상태로 유지됩니다. Ubuntu App Center에서도 받을 수 있습니다.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 단일 파일 — 실행 권한을 부여하고 실행하세요. 자체 업데이트를 지원합니다.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — 기억에 남는 어�
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : 여러 언어의 어휘를 만들고 학습하고 기억하기 위한 무료 오픈 소스 데스크톱 앱입니다. 단어를 추가하면 자동으로 번역되고, 각 단어가 ‘신규’에서 ‘마스터함’까지 올라가는 과정을 지켜볼 수 있습니다.
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Lingueez 다운로드 — Windows, Linux, Android, 브라우저, 전자책 리더
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Microsoft Store, Google Play에서, 또는 Windows 설치 프로그램, Linux AppImage, Flatpak으로 Lingueez를 무료로 받으세요. KOReader 전자책 리더에서 읽으면서 단어를 저장할 수도 있습니다.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Snap Store, Microsoft Store, Google Play에서, 또는 Windows 설치 프로그램, Linux AppImage, Flatpak으로 Lingueez를 무료로 받으세요. KOReader 전자책 리더에서 읽으면서 단어를 저장할 수도 있습니다.
 Lingueez for Android — your vocabulary in your pocket: Android용 Lingueez — 주머니 속 나의 어휘
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Lingueez Android 앱은 어휘를 휴대폰으로 옮겨 줍니다. 간격 반복 플래시카드, 퀴즈, 손을 쓰지 않는 듣기까지 모두 기기에서 실행됩니다. 오프라인에서도 작동하며 Lingueez 계정을 통해 다른 기기와 동기화됩니다.

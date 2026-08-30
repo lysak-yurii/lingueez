@@ -5,6 +5,8 @@ nothing else. It does not list Flathub, and its Debian support covers only packa
 from the Ubuntu archive. Publishing here is the only way to appear in the store that
 ships on every Ubuntu desktop.
 
+The snap is live at <https://snapcraft.io/lingueez> — `sudo snap install lingueez`.
+
 Use the **full `PySide6` wheel**, not `PySide6-Essentials`: `app/ui/reader.py`
 imports QtMultimedia at module scope and that module ships in PySide6-Addons.
 Essentials builds and packs without complaint, then the app dies at startup with
@@ -94,7 +96,8 @@ no snapd needed.
   path). Until it is proven, do not advertise it: the same rule the unimplemented
   GlobalShortcuts portal follows.
 - **`password-manager-service` auto-connection.** Worth a store request at
-  <https://forum.snapcraft.io/c/store-requests> so users don't need `snap connect`.
+  <https://forum.snapcraft.io/c/store-requests> so users don't need `snap connect`
+  (the name is registered and published; this is the one request still outstanding).
 - **`python3-venv` in `stage-packages`.** There to guarantee an interpreter; drop it
   if a build shows core24 already provides python3.12.
 
@@ -106,17 +109,19 @@ tag's run:
 
 ```bash
 snapcraft login
-snapcraft register lingueez          # once
 snapcraft upload --release=edge lingueez_*.snap
 snapcraft release lingueez <rev> stable
 ```
+
+`snapcraft register lingueez` was the one-off that claimed the name; it is done.
 
 Snapcraft's own build service (the Builds tab) triggers on a push to `main`, not on a
 tag. Version comes from the metainfo via `adopt-info`, so edge would fill with
 revisions all reporting the same version, differing only in what sat on `main` at the
 time. Building on the tag avoids matching revisions back to commits by hand.
 
-Then fill the store listing at <https://snapcraft.io/lingueez/listing> — App Center
-renders it verbatim, including the screenshots (use the same set as the Flathub and
+The store listing is filled in at <https://snapcraft.io/lingueez/listing>; edit it
+there whenever the copy or screenshots change — App Center renders it verbatim,
+including the screenshots (use the same set as the Flathub and
 Store listings, `docs/assets/shots/`). Install counts are visible only to the
 publisher: `snapcraft metrics lingueez --name weekly_installed_base --format table`.

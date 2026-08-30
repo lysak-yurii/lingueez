@@ -62,6 +62,7 @@ Same package from the terminal.: Samma paket från terminalen.
 Installer (.exe): Installerare (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: Uppdateras manuellt. Windows kan varna för att utfärdaren är okänd.
 x86_64 · Any modern distribution: x86_64 · Alla moderna distributioner
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Installeras och uppdateras automatiskt — och finns i Ubuntus App Center.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: En fil — markera som körbar och kör. Uppdaterar sig själv på plats.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — bygg ett ordförråd s
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : En gratis skrivbordsapp med öppen källkod för att bygga, plugga och minnas ordförråd på flera språk. Lägg till ord som översätts automatiskt och se hur varje ord klättrar från ”Nya” till ”Bemästrade”.
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Ladda ner Lingueez — Windows, Linux, Android, webbläsare och e-läsare
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Hämta Lingueez gratis från Microsoft Store, Google Play, eller som Windows-installerare, Linux-AppImage eller Flatpak. Eller läs och spara ord direkt på din e-läsare med KOReader.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Hämta Lingueez gratis från Snap Store, Microsoft Store, Google Play, eller som Windows-installerare, Linux-AppImage eller Flatpak. Eller läs och spara ord direkt på din e-läsare med KOReader.
 Lingueez for Android — your vocabulary in your pocket: Lingueez för Android — ditt ordförråd i fickan
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Lingueez-appen för Android lägger ditt ordförråd i mobilen — flashkort med repeterad inlärning, quiz och handsfree-uppspelning, allt direkt på enheten. Fungerar offline och synkas med dina andra enheter via ditt Lingueez-konto.

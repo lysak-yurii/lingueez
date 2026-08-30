@@ -62,6 +62,7 @@ Same package from the terminal.: Cùng gói cài đặt từ dòng lệnh (termi
 Installer (.exe): Bộ cài đặt (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: Cập nhật thủ công. Windows có thể cảnh báo rằng nhà phát hành không xác định.
 x86_64 · Any modern distribution: x86_64 · Mọi bản phân phối hiện đại
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Tự động cài đặt và cập nhật — và có trong App Center của Ubuntu.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Một tệp duy nhất — đánh dấu cho phép chạy và khởi chạy. Tự động cập nhật tại chỗ.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — xây dựng vốn từ
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : Ứng dụng máy tính miễn phí, mã nguồn mở để xây dựng, học và ghi nhớ từ vựng ở nhiều ngôn ngữ. Thêm những từ được dịch tự động và theo dõi từng từ đi lên từ “Mới” đến “Đã thành thạo”.
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Tải Lingueez — Windows, Linux, Android, trình duyệt và máy đọc sách
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Tải Lingueez miễn phí từ Microsoft Store, Google Play, hoặc dưới dạng trình cài đặt Windows, AppImage cho Linux hay Flatpak. Hoặc đọc và lưu từ ngay trên máy đọc sách chạy KOReader.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Tải Lingueez miễn phí từ Snap Store, Microsoft Store, Google Play, hoặc dưới dạng trình cài đặt Windows, AppImage cho Linux hay Flatpak. Hoặc đọc và lưu từ ngay trên máy đọc sách chạy KOReader.
 Lingueez for Android — your vocabulary in your pocket: Lingueez cho Android — vốn từ vựng trong túi bạn
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Ứng dụng Lingueez cho Android đưa vốn từ vựng vào điện thoại của bạn — thẻ ghi nhớ lặp lại ngắt quãng, câu đố và nghe rảnh tay, tất cả chạy ngay trên máy. Hoạt động ngoại tuyến và đồng bộ với các thiết bị khác của bạn qua tài khoản Lingueez.

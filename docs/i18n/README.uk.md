@@ -22,7 +22,7 @@
 | | |
 |---|---|
 | **Windows** | [Microsoft Store](https://apps.microsoft.com/detail/9pkdjkgvzt6v) (`winget install 9PKDJKGVZT6V`) або інсталятор із [релізів](https://github.com/lysak-yurii/lingueez/releases/latest) |
-| **Linux** | AppImage чи пакунок Flatpak із [релізів](https://github.com/lysak-yurii/lingueez/releases/latest) |
+| **Linux** | [Snap Store](https://snapcraft.io/lingueez) (`sudo snap install lingueez`, також в App Center на Ubuntu) або AppImage чи пакунок Flatpak із [релізів](https://github.com/lysak-yurii/lingueez/releases/latest) |
 | **Android** | [Google Play](https://play.google.com/store/apps/details?id=app.lingueez.mobile) — застосунок-супутник із тим самим словником |
 | **Браузер** | [web.lingueez.app](https://web.lingueez.app/) |
 | **Електронна книга** | [плагін для KOReader](https://lingueez.app/koreader/) — утримайте слово під час читання, і воно потрапить до вашого словника |

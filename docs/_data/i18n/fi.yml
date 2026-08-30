@@ -62,6 +62,7 @@ Same package from the terminal.: Sama paketti, mutta päätteestä.
 Installer (.exe): Asennusohjelma (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: Päivittyy käsin. Windows saattaa varoittaa, ettei julkaisijaa tunneta.
 x86_64 · Any modern distribution: x86_64 · Mikä tahansa nykyaikainen jakelu
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Asentuu ja päivittyy itsestään — ja löytyy Ubuntun App Centeristä.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Yksi ainoa tiedosto — merkitse se suoritettavaksi ja käynnistä. Päivittää itsensä.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — sanasto, joka jää mi
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : Ilmainen, avoimen lähdekoodin työpöytäsovellus sanaston kartuttamiseen, opiskeluun ja muistamiseen useilla kielillä. Lisää sanoja, jotka kääntyvät itsestään, ja katso kuinka kukin nousee tilasta ”Uusi” tilaan ”Hallitut”.
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Lataa Lingueez — Windows, Linux, Android, selain ja lukulaite
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Hanki Lingueez ilmaiseksi Microsoft Storesta, Google Playstä tai Windows-asennusohjelmana, Linux-AppImagena tai Flatpakina. Tai lue ja tallenna sanoja KOReader-lukulaitteellasi.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Hanki Lingueez ilmaiseksi Snap Storesta, Microsoft Storesta, Google Playstä tai Windows-asennusohjelmana, Linux-AppImagena tai Flatpakina. Tai lue ja tallenna sanoja KOReader-lukulaitteellasi.
 Lingueez for Android — your vocabulary in your pocket: Lingueez Androidille — sanastosi taskussa
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Lingueezin Android-sovellus vie sanastosi puhelimeen — välistetyllä kertauksella toimivat muistikortit, tietovisat ja kuuntelu liikkeellä, kaikki itse laitteella. Toimii verkotta ja synkronoituu muille laitteillesi Lingueez-tilisi kautta.

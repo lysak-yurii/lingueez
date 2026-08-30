@@ -62,6 +62,7 @@ Same package from the terminal.: แพ็กเกจเดียวกัน �
 Installer (.exe): ตัวติดตั้ง (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: ต้องอัปเดตเอง Windows อาจเตือนว่าไม่รู้จักผู้เผยแพร่
 x86_64 · Any modern distribution: x86_64 · ดิสโทรสมัยใหม่ทุกตัว
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: ติดตั้งและอัปเดตให้เองโดยอัตโนมัติ และมีอยู่ใน App Center ของ Ubuntu
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: ไฟล์เดียวจบ — ตั้งให้รันได้แล้วเปิดใช้ ตัวมันอัปเดตให้เอง
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — คลังคำศ�
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : แอปเดสก์ท็อปฟรีและโอเพนซอร์สสำหรับสร้าง ฝึก และจดจำคำศัพท์ข้ามภาษา เพิ่มคำที่แปลให้เองอัตโนมัติ แล้วดูแต่ละคำไต่ระดับจาก „ใหม่“ ไปจนถึง „เชี่ยวชาญแล้ว“
 Download Lingueez — Windows, Linux, Android, browser and e-reader: ดาวน์โหลด Lingueez — Windows, Linux, Android, เบราว์เซอร์ และเครื่องอ่านอีบุ๊ก
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: รับ Lingueez ฟรีจาก Microsoft Store, Google Play หรือในรูปตัวติดตั้ง Windows, AppImage สำหรับ Linux และ Flatpak หรือจะอ่านและบันทึกคำบนเครื่องอ่านอีบุ๊กที่ใช้ KOReader ก็ได้
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: รับ Lingueez ฟรีจาก Snap Store, Microsoft Store, Google Play หรือในรูปตัวติดตั้ง Windows, AppImage สำหรับ Linux และ Flatpak หรือจะอ่านและบันทึกคำบนเครื่องอ่านอีบุ๊กที่ใช้ KOReader ก็ได้
 Lingueez for Android — your vocabulary in your pocket: Lingueez สำหรับ Android — คลังคำศัพท์ในกระเป๋าคุณ
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : แอป Lingueez สำหรับ Android ย้ายคลังคำศัพท์ของคุณลงมือถือ — แฟลชการ์ดแบบทบทวนเว้นระยะ แบบทดสอบ และการฟังแบบไม่ต้องใช้มือ ทั้งหมดทำงานบนตัวเครื่อง ใช้งานออฟไลน์ได้ และซิงก์กับอุปกรณ์อื่นผ่านบัญชี Lingueez ของคุณ

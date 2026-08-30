@@ -1,10 +1,11 @@
 {%- comment -%}
-  Store badges, one row. Official artwork from Google and Microsoft, served
-  locally; GitHub publishes none, so that one is built to the same measure from
-  the site's tokens. See .badges in site.css.
+  Store badges, one row. Official artwork from Google, Microsoft and Canonical,
+  served locally; GitHub publishes none, so that one is built to the same measure
+  from the site's tokens. See .badges in site.css.
 
   Parameters — pass any value to include a badge:
     store    Microsoft Store
+    snap     Snap Store
     play     Google Play
     github   the URL the GitHub badge points at (a release page, not the repo:
              this row is a download row)
@@ -13,6 +14,10 @@
   {% if include.store %}<a class="badge-link" href="https://apps.microsoft.com/detail/9pkdjkgvzt6v">
     <img src="/assets/badges/microsoft-store.svg" width="161" height="44"
          alt="Download Lingueez from the Microsoft Store">
+  </a>{% endif %}
+  {% if include.snap %}<a class="badge-link" href="https://snapcraft.io/lingueez">
+    <img src="/assets/badges/snap-store.svg" width="182" height="56"
+         alt="Get Lingueez from the Snap Store">
   </a>{% endif %}
   {% if include.play %}<a class="badge-link" href="https://play.google.com/store/apps/details?id=app.lingueez.mobile">
     <img src="/assets/badges/google-play.png" width="564" height="168"

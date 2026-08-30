@@ -62,6 +62,7 @@ Same package from the terminal.: ターミナルから同じパッケージを�
 Installer (.exe): インストーラー (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: 手動更新。Windows により発行元が不明である旨の警告が表示される場合があります。
 x86_64 · Any modern distribution: x86_64・主要なモダンディストリビューション
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: 自動的にインストールされ、最新の状態に保たれます。Ubuntu の App Center にも掲載されています。
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 1 つのファイル — 実行権限を付与して実行するだけ。その場で自動更新されます。
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — 忘れない語彙力�
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : 複数の言語の語彙を、つくり、学び、覚えるための無料のオープンソースデスクトップアプリ。追加した単語は自動で翻訳され、「新規」から「習得済み」へと着実に進んでいきます。
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Lingueez をダウンロード — Windows、Linux、Android、ブラウザ、電子書籍リーダー
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Lingueez は Microsoft Store、Google Play のほか、Windows インストーラー、Linux の AppImage、Flatpak として無料で入手できます。KOReader 搭載の電子書籍リーダーで読みながら単語を保存することもできます。
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Lingueez は Snap Store、Microsoft Store、Google Play のほか、Windows インストーラー、Linux の AppImage、Flatpak として無料で入手できます。KOReader 搭載の電子書籍リーダーで読みながら単語を保存することもできます。
 Lingueez for Android — your vocabulary in your pocket: Android 版 Lingueez — 語彙をポケットに
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Android 版 Lingueez アプリなら、語彙をいつでもスマホに。分散学習の単語カード、クイズ、ハンズフリーの読み上げがすべて端末上で動きます。オフラインでも使え、Lingueez アカウントを通じて他のデバイスと同期します。

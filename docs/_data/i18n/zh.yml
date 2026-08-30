@@ -62,6 +62,7 @@ Same package from the terminal.: 使用终端安装相同软件包。
 Installer (.exe): 安装程序 (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: 需手动更新。Windows 可能会提示未知发布者警告。
 x86_64 · Any modern distribution: x86_64 · 适用于任何现代 Linux 发行版
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: 自动安装并保持最新版本，在 Ubuntu App Center 中也能找到。
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 单文件格式——赋予可执行权限即可运行。支持就地自我更新。
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — 打造牢记不忘的�
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : 一款免费开源的桌面应用，帮你建立、学习并牢记多语种词汇。添加的单词会自动翻译，你可以看着每个词从“生词”一路升到“已精通”。
 Download Lingueez — Windows, Linux, Android, browser and e-reader: 下载 Lingueez — Windows、Linux、Android、浏览器和电子书阅读器
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: 可从 Microsoft Store、Google Play 免费获取 Lingueez，也可下载 Windows 安装程序、Linux AppImage 或 Flatpak。还能在装有 KOReader 的电子书阅读器上边读边存词。
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: 可从 Snap Store、Microsoft Store、Google Play 免费获取 Lingueez，也可下载 Windows 安装程序、Linux AppImage 或 Flatpak。还能在装有 KOReader 的电子书阅读器上边读边存词。
 Lingueez for Android — your vocabulary in your pocket: Android 版 Lingueez — 把词汇装进口袋
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Lingueez 安卓应用把词汇装进你的手机——间隔复习记忆卡片、测验和免提朗读，全都在设备上运行。可离线使用，并通过你的 Lingueez 账号与其他设备同步。

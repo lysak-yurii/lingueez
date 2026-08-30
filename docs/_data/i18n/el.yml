@@ -62,6 +62,7 @@ Same package from the terminal.: Το ίδιο πακέτο από το τερμ
 Installer (.exe): Πρόγραμμα εγκατάστασης (.exe)
 Updates manually. Windows may warn that the publisher is unknown.: Ενημερώνεται μη αυτόματα. Τα Windows ενδέχεται να προειδοποιήσουν ότι ο εκδότης είναι άγνωστος.
 x86_64 · Any modern distribution: x86_64 · Κάθε σύγχρονη διανομή
+Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Εγκαθίσταται και ενημερώνεται αυτόματα — και βρίσκεται στο App Center του Ubuntu.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Ένα αρχείο — σημειώστε το ως εκτελέσιμο και τρέξτε το. Ενημερώνεται αυτόματα.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
@@ -225,8 +226,8 @@ Lingueez — build a vocabulary that sticks: Lingueez — χτίστε ένα λ
 ? A free, open-source desktop app for building, studying and remembering vocabulary across languages. Add words that translate automatically and watch each one climb from New to Mastered.
 : Μια δωρεάν εφαρμογή ανοιχτού κώδικα για υπολογιστή, για να χτίζετε, να μελετάτε και να θυμάστε λεξιλόγιο σε πολλές γλώσσες. Προσθέστε λέξεις που μεταφράζονται αυτόματα και δείτε την καθεμία να ανεβαίνει από «Νέες» σε «Κατακτημένες».
 Download Lingueez — Windows, Linux, Android, browser and e-reader: Λήψη του Lingueez — Windows, Linux, Android, browser και e-reader
-? Get Lingueez free from the Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
-: Αποκτήστε το Lingueez δωρεάν από το Microsoft Store, το Google Play ή ως πρόγραμμα εγκατάστασης για Windows, AppImage για Linux ή Flatpak. Ή διαβάστε και αποθηκεύστε λέξεις στον e-reader σας με KOReader.
+? Get Lingueez free from the Snap Store, Microsoft Store, Google Play, or as a Windows installer, Linux AppImage or Flatpak. Or read and save words on your KOReader e-reader.
+: Αποκτήστε το Lingueez δωρεάν από το Snap Store, το Microsoft Store, το Google Play ή ως πρόγραμμα εγκατάστασης για Windows, AppImage για Linux ή Flatpak. Ή διαβάστε και αποθηκεύστε λέξεις στον e-reader σας με KOReader.
 Lingueez for Android — your vocabulary in your pocket: Lingueez για Android — το λεξιλόγιό σας στην τσέπη σας
 ? The Lingueez Android app puts your vocabulary on your phone — spaced-repetition flashcards, quizzes, and hands-free listening that runs on the device. Works offline, and syncs with your other devices through your Lingueez account.
 : Η εφαρμογή Lingueez για Android φέρνει το λεξιλόγιό σας στο κινητό — κάρτες flashcard με επανάληψη σε διαστήματα, κουίζ και ακρόαση χωρίς χέρια, όλα πάνω στη συσκευή. Λειτουργεί εκτός σύνδεσης και συγχρονίζεται με τις άλλες συσκευές σας μέσω του λογαριασμού σας Lingueez.

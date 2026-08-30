@@ -64,14 +64,30 @@
         <p class="dl-req">{% include t.html s='x86_64 · Any modern distribution' %}</p>
 
         <div class="dl-actions">
-          <!-- AppImage — recommended -->
+          <!-- Snap Store — recommended -->
           <div class="method rec">
             <span class="rec-tag">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               {% include t.html s='Recommended' %}
             </span>
+            <a class="btn btn-primary method-btn" href="https://snapcraft.io/lingueez">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Snap Store</a>
+            <p class="dl-note">{% include t.html s='Installs and stays up to date automatically — and it is in Ubuntu’s App Center.' %}</p>
+            <div class="cmd">
+              <code>sudo snap install lingueez</code>
+              <button type="button" data-copy="sudo snap install lingueez" aria-label="Copy command">
+                <svg class="clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+            <p class="dl-note">{% include t.html s='Same package from the terminal.' %}</p>
+          </div>
+
+          <!-- AppImage -->
+          <div class="method">
             <div class="method-row">
-              <a class="btn btn-primary method-btn" data-asset=".AppImage" href="https://github.com/lysak-yurii/lingueez/releases/latest">
+              <a class="btn btn-ghost method-btn" data-asset=".AppImage" href="https://github.com/lysak-yurii/lingueez/releases/latest">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {% include t.html s='AppImage' %}</a>
               <span class="dl-meta" data-meta=".AppImage"></span>
