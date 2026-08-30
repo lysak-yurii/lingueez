@@ -12,11 +12,21 @@
      answer the visitor came for. */
   .dl-tabs{ max-width:640px; margin:0 auto; }
 
-  .tabrow{
-    display:flex; gap:var(--s-1); margin-bottom:var(--s-4);
-    border-bottom:1px solid var(--border);
-    overflow-x:auto; scrollbar-width:none;
+  /* The row scrolls rather than wraps — "Leitor de livros digitais" is one tab in
+     Portuguese, and no breakpoint fits four of those. The hairline lives on the
+     wrapper so the fades can mask the tabs without eating the rule under them. */
+  .tabs-scroll{
+    position:relative; border-bottom:1px solid var(--border); margin-bottom:var(--s-4);
   }
+  .tabs-scroll::before, .tabs-scroll::after{
+    content:""; position:absolute; top:0; bottom:1px; width:34px; pointer-events:none;
+    opacity:1; transition:opacity var(--dur-fast) var(--ease-out);
+  }
+  .tabs-scroll::before{ left:0; background:linear-gradient(90deg, var(--bg), transparent); }
+  .tabs-scroll::after{ right:0; background:linear-gradient(270deg, var(--bg), transparent); }
+  .tabs-scroll.at-start::before, .tabs-scroll.at-end::after{ opacity:0; }
+
+  .tabrow{ display:flex; gap:var(--s-1); overflow-x:auto; scrollbar-width:none; }
   .tabrow::-webkit-scrollbar{ display:none; }
   .dl-tab{
     display:inline-flex; align-items:center; gap:.5em; flex:none;
@@ -34,8 +44,11 @@
   /* Four tabs plus icons overflow a phone, and a tab you have to scroll to find
      is a tab nobody finds. The labels alone fit. */
   @media (max-width:480px){
-    .dl-tab{ padding:.7em .6em; font-size:.9rem; }
+    .dl-tab{ padding:.7em .5em; font-size:.88rem; }
     .dl-tab svg{ display:none; }
+  }
+  @media (max-width:360px){
+    .dl-tab{ padding:.7em .38em; font-size:.84rem; }
   }
 
   .dl-panel{

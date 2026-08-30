@@ -12,6 +12,7 @@
          foot hides the inactive ones, so with JS off the page is four readable
          sections and the tab row is a list of jump links into them. -->
     <div class="dl-tabs reveal">
+      <div class="tabs-scroll">
       <div class="tabrow" role="tablist" aria-labelledby="dl-title">
         <a class="dl-tab" role="tab" id="tab-linux" href="#panel-linux" aria-controls="panel-linux" data-platform="linux">
           <!-- Tux silhouette, flattened to one colour from Super Tiny Icons (MIT-licensed). -->
@@ -27,6 +28,7 @@
         <a class="dl-tab" role="tab" id="tab-reader" href="#panel-reader" aria-controls="panel-reader">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v18H5.5A1.5 1.5 0 0 1 4 19.5z"/><line x1="8" y1="3" x2="8" y2="21"/></svg>
           {% include t.html s='E-reader' %}</a>
+      </div>
       </div>
 
       <!-- LINUX -->
@@ -163,6 +165,21 @@
   var panels=[].slice.call(document.querySelectorAll('.dl-panel'));
   if(!row || !tabs.length) return;
 
+  var wrap=row.parentNode;
+
+  /* Only ever moves the row's own scrollLeft: scrollIntoView would drag the page
+     down to the tab strip on load. */
+  function reveal(tab){
+    var t=tab.getBoundingClientRect(), r=row.getBoundingClientRect();
+    if(t.left < r.left) row.scrollLeft -= (r.left - t.left) + 12;
+    else if(t.right > r.right) row.scrollLeft += (t.right - r.right) + 12;
+  }
+
+  function edges(){
+    wrap.classList.toggle('at-start', row.scrollLeft <= 1);
+    wrap.classList.toggle('at-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 1);
+  }
+
   function select(tab, focus){
     tabs.forEach(function(t){
       var on=t===tab;
@@ -170,7 +187,22 @@
       t.tabIndex=on?0:-1;
     });
     panels.forEach(function(p){ p.hidden = p.id!==tab.getAttribute('aria-controls'); });
+    reveal(tab);
+    edges();
     if(focus) tab.focus();
+  }
+
+  row.addEventListener('scroll', edges);
+  addEventListener('resize', edges);
+
+  /* Tab widths are measured before the web font arrives and grow when it does, which
+     leaves the selected tab half off the edge and the fades reading the old width. */
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){
+      var sel=row.querySelector('.dl-tab[aria-selected="true"]');
+      if(sel) reveal(sel);
+      edges();
+    });
   }
 
   var ua=navigator.userAgent||'';
