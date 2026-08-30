@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: ログイン
 Free · Open source · No account required: 無料・オープンソース・アカウント登録不要
 Your vocabulary lives on your own machine. Pick the way that suits you best.: 語彙データはお手元のデバイスに保存されます。最適な方法をお選びください。
-Your device: お使いのデバイス
-Windows 10 or newer · 64-bit: Windows 10 以降・64 ビット
-Recommended: 推奨
-Installs and stays up to date automatically.: 自動的にインストールされ、最新の状態に保たれます。
-Same package from the terminal.: ターミナルから同じパッケージを利用可能。
-Installer (.exe): インストーラー (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: 手動更新。Windows により発行元が不明である旨の警告が表示される場合があります。
 x86_64 · Any modern distribution: x86_64・主要なモダンディストリビューション
+Your device: お使いのデバイス
+Recommended: 推奨
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: 自動的にインストールされ、最新の状態に保たれます。Ubuntu の App Center にも掲載されています。
+Same package from the terminal.: ターミナルから同じパッケージを利用可能。
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 1 つのファイル — 実行権限を付与して実行するだけ。その場で自動更新されます。
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : 同じ AppImage です。<a href="https://github.com/ivan-hc/AM">AM</a> または root 権限なしの <code>appman -i lingueez</code> で管理可能。
 Flatpak bundle: Flatpak バンドル
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: サンドボックス環境。<code>flatpak install</code> でインストール — 手動更新。
+Windows 10 or newer · 64-bit: Windows 10 以降・64 ビット
+Installs and stays up to date automatically.: 自動的にインストールされ、最新の状態に保たれます。
+Installer (.exe): インストーラー (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: 手動更新。Windows により発行元が不明である旨の警告が表示される場合があります。
 Phone or tablet · Google Play: スマートフォン / タブレット・Google Play
 Get it on Google Play: Google Play で手に入れよう
 Same account as on your other devices — your vocabulary syncs automatically.: 他のデバイスと同じアカウント — 語彙が自動で同期されます。

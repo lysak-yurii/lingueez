@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Пријава
 Free · Open source · No account required: Бесплатно · Отворен код · Без регистрације
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Ваш речник остаје на вашем рачунару. Изаберите начин који вам највише одговара.
-Your device: Ваш уређај
-Windows 10 or newer · 64-bit: Windows 10 или новији · 64-битни
-Recommended: Препоручено
-Installs and stays up to date automatically.: Инсталира се и ажурира само.
-Same package from the terminal.: Исти пакет, само из терминала.
-Installer (.exe): Инсталациони програм (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Ажурира се ручно. Windows може упозорити да издавач није познат.
 x86_64 · Any modern distribution: x86_64 · Било која савремена дистрибуција
+Your device: Ваш уређај
+Recommended: Препоручено
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Инсталира се и ажурира само — и налази се у Ubuntu App Center-у.
+Same package from the terminal.: Исти пакет, само из терминала.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Једна једина датотека — означите је извршном и покрените. Ажурира се сама.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Исти AppImage, само под управом <a href="https://github.com/ivan-hc/AM">AM</a> — или <code>appman -i lingueez</code> без root-а.
 Flatpak bundle: Flatpak пакет
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: У изолованом окружењу. Инсталирајте помоћу <code>flatpak install</code> — ажурира се ручно.
+Windows 10 or newer · 64-bit: Windows 10 или новији · 64-битни
+Installs and stays up to date automatically.: Инсталира се и ажурира само.
+Installer (.exe): Инсталациони програм (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Ажурира се ручно. Windows може упозорити да издавач није познат.
 Phone or tablet · Google Play: Телефон или таблет · Google Play
 Get it on Google Play: Преузмите са Google Play-а
 Same account as on your other devices — your vocabulary syncs automatically.: Исти налог као на осталим уређајима — речник се синхронизује сам.

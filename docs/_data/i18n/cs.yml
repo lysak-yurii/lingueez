@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Přihlásit se
 Free · Open source · No account required: Zdarma · Otevřený kód · Bez registrace
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Vaše slovní zásoba zůstává ve vašem počítači. Vyberte si způsob, který vám sedí nejlíp.
-Your device: Vaše zařízení
-Windows 10 or newer · 64-bit: Windows 10 nebo novější · 64bitový
-Recommended: Doporučeno
-Installs and stays up to date automatically.: Nainstaluje se a aktualizuje se samo.
-Same package from the terminal.: Tentýž balíček, jen z terminálu.
-Installer (.exe): Instalátor (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Aktualizuje se ručně. Windows může varovat, že vydavatel není známý.
 x86_64 · Any modern distribution: x86_64 · Libovolná současná distribuce
+Your device: Vaše zařízení
+Recommended: Doporučeno
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Nainstaluje se a aktualizuje se samo — a najdete ho i v Ubuntu App Center.
+Same package from the terminal.: Tentýž balíček, jen z terminálu.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Jediný soubor — nastavte mu právo ke spuštění a spusťte. Aktualizuje se sám.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Tentýž AppImage, jen pod správou <a href="https://github.com/ivan-hc/AM">AM</a> — nebo <code>appman -i lingueez</code> bez roota.
 Flatpak bundle: Balíček Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: V sandboxu. Nainstalujte přes <code>flatpak install</code> — aktualizuje se ručně.
+Windows 10 or newer · 64-bit: Windows 10 nebo novější · 64bitový
+Installs and stays up to date automatically.: Nainstaluje se a aktualizuje se samo.
+Installer (.exe): Instalátor (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Aktualizuje se ručně. Windows může varovat, že vydavatel není známý.
 Phone or tablet · Google Play: Telefon nebo tablet · Google Play
 Get it on Google Play: Stáhnout z Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Stejný účet jako na ostatních zařízeních — slovní zásoba se synchronizuje sama.

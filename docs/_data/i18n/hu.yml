@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Bejelentkezés
 Free · Open source · No account required: Ingyenes · Nyílt forráskódú · Fiók nélkül is
 Your vocabulary lives on your own machine. Pick the way that suits you best.: A szókincsed a saját gépeden marad. Válaszd azt a módot, amelyik neked a legjobban fekszik.
-Your device: A te eszközöd
-Windows 10 or newer · 64-bit: Windows 10 vagy újabb · 64 bites
-Recommended: Ajánlott
-Installs and stays up to date automatically.: Magától települ és magától frissül.
-Same package from the terminal.: Ugyanaz a csomag, csak terminálból.
-Installer (.exe): Telepítő (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Kézzel frissül. A Windows figyelmeztethet, hogy a kiadó ismeretlen.
 x86_64 · Any modern distribution: x86_64 · Bármely mai disztribúció
+Your device: A te eszközöd
+Recommended: Ajánlott
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Magától települ és magától frissül — és ott van az Ubuntu App Centerében.
+Same package from the terminal.: Ugyanaz a csomag, csak terminálból.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Egyetlen fájl — állítsd futtathatóra és indítsd el. Magát frissíti.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Ugyanaz az AppImage, csak az <a href="https://github.com/ivan-hc/AM">AM</a> kezelésében — vagy <code>appman -i lingueez</code> rendszergazdai jog nélkül.
 Flatpak bundle: Flatpak csomag
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Homokozóban fut. Telepítsd a <code>flatpak install</code> paranccsal — kézzel frissül.
+Windows 10 or newer · 64-bit: Windows 10 vagy újabb · 64 bites
+Installs and stays up to date automatically.: Magától települ és magától frissül.
+Installer (.exe): Telepítő (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Kézzel frissül. A Windows figyelmeztethet, hogy a kiadó ismeretlen.
 Phone or tablet · Google Play: Telefon vagy tablet · Google Play
 Get it on Google Play: Töltsd le a Google Playről
 Same account as on your other devices — your vocabulary syncs automatically.: Ugyanaz a fiók, mint a többi eszközödön — a szókincs magától szinkronizálódik.

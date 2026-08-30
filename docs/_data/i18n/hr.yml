@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Prijava
 Free · Open source · No account required: Besplatno · Otvoreni kod · Bez registracije
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Vaš vokabular ostaje na vašem računalu. Odaberite način koji vam najbolje odgovara.
-Your device: Vaš uređaj
-Windows 10 or newer · 64-bit: Windows 10 ili noviji · 64-bitni
-Recommended: Preporučeno
-Installs and stays up to date automatically.: Instalira se i ažurira samo.
-Same package from the terminal.: Isti paket, samo iz terminala.
-Installer (.exe): Instalacijski program (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Ažurira se ručno. Windows može upozoriti da izdavač nije poznat.
 x86_64 · Any modern distribution: x86_64 · Bilo koja suvremena distribucija
+Your device: Vaš uređaj
+Recommended: Preporučeno
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Instalira se i ažurira samo — i dostupan je u Ubuntuovom App Centeru.
+Same package from the terminal.: Isti paket, samo iz terminala.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Jedna jedina datoteka — označite je izvršnom i pokrenite. Ažurira se sama.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Isti AppImage, samo pod upravom <a href="https://github.com/ivan-hc/AM">AM</a> — ili <code>appman -i lingueez</code> bez roota.
 Flatpak bundle: Flatpak paket
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: U sandboxu. Instalirajte s <code>flatpak install</code> — ažurira se ručno.
+Windows 10 or newer · 64-bit: Windows 10 ili noviji · 64-bitni
+Installs and stays up to date automatically.: Instalira se i ažurira samo.
+Installer (.exe): Instalacijski program (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Ažurira se ručno. Windows može upozoriti da izdavač nije poznat.
 Phone or tablet · Google Play: Mobitel ili tablet · Google Play
 Get it on Google Play: Preuzmite s Google Playa
 Same account as on your other devices — your vocabulary syncs automatically.: Isti račun kao na ostalim uređajima — vokabular se sinkronizira sam.

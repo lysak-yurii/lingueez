@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Se connecter
 Free · Open source · No account required: Gratuit · Open source · Aucun compte requis
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Votre vocabulaire reste sur votre propre appareil. Choisissez la méthode qui vous convient le mieux.
-Your device: Votre appareil
-Windows 10 or newer · 64-bit: Windows 10 ou ultérieur · 64 bits
-Recommended: Recommandé
-Installs and stays up to date automatically.: S'installe et se met à jour automatiquement.
-Same package from the terminal.: Le même paquet depuis le terminal.
-Installer (.exe): Installeur (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Mise à jour manuelle. Windows peut avertir que l'éditeur est inconnu.
 x86_64 · Any modern distribution: x86_64 · N'importe quelle distribution moderne
+Your device: Votre appareil
+Recommended: Recommandé
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: S’installe et se met à jour automatiquement — et se trouve dans l’App Center d’Ubuntu.
+Same package from the terminal.: Le même paquet depuis le terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Un seul fichier — rendez-le exécutable et lancez-le. Se met à jour sur place.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Même AppImage, gérée par <a href="https://github.com/ivan-hc/AM">AM</a> — ou <code>appman -i lingueez</code> sans privilèges root.
 Flatpak bundle: Package Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Isolé (Sandbox). Installez avec <code>flatpak install</code> — mise à jour manuelle.
+Windows 10 or newer · 64-bit: Windows 10 ou ultérieur · 64 bits
+Installs and stays up to date automatically.: S'installe et se met à jour automatiquement.
+Installer (.exe): Installeur (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Mise à jour manuelle. Windows peut avertir que l'éditeur est inconnu.
 Phone or tablet · Google Play: Téléphone ou tablette · Google Play
 Get it on Google Play: Disponible sur Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Même compte que sur vos autres appareils — votre vocabulaire se synchronise automatiquement.

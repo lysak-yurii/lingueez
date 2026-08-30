@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: 登录
 Free · Open source · No account required: 免费 · 开源 · 无需注册账号
 Your vocabulary lives on your own machine. Pick the way that suits you best.: 您的词汇库保存在您自己的设备上。选择最适合您的安装方式。
-Your device: 您的设备
-Windows 10 or newer · 64-bit: Windows 10 或更高版本 · 64位
-Recommended: 推荐
-Installs and stays up to date automatically.: 自动安装并保持最新版本。
-Same package from the terminal.: 使用终端安装相同软件包。
-Installer (.exe): 安装程序 (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: 需手动更新。Windows 可能会提示未知发布者警告。
 x86_64 · Any modern distribution: x86_64 · 适用于任何现代 Linux 发行版
+Your device: 您的设备
+Recommended: 推荐
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: 自动安装并保持最新版本，在 Ubuntu App Center 中也能找到。
+Same package from the terminal.: 使用终端安装相同软件包。
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 单文件格式——赋予可执行权限即可运行。支持就地自我更新。
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : 同样的 AppImage，由 <a href="https://github.com/ivan-hc/AM">AM</a> 管理，或无需 root 权限运行 <code>appman -i lingueez</code>。
 Flatpak bundle: Flatpak 软件包
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: 沙盒隔离。使用 <code>flatpak install</code> 安装——需手动更新。
+Windows 10 or newer · 64-bit: Windows 10 或更高版本 · 64位
+Installs and stays up to date automatically.: 自动安装并保持最新版本。
+Installer (.exe): 安装程序 (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: 需手动更新。Windows 可能会提示未知发布者警告。
 Phone or tablet · Google Play: 手机或平板电脑 · Google Play
 Get it on Google Play: 前往 Google Play 下载
 Same account as on your other devices — your vocabulary syncs automatically.: 与您其他设备使用同一账号——词汇库自动同步。

@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: लॉग इन करें
 Free · Open source · No account required: मुफ़्त · ओपन सोर्स · किसी खाते की आवश्यकता नहीं
 Your vocabulary lives on your own machine. Pick the way that suits you best.: आपकी शब्दावली आपकी अपनी मशीन पर रहती है। वह तरीका चुनें जो आपको सबसे अच्छा लगता है।
-Your device: आपका डिवाइस
-Windows 10 or newer · 64-bit: Windows 10 या नया · 64-बिट
-Recommended: अनुशंसित
-Installs and stays up to date automatically.: इंस्टॉल होता है और स्वचालित रूप से अपडेट रहता है।
-Same package from the terminal.: टर्मिनल से वही पैकेज।
-Installer (.exe): इंस्टॉलर (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: मैन्युअल रूप से अपडेट होता है। Windows चेतावनी दे सकता है कि प्रकाशक अज्ञात है।
 x86_64 · Any modern distribution: x86_64 · कोई भी आधुनिक डिस्ट्रीब्यूशन
+Your device: आपका डिवाइस
+Recommended: अनुशंसित
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: इंस्टॉल होता है और स्वचालित रूप से अपडेट रहता है — और यह Ubuntu के App Center में भी मौजूद है।
+Same package from the terminal.: टर्मिनल से वही पैकेज।
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: एक फ़ाइल — इसे निष्पादन योग्य (executable) के रूप में चिह्नित करें और चलाएं। स्वतः अपडेट होता है।
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : वही AppImage, <a href="https://github.com/ivan-hc/AM">AM</a> द्वारा प्रबंधित — या बिना रूट के <code>appman -i lingueez</code>।
 Flatpak bundle: फ़्लैटपैक बंडल
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: सैंडबॉक्स्ड। <code>flatpak install</code> के साथ इंस्टॉल करें — मैन्युअल रूप से अपडेट होता है।
+Windows 10 or newer · 64-bit: Windows 10 या नया · 64-बिट
+Installs and stays up to date automatically.: इंस्टॉल होता है और स्वचालित रूप से अपडेट रहता है।
+Installer (.exe): इंस्टॉलर (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: मैन्युअल रूप से अपडेट होता है। Windows चेतावनी दे सकता है कि प्रकाशक अज्ञात है।
 Phone or tablet · Google Play: फ़ोन या टैबलेट · Google Play
 Get it on Google Play: इसे Google Play पर प्राप्त करें
 Same account as on your other devices — your vocabulary syncs automatically.: आपके अन्य डिवाइस जैसा ही खाता — आपकी शब्दावली स्वचालित रूप से सिंक होती है।

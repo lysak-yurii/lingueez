@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Войти
 Free · Open source · No account required: Бесплатно · Открытый исходный код · Без регистрации
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Ваш словарный запас хранится на вашем устройстве. Выберите удобный способ.
-Your device: Ваше устройство
-Windows 10 or newer · 64-bit: Windows 10 или новее · 64-разрядная
-Recommended: Рекомендуется
-Installs and stays up to date automatically.: Устанавливается и обновляется автоматически.
-Same package from the terminal.: Тот же пакет через терминал.
-Installer (.exe): Установщик (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Обновляется вручную. Windows может предупредить об неизвестном издателе.
 x86_64 · Any modern distribution: x86_64 · Любой современный дистрибутив
+Your device: Ваше устройство
+Recommended: Рекомендуется
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Устанавливается и обновляется автоматически — и есть в App Center на Ubuntu.
+Same package from the terminal.: Тот же пакет через терминал.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Один файл — сделайте исполняемым и запускайте. Обновляется на месте.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Тот же AppImage под управлением <a href="https://github.com/ivan-hc/AM">AM</a> — или <code>appman -i lingueez</code> без root-прав.
 Flatpak bundle: Пакет Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Изолированная среда (песочница). Установка через <code>flatpak install</code> — обновляется вручную.
+Windows 10 or newer · 64-bit: Windows 10 или новее · 64-разрядная
+Installs and stays up to date automatically.: Устанавливается и обновляется автоматически.
+Installer (.exe): Установщик (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Обновляется вручную. Windows может предупредить об неизвестном издателе.
 Phone or tablet · Google Play: Телефон или планшет · Google Play
 Get it on Google Play: Скачать в Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Тот же аккаунт, что и на других устройствах, — ваш словарь синхронизируется автоматически.

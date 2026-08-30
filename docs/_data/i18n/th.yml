@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: เข้าสู่ระบบ
 Free · Open source · No account required: ฟรี · โอเพนซอร์ส · ไม่ต้องสมัครบัญชี
 Your vocabulary lives on your own machine. Pick the way that suits you best.: คลังคำศัพท์ของคุณอยู่ในเครื่องของคุณเอง เลือกวิธีที่เหมาะกับคุณที่สุด
-Your device: อุปกรณ์ของคุณ
-Windows 10 or newer · 64-bit: Windows 10 ขึ้นไป · 64 บิต
-Recommended: แนะนำ
-Installs and stays up to date automatically.: ติดตั้งและอัปเดตให้เองโดยอัตโนมัติ
-Same package from the terminal.: แพ็กเกจเดียวกัน แต่สั่งจากเทอร์มินัล
-Installer (.exe): ตัวติดตั้ง (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: ต้องอัปเดตเอง Windows อาจเตือนว่าไม่รู้จักผู้เผยแพร่
 x86_64 · Any modern distribution: x86_64 · ดิสโทรสมัยใหม่ทุกตัว
+Your device: อุปกรณ์ของคุณ
+Recommended: แนะนำ
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: ติดตั้งและอัปเดตให้เองโดยอัตโนมัติ และมีอยู่ใน App Center ของ Ubuntu
+Same package from the terminal.: แพ็กเกจเดียวกัน แต่สั่งจากเทอร์มินัล
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: ไฟล์เดียวจบ — ตั้งให้รันได้แล้วเปิดใช้ ตัวมันอัปเดตให้เอง
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : AppImage ตัวเดียวกัน เพียงแต่จัดการผ่าน <a href="https://github.com/ivan-hc/AM">AM</a> — หรือใช้ <code>appman -i lingueez</code> โดยไม่ต้องเป็น root
 Flatpak bundle: ชุดไฟล์ Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: ทำงานในแซนด์บ็อกซ์ ติดตั้งด้วย <code>flatpak install</code> — ต้องอัปเดตเอง
+Windows 10 or newer · 64-bit: Windows 10 ขึ้นไป · 64 บิต
+Installs and stays up to date automatically.: ติดตั้งและอัปเดตให้เองโดยอัตโนมัติ
+Installer (.exe): ตัวติดตั้ง (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: ต้องอัปเดตเอง Windows อาจเตือนว่าไม่รู้จักผู้เผยแพร่
 Phone or tablet · Google Play: มือถือหรือแท็บเล็ต · Google Play
 Get it on Google Play: ดาวน์โหลดบน Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: บัญชีเดียวกับอุปกรณ์อื่นของคุณ — คลังคำศัพท์ซิงก์ให้เองโดยอัตโนมัติ

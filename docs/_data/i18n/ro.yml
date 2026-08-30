@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Autentificare
 Free · Open source · No account required: Gratuit · Sursă deschisă · Fără cont
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Vocabularul tău stă pe computerul tău. Alege modul care ți se potrivește cel mai bine.
-Your device: Dispozitivul tău
-Windows 10 or newer · 64-bit: Windows 10 sau mai nou · pe 64 de biți
-Recommended: Recomandat
-Installs and stays up to date automatically.: Se instalează și se actualizează singur.
-Same package from the terminal.: Același pachet, dar din terminal.
-Installer (.exe): Program de instalare (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Se actualizează manual. Windows poate avertiza că editorul nu este cunoscut.
 x86_64 · Any modern distribution: x86_64 · Orice distribuție modernă
+Your device: Dispozitivul tău
+Recommended: Recomandat
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Se instalează și se actualizează singur — și se găsește în App Center din Ubuntu.
+Same package from the terminal.: Același pachet, dar din terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Un singur fișier — marchează-l ca executabil și pornește-l. Se actualizează singur.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Același AppImage, dar administrat de <a href="https://github.com/ivan-hc/AM">AM</a> — sau <code>appman -i lingueez</code> fără root.
 Flatpak bundle: Pachet Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Izolat în sandbox. Instalează cu <code>flatpak install</code> — se actualizează manual.
+Windows 10 or newer · 64-bit: Windows 10 sau mai nou · pe 64 de biți
+Installs and stays up to date automatically.: Se instalează și se actualizează singur.
+Installer (.exe): Program de instalare (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Se actualizează manual. Windows poate avertiza că editorul nu este cunoscut.
 Phone or tablet · Google Play: Telefon sau tabletă · Google Play
 Get it on Google Play: Descarcă din Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Același cont ca pe celelalte dispozitive — vocabularul se sincronizează singur.

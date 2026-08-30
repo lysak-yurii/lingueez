@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Σύνδεση
 Free · Open source · No account required: Δωρεάν · Ανοιχτού κώδικα · Δεν απαιτείται λογαριασμός
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Το λεξιλόγιό σας παραμένει στη δική σας συσκευή. Επιλέξτε τον τρόπο που σας ταιριάζει καλύτερα.
-Your device: Η συσκευή σας
-Windows 10 or newer · 64-bit: Windows 10 ή νεότερο · 64-bit
-Recommended: Proteinomeno
-Installs and stays up to date automatically.: Εγκαθίσταται και ενημερώνεται αυτόματα.
-Same package from the terminal.: Το ίδιο πακέτο από το τερματικό.
-Installer (.exe): Πρόγραμμα εγκατάστασης (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Ενημερώνεται μη αυτόματα. Τα Windows ενδέχεται να προειδοποιήσουν ότι ο εκδότης είναι άγνωστος.
 x86_64 · Any modern distribution: x86_64 · Κάθε σύγχρονη διανομή
+Your device: Η συσκευή σας
+Recommended: Proteinomeno
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Εγκαθίσταται και ενημερώνεται αυτόματα — και βρίσκεται στο App Center του Ubuntu.
+Same package from the terminal.: Το ίδιο πακέτο από το τερματικό.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Ένα αρχείο — σημειώστε το ως εκτελέσιμο και τρέξτε το. Ενημερώνεται αυτόματα.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Το ίδιο AppImage, διαχειριζόμενο από το <a href="https://github.com/ivan-hc/AM">AM</a> — ή <code>appman -i lingueez</code> χωρίς δικαιώματα root.
 Flatpak bundle: Πακέτο Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Σε προστατευμένο περιβάλλον (sandbox). Εγκατάσταση με <code>flatpak install</code> — μη αυτόματη ενημέρωση.
+Windows 10 or newer · 64-bit: Windows 10 ή νεότερο · 64-bit
+Installs and stays up to date automatically.: Εγκαθίσταται και ενημερώνεται αυτόματα.
+Installer (.exe): Πρόγραμμα εγκατάστασης (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Ενημερώνεται μη αυτόματα. Τα Windows ενδέχεται να προειδοποιήσουν ότι ο εκδότης είναι άγνωστος.
 Phone or tablet · Google Play: Τηλέφωνο ή τάμπλετ · Google Play
 Get it on Google Play: Αποκτήστε το στο Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Ίδιος λογαριασμός με τις άλλες συσκευές σας — το λεξιλόγιό σας συγχρονίζεται αυτόματα.

@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Logg inn
 Free · Open source · No account required: Gratis · Åpen kildekode · Ingen konto nødvendig
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Ordforrådet ditt blir liggende på din egen maskin. Velg måten som passer deg best.
-Your device: Enheten din
-Windows 10 or newer · 64-bit: Windows 10 eller nyere · 64-bit
-Recommended: Anbefalt
-Installs and stays up to date automatically.: Installerer og oppdaterer seg selv.
-Same package from the terminal.: Samme pakke, bare fra terminalen.
-Installer (.exe): Installasjonsprogram (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Oppdateres manuelt. Windows kan advare om at utgiveren er ukjent.
 x86_64 · Any modern distribution: x86_64 · Enhver moderne distribusjon
+Your device: Enheten din
+Recommended: Anbefalt
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Installerer og oppdaterer seg selv — og den ligger i Ubuntus App Center.
+Same package from the terminal.: Samme pakke, bare fra terminalen.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Én eneste fil — gjør den kjørbar og start den. Den oppdaterer seg selv.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Samme AppImage, bare håndtert av <a href="https://github.com/ivan-hc/AM">AM</a> — eller <code>appman -i lingueez</code> uten root.
 Flatpak bundle: Flatpak-pakke
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Kjører i sandkasse. Installer med <code>flatpak install</code> — oppdateres manuelt.
+Windows 10 or newer · 64-bit: Windows 10 eller nyere · 64-bit
+Installs and stays up to date automatically.: Installerer og oppdaterer seg selv.
+Installer (.exe): Installasjonsprogram (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Oppdateres manuelt. Windows kan advare om at utgiveren er ukjent.
 Phone or tablet · Google Play: Telefon eller nettbrett · Google Play
 Get it on Google Play: Last ned på Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Samme konto som på de andre enhetene dine — ordforrådet synkroniserer seg selv.

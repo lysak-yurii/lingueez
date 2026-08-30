@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Iniciar sesión
 Free · Open source · No account required: Gratuito · Código abierto · Sin necesidad de cuenta
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Tu vocabulario reside en tu propio dispositivo. Elige la opción que mejor se adapte a ti.
-Your device: Tu dispositivo
-Windows 10 or newer · 64-bit: Windows 10 o posterior · 64 bits
-Recommended: Recomendado
-Installs and stays up to date automatically.: Se instala y se actualiza automáticamente.
-Same package from the terminal.: El mismo paquete desde la terminal.
-Installer (.exe): Instalador (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Se actualiza manualmente. Windows puede advertir que el editor es desconocido.
 x86_64 · Any modern distribution: x86_64 · Cualquier distribución moderna
+Your device: Tu dispositivo
+Recommended: Recomendado
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Se instala y se actualiza automáticamente — y está en el App Center de Ubuntu.
+Same package from the terminal.: El mismo paquete desde la terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: 'Un solo archivo: márcalo como ejecutable y ejecútalo. Se actualiza automáticamente.'
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Misma AppImage, gestionada por <a href="https://github.com/ivan-hc/AM">AM</a> — o <code>appman -i lingueez</code> sin root.
 Flatpak bundle: Paquete Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: En entorno aislado (sandbox). Instalar con <code>flatpak install</code> — actualiza manualmente.
+Windows 10 or newer · 64-bit: Windows 10 o posterior · 64 bits
+Installs and stays up to date automatically.: Se instala y se actualiza automáticamente.
+Installer (.exe): Instalador (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Se actualiza manualmente. Windows puede advertir que el editor es desconocido.
 Phone or tablet · Google Play: Teléfono o tableta · Google Play
 Get it on Google Play: Consíguelo en Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: 'Misma cuenta que en tus otros dispositivos: tu vocabulario se sincroniza automáticamente.'

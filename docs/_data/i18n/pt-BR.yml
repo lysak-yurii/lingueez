@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Entrar
 Free · Open source · No account required: Grátis · Código aberto · Sem conta
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Seu vocabulário fica na sua própria máquina. Escolha o jeito que mais combina com você.
-Your device: Seu dispositivo
-Windows 10 or newer · 64-bit: Windows 10 ou mais recente · 64 bits
-Recommended: Recomendado
-Installs and stays up to date automatically.: Instala e se atualiza sozinho.
-Same package from the terminal.: O mesmo pacote, só que pelo terminal.
-Installer (.exe): Instalador (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Atualiza manualmente. O Windows pode avisar que o editor é desconhecido.
 x86_64 · Any modern distribution: x86_64 · Qualquer distribuição atual
+Your device: Seu dispositivo
+Recommended: Recomendado
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Instala e se atualiza sozinho — e está no App Center do Ubuntu.
+Same package from the terminal.: O mesmo pacote, só que pelo terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Um arquivo só — marque como executável e rode. Ele se atualiza sozinho.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : O mesmo AppImage, só que gerenciado pelo <a href="https://github.com/ivan-hc/AM">AM</a> — ou <code>appman -i lingueez</code> sem root.
 Flatpak bundle: Pacote Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Em sandbox. Instale com <code>flatpak install</code> — atualiza manualmente.
+Windows 10 or newer · 64-bit: Windows 10 ou mais recente · 64 bits
+Installs and stays up to date automatically.: Instala e se atualiza sozinho.
+Installer (.exe): Instalador (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Atualiza manualmente. O Windows pode avisar que o editor é desconhecido.
 Phone or tablet · Google Play: Celular ou tablet · Google Play
 Get it on Google Play: Baixe no Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: A mesma conta dos seus outros dispositivos — o vocabulário sincroniza sozinho.

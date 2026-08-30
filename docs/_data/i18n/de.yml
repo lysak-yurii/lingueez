@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Anmelden
 Free · Open source · No account required: Kostenlos · Open Source · Kein Konto erforderlich
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Ihr Vokabular bleibt auf Ihrem eigenen Gerät. Wählen Sie den Weg, der am besten zu Ihnen passt.
-Your device: Ihr Gerät
-Windows 10 or newer · 64-bit: Windows 10 oder neuer · 64-Bit
-Recommended: Empfohlen
-Installs and stays up to date automatically.: Installiert und aktualisiert sich automatisch.
-Same package from the terminal.: Dasselbe Paket über das Terminal.
-Installer (.exe): Installer (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Wird manuell aktualisiert. Windows warnt möglicherweise vor einem unbekannten Herausgeber.
 x86_64 · Any modern distribution: x86_64 · Jede moderne Distribution
+Your device: Ihr Gerät
+Recommended: Empfohlen
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Installiert und aktualisiert sich automatisch — und ist im App Center von Ubuntu zu finden.
+Same package from the terminal.: Dasselbe Paket über das Terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Eine Datei – als ausführbar markieren und starten. Aktualisiert sich von selbst.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Dasselbe AppImage, verwaltet von <a href="https://github.com/ivan-hc/AM">AM</a> – oder <code>appman -i lingueez</code> ohne Root-Rechte.
 Flatpak bundle: Flatpak-Paket
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Isoliert (Sandboxed). Mit <code>flatpak install</code> installieren – wird manuell aktualisiert.
+Windows 10 or newer · 64-bit: Windows 10 oder neuer · 64-Bit
+Installs and stays up to date automatically.: Installiert und aktualisiert sich automatisch.
+Installer (.exe): Installer (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Wird manuell aktualisiert. Windows warnt möglicherweise vor einem unbekannten Herausgeber.
 Phone or tablet · Google Play: Smartphone oder Tablet · Google Play
 Get it on Google Play: Jetzt bei Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Dasselbe Konto wie auf Ihren anderen Geräten – Ihr Vokabular synchronisiert sich automatisch.

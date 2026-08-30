@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Đăng nhập
 Free · Open source · No account required: Miễn phí · Mã nguồn mở · Không cần tài khoản
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Dữ liệu từ vựng nằm ngay trên máy của bạn. Chọn phương thức phù hợp nhất với bạn.
-Your device: Thiết bị của bạn
-Windows 10 or newer · 64-bit: Windows 10 trở lên · 64-bit
-Recommended: Khuyên dùng
-Installs and stays up to date automatically.: Tự động cài đặt và cập nhật.
-Same package from the terminal.: Cùng gói cài đặt từ dòng lệnh (terminal).
-Installer (.exe): Bộ cài đặt (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Cập nhật thủ công. Windows có thể cảnh báo rằng nhà phát hành không xác định.
 x86_64 · Any modern distribution: x86_64 · Mọi bản phân phối hiện đại
+Your device: Thiết bị của bạn
+Recommended: Khuyên dùng
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Tự động cài đặt và cập nhật — và có trong App Center của Ubuntu.
+Same package from the terminal.: Cùng gói cài đặt từ dòng lệnh (terminal).
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Một tệp duy nhất — đánh dấu cho phép chạy và khởi chạy. Tự động cập nhật tại chỗ.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Cùng tệp AppImage, quản lý bởi <a href="https://github.com/ivan-hc/AM">AM</a> — hoặc <code>appman -i lingueez</code> không cần quyền root.
 Flatpak bundle: Gói Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Môi trường cô lập (sandbox). Cài đặt bằng <code>flatpak install</code> — cập nhật thủ công.
+Windows 10 or newer · 64-bit: Windows 10 trở lên · 64-bit
+Installs and stays up to date automatically.: Tự động cài đặt và cập nhật.
+Installer (.exe): Bộ cài đặt (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Cập nhật thủ công. Windows có thể cảnh báo rằng nhà phát hành không xác định.
 Phone or tablet · Google Play: Điện thoại hoặc máy tính bảng · Google Play
 Get it on Google Play: Tải trên Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Cùng tài khoản với các thiết bị khác của bạn — từ vựng tự động đồng bộ.

@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Kirjaudu sisään
 Free · Open source · No account required: Ilmainen · Avoin lähdekoodi · Ei tiliä tarvita
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Sanastosi pysyy omalla koneellasi. Valitse tapa, joka sopii sinulle parhaiten.
-Your device: Sinun laitteesi
-Windows 10 or newer · 64-bit: Windows 10 tai uudempi · 64-bittinen
-Recommended: Suositeltu
-Installs and stays up to date automatically.: Asentuu ja päivittyy itsestään.
-Same package from the terminal.: Sama paketti, mutta päätteestä.
-Installer (.exe): Asennusohjelma (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Päivittyy käsin. Windows saattaa varoittaa, ettei julkaisijaa tunneta.
 x86_64 · Any modern distribution: x86_64 · Mikä tahansa nykyaikainen jakelu
+Your device: Sinun laitteesi
+Recommended: Suositeltu
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Asentuu ja päivittyy itsestään — ja löytyy Ubuntun App Centeristä.
+Same package from the terminal.: Sama paketti, mutta päätteestä.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Yksi ainoa tiedosto — merkitse se suoritettavaksi ja käynnistä. Päivittää itsensä.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Sama AppImage, mutta <a href="https://github.com/ivan-hc/AM">AM</a>:n hallinnassa — tai <code>appman -i lingueez</code> ilman pääkäyttäjän oikeuksia.
 Flatpak bundle: Flatpak-paketti
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Hiekkalaatikossa. Asenna komennolla <code>flatpak install</code> — päivittyy käsin.
+Windows 10 or newer · 64-bit: Windows 10 tai uudempi · 64-bittinen
+Installs and stays up to date automatically.: Asentuu ja päivittyy itsestään.
+Installer (.exe): Asennusohjelma (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Päivittyy käsin. Windows saattaa varoittaa, ettei julkaisijaa tunneta.
 Phone or tablet · Google Play: Puhelin tai tabletti · Google Play
 Get it on Google Play: Lataa Google Playstä
 Same account as on your other devices — your vocabulary syncs automatically.: Sama tili kuin muilla laitteillasi — sanasto synkronoituu itsestään.

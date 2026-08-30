@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Giriş yap
 Free · Open source · No account required: Ücretsiz · Açık kaynak · Hesap gerekmez
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Kelime bilginiz kendi cihazınızda saklanır. Size en uygun yöntemi seçin.
-Your device: Cihazınız
-Windows 10 or newer · 64-bit: Windows 10 veya üzeri · 64-bit
-Recommended: Önerilen
-Installs and stays up to date automatically.: Otomatik olarak yüklenir ve güncellenir.
-Same package from the terminal.: Terminal üzerinden aynı paket.
-Installer (.exe): Yükleyici (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Manuel olarak güncellenir. Windows, yayıncının bilinmediği uyarısını verebilir.
 x86_64 · Any modern distribution: x86_64 · Tüm modern dağıtımlar
+Your device: Cihazınız
+Recommended: Önerilen
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Otomatik olarak yüklenir ve güncellenir — ayrıca Ubuntu App Center’da yer alır.
+Same package from the terminal.: Terminal üzerinden aynı paket.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Tek bir dosya — çalıştırılabilir olarak işaretleyin ve çalıştırın. Kendi kendini günceller.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : <a href="https://github.com/ivan-hc/AM">AM</a> tarafından yönetilen aynı AppImage — veya root olmadan <code>appman -i lingueez</code>.
 Flatpak bundle: Flatpak paketi
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Korumalı alan (sandboxed). <code>flatpak install</code> ile yükleyin — manuel güncellenir.
+Windows 10 or newer · 64-bit: Windows 10 veya üzeri · 64-bit
+Installs and stays up to date automatically.: Otomatik olarak yüklenir ve güncellenir.
+Installer (.exe): Yükleyici (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Manuel olarak güncellenir. Windows, yayıncının bilinmediği uyarısını verebilir.
 Phone or tablet · Google Play: Telefon veya tablet · Google Play
 Get it on Google Play: Google Play'den indirin
 Same account as on your other devices — your vocabulary syncs automatically.: Diğer cihazlarınızla aynı hesap — kelime bilginiz otomatik olarak senkronize edilir.

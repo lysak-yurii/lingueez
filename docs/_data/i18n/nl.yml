@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Inloggen
 Free · Open source · No account required: Gratis · Open source · Geen account nodig
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Je woordenschat staat op je eigen apparaat. Kies de manier die het beste bij je past.
-Your device: Jouw apparaat
-Windows 10 or newer · 64-bit: Windows 10 of nieuwer · 64-bit
-Recommended: Aanbevolen
-Installs and stays up to date automatically.: Installeert en update automatisch.
-Same package from the terminal.: Hetzelfde pakket via de terminal.
-Installer (.exe): Installatiebestand (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Handmatig updaten. Windows kan waarschuwen dat de uitgever onbekend is.
 x86_64 · Any modern distribution: x86_64 · Elke moderne distributie
+Your device: Jouw apparaat
+Recommended: Aanbevolen
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Installeert en update automatisch — en staat in het App Center van Ubuntu.
+Same package from the terminal.: Hetzelfde pakket via de terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Één bestand — markeer het als uitvoerbaar en start het. Update zichzelf automatisch.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : Hetzelfde AppImage, beheerd door <a href="https://github.com/ivan-hc/AM">AM</a> — of <code>appman -i lingueez</code> zonder root.
 Flatpak bundle: Flatpak-pakket
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: In een zandbak (sandboxed). Installeer met <code>flatpak install</code> — handmatig updaten.
+Windows 10 or newer · 64-bit: Windows 10 of nieuwer · 64-bit
+Installs and stays up to date automatically.: Installeert en update automatisch.
+Installer (.exe): Installatiebestand (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Handmatig updaten. Windows kan waarschuwen dat de uitgever onbekend is.
 Phone or tablet · Google Play: Telefoon of tablet · Google Play
 Get it on Google Play: Download op Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Hetzelfde account als op je andere apparaten — je woordenschat synchroniseert automatisch.

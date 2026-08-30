@@ -54,21 +54,21 @@ GitHub: GitHub
 Log in: Log masuk
 Free · Open source · No account required: Percuma · Sumber terbuka · Tanpa akaun
 Your vocabulary lives on your own machine. Pick the way that suits you best.: Kosa kata anda kekal pada mesin anda sendiri. Pilih cara yang paling sesuai untuk anda.
-Your device: Peranti anda
-Windows 10 or newer · 64-bit: Windows 10 atau lebih baharu · 64-bit
-Recommended: Disyorkan
-Installs and stays up to date automatically.: Dipasang dan dikemas kini dengan sendirinya.
-Same package from the terminal.: Pakej yang sama, cuma daripada terminal.
-Installer (.exe): Pemasang (.exe)
-Updates manually. Windows may warn that the publisher is unknown.: Dikemas kini secara manual. Windows mungkin memberi amaran bahawa penerbitnya tidak dikenali.
 x86_64 · Any modern distribution: x86_64 · Sebarang distribusi moden
+Your device: Peranti anda
+Recommended: Disyorkan
 Installs and stays up to date automatically — and it is in Ubuntu’s App Center.: Dipasang dan dikemas kini dengan sendirinya — dan ada dalam App Center Ubuntu.
+Same package from the terminal.: Pakej yang sama, cuma daripada terminal.
 AppImage: AppImage
 One file — mark it executable and run it. Updates itself in place.: Satu fail sahaja — tandakan ia boleh laku dan jalankan. Ia mengemas kini dirinya sendiri.
 ? Same AppImage, managed by <a href="https://github.com/ivan-hc/AM">AM</a> — or <code>appman -i lingueez</code> without root.
 : AppImage yang sama, cuma diuruskan oleh <a href="https://github.com/ivan-hc/AM">AM</a> — atau <code>appman -i lingueez</code> tanpa root.
 Flatpak bundle: Bundel Flatpak
 Sandboxed. Install with <code>flatpak install</code> — updates manually.: Dikotakpasirkan. Pasang dengan <code>flatpak install</code> — dikemas kini secara manual.
+Windows 10 or newer · 64-bit: Windows 10 atau lebih baharu · 64-bit
+Installs and stays up to date automatically.: Dipasang dan dikemas kini dengan sendirinya.
+Installer (.exe): Pemasang (.exe)
+Updates manually. Windows may warn that the publisher is unknown.: Dikemas kini secara manual. Windows mungkin memberi amaran bahawa penerbitnya tidak dikenali.
 Phone or tablet · Google Play: Telefon atau tablet · Google Play
 Get it on Google Play: Dapatkannya di Google Play
 Same account as on your other devices — your vocabulary syncs automatically.: Akaun yang sama seperti pada peranti anda yang lain — kosa kata disegerakkan dengan sendirinya.
