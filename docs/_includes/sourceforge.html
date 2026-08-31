@@ -1,0 +1,16 @@
+{%- comment -%}
+  SourceForge's project badge, their markup and their image URLs — sflogo.php
+  counts the impression, so the file stays remote rather than cached locally.
+  type=17 is the dark-text mark, type=18 the white one; both are transparent
+  SVGs with no plate, so the wrong one on the wrong ground is invisible.
+
+  Their snippet gives width only. The SVG carries a viewBox (653x103) and no
+  intrinsic size, so height is ours to work out — without it the footer
+  reserves no space for the badge and the column jumps when it lands.
+{%- endcomment -%}
+<a class="sfnet-badge" href="https://sourceforge.net/p/lingueez/">
+  <img class="only-light" src="https://sourceforge.net/sflogo.php?type=17&amp;group_id=4133148"
+       alt="Download Lingueez - Vocabulary Builder" width="200" height="32" loading="lazy">
+  <img class="only-dark" src="https://sourceforge.net/sflogo.php?type=18&amp;group_id=4133148"
+       alt="Download Lingueez - Vocabulary Builder" width="200" height="32" loading="lazy">
+</a>

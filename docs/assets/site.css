@@ -682,13 +682,21 @@
   }
   .attrib{ color:var(--text-dim); }
 
-  /* Startup Fame ships the badge at a fixed 224x36 on an opaque plate, so it
-     needs no frame of ours — only, like .brand above, an escape from the block
-     links of .foot-grid, which would otherwise stretch it across the column. */
-  .foot-grid .sf-badge{ display:inline-block; padding:0; margin-top:var(--s-4); }
+  /* Third-party badges, each the vendor's own artwork in two colourways that
+     .only-light/.only-dark pick between. Like .brand above they need an escape
+     from the block links of .foot-grid, which would otherwise stretch them
+     across the column and hand them its .18em padding. */
+  .foot-badges{
+    display:flex; flex-direction:column; align-items:flex-start;
+    gap:var(--s-3); margin-top:var(--s-4);
+  }
+  .foot-grid .foot-badges a{ display:inline-block; padding:0; }
+  .foot-badges a:hover{ opacity:.88; }
+  /* Startup Fame's is an opaque plate and needs no frame of ours; SourceForge's
+     is transparent and sits directly on the page. */
   .sf-badge{ border-radius:6px; }
-  .sf-badge:hover{ opacity:.88; }
   .sf-badge img{ width:224px; }
+  .sfnet-badge img{ width:200px; }
 }
 
 /* ==========================================================================
