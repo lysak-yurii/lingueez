@@ -1117,8 +1117,10 @@ class QuizPage(QWidget):
         self.missed_list.tag_requested.connect(self._tag_missed_words)
         missed.addWidget(self.missed_list)
         missed_row = QHBoxLayout()
+        # Outweighs the spacers: at stretch 0 the panel takes its size hint, and
+        # the elidable rows inside hint at almost nothing.
         missed_row.addStretch(1)
-        missed_row.addWidget(self.missed_panel)
+        missed_row.addWidget(self.missed_panel, 10)
         missed_row.addStretch(1)
         self.missed_panel.setVisible(False)
         cv.addSpacing(14)
