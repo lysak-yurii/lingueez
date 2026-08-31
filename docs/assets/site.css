@@ -681,6 +681,14 @@
     border-top:1px solid var(--border); font-size:.86rem;
   }
   .attrib{ color:var(--text-dim); }
+
+  /* Startup Fame ships the badge at a fixed 224x36 on an opaque plate, so it
+     needs no frame of ours — only, like .brand above, an escape from the block
+     links of .foot-grid, which would otherwise stretch it across the column. */
+  .foot-grid .sf-badge{ display:inline-block; padding:0; margin-top:var(--s-4); }
+  .sf-badge{ border-radius:6px; }
+  .sf-badge:hover{ opacity:.88; }
+  .sf-badge img{ width:224px; }
 }
 
 /* ==========================================================================

@@ -1,0 +1,13 @@
+{%- comment -%}
+  Startup Fame's "Featured on" badge, in the markup their listing check looks
+  for — their image URLs stay remote on purpose, a local copy would not verify.
+  Two files, one per plate colour (#1f1f1f and #fff), so the theme picks one
+  through .only-dark/.only-light instead of a filter.
+{%- endcomment -%}
+<a class="sf-badge" href="https://startupfa.me/s/lingueez?utm_source=lingueez.app"
+   target="_blank" rel="noopener">
+  <img class="only-light" src="https://startupfa.me/badges/featured/light-small.webp"
+       alt="Lingueez - Featured on Startup Fame" width="224" height="36" loading="lazy">
+  <img class="only-dark" src="https://startupfa.me/badges/featured/dark-small.webp"
+       alt="Lingueez - Featured on Startup Fame" width="224" height="36" loading="lazy">
+</a>
