@@ -1,0 +1,19 @@
+{%- comment -%}
+  Product Hunt's "Featured on" badge, their embed markup and their image URLs —
+  the widget endpoint stamps the badge with whatever ribbon the launch has earned
+  since, so a local copy would freeze it at today's.
+
+  theme=neutral is the white plate, theme=dark the near-black one, paired to the
+  site's themes through .only-light/.only-dark. The 10px corner radius is inside
+  the SVG, so unlike .sf-badge this one needs no rounding of ours. The ?t= stamps
+  are Product Hunt's own cache busters, kept as issued.
+{%- endcomment -%}
+<a class="ph-badge" href="https://www.producthunt.com/products/lingueez-vocabulary-builder?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-lingueez-vocabulary-builder"
+   target="_blank" rel="noopener noreferrer">
+  <img class="only-light" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1235989&amp;theme=neutral&amp;t=1788173364444"
+       alt="Lingueez — Vocabulary Builder - Build your vocabulary while reading. Master every word. | Product Hunt"
+       width="250" height="54" loading="lazy">
+  <img class="only-dark" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1235989&amp;theme=dark&amp;t=1788173351620"
+       alt="Lingueez — Vocabulary Builder - Build your vocabulary while reading. Master every word. | Product Hunt"
+       width="250" height="54" loading="lazy">
+</a>

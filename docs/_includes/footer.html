@@ -4,10 +4,6 @@
       <div>
         <a class="brand" href="/" style="font-size:1.05rem;"><img src="/assets/icon.png" alt="" width="24" height="24"> Lingueez</a>
         <p style="margin:.7rem 0 0; max-width:30ch;">{% include t.html s='Build vocabulary with confidence—across every language you learn.' %}</p>
-        <div class="foot-badges">
-          {% include startup-fame.html %}
-          {% include sourceforge.html %}
-        </div>
       </div>
       <div>
         <h4>{% include t.html s='Product' %}</h4>
@@ -31,6 +27,16 @@
         <h4>{% include t.html s='Contact' %}</h4>
         <a href="mailto:support@lingueez.app">support@lingueez.app</a>
       </div>
+    </div>
+    {%- comment -%}
+      Third-party badges live on their own row rather than in the brand column:
+      each vendor dictates its own artwork, so the only thing that makes them
+      read as a set is a shared baseline and one optical height. See .foot-badges.
+    {%- endcomment -%}
+    <div class="foot-badges">
+      {% include producthunt.html %}
+      {% include startup-fame.html %}
+      {% include sourceforge.html %}
     </div>
     <div class="foot-bottom">
       <span class="attrib">© 2024–2026 Lingueez — created by Yurii Lysak</span>

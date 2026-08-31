@@ -682,21 +682,23 @@
   }
   .attrib{ color:var(--text-dim); }
 
-  /* Third-party badges, each the vendor's own artwork in two colourways that
-     .only-light/.only-dark pick between. Like .brand above they need an escape
-     from the block links of .foot-grid, which would otherwise stretch them
-     across the column and hand them its .18em padding. */
+  /* Third-party badges. Every vendor dictates its own artwork, in two colourways
+     that .only-light/.only-dark pick between, so nothing about their styling is
+     ours to unify — a shared height is the only thing holding the row together.
+     The heights are optical rather than equal: the plated marks carry their own
+     padding, while SourceForge's is a bare glyph that reads a size larger at the
+     same box height, so it is set shorter. */
   .foot-badges{
-    display:flex; flex-direction:column; align-items:flex-start;
-    gap:var(--s-3); margin-top:var(--s-4);
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:var(--s-3) var(--s-5); margin-top:var(--s-6);
   }
-  .foot-grid .foot-badges a{ display:inline-block; padding:0; }
+  .foot-badges a{ display:inline-flex; border-radius:6px; }
   .foot-badges a:hover{ opacity:.88; }
-  /* Startup Fame's is an opaque plate and needs no frame of ours; SourceForge's
-     is transparent and sits directly on the page. */
-  .sf-badge{ border-radius:6px; }
-  .sf-badge img{ width:224px; }
-  .sfnet-badge img{ width:200px; }
+  /* width:auto is not optional: the vendors' own width attributes are
+     presentational hints, and left standing they fight the height below and
+     squash the mark. */
+  .foot-badges img{ width:auto; height:38px; }
+  .sfnet-badge img{ height:30px; }
 }
 
 /* ==========================================================================
