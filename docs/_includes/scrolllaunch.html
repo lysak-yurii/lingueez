@@ -1,0 +1,15 @@
+{%- comment -%}
+  ScrollLaunch's badge. Their snippet offers the light badge only — a white
+  plate with near-black type, which beside four dark-plate badges reads as a lit
+  slab in dark theme. The endpoint does answer ?theme=dark (undocumented, but it
+  returns a properly inverted badge: navy plate, white type), so the pair here is
+  ours rather than theirs. If it ever stops honouring the parameter this falls
+  back to the light badge in both themes, which is legible but loud.
+{%- endcomment -%}
+<a class="sl-badge" href="https://www.scrolllaunch.com/products/lingueez-vocabulary-builder?ref=badge"
+   target="_blank" rel="noopener">
+  <img class="only-light" src="https://www.scrolllaunch.com/api/badge/lingueez-vocabulary-builder"
+       alt="Featured on ScrollLaunch" width="220" height="48" loading="lazy">
+  <img class="only-dark" src="https://www.scrolllaunch.com/api/badge/lingueez-vocabulary-builder?theme=dark"
+       alt="Featured on ScrollLaunch" width="220" height="48" loading="lazy">
+</a>
