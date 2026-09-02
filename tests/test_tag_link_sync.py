@@ -173,6 +173,10 @@ class TagLinkSchemaTests(unittest.TestCase):
                 "CREATE TABLE word_tags (word_id TEXT NOT NULL, "
                 "tag_id TEXT NOT NULL, PRIMARY KEY (word_id, tag_id))"
             )
+            # The link needs its word: initialize_database also sweeps links
+            # left behind by deleted words (see tests.test_orphan_tags).
+            conn.execute("CREATE TABLE words (ID TEXT PRIMARY KEY, Word1 TEXT, Word2 TEXT)")
+            conn.execute("INSERT INTO words VALUES ('w0', 'cat', 'Katze')")
             conn.execute("INSERT INTO word_tags VALUES ('w0', 't1')")
             conn.commit()
             conn.close()

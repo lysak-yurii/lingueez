@@ -639,6 +639,25 @@ class SupabaseClient:
                 ok = False
         return ok
 
+    def remove_word_tags_for_words(self, word_ids: List[str]) -> bool:
+        """Delete every tag link belonging to these words.
+
+        Words are only soft-deleted in the cloud, so their link rows would
+        otherwise outlive them and come back down on the next tag sync.
+        """
+        if not self.client or not word_ids:
+            return True
+        ok = True
+        chunk_size = 200
+        for start in range(0, len(word_ids), chunk_size):
+            chunk = [str(w) for w in word_ids[start:start + chunk_size]]
+            try:
+                self.client.table('word_tags').delete().in_('word_id', chunk).execute()
+            except Exception as exc:
+                logging.warning(f"word_tags cleanup for deleted words failed: {exc}")
+                ok = False
+        return ok
+
     def delete_word(self, word_id: int) -> bool:
         """Soft delete a word from Supabase (sets deleted_at timestamp)."""
         if not self.client:

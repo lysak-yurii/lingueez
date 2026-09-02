@@ -23,7 +23,7 @@ import sqlite3
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any, Tuple
 from app.core.supabase_client import get_supabase
-from app.core.db import new_id, rekey_progress
+from app.core.db import new_id, purge_orphan_tags, rekey_progress
 from app.core.errors import DuplicateWordError
 import logging
 import os
@@ -1195,6 +1195,9 @@ class DatabaseAdapter:
                 logging.warning(f"Bulk delete failed for word {word_id}: {exc}")
                 failed.append(word_id)
 
+        if deleted:
+            self._drop_cloud_word_tags(deleted, self._purge_orphan_tags_sqlite())
+
         if deleted and self._use_cloud():
             try:
                 synced, _unsynced = self.supabase.delete_words_bulk(deleted)
@@ -1291,6 +1294,7 @@ class DatabaseAdapter:
         if local_success:
             # Track deletion for sync
             self._track_deletion('words', word_id)
+            self._drop_cloud_word_tags([word_id], self._purge_orphan_tags_sqlite())
 
             if self._use_cloud():
                 try:
@@ -1312,6 +1316,37 @@ class DatabaseAdapter:
             conn.execute("DELETE FROM word_tags WHERE word_id = ?", (word_id,))
             conn.execute("DELETE FROM words WHERE ID = ?", (word_id,))
         return True
+
+    def _purge_orphan_tags_sqlite(self) -> List[str]:
+        """Drop tags whose last word is gone. Returns the removed tag ids.
+
+        Deleting a word takes its links with it; without this the tag itself
+        stayed behind and kept appearing in the picker with nothing under it.
+        """
+        try:
+            with self._write() as conn:
+                _links, tag_ids = purge_orphan_tags(conn.cursor())
+            return tag_ids
+        except sqlite3.Error as exc:
+            logging.warning(f"Could not purge orphan tags: {exc}")
+            return []
+
+    def _drop_cloud_word_tags(self, word_ids: List[str], orphan_tag_ids: List[str]):
+        """Mirror a local tag cleanup to the cloud, best effort.
+
+        A cloud word is only soft-deleted, so its link rows survive the delete
+        and the next sync would pull them back as uses of a tag whose words are
+        all gone. The tag row goes too when nothing links to it any more, which
+        is the same rule remove_tag_from_word applies.
+        """
+        if not self._use_cloud():
+            return
+        try:
+            self.supabase.remove_word_tags_for_words(word_ids)
+            for tag_id in orphan_tag_ids:
+                self.supabase.delete_tag(tag_id)
+        except Exception as exc:
+            logging.warning(f"Could not clean up tag links in the cloud: {exc}")
     
     # Texts operations
     def get_texts(self) -> List[Dict[str, Any]]:

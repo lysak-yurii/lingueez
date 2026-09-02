@@ -130,10 +130,12 @@ class CheckDuplicateEntryTests(unittest.TestCase):
         index = build_word_index(self.cur)
         self.assertEqual(
             check_duplicate_entry(self.cur, "Cat", "Katze", "English", "German", index=index),
-            ("exact_duplicate", 1))
+            ("exact_duplicate", 1),
+        )
         self.assertEqual(
             check_duplicate_entry(self.cur, "xyz", "abc", "English", "German", index=index),
-            (None, None))
+            (None, None),
+        )
 
 
 if __name__ == "__main__":

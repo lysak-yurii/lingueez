@@ -1482,6 +1482,12 @@ class SyncManager:
 
             local_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in local_word_tags}
             cloud_wt_set = {(wt.get('word_id'), wt.get('tag_id')) for wt in cloud_word_tags}
+
+            # A cloud word is only soft-deleted, so links written before that
+            # cleanup existed can outlive their word. Pulling those back down
+            # would recreate the tag locally with no word to show for it.
+            cursor.execute("SELECT ID FROM words")
+            local_word_ids = {row[0] for row in cursor.fetchall()}
             
             # Sync tags from cloud to local
             for cloud_tag in cloud_tags:
@@ -1515,6 +1521,10 @@ class SyncManager:
                 word_id = cloud_wt.get('word_id')
                 tag_id = cloud_wt.get('tag_id')
                 key = (word_id, tag_id)
+
+                if word_id not in local_word_ids:
+                    logging.debug(f"Skipping word_tag for unknown word {word_id}")
+                    continue
 
                 if key not in local_wt_set:
                     cursor.execute(
@@ -1550,13 +1560,25 @@ class SyncManager:
                     f"Cloud returned no word_tags but local has {len(local_word_tags)} — "
                     f"treating as a connection issue, skipping link removal")
 
+            # Whatever the two sides disagreed about, a tag with no links left
+            # is garbage on either of them.
+            links_removed, orphan_tags = dbcore.purge_orphan_tags(cursor)
+            if links_removed or orphan_tags:
+                logging.info(f"Tag sync removed {links_removed} dangling link(s) "
+                             f"and {len(orphan_tags)} unused tag(s)")
+
             conn.commit()
             
-            # Push local-only tags to cloud
+            # Push local-only tags to cloud. local_tags/local_word_tags were read
+            # before the purge above, so anything it dropped is excluded here
+            # instead of being pushed straight back up.
+            purged_tag_ids = set(orphan_tags)
             for local_tag in local_tags:
                 tag_name = local_tag.get('tag_name')
                 local_tag_id = local_tag.get('tag_id')
                 
+                if local_tag_id in purged_tag_ids:
+                    continue
                 if tag_name not in cloud_tag_by_name:
                     try:
                         result = self.supabase.insert_tag(tag_name, tag_id=local_tag_id)
@@ -1569,7 +1591,9 @@ class SyncManager:
             # per link, and mark them synced so a later remote removal can be
             # told apart from a fresh local addition.
             to_push = [(wt.get('word_id'), wt.get('tag_id')) for wt in local_word_tags
-                       if (wt.get('word_id'), wt.get('tag_id')) not in cloud_wt_set]
+                       if (wt.get('word_id'), wt.get('tag_id')) not in cloud_wt_set
+                       and wt.get('word_id') in local_word_ids
+                       and wt.get('tag_id') not in purged_tag_ids]
             if to_push:
                 try:
                     if self.supabase.add_tags_to_words_bulk(to_push):

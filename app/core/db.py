@@ -248,6 +248,13 @@ def initialize_database(db_path=None):
     # rather than risking the deletion of a link that never reached the cloud.
     _ensure_column(cursor, 'word_tags', 'synced', 'INTEGER NOT NULL DEFAULT 0')
 
+    # Sweep tags orphaned by earlier versions, which dropped a deleted word's
+    # links but left the tag itself behind.
+    links_removed, orphan_tags = purge_orphan_tags(cursor)
+    if links_removed or orphan_tags:
+        logging.info("Removed %d dangling tag link(s) and %d unused tag(s)",
+                     links_removed, len(orphan_tags))
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sync_deletions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -565,6 +572,22 @@ def _backup_before_migration(db_path):
         logging.exception("Could not back up %s before migration", db_path)
 
 
+def purge_orphan_tags(cursor):
+    """Drop tag links whose word is gone, then tags nothing links to.
+
+    Tags only ever come into existence attached to a word, so one with no links
+    left is garbage — it used to survive deleting its last word and keep showing
+    up in the tag picker. Returns ``(links_removed, removed_tag_ids)``.
+    """
+    cursor.execute("DELETE FROM word_tags WHERE word_id NOT IN (SELECT ID FROM words)")
+    links_removed = cursor.rowcount
+    cursor.execute("SELECT tag_id FROM tags WHERE tag_id NOT IN (SELECT tag_id FROM word_tags)")
+    tag_ids = [row[0] for row in cursor.fetchall()]
+    if tag_ids:
+        cursor.executemany("DELETE FROM tags WHERE tag_id = ?", [(t,) for t in tag_ids])
+    return links_removed, tag_ids
+
+
 def get_all_tags(db_path=None):
     db_path = db_path or get_active_db_path()
     conn = sqlite3.connect(db_path)
@@ -623,9 +646,13 @@ def get_tag_usage_counts(db_path=None):
     db_path = db_path or get_active_db_path()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+    # Joining words keeps a link left behind by a deleted word from counting as
+    # a use — the picker would otherwise offer a tag that matches nothing.
     cursor.execute('''
-        SELECT tags.tag_name, COUNT(word_tags.word_id)
-        FROM tags LEFT JOIN word_tags ON tags.tag_id = word_tags.tag_id
+        SELECT tags.tag_name, COUNT(words.ID)
+        FROM tags
+        LEFT JOIN word_tags ON tags.tag_id = word_tags.tag_id
+        LEFT JOIN words ON words.ID = word_tags.word_id
         GROUP BY tags.tag_id ORDER BY tags.tag_name COLLATE NOCASE
     ''')
     counts = dict(cursor.fetchall())
