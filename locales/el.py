@@ -1736,6 +1736,20 @@ TRANSLATIONS: dict[str, str] = {
         "Η μπάρα δείχνει από τι αποτελείται η δεσμίδα ανά κατάσταση. Κάθε απάντηση "
         "τροφοδοτεί το ίδιο πρόγραμμα επαναλήψεων με τις κάρτες: μια λέξη που "
         "θυμηθήκατε επιστρέφει αργότερα, μια λάθος νωρίτερα.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Ορισμός 1",
+    "Definitions and tags": "Ορισμοί και ετικέτες",
+    "Definitions and tags ({n})": "Ορισμοί και ετικέτες ({n})",
+    " · {n} gaining definitions or tags": " · {n} θα αποκτήσουν ορισμούς ή ετικέτες",
+    "Already in the database — kept as is.": "Υπάρχει ήδη στη βάση δεδομένων — παραμένει ως έχει.",
+    "New tags: {tags}": "Νέες ετικέτες: {tags}",
+    "\n\nEntry ID: {id}": "\n\nΑναγνωριστικό εγγραφής: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Προαιρετικές στήλες: Definition, Definition2 και Tags (χωρισμένες με κόμμα) — συγχωνεύονται στις λέξεις που ήδη έχετε, χωρίς να τις αντικαθιστούν."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -38,18 +38,73 @@ def normalize_language_pairs(df):
     df['Language2'] = df['Language2'].astype(str)
     df['Status'] = df['Status'].astype(str)
 
+    # Definitions belong to their word, so they travel with the swap.
+    paired = [('Word1', 'Word2')]
+    if {'Definition', 'Definition2'}.issubset(df.columns):
+        paired.append(('Definition', 'Definition2'))
+
     # Swap columns where Language1 > Language2
     for index, row in df.iterrows():
         if row['Language1'] > row['Language2']:
             df.at[index, 'Language1'], df.at[index, 'Language2'] = row['Language2'], row['Language1']
-            df.at[index, 'Word1'], df.at[index, 'Word2'] = row['Word2'], row['Word1']
+            for first, second in paired:
+                df.at[index, first], df.at[index, second] = row[second], row[first]
 
     return df
 
 
-def check_duplicate_entry(cursor, word1, word2, lang1, lang2):
+def fold(value):
+    """Comparison form of a word or language: trimmed and lowercased.
+
+    Python's ``str.lower`` folds every alphabet the app supports; SQLite's own
+    NOCASE collation and LOWER() only fold ASCII, which would leave Cyrillic,
+    Greek and accented Latin words matching case-sensitively.
+    """
+    return None if value is None else str(value).strip().lower()
+
+
+def build_word_index(cursor):
+    """Every stored word keyed by its folded pair, for duplicate matching.
+
+    ``{(folded Word1, folded Word2): [(ID, Language1, Language2), …]}``. Built
+    once per import; matching each row with four SQL queries instead costs a
+    full table scan per spreadsheet row.
+    """
+    index = {}
+    cursor.execute("SELECT ID, Word1, Word2, Language1, Language2 FROM words")
+    for row_id, word1, word2, language1, language2 in cursor.fetchall():
+        index.setdefault((fold(word1), fold(word2)), []).append(
+            (row_id, language1, language2))
+    return index
+
+
+def _languages_match(stored, incoming):
+    """True when both language slots agree; a missing language matches only NULL."""
+    return all(
+        (left is None and right is None) or
+        (left is not None and right is not None and fold(left) == fold(right))
+        for left, right in zip(stored, incoming, strict=True))
+
+
+def _match_id(rows, languages, same_languages):
+    """First row id whose languages match (or differ from) *languages*."""
+    for row_id, stored1, stored2 in rows:
+        if _languages_match((stored1, stored2), languages) == same_languages:
+            return row_id
+    return None
+
+
+def check_duplicate_entry(cursor, word1, word2, lang1, lang2, index=None):
     """
     Check if an entry exists in the database in various forms.
+
+    Words and languages are compared folded (trimmed, lowercased), so a
+    spreadsheet's "House" finds a stored "house" instead of adding a second
+    entry for it.
+
+    Pass *index* from :func:`build_word_index` to reuse one scan across a whole
+    import; without it the index is rebuilt on every call.
+
     Returns:
         - 'exact_duplicate' if an exact match is found.
         - 'needs_update' if an entry with the same Word1 and Word2 but different languages exists.
@@ -57,73 +112,19 @@ def check_duplicate_entry(cursor, word1, word2, lang1, lang2):
         - 'reversed_needs_update' if a reversed match with different languages is found.
         - None if no duplicate is found.
     """
-    # Check for exact duplicate
-    cursor.execute("""
-        SELECT ID FROM words 
-        WHERE 
-            (Word1 = ? OR (Word1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Word2 = ? OR (Word2 IS NULL AND ? IS NULL)) 
-            AND 
-            (Language1 = ? OR (Language1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Language2 = ? OR (Language2 IS NULL AND ? IS NULL))
-    """, (word1, word1, word2, word2, lang1, lang1, lang2, lang2))
-    exact_match = cursor.fetchone()
-    if exact_match:
-        return 'exact_duplicate', exact_match[0]
+    if index is None:
+        index = build_word_index(cursor)
 
-    # Check for same Word1 and Word2 but different languages
-    cursor.execute("""
-        SELECT ID FROM words 
-        WHERE 
-            (Word1 = ? OR (Word1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Word2 = ? OR (Word2 IS NULL AND ? IS NULL))
-            AND 
-            (
-                (Language1 != ? OR Language1 IS NULL OR ? IS NULL) 
-                OR 
-                (Language2 != ? OR Language2 IS NULL OR ? IS NULL)
-            )
-    """, (word1, word1, word2, word2, lang1, lang1, lang2, lang2))
-    same_word_diff_lang = cursor.fetchone()
-    if same_word_diff_lang:
-        return 'needs_update', same_word_diff_lang[0]
+    forward = index.get((fold(word1), fold(word2)), ())
+    backward = index.get((fold(word2), fold(word1)), ())
 
-    # Check for reversed duplicate
-    cursor.execute("""
-        SELECT ID FROM words 
-        WHERE 
-            (Word1 = ? OR (Word1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Word2 = ? OR (Word2 IS NULL AND ? IS NULL)) 
-            AND 
-            (Language1 = ? OR (Language1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Language2 = ? OR (Language2 IS NULL AND ? IS NULL))
-    """, (word2, word2, word1, word1, lang2, lang2, lang1, lang1))
-    reversed_exact_match = cursor.fetchone()
-    if reversed_exact_match:
-        return 'reversed_duplicate', reversed_exact_match[0]
-
-    # Check for reversed pair with different languages
-    cursor.execute("""
-        SELECT ID FROM words 
-        WHERE 
-            (Word1 = ? OR (Word1 IS NULL AND ? IS NULL)) 
-            AND 
-            (Word2 = ? OR (Word2 IS NULL AND ? IS NULL))
-            AND 
-            (
-                (Language1 != ? OR Language1 IS NULL OR ? IS NULL) 
-                OR 
-                (Language2 != ? OR Language2 IS NULL OR ? IS NULL)
-            )
-    """, (word2, word2, word1, word1, lang2, lang2, lang1, lang1))
-    reversed_diff_lang = cursor.fetchone()
-    if reversed_diff_lang:
-        return 'reversed_needs_update', reversed_diff_lang[0]
+    for rows, languages, matched, differing in (
+            (forward, (lang1, lang2), 'exact_duplicate', 'needs_update'),
+            (backward, (lang2, lang1), 'reversed_duplicate', 'reversed_needs_update')):
+        for kind, same in ((matched, True), (differing, False)):
+            row_id = _match_id(rows, languages, same)
+            if row_id is not None:
+                return kind, row_id
 
     return None, None
 

@@ -1776,6 +1776,20 @@ TRANSLATIONS: dict[str, str] = {
         "पट्टी दिखाती है कि सेट में किस स्थिति के कितने शब्द हैं। हर उत्तर वही "
         "अंतराल-पुनरावृत्ति कार्यक्रम भरता है जो फ़्लैशकार्ड का है: याद आया शब्द बाद "
         "में लौटता है, और चूका हुआ जल्दी।",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "परिभाषा 1",
+    "Definitions and tags": "परिभाषाएँ और टैग",
+    "Definitions and tags ({n})": "परिभाषाएँ और टैग ({n})",
+    " · {n} gaining definitions or tags": " · {n} को परिभाषाएँ या टैग मिलेंगे",
+    "Already in the database — kept as is.": "पहले से डेटाबेस में है — यथावत रहेगा।",
+    "New tags: {tags}": "नए टैग: {tags}",
+    "\n\nEntry ID: {id}": "\n\nप्रविष्टि आईडी: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "वैकल्पिक कॉलम: Definition, Definition2 और Tags (अल्पविराम से अलग) — आपके पास पहले से मौजूद शब्दों में जोड़े जाते हैं, उन्हें कभी अधिलेखित नहीं करते।"
+    ),
 }
 
 # Date names, read by app.i18n.

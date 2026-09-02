@@ -1802,6 +1802,20 @@ TRANSLATIONS: dict[str, str] = {
         "Bilah menunjukkan komposisi set menurut status. Setiap jawaban mengisi jadwal "
         "pengulangan berjarak yang sama dengan kartu: kata yang Anda ingat kembali "
         "lebih lama lagi, yang salah kembali lebih cepat.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definisi 1",
+    "Definitions and tags": "Definisi dan tag",
+    "Definitions and tags ({n})": "Definisi dan tag ({n})",
+    " · {n} gaining definitions or tags": " · {n} akan mendapat definisi atau tag",
+    "Already in the database — kept as is.": "Sudah ada di basis data — dibiarkan apa adanya.",
+    "New tags: {tags}": "Tag baru: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID entri: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Kolom opsional: Definition, Definition2, dan Tags (dipisahkan koma) — digabungkan ke kata yang sudah Anda miliki, tanpa menimpanya."
+    ),
 }
 
 # Date names read by app.i18n.

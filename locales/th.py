@@ -1512,6 +1512,20 @@ TRANSLATIONS: dict[str, str] = {
         "แถบสีแสดงส่วนประกอบของชุดคำตามสถานะ "
         "ทุกคำตอบจะเข้าสู่ตารางทบทวนแบบเว้นช่วงเดียวกับบัตรคำ คำที่จำได้จะกลับมาช้าลง "
         "ส่วนคำที่ตอบผิดจะกลับมาเร็วขึ้น",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "คำนิยาม 1",
+    "Definitions and tags": "คำนิยามและแท็ก",
+    "Definitions and tags ({n})": "คำนิยามและแท็ก ({n})",
+    " · {n} gaining definitions or tags": " · {n} รายการที่จะได้รับคำนิยามหรือแท็ก",
+    "Already in the database — kept as is.": "มีอยู่ในฐานข้อมูลแล้ว — คงไว้ตามเดิม",
+    "New tags: {tags}": "แท็กใหม่: {tags}",
+    "\n\nEntry ID: {id}": "\n\nรหัสรายการ: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "คอลัมน์เสริม: Definition, Definition2 และ Tags (คั่นด้วยจุลภาค) — จะถูกรวมเข้ากับคำที่คุณมีอยู่แล้ว โดยไม่เขียนทับ"
+    ),
 }
 
 MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",

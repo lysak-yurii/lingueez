@@ -1797,6 +1797,20 @@ TRANSLATIONS: dict[str, str] = {
         "Palkki näyttää pakan koostumuksen tiloittain. Jokainen vastaus syöttää samaa "
         "kertausaikataulua kuin kortit: muistamasi sana palaa myöhemmin, väärin mennyt "
         "aiemmin.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Määritelmä 1",
+    "Definitions and tags": "Määritelmät ja tunnisteet",
+    "Definitions and tags ({n})": "Määritelmät ja tunnisteet ({n})",
+    " · {n} gaining definitions or tags": " · {n} saa määritelmiä tai tunnisteita",
+    "Already in the database — kept as is.": "On jo tietokannassa — säilyy ennallaan.",
+    "New tags: {tags}": "Uudet tunnisteet: {tags}",
+    "\n\nEntry ID: {id}": "\n\nTietueen tunnus: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Valinnaiset sarakkeet: Definition, Definition2 ja Tags (pilkuin eroteltuna) — yhdistetään sanoihin, jotka sinulla jo on, korvaamatta niitä."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in genitive / partitive form for date displays.

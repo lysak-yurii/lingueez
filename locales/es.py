@@ -1797,6 +1797,20 @@ TRANSLATIONS: dict[str, str] = {
         "La barra muestra de qué se compone el mazo por estado. Cada respuesta "
         "alimenta el mismo calendario de repetición espaciada que las tarjetas: la "
         "palabra que recuerdas vuelve más tarde y la que fallas, antes.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definición 1",
+    "Definitions and tags": "Definiciones y etiquetas",
+    "Definitions and tags ({n})": "Definiciones y etiquetas ({n})",
+    " · {n} gaining definitions or tags": " · {n} recibirán definiciones o etiquetas",
+    "Already in the database — kept as is.": "Ya está en la base de datos: se mantiene igual.",
+    "New tags: {tags}": "Etiquetas nuevas: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID de entrada: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Columnas opcionales: Definition, Definition2 y Tags (separadas por comas): se añaden a las palabras que ya tienes, sin sobrescribirlas."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in lowercase as standard in Spanish dates.

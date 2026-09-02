@@ -1507,6 +1507,20 @@ TRANSLATIONS: dict[str, str] = {
         "Pruh ukazuje zloženie balíčka podľa stavov. Každá odpoveď napĺňa rovnaký plán "
         "opakovania ako kartičky: slovo, ktoré si vybavíte, sa vráti neskôr, chybné "
         "skôr.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definícia 1",
+    "Definitions and tags": "Definície a značky",
+    "Definitions and tags ({n})": "Definície a značky ({n})",
+    " · {n} gaining definitions or tags": " · {n} získa definície alebo značky",
+    "Already in the database — kept as is.": "Už je v databáze — zostane bez zmeny.",
+    "New tags: {tags}": "Nové značky: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID záznamu: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Voliteľné stĺpce: Definition, Definition2 a Tags (oddelené čiarkami) — pridajú sa k slovám, ktoré už máte, bez prepísania."
+    ),
 }
 
 MONTHS = ["januára", "februára", "marca", "apríla", "mája", "júna",

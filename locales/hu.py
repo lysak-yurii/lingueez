@@ -1799,6 +1799,20 @@ TRANSLATIONS: dict[str, str] = {
         "A sáv a pakli összetételét mutatja állapot szerint. Minden válasz ugyanabba "
         "az ismétlési ütemtervbe folyik be, mint a kártyáknál: a felidézett szó később "
         "tér vissza, az elrontott hamarabb.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "1. meghatározás",
+    "Definitions and tags": "Meghatározások és címkék",
+    "Definitions and tags ({n})": "Meghatározások és címkék ({n})",
+    " · {n} gaining definitions or tags": " · {n} kap meghatározást vagy címkét",
+    "Already in the database — kept as is.": "Már szerepel az adatbázisban — változatlan marad.",
+    "New tags: {tags}": "Új címkék: {tags}",
+    "\n\nEntry ID: {id}": "\n\nBejegyzés azonosítója: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Nem kötelező oszlopok: Definition, Definition2 és Tags (vesszővel elválasztva) — a már meglévő szavakhoz adódnak hozzá, felülírás nélkül."
+    ),
 }
 
 # Date names, read by app.i18n. Months in Hungarian usually use nominative or -i suffix.

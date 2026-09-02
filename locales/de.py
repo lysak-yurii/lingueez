@@ -1800,6 +1800,20 @@ TRANSLATIONS: dict[str, str] = {
         "Der Balken zeigt, woraus der Stapel nach Status besteht. Jede Antwort fließt "
         "in denselben Wiederholungsplan wie bei den Karteikarten: ein Wort, das Sie "
         "können, kommt später wieder — eines mit Fehler früher.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definition 1",
+    "Definitions and tags": "Definitionen und Tags",
+    "Definitions and tags ({n})": "Definitionen und Tags ({n})",
+    " · {n} gaining definitions or tags": " · {n} erhalten Definitionen oder Tags",
+    "Already in the database — kept as is.": "Bereits in der Datenbank — bleibt unverändert.",
+    "New tags: {tags}": "Neue Tags: {tags}",
+    "\n\nEntry ID: {id}": "\n\nEintrags-ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Optionale Spalten: Definition, Definition2 und Tags (durch Kommas getrennt) — werden zu bereits vorhandenen Wörtern hinzugefügt, ohne sie zu überschreiben."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in standard nominative/genitive German format.

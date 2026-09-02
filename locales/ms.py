@@ -1517,6 +1517,20 @@ TRANSLATIONS: dict[str, str] = {
         "Bar menunjukkan komposisi set mengikut status. Setiap jawapan mengisi jadual "
         "ulangan berselang yang sama seperti kad: perkataan yang anda ingat kembali "
         "lebih lewat, yang tersilap kembali lebih awal.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definisi 1",
+    "Definitions and tags": "Definisi dan tanda",
+    "Definitions and tags ({n})": "Definisi dan tanda ({n})",
+    " · {n} gaining definitions or tags": " · {n} akan mendapat definisi atau tanda",
+    "Already in the database — kept as is.": "Sudah ada dalam pangkalan data — dikekalkan seadanya.",
+    "New tags: {tags}": "Tanda baharu: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID entri: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Lajur pilihan: Definition, Definition2 dan Tags (dipisahkan koma) — digabungkan ke dalam perkataan yang sudah anda ada, tanpa menimpanya."
+    ),
 }
 
 MONTHS = ["Januari", "Februari", "Mac", "April", "Mei", "Jun",

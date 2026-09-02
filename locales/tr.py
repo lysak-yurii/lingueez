@@ -1523,6 +1523,20 @@ TRANSLATIONS: dict[str, str] = {
         "Çubuk, destenin durumlara göre bileşimini gösterir. Her yanıt kartlarla aynı "
         "aralıklı tekrar programını besler: hatırladığınız kelime daha geç, "
         "yanıldığınız daha erken geri gelir.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Tanım 1",
+    "Definitions and tags": "Tanımlar ve etiketler",
+    "Definitions and tags ({n})": "Tanımlar ve etiketler ({n})",
+    " · {n} gaining definitions or tags": " · tanım veya etiket kazanan {n} öğe",
+    "Already in the database — kept as is.": "Zaten veritabanında — olduğu gibi korunur.",
+    "New tags: {tags}": "Yeni etiketler: {tags}",
+    "\n\nEntry ID: {id}": "\n\nKayıt kimliği: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "İsteğe bağlı sütunlar: Definition, Definition2 ve Tags (virgülle ayrılmış) — hâlihazırda sahip olduğunuz kelimelere eklenir, asla üzerine yazmaz."
+    ),
 }
 
 # Date names, read by app.i18n.

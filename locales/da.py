@@ -1800,6 +1800,20 @@ TRANSLATIONS: dict[str, str] = {
         "Bjælken viser bundtets sammensætning efter status. Hvert svar føder den samme "
         "gentagelsesplan som kortene: et ord, du husker, vender tilbage senere, et "
         "forkert tidligere.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definition 1",
+    "Definitions and tags": "Definitioner og tags",
+    "Definitions and tags ({n})": "Definitioner og tags ({n})",
+    " · {n} gaining definitions or tags": " · {n} får definitioner eller tags",
+    "Already in the database — kept as is.": "Findes allerede i databasen — bevares uændret.",
+    "New tags: {tags}": "Nye tags: {tags}",
+    "\n\nEntry ID: {id}": "\n\nPost-id: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Valgfrie kolonner: Definition, Definition2 og Tags (kommasepareret) — flettes ind i ord, du allerede har, uden at overskrive dem."
+    ),
 }
 
 # Date names read by app.i18n.

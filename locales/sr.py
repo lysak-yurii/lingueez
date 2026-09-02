@@ -1515,6 +1515,20 @@ TRANSLATIONS: dict[str, str] = {
         "Трака показује састав шпила по статусима. Сваки одговор храни исти распоред "
         "понављања као картице: реч које се сетите враћа се касније, а промашена "
         "раније.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Дефиниција 1",
+    "Definitions and tags": "Дефиниције и ознаке",
+    "Definitions and tags ({n})": "Дефиниције и ознаке ({n})",
+    " · {n} gaining definitions or tags": " · {n} добија дефиниције или ознаке",
+    "Already in the database — kept as is.": "Већ постоји у бази података — остаје непромењено.",
+    "New tags: {tags}": "Нове ознаке: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID уноса: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Опционе колоне: Definition, Definition2 и Tags (раздвојене зарезима) — додају се речима које већ имате, без преписивања."
+    ),
 }
 
 # Date names, read by app.i18n. Months in Serbian (nominative/standard format).

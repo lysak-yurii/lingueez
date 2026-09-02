@@ -1802,6 +1802,20 @@ TRANSLATIONS: dict[str, str] = {
         "La barra mostra com'è composto il mazzo per stato. Ogni risposta alimenta lo "
         "stesso calendario di ripetizione dilazionata delle flashcard: una parola "
         "ricordata torna più tardi, una sbagliata torna prima.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definizione 1",
+    "Definitions and tags": "Definizioni e tag",
+    "Definitions and tags ({n})": "Definizioni e tag ({n})",
+    " · {n} gaining definitions or tags": " · {n} riceveranno definizioni o tag",
+    "Already in the database — kept as is.": "Già presente nel database — resta invariato.",
+    "New tags: {tags}": "Nuovi tag: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID voce: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Colonne facoltative: Definition, Definition2 e Tags (separati da virgole) — vengono uniti alle parole che hai già, senza mai sovrascriverle."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the format used for dates

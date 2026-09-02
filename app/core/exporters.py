@@ -56,12 +56,16 @@ EXPORT_COLUMN_LABELS = {
     "Language2": "Language 2 (translation)", "Word2": "Word 2 (translation)",
     "Source": "Source", "created_at": "Created at",
 }
-# Definition columns are fetched from the database on demand (all formats)
-EXTRA_COLUMNS = ["Definition", "Definition2"]
-EXTRA_LABELS = {"Definition": "Definition 1", "Definition2": "Definition 2"}
+# Definitions and tags are fetched from the database on demand (all formats).
+# NOTE: the labels here are display headers, not the importer's column names —
+# an export is not re-importable header-for-header.
+EXTRA_COLUMNS = ["Definition", "Definition2", "Tags"]
+EXTRA_LABELS = {"Definition": "Definition 1", "Definition2": "Definition 2",
+                "Tags": "Tags"}
 PDF_WIDTH_DEFAULTS = {"ID": 0.5, "RowNumber": 0.5, "Status": 0.8, "Language1": 1.0,
                       "Word1": 1.6, "Language2": 1.0, "Word2": 1.6, "Source": 1.0,
-                      "created_at": 1.2, "Definition": 2.5, "Definition2": 2.5}
+                      "created_at": 1.2, "Definition": 2.5, "Definition2": 2.5,
+                      "Tags": 1.2}
 BUILTIN_FONTS = ["Helvetica", "Times-Roman", "Courier"]
 # Bundled .ttf fonts live here (relative to the app's working dir, in both dev and
 # frozen builds). The reportlab built-ins above are Latin-only, so the default below
@@ -90,21 +94,32 @@ def register_fonts(font_folder=FONTS_DIR):
     return names
 
 
-def _fetch_definitions(rows, db_path):
-    """Definitions per word id: {ID: (Definition, Definition2)}."""
-    ids = []
-    for row in rows:
-        try:
-            ids.append(int(row.get("ID")))
-        except (TypeError, ValueError):
-            continue
+def _fetch_extras(rows, db_path):
+    """Definitions and tags per word id: {ID: {"Definition", "Definition2", "Tags"}}.
+
+    Ids are UUID strings, so they go into the query exactly as the rows carry them.
+    """
+    ids = [row.get("ID") for row in rows if row.get("ID") is not None]
     if not ids:
         return {}
+    extras = {}
     with sqlite3.connect(db_path) as connection:
         marks = ",".join("?" * len(ids))
         cursor = connection.execute(
-            f"SELECT id, Definition, Definition2 FROM words WHERE id IN ({marks})", ids)
-        return {r[0]: (r[1] or "", r[2] or "") for r in cursor.fetchall()}
+            f"SELECT ID, Definition, Definition2 FROM words WHERE ID IN ({marks})", ids)
+        for word_id, definition, definition2 in cursor.fetchall():
+            extras[word_id] = {"Definition": definition or "",
+                               "Definition2": definition2 or "", "Tags": ""}
+        cursor = connection.execute(
+            f"""SELECT word_tags.word_id, tags.tag_name FROM word_tags
+                JOIN tags ON tags.tag_id = word_tags.tag_id
+                WHERE word_tags.word_id IN ({marks})
+                ORDER BY tags.tag_name COLLATE NOCASE""", ids)
+        for word_id, tag_name in cursor.fetchall():
+            if word_id in extras:
+                current = extras[word_id]["Tags"]
+                extras[word_id]["Tags"] = f"{current}, {tag_name}" if current else tag_name
+    return extras
 
 
 def _rows_to_table(rows, exclude_columns, db_path=None):
@@ -114,10 +129,10 @@ def _rows_to_table(rows, exclude_columns, db_path=None):
     data = [[("" if row.get(c) is None else row.get(c)) for c in included] for row in rows]
     extras = [c for c in EXTRA_COLUMNS if c not in exclude] if db_path else []
     if extras:
-        definitions = _fetch_definitions(rows, db_path)
+        stored = _fetch_extras(rows, db_path)
+        blank = {c: "" for c in EXTRA_COLUMNS}
         for row, table_row in zip(rows, data, strict=False):
-            d1, d2 = definitions.get(row.get("ID"), ("", ""))
-            values = {"Definition": d1, "Definition2": d2}
+            values = stored.get(row.get("ID"), blank)
             table_row.extend(values[c] for c in extras)
         headers += [EXTRA_LABELS[c] for c in extras]
     return headers, data, included + extras

@@ -1557,6 +1557,20 @@ TRANSLATIONS: dict[str, str] = {
         "Traka pokazuje sastav špila po statusima. Svaki odgovor hrani isti raspored "
         "ponavljanja kao kartice: riječ koje se sjetite vraća se kasnije, a promašena "
         "ranije.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definicija 1",
+    "Definitions and tags": "Definicije i oznake",
+    "Definitions and tags ({n})": "Definicije i oznake ({n})",
+    " · {n} gaining definitions or tags": " · {n} dobiva definicije ili oznake",
+    "Already in the database — kept as is.": "Već je u bazi podataka — ostaje nepromijenjeno.",
+    "New tags: {tags}": "Nove oznake: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID unosa: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Neobavezni stupci: Definition, Definition2 i Tags (odvojeni zarezima) — dodaju se riječima koje već imate, bez prepisivanja."
+    ),
 }
 
 # Date names, read by app.i18n.

@@ -1799,6 +1799,20 @@ TRANSLATIONS: dict[str, str] = {
         "Pasek pokazuje skład talii według statusów. Każda odpowiedź zasila ten sam "
         "harmonogram powtórek co fiszki: słowo, które pamiętasz, wróci później, a "
         "pomylone — wcześniej.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definicja 1",
+    "Definitions and tags": "Definicje i tagi",
+    "Definitions and tags ({n})": "Definicje i tagi ({n})",
+    " · {n} gaining definitions or tags": " · {n} otrzyma definicje lub tagi",
+    "Already in the database — kept as is.": "Już jest w bazie danych — pozostaje bez zmian.",
+    "New tags: {tags}": "Nowe tagi: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID wpisu: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Kolumny opcjonalne: Definition, Definition2 i Tags (rozdzielone przecinkami) — są dołączane do słów, które już masz, bez nadpisywania ich."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

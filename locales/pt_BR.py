@@ -1507,6 +1507,20 @@ TRANSLATIONS: dict[str, str] = {
         "A barra mostra a composição do baralho por status. Cada resposta alimenta o "
         "mesmo cronograma de repetição espaçada dos cartões: uma palavra que você "
         "lembra volta mais tarde e uma que erra volta mais cedo.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definição 1",
+    "Definitions and tags": "Definições e tags",
+    "Definitions and tags ({n})": "Definições e tags ({n})",
+    " · {n} gaining definitions or tags": " · {n} vão receber definições ou tags",
+    "Already in the database — kept as is.": "Já está no banco de dados — mantido como está.",
+    "New tags: {tags}": "Novas tags: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID da entrada: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Colunas opcionais: Definition, Definition2 e Tags (separadas por vírgulas) — são mescladas às palavras que você já tem, sem sobrescrevê-las."
+    ),
 }
 
 # Date names, read by app.i18n.

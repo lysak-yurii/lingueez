@@ -1533,6 +1533,20 @@ TRANSLATIONS: dict[str, str] = {
         "Stapeln visar vad leken består av per status. Varje svar matar samma "
         "repetitionsschema som korten: ett ord du minns kommer tillbaka senare, ett du "
         "missar tidigare.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definition 1",
+    "Definitions and tags": "Definitioner och taggar",
+    "Definitions and tags ({n})": "Definitioner och taggar ({n})",
+    " · {n} gaining definitions or tags": " · {n} får definitioner eller taggar",
+    "Already in the database — kept as is.": "Finns redan i databasen — behålls som den är.",
+    "New tags: {tags}": "Nya taggar: {tags}",
+    "\n\nEntry ID: {id}": "\n\nPost-ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Valfria kolumner: Definition, Definition2 och Tags (kommaseparerade) — slås samman med ord du redan har, utan att skriva över dem."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

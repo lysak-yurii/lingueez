@@ -1800,6 +1800,20 @@ TRANSLATIONS: dict[str, str] = {
         "Лентата показва състава на тестето по статуси. Всеки отговор захранва същия "
         "график за разредено повторение като картите: дума, която сте си спомнили, се "
         "връща по-късно, а сгрешена — по-рано.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Дефиниция 1",
+    "Definitions and tags": "Дефиниции и етикети",
+    "Definitions and tags ({n})": "Дефиниции и етикети ({n})",
+    " · {n} gaining definitions or tags": " · {n} ще получат дефиниции или етикети",
+    "Already in the database — kept as is.": "Вече е в базата данни — остава без промяна.",
+    "New tags: {tags}": "Нови етикети: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID на записа: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Незадължителни колони: Definition, Definition2 и Tags (разделени със запетая) — добавят се към думите, които вече имате, без да ги презаписват."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

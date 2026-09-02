@@ -1615,6 +1615,20 @@ TRANSLATIONS: dict[str, str] = {
         "Bara arată din ce e alcătuit pachetul, pe stări. Fiecare răspuns alimentează "
         "același calendar de repetiție ca la cartonașe: un cuvânt reamintit revine mai "
         "târziu, iar unul greșit revine mai devreme.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definiția 1",
+    "Definitions and tags": "Definiții și etichete",
+    "Definitions and tags ({n})": "Definiții și etichete ({n})",
+    " · {n} gaining definitions or tags": " · {n} vor primi definiții sau etichete",
+    "Already in the database — kept as is.": "Există deja în baza de date — rămâne neschimbat.",
+    "New tags: {tags}": "Etichete noi: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID-ul intrării: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Coloane opționale: Definition, Definition2 și Tags (separate prin virgule) — sunt adăugate la cuvintele pe care le ai deja, fără a le suprascrie."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case (or standard Romanian names used for formatting).

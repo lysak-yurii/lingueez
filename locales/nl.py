@@ -1506,6 +1506,20 @@ TRANSLATIONS: dict[str, str] = {
         "De balk laat zien waaruit het stapeltje bestaat per status. Elk antwoord "
         "voedt hetzelfde herhalingsschema als de kaarten: een woord dat je weet komt "
         "later terug, een fout woord eerder.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definitie 1",
+    "Definitions and tags": "Definities en tags",
+    "Definitions and tags ({n})": "Definities en tags ({n})",
+    " · {n} gaining definitions or tags": " · {n} krijgen definities of tags",
+    "Already in the database — kept as is.": "Staat al in de database — blijft ongewijzigd.",
+    "New tags: {tags}": "Nieuwe tags: {tags}",
+    "\n\nEntry ID: {id}": "\n\nItem-ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Optionele kolommen: Definition, Definition2 en Tags (komma-gescheiden) — worden samengevoegd met woorden die je al hebt, zonder ze te overschrijven."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in lowercase for Dutch formatting.

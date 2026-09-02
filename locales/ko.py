@@ -1535,6 +1535,20 @@ TRANSLATIONS: dict[str, str] = {
     "later — and one you miss comes back sooner.":
         "막대는 출제 범위의 상태별 구성을 보여 줍니다. 모든 답은 카드와 같은 간격 반복 일정에 반영되므로, 떠올린 단어는 나중에 다시 나오고 "
         "틀린 단어는 더 빨리 돌아옵니다.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "정의 1",
+    "Definitions and tags": "정의 및 태그",
+    "Definitions and tags ({n})": "정의 및 태그 ({n})",
+    " · {n} gaining definitions or tags": " · 정의 또는 태그가 추가되는 항목 {n}개",
+    "Already in the database — kept as is.": "이미 데이터베이스에 있음 — 그대로 유지됩니다.",
+    "New tags: {tags}": "새 태그: {tags}",
+    "\n\nEntry ID: {id}": "\n\n항목 ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "선택 열: Definition, Definition2, Tags(쉼표로 구분) — 이미 있는 단어에 병합되며 덮어쓰지 않습니다."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

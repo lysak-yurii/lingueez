@@ -1800,6 +1800,20 @@ TRANSLATIONS: dict[str, str] = {
         "Pruh ukazuje složení balíčku podle stavů. Každá odpověď plní stejný plán "
         "opakování jako kartičky: slovo, které si vybavíte, se vrátí později, chybné "
         "dříve.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definice 1",
+    "Definitions and tags": "Definice a značky",
+    "Definitions and tags ({n})": "Definice a značky ({n})",
+    " · {n} gaining definitions or tags": " · {n} získá definice nebo značky",
+    "Already in the database — kept as is.": "Již v databázi — zůstane beze změny.",
+    "New tags: {tags}": "Nové značky: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID záznamu: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Volitelné sloupce: Definition, Definition2 a Tags (oddělené čárkami) — doplní se ke slovům, která už máte, aniž by je přepsaly."
+    ),
 }
 
 # Date names, read by app.i18n.

@@ -1540,6 +1540,20 @@ TRANSLATIONS: dict[str, str] = {
         "Полоса показывает состав набора по статусам. Каждый ответ питает тот же "
         "график интервального повторения, что и карточки: слово, которое вы вспомнили, "
         "вернётся позже, а с ошибкой — раньше.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Определение 1",
+    "Definitions and tags": "Определения и теги",
+    "Definitions and tags ({n})": "Определения и теги ({n})",
+    " · {n} gaining definitions or tags": " · получат определения или теги: {n}",
+    "Already in the database — kept as is.": "Уже есть в базе данных — останется без изменений.",
+    "New tags: {tags}": "Новые теги: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID записи: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Необязательные столбцы: Definition, Definition2 и Tags (через запятую) — добавляются к уже имеющимся словам, ничего не перезаписывая."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

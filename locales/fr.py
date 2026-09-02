@@ -1801,6 +1801,20 @@ TRANSLATIONS: dict[str, str] = {
         "La barre montre la composition du paquet par statut. Chaque réponse alimente "
         "le même calendrier de répétition espacée que les cartes : un mot retrouvé "
         "revient plus tard, un mot manqué revient plus tôt.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Définition 1",
+    "Definitions and tags": "Définitions et étiquettes",
+    "Definitions and tags ({n})": "Définitions et étiquettes ({n})",
+    " · {n} gaining definitions or tags": " · {n} recevront des définitions ou des étiquettes",
+    "Already in the database — kept as is.": "Déjà dans la base de données — conservé tel quel.",
+    "New tags: {tags}": "Nouvelles étiquettes : {tags}",
+    "\n\nEntry ID: {id}": "\n\nID de l'entrée : {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Colonnes facultatives : Definition, Definition2 et Tags (séparées par des virgules) — fusionnées avec les mots que vous avez déjà, sans jamais les écraser."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in lowercase standard French form.

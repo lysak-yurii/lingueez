@@ -1521,6 +1521,20 @@ TRANSLATIONS: dict[str, str] = {
     "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
     "later — and one you miss comes back sooner.":
         "色条按状态显示这组词的构成。每次作答都会计入与卡片相同的间隔重复计划：答对的词下次出现得更晚，答错的词更早回来。",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "释义 1",
+    "Definitions and tags": "释义与标签",
+    "Definitions and tags ({n})": "释义与标签 ({n})",
+    " · {n} gaining definitions or tags": " · {n} 个将获得释义或标签",
+    "Already in the database — kept as is.": "已在数据库中 — 保持不变。",
+    "New tags: {tags}": "新标签：{tags}",
+    "\n\nEntry ID: {id}": "\n\n条目 ID：{id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "可选列：Definition、Definition2 和 Tags（以逗号分隔）——会合并到你已有的单词中，不会覆盖原有内容。"
+    ),
 }
 
 # Date names, read by app.i18n. Months in Simplified Chinese numbers/names ("1月", "2月" etc.)

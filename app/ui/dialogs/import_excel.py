@@ -41,7 +41,7 @@ from app.config import load_settings
 from app.core.backup_management import backup_database
 from app.core.importer import (
     ACTION_ADD, ACTION_SKIP, ACTION_UPDATE, analyze_excel_import,
-    apply_additions, apply_updates,
+    apply_additions, apply_updates, brings_extras,
 )
 from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
@@ -52,12 +52,18 @@ logger = logging.getLogger(__name__)
 
 _PY_LEVELS = {'error': logging.ERROR, 'warning': logging.WARNING}
 
-COL_CHECK, COL_ROW, COL_WORD1, COL_LANG1, COL_WORD2, COL_LANG2, COL_ACTION, COL_DETAILS = range(8)
+(COL_CHECK, COL_ROW, COL_WORD1, COL_LANG1, COL_WORD2, COL_LANG2,
+ COL_ACTION, COL_DETAILS, COL_DEF1, COL_DEF2, COL_TAGS) = range(11)
+
+# Columns that only make sense when the file actually carries them; hidden
+# otherwise so a plain four-column import looks exactly as it always did.
+EXTRA_COLUMNS = (COL_DEF1, COL_DEF2, COL_TAGS)
 
 
 def _headers():
     return ["", tr("Row"), tr("Word 1"), tr("Language 1"),
-            tr("Word 2"), tr("Language 2"), tr("Action"), tr("Details")]
+            tr("Word 2"), tr("Language 2"), tr("Action"), tr("Details"),
+            tr("Definition 1"), tr("Definition 2"), tr("Tags")]
 
 
 def _action_labels():
@@ -67,6 +73,7 @@ def _action_labels():
 def _filters():
     return [("all", tr("All")), (ACTION_ADD, tr("To add")),
             (ACTION_UPDATE, tr("To update")), (ACTION_SKIP, tr("Skipped")),
+            ("extras", tr("Definitions and tags")),
             ("unknown_lang", tr("Unrecognized"))]
 
 
@@ -76,6 +83,8 @@ ACTION_LEVEL = {ACTION_ADD: 'new', ACTION_UPDATE: 'warning', ACTION_SKIP: None}
 def _cell_text(value):
     if value is None:
         return ""
+    if isinstance(value, (list, tuple)):
+        return ", ".join(str(v) for v in value)
     text = str(value)
     return "" if text.lower() == 'nan' else text
 
@@ -121,7 +130,11 @@ class ImportReviewDialog(FramelessDialog):
 
         hint = QLabel(tr("Expected columns: Language1, Language2, Word1, Word2 — named in a "
                          "header row, or headerless with the first four columns in that order. "
-                         "A ready-made template is available in the app menu → Save Import Template."))
+                         "A ready-made template is available in the app menu → Save Import Template.")
+                      + " "
+                      + tr("Optional columns: Definition, Definition2 and Tags "
+                           "(comma-separated) — merged into words you already have, "
+                           "never overwriting them."))
         hint.setStyleSheet(f"color: {self.colors['text_dim']};")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -147,7 +160,7 @@ class ImportReviewDialog(FramelessDialog):
         toolbar.addWidget(self.selection_label)
         layout.addLayout(toolbar)
 
-        self.table = QTableWidget(0, 8)
+        self.table = QTableWidget(0, 11)
         self.table.setHorizontalHeaderLabels(_headers())
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -163,7 +176,15 @@ class ImportReviewDialog(FramelessDialog):
             self.table.setColumnWidth(col, 190)
         for col in (COL_LANG1, COL_LANG2):
             self.table.setColumnWidth(col, 100)
+        for col in (COL_DEF1, COL_DEF2):
+            self.table.setColumnWidth(col, 170)
+        self.table.setColumnWidth(COL_TAGS, 130)
         self.table.setColumnWidth(COL_ACTION, 80)
+        # Details stretches while it is the last visible column; once the extras
+        # appear behind it, this keeps it wide enough to read.
+        self.table.setColumnWidth(COL_DETAILS, 320)
+        for col in EXTRA_COLUMNS:
+            self.table.setColumnHidden(col, True)
         self.table.itemChanged.connect(self._on_item_changed)
         header_view.sortIndicatorChanged.connect(lambda *_: self._apply_filter())
         # connect chips only now that the table they filter exists
@@ -294,6 +315,9 @@ class ImportReviewDialog(FramelessDialog):
         self.filter_buttons[ACTION_ADD].setText(tr("To add ({n})").format(n=counts['add']))
         self.filter_buttons[ACTION_UPDATE].setText(tr("To update ({n})").format(n=counts['update']))
         self.filter_buttons[ACTION_SKIP].setText(tr("Skipped ({n})").format(n=counts['skip']))
+        extras = counts.get('extras', 0)
+        self.filter_buttons["extras"].setText(
+            tr("Definitions and tags ({n})").format(n=extras))
         unknown = counts.get('unknown_lang', 0)
         self.filter_buttons["unknown_lang"].setText(
             tr("Unrecognized ({n})").format(n=unknown))
@@ -302,6 +326,8 @@ class ImportReviewDialog(FramelessDialog):
         summary = tr("{total} rows: {add} new · {update} updates · {skip} skipped").format(
             total=counts['total'], add=counts['add'],
             update=counts['update'], skip=counts['skip'])
+        if extras:
+            summary += tr(" · {n} gaining definitions or tags").format(n=extras)
         if unknown:
             summary += tr(" · {n} with unrecognized language").format(n=unknown)
         self.summary_label.setText(summary)
@@ -350,6 +376,8 @@ class ImportReviewDialog(FramelessDialog):
                                        "exactly as written."))
                 self.table.setItem(row_idx, col, item)
 
+            self._fill_extras(row_idx, payload, actionable, dim)
+
             action_item = QTableWidgetItem(_action_labels()[payload['action']])
             level = ACTION_LEVEL[payload['action']]
             action_item.setForeground(QColor(level_color(level)) if level else dim)
@@ -360,15 +388,55 @@ class ImportReviewDialog(FramelessDialog):
             self.table.setItem(row_idx, COL_ACTION, action_item)
 
             detail_item = QTableWidgetItem(payload['detail'])
-            detail_item.setToolTip(payload['detail'])
+            # The row id is out of the message itself — it is 36 characters of
+            # UUID that would crowd out the part the reviewer reads.
+            detail_item.setToolTip(payload['detail'] + (
+                tr("\n\nEntry ID: {id}").format(id=payload['ID']) if payload['ID'] else ""))
             if not actionable:
                 detail_item.setForeground(dim)
             self.table.setItem(row_idx, COL_DETAILS, detail_item)
+
+        for col, key in ((COL_DEF1, 'Definition'), (COL_DEF2, 'Definition2'),
+                         (COL_TAGS, 'Tags')):
+            self.table.setColumnHidden(
+                col, not any(_cell_text(payload.get(key)) for payload in rows))
 
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(COL_ROW, Qt.AscendingOrder)
         self._populating = False
         self._apply_filter()
+
+    def _fill_extras(self, row_idx, payload, actionable, dim):
+        """Definition and tag cells, marked by whether the import will write them.
+
+        An existing word keeps what it already has, so a value the merge will not
+        write is dimmed and says why — the row still shows what the file holds.
+        """
+        patch = payload.get('patch') or {}
+        is_update = payload['action'] == ACTION_UPDATE
+        new_tags = payload.get('new_tags') or []
+        kept = tr("Already in the database — kept as is.")
+
+        for col, key in ((COL_DEF1, 'Definition'), (COL_DEF2, 'Definition2')):
+            text = _cell_text(payload.get(key))
+            item = QTableWidgetItem(text)
+            if text:
+                item.setToolTip(text)
+            if not actionable or (is_update and text and key not in patch):
+                item.setForeground(dim)
+                if actionable and text:
+                    item.setToolTip(f"{text}\n\n{kept}")
+            self.table.setItem(row_idx, col, item)
+
+        tags = payload.get('Tags') or []
+        tag_item = QTableWidgetItem(_cell_text(tags))
+        if tags:
+            tag_item.setToolTip(
+                tr("New tags: {tags}").format(tags=", ".join(new_tags)) if is_update and new_tags
+                else kept if is_update else _cell_text(tags))
+        if not actionable or (is_update and tags and not new_tags):
+            tag_item.setForeground(dim)
+        self.table.setItem(row_idx, COL_TAGS, tag_item)
 
     # ---------------------------------------------------- selection/filter
 
@@ -386,6 +454,8 @@ class ImportReviewDialog(FramelessDialog):
                 hidden = False
             elif wanted == "unknown_lang":
                 hidden = payload.get('lang_ok', True)
+            elif wanted == "extras":
+                hidden = not brings_extras(payload)
             else:
                 hidden = payload['action'] != wanted
             self.table.setRowHidden(row_idx, hidden)

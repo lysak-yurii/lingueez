@@ -1774,6 +1774,20 @@ TRANSLATIONS: dict[str, str] = {
     "spaced-repetition schedule as Flashcards, so a word you recall here comes back "
     "later — and one you miss comes back sooner.":
         "バーは出題範囲の状態別の内訳です。どの回答もカードと同じ間隔反復の予定に反映されるので、思い出せた単語は次に出るまで長くなり、間違えた単語は早く戻ってきます。",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "定義 1",
+    "Definitions and tags": "定義とタグ",
+    "Definitions and tags ({n})": "定義とタグ ({n})",
+    " · {n} gaining definitions or tags": " · 定義またはタグが追加されるもの {n} 件",
+    "Already in the database — kept as is.": "すでにデータベースにあります — そのまま維持されます。",
+    "New tags: {tags}": "新しいタグ: {tags}",
+    "\n\nEntry ID: {id}": "\n\nエントリ ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "任意の列: Definition、Definition2、Tags（カンマ区切り）— すでにある単語に統合され、上書きはされません。"
+    ),
 }
 
 # Date names, read by app.i18n. Months use standard Japanese calendar names.

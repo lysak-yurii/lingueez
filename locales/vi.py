@@ -1534,6 +1534,20 @@ TRANSLATIONS: dict[str, str] = {
         "Thanh màu cho thấy bộ từ gồm những trạng thái nào. Mỗi câu trả lời đều đi vào "
         "cùng lịch lặp lại ngắt quãng như thẻ ghi nhớ: từ bạn nhớ được sẽ quay lại "
         "muộn hơn, từ trả lời sai sẽ quay lại sớm hơn.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Định nghĩa 1",
+    "Definitions and tags": "Định nghĩa và thẻ",
+    "Definitions and tags ({n})": "Định nghĩa và thẻ ({n})",
+    " · {n} gaining definitions or tags": " · {n} sẽ nhận định nghĩa hoặc thẻ",
+    "Already in the database — kept as is.": "Đã có trong cơ sở dữ liệu — giữ nguyên.",
+    "New tags: {tags}": "Thẻ mới: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID mục: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Cột tùy chọn: Definition, Definition2 và Tags (phân tách bằng dấu phẩy) — được gộp vào các từ bạn đã có, không bao giờ ghi đè."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

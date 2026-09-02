@@ -1541,6 +1541,20 @@ TRANSLATIONS: dict[str, str] = {
         "Stolpen viser hva bunken består av etter status. Hvert svar mater den samme "
         "repetisjonsplanen som kortene: et ord du husker kommer tilbake senere, et du "
         "bommer på tidligere.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definisjon 1",
+    "Definitions and tags": "Definisjoner og etiketter",
+    "Definitions and tags ({n})": "Definisjoner og etiketter ({n})",
+    " · {n} gaining definitions or tags": " · {n} får definisjoner eller etiketter",
+    "Already in the database — kept as is.": "Finnes allerede i databasen — beholdes som den er.",
+    "New tags: {tags}": "Nye etiketter: {tags}",
+    "\n\nEntry ID: {id}": "\n\nOppførings-ID: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Valgfrie kolonner: Definition, Definition2 og Tags (kommaseparert) — slås sammen med ord du allerede har, uten å overskrive dem."
+    ),
 }
 
 # Date names, read by app.i18n.

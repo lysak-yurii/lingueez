@@ -918,6 +918,8 @@ class DatabaseAdapter:
         word2 = word_data.get('Word2', word_data.get('word2'))
         status = word_data.get('Status', word_data.get('status'))
         source = word_data.get('Source', word_data.get('source', ''))
+        definition = word_data.get('Definition', word_data.get('definition'))
+        definition2 = word_data.get('Definition2', word_data.get('definition2'))
 
         # Explicitly set created_at to ensure consistent ordering
         from datetime import datetime
@@ -930,9 +932,11 @@ class DatabaseAdapter:
         try:
             with self._write() as conn:
                 conn.execute('''
-                    INSERT INTO words (ID, Language1, Word1, Language2, Word2, Status, Source, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (word_id, language1, word1, language2, word2, status, source, created_at))
+                    INSERT INTO words (ID, Language1, Word1, Language2, Word2, Status, Source,
+                                       Definition, Definition2, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (word_id, language1, word1, language2, word2, status, source,
+                      definition, definition2, created_at))
         except sqlite3.IntegrityError as exc:
             raise self._as_duplicate_word_error(exc, word1, word2)
 

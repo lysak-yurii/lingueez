@@ -1800,6 +1800,20 @@ TRANSLATIONS: dict[str, str] = {
         "A barra mostra a composição do baralho por estado. Cada resposta alimenta o "
         "mesmo calendário de repetição espaçada dos cartões: uma palavra que recorda "
         "volta mais tarde e uma que falha volta mais cedo.",
+
+    # ── import_excel.py (definitions & tags) ──────────────────────────────
+    "Definition 1": "Definição 1",
+    "Definitions and tags": "Definições e etiquetas",
+    "Definitions and tags ({n})": "Definições e etiquetas ({n})",
+    " · {n} gaining definitions or tags": " · {n} vão receber definições ou etiquetas",
+    "Already in the database — kept as is.": "Já está na base de dados — mantém-se como está.",
+    "New tags: {tags}": "Novas etiquetas: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID da entrada: {id}",
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Colunas opcionais: Definition, Definition2 e Tags (separadas por vírgulas) — são combinadas com as palavras que já tem, sem as substituir."
+    ),
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -549,6 +549,7 @@ TRANSLATIONS: dict[str, str] = {
     "Language 1": "Мова 1",
     "Word 2": "Слово 2",
     "Language 2": "Мова 2",
+    "Definition 1": "Визначення 1",
     "Action": "Дія",
     "Details": "Деталі",
     "Add": "Додати",
@@ -559,6 +560,11 @@ TRANSLATIONS: dict[str, str] = {
     "To update": "До оновлення",
     "Skipped": "Пропущені",
     "Unrecognized": "Нерозпізнані",
+    "Definitions and tags": "Визначення й теги",
+    "Already in the database — kept as is.":
+        "Уже є в базі даних — залишиться без змін.",
+    "New tags: {tags}": "Нові теги: {tags}",
+    "\n\nEntry ID: {id}": "\n\nID запису: {id}",
     "Only recognized languages": "Лише розпізнані мови",
     "Exclude rows whose language wasn't recognized.":
         "Виключити рядки з нерозпізнаною мовою.",
@@ -1048,11 +1054,20 @@ TRANSLATIONS: dict[str, str] = {
         "або без заголовка з чотирма першими стовпцями у такому порядку. "
         "Готовий шаблон є в меню програми → Зберегти шаблон імпорту."
     ),
+    "Optional columns: Definition, Definition2 and Tags "
+    "(comma-separated) — merged into words you already have, "
+    "never overwriting them.": (
+        "Додаткові стовпці: Definition, Definition2 і Tags "
+        "(через кому) — додаються до слів, які вже є, "
+        "нічого не перезаписуючи."
+    ),
     "All ({n})": "Усі ({n})",
     "To add ({n})": "До додавання ({n})",
     "To update ({n})": "До оновлення ({n})",
     "Skipped ({n})": "Пропущені ({n})",
     "Unrecognized ({n})": "Нерозпізнані ({n})",
+    "Definitions and tags ({n})": "Визначення й теги ({n})",
+    " · {n} gaining definitions or tags": " · {n} отримають визначення або теги",
     " · {n} with unrecognized language": " · {n} з нерозпізнаною мовою",
     "{total} rows: {add} new · {update} updates · {skip} skipped": (
         "{total} рядків: {add} нових · {update} оновлень · {skip} пропущено"

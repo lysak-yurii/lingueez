@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd  # noqa: E402
 
 from app.core.data_management import (  # noqa: E402
+    build_word_index,
     check_duplicate_entry,
     normalize_language_pairs,
 )
@@ -62,6 +63,7 @@ class CheckDuplicateEntryTests(unittest.TestCase):
             [
                 (1, "cat", "Katze", "English", "German"),
                 (2, "Hund", "dog", "German", "English"),
+                (3, "слово", "word", "Ukrainian", "English"),
             ],
         )
         self.cur = self.conn.cursor()
@@ -91,6 +93,47 @@ class CheckDuplicateEntryTests(unittest.TestCase):
         kind, rid = check_duplicate_entry(self.cur, "xyz", "abc", "English", "German")
         self.assertIsNone(kind)
         self.assertIsNone(rid)
+
+    def test_capitalized_words_find_the_stored_lowercase_entry(self):
+        kind, rid = check_duplicate_entry(self.cur, "Cat", "KATZE", "English", "German")
+        self.assertEqual(kind, "exact_duplicate")
+        self.assertEqual(rid, 1)
+
+    def test_case_folding_covers_non_ascii_alphabets(self):
+        # SQLite's own NOCASE collation folds ASCII only, so this is the case
+        # that a COLLATE NOCASE fix would silently miss.
+        kind, rid = check_duplicate_entry(self.cur, "Слово", "Word", "Ukrainian", "English")
+        self.assertEqual(kind, "exact_duplicate")
+        self.assertEqual(rid, 3)
+
+    def test_surrounding_whitespace_is_ignored(self):
+        kind, rid = check_duplicate_entry(self.cur, " cat ", "Katze", "English", "German")
+        self.assertEqual(kind, "exact_duplicate")
+        self.assertEqual(rid, 1)
+
+    def test_language_case_does_not_split_an_entry(self):
+        kind, rid = check_duplicate_entry(self.cur, "cat", "Katze", "english", "GERMAN")
+        self.assertEqual(kind, "exact_duplicate")
+        self.assertEqual(rid, 1)
+
+    def test_capitalized_words_still_report_a_language_conflict(self):
+        kind, rid = check_duplicate_entry(self.cur, "Cat", "Katze", "English", "French")
+        self.assertEqual(kind, "needs_update")
+        self.assertEqual(rid, 1)
+
+    def test_capitalized_reversed_pair_matches(self):
+        kind, rid = check_duplicate_entry(self.cur, "Dog", "HUND", "English", "German")
+        self.assertEqual(kind, "reversed_duplicate")
+        self.assertEqual(rid, 2)
+
+    def test_a_prebuilt_index_gives_the_same_answers(self):
+        index = build_word_index(self.cur)
+        self.assertEqual(
+            check_duplicate_entry(self.cur, "Cat", "Katze", "English", "German", index=index),
+            ("exact_duplicate", 1))
+        self.assertEqual(
+            check_duplicate_entry(self.cur, "xyz", "abc", "English", "German", index=index),
+            (None, None))
 
 
 if __name__ == "__main__":
