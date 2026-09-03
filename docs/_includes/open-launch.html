@@ -1,0 +1,19 @@
+{%- comment -%}
+  Open-Launch's badge, their artwork and their image URLs.
+
+  Their snippet sizes the image with an inline style, which would outrank the
+  shared height in .foot-badges and leave this one badge a size larger than the
+  rest of the row. Both files declare 195x44 intrinsically, so those go on the
+  width/height attributes instead and the CSS keeps the row on one baseline.
+
+  The names match the ground, not the artwork: -light is a white plate with
+  blue type, separated from the page only by its drop shadow, and -dark is a
+  zinc-800 plate with near-white type.
+{%- endcomment -%}
+<a class="ol-badge" href="https://open-launch.com/projects/lingueez-vocabulary-builder"
+   target="_blank" rel="noopener">
+  <img class="only-light" src="https://open-launch.com/images/badges/top2-light.svg"
+       alt="Open-Launch Top 2 Daily Winner" width="195" height="44" loading="lazy">
+  <img class="only-dark" src="https://open-launch.com/images/badges/top2-dark.svg"
+       alt="Open-Launch Top 2 Daily Winner" width="195" height="44" loading="lazy">
+</a>
