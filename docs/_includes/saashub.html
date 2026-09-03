@@ -1,0 +1,22 @@
+{%- comment -%}
+  SaaSHub's badge, their artwork and their image URLs.
+
+  Their snippet caps the image with an inline max-width, which would outrank the
+  shared height in .foot-badges; both files are 300x100, so those numbers go on
+  the width/height attributes and the CSS keeps the row on one baseline.
+
+  -color is the light-ground badge: a white plate inside a navy keyline. -dark
+  is a #494949 plate, lighter than the other dark badges and than the footer's
+  own #101418, so it sits a shade proud of the row in dark theme — it is the
+  only dark artwork they publish (-light, -white and -black all 404).
+
+  One anchor serves both images, so its badge_variant can only name one of
+  them; it is a tracking parameter, not the thing that picks the artwork.
+{%- endcomment -%}
+<a class="saashub-badge" href="https://www.saashub.com/lingueez-app?utm_source=badge&amp;utm_campaign=badge&amp;utm_content=lingueez-app&amp;badge_variant=color&amp;badge_kind=approved"
+   target="_blank" rel="noopener">
+  <img class="only-light" src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"
+       alt="Approved on SaaSHub" width="300" height="100" loading="lazy">
+  <img class="only-dark" src="https://cdn-b.saashub.com/img/badges/approved-dark.png?v=1"
+       alt="Approved on SaaSHub" width="300" height="100" loading="lazy">
+</a>
