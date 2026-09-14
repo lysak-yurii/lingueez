@@ -59,6 +59,11 @@ class ParseTagsTests(unittest.TestCase):
     def test_splits_trims_and_drops_blanks(self):
         self.assertEqual(parse_tags(" noun , food ,, "), ["noun", "food"])
 
+    def test_semicolons_separate_too(self):
+        self.assertEqual(
+            parse_tags("grammar; liturgy, archaic;"), ["grammar", "liturgy", "archaic"]
+        )
+
     def test_deduplicates_case_insensitively_keeping_first_spelling(self):
         self.assertEqual(parse_tags("Noun, noun, NOUN"), ["Noun"])
 

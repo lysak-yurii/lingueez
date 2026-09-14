@@ -33,6 +33,7 @@ already carries — an import never overwrites or removes what is already there.
 """
 import logging
 import os
+import re
 import sqlite3
 
 import numpy as np
@@ -51,7 +52,7 @@ OPTIONAL_HEADERS = ["Status", "ID", "Definition", "Definition2", "Tags"]
 # Columns worth putting in the template: the required four plus the extras a
 # user actually fills in by hand (Status and ID are machine columns).
 TEMPLATE_HEADERS = REQUIRED_HEADERS + ["Definition", "Definition2", "Tags"]
-TAG_SEPARATOR = ","
+TAG_SEPARATORS = re.compile(r"[,;]")
 
 ACTION_ADD = 'add'
 ACTION_UPDATE = 'update'
@@ -145,7 +146,7 @@ def _text(value):
 def parse_tags(value):
     """Tag names from one separated cell, de-duplicated case-insensitively."""
     names, seen = [], set()
-    for part in _text(value).split(TAG_SEPARATOR):
+    for part in TAG_SEPARATORS.split(_text(value)):
         name = part.strip()
         if name and name.lower() not in seen:
             seen.add(name.lower())
