@@ -34,7 +34,8 @@ from PySide6.QtCore import (
     QAbstractAnimation, QEasingCurve, QEvent, QParallelAnimationGroup, QPoint, QPointF,
     QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal,
 )
-from PySide6.QtGui import QAction, QColor, QFont, QFontMetrics, QPainter, QTextCursor
+from PySide6.QtGui import (QAction, QColor, QFont, QFontMetrics, QPainter, QTextCursor,
+                           QTextOption)
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QComboBox, QFileDialog, QFrame,
     QGraphicsOpacityEffect, QHBoxLayout, QLabel, QLineEdit, QListWidget,
@@ -44,6 +45,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import get_float, get_int, load_settings, save_settings
+from app.core import hyphenation
 from app.core.audio import is_language_supported, speak_word
 from app.core.languages import TRANSLATION_CODES
 from app.i18n import fill_lang_combo, get_lang, lang_label, lang_value, set_lang, tr
@@ -149,10 +151,35 @@ def _norm_paper_mode(value):
 
 
 class ReaderTextEdit(QTextEdit):
-    """Reading pane that zooms its font on Ctrl+scroll / Ctrl +/- / Ctrl+0."""
+    """Reading pane that zooms its font on Ctrl+scroll / Ctrl +/- / Ctrl+0.
+
+    Justified, like a book page; TextsPage soft-hyphenates the text so the word
+    gaps stay even. Qt leaves a paragraph's last line and lines ending in a line
+    break unjustified on its own."""
 
     # Set by TextsPage; called with a step delta or the string "reset".
     on_zoom = None
+
+    # Breathing room around the text (Qt's default is 4px). Set on the document
+    # rather than as widget padding, so the scrollbar stays at the pane's edge.
+    TEXT_MARGIN = 16
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.document().setDocumentMargin(self.TEXT_MARGIN)
+        option = QTextOption(self.document().defaultTextOption())
+        option.setAlignment(Qt.AlignJustify)
+        self.document().setDefaultTextOption(option)
+
+    def createMimeDataFromSelection(self):
+        # the soft hyphens are for layout only; copied text shouldn't carry them
+        mime = super().createMimeDataFromSelection()
+        if hyphenation.SOFT_HYPHEN in mime.text():
+            html = mime.html()
+            mime.setText(hyphenation.strip(mime.text()))
+            if html:
+                mime.setHtml(hyphenation.strip(html).replace("&shy;", ""))
+        return mime
 
     def wheelEvent(self, event):
         if event.modifiers() & Qt.ControlModifier and self.on_zoom:
@@ -405,6 +432,7 @@ class TextsPage(QWidget):
         self.language_combo.setEditable(True)
         fill_lang_combo(self.language_combo, sorted(TRANSLATION_CODES))
         self.language_combo.editTextChanged.connect(self._mark_dirty)
+        self.language_combo.editTextChanged.connect(self._on_language_edited)
         self.language_combo.editTextChanged.connect(self.language_combo.updateGeometry)
         meta.addWidget(self.language_combo)
         self.level_combo = QComboBox()
@@ -867,6 +895,7 @@ class TextsPage(QWidget):
             tr("From words: {words}").format(words=words) if words else "")
         self.words_line.setVisible(bool(words))
         self.body.setHtml(markup_to_html(str(text.get('Text') or "")))
+        self._apply_hyphenation()
         self._src_spans = None  # body changed — sync spans are stale
         self._loading = False
         self._set_dirty(False)
@@ -896,7 +925,10 @@ class TextsPage(QWidget):
         self.edit_btn.setToolTip(tr("Done editing") if editing else tr("Edit text"))
         self.edit_btn.setIcon(icons.icon(
             "edit", self._colors["accent_text" if editing else "text"], 18))
+        was_editing = not self.body.isReadOnly()
         self.body.setReadOnly(not editing)
+        if editing != was_editing:
+            self._apply_hyphenation()  # off while editing, back on after
         self.body.viewport().setCursor(
             Qt.IBeamCursor if editing else Qt.ArrowCursor)
         self._set_hover(None)
@@ -904,6 +936,42 @@ class TextsPage(QWidget):
         self._pending_click = None
         if editing:
             self.body.setFocus()
+
+    def _on_language_edited(self, *_):
+        # the break points depend on the language; not mid-reading, where the
+        # reader's char offsets index the text as it is now
+        if not self._loading and self.body.isReadOnly() and not self.is_reading:
+            self._apply_hyphenation()
+
+    def _apply_hyphenation(self):
+        """Soft-hyphenate the reading pane for its language, or clear the soft
+        hyphens while it is being edited.
+
+        Edited in place rather than re-rendered, so the text keeps its
+        formatting. The undo stack is cleared so an edit can't undo back into
+        (or out of) the hyphens."""
+        text = self.body.toPlainText()
+        old = [i for i, ch in enumerate(text) if ch == hyphenation.SOFT_HYPHEN]
+        new = []
+        if self.body.isReadOnly():
+            code = TRANSLATION_CODES.get(get_lang(self.language_combo))
+            new = hyphenation.break_points(hyphenation.strip(text), code)
+        if not old and not new:
+            return
+        loading, self._loading = self._loading, True
+        cursor = QTextCursor(self.body.document())
+        cursor.beginEditBlock()
+        for pos in reversed(old):
+            cursor.setPosition(pos)
+            cursor.setPosition(pos + 1, QTextCursor.KeepAnchor)
+            cursor.removeSelectedText()
+        for pos in reversed(new):  # offsets into the stripped text
+            cursor.setPosition(pos)
+            cursor.insertText(hyphenation.SOFT_HYPHEN)
+        cursor.endEditBlock()
+        self.body.document().clearUndoRedoStacks()
+        self._src_spans = None
+        self._loading = loading
 
     def _mark_dirty(self, *_):
         if not self._loading and self.current is not None:
@@ -919,7 +987,7 @@ class TextsPage(QWidget):
             'Language': get_lang(self.language_combo).strip(),
             'Level': self.level_combo.currentText().strip(),
             'Category': self.topic_edit.text().strip(),
-            'Text': self.body.toPlainText().strip(),
+            'Text': hyphenation.strip(self.body.toPlainText()).strip(),
         }
 
     def _write_text(self, text, data):
@@ -1004,7 +1072,8 @@ class TextsPage(QWidget):
             return
         self._set_edit_mode(False)
         self.tts_started.emit()  # the main window stops its word player
-        # toPlainText() unstripped: reader offsets must match the document
+        # toPlainText() unstripped, soft hyphens and all: reader offsets must
+        # match the document (the reader drops the hyphens before speaking)
         self._reading_plain = self.body.toPlainText()
         if not self.reader.start(self._reading_plain, language,
                                  start_char=start_char):
@@ -1291,6 +1360,8 @@ class TextsPage(QWidget):
     def _set_translation_text(self, text, dim=False, danger=False):
         self._trans_color = "danger" if danger else ("dim" if dim else None)
         self._apply_trans_style()
+        if not (dim or danger):  # a translation, not a status message
+            text = hyphenation.hyphenate(text, TRANSLATION_CODES[self._translate_target()])
         self.trans_body.setPlainText(text)
         self._dst_spans = None  # translation changed — sync spans are stale
 
@@ -1299,7 +1370,7 @@ class TextsPage(QWidget):
             return
         self._trans_request += 1
         request = self._trans_request
-        text = self.body.toPlainText().strip()
+        text = hyphenation.strip(self.body.toPlainText()).strip()
         if not text:
             self._set_translation_text("")
             return
@@ -1517,7 +1588,7 @@ class TextsPage(QWidget):
         if not word_range:
             return False
         start, end = word_range
-        word = self.body.toPlainText()[start:end]
+        word = hyphenation.strip(self.body.toPlainText()[start:end])
         self._pronounce(word, get_lang(self.language_combo))
         self._show_word_popup(word, start, end)
         return True
@@ -1543,7 +1614,8 @@ class TextsPage(QWidget):
     def _show_word_popup(self, word, start, end):
         """Anchor the translation popover above the clicked word."""
         text = self.body.toPlainText()
-        sentence = next((text[a:b].strip() for a, b in _sentence_spans(text)
+        sentence = next((hyphenation.strip(text[a:b]).strip()
+                         for a, b in _sentence_spans(text)
                          if a <= start < b), "")
         cursor = QTextCursor(self.body.document())
         cursor.setPosition(start)
@@ -1578,7 +1650,7 @@ class TextsPage(QWidget):
         menu = self.body.createStandardContextMenu(pos)
         cursor = self.body.cursorForPosition(pos)
         cursor.select(QTextCursor.WordUnderCursor)
-        word = cursor.selectedText().strip()
+        word = hyphenation.strip(cursor.selectedText()).strip()
         language = get_lang(self.language_combo)
         if word and any(ch.isalpha() for ch in word):
             display = word if len(word) <= 24 else word[:21] + "…"

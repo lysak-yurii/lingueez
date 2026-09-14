@@ -40,7 +40,7 @@ from PySide6.QtCore import QObject, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QWidget
 
-from app.core import audio
+from app.core import audio, hyphenation
 from app.i18n import lang_label, tr
 from app.ui import icons
 from app.ui.widgets import ElidedLabel
@@ -49,8 +49,9 @@ from app.ui.widgets import ElidedLabel
 # whitespace, or at any newline run. Offsets are kept so chunk ranges
 # always map back into the original plain text.
 _SENTENCE_END = re.compile(r"[.!?…]+[)\"'»”’]*\s+|\n+")
-# A word, allowing inner apostrophes/hyphens (don't, well-known, l'eau)
-_WORD = re.compile(r"[^\W\d_][\w]*(?:[’'\-][\w]+)*", re.UNICODE)
+# A word, allowing inner apostrophes/hyphens (don't, well-known, l'eau) and the
+# soft hyphens the Texts page inserts for line breaking
+_WORD = re.compile(r"[^\W\d_][\w\u00ad]*(?:[’'\-][\w\u00ad]+)*", re.UNICODE)
 
 MAX_CHUNK_CHARS = 250
 
@@ -268,7 +269,7 @@ class ReaderPlayer(QObject):
         if cancel.is_set():
             return
         try:
-            path = audio.synthesize_speech(text, lang_code,
+            path = audio.synthesize_speech(hyphenation.strip(text), lang_code,
                                            cancellation_event=cancel)
         except Exception as exc:
             logging.warning(f"Reader: synthesis failed for chunk {index}: {exc}")

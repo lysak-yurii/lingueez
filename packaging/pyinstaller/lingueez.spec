@@ -78,6 +78,9 @@ datas += collect_data_files("PySide6", includes=[
     f"Qt/translations/qtbase_{qt_translation_code(code)}.qm"
     for code in sorted(locale_codes)
 ])
+# pyphen finds its hyphenation dictionaries (*.dic) next to its package on disk;
+# without them the reader silently stops hyphenating.
+datas += collect_data_files("pyphen")
 # License/attribution must travel with the binary (AGPL §7 + ffmpeg).
 datas += [(repo_path(n), ".")
           for n in ("NOTICE", "THIRD-PARTY-LICENSES.md", "LICENSE.txt")]
@@ -101,6 +104,7 @@ hiddenimports = [
     "google.genai", "openai", "feedparser", "trafilatura",
     "pydub", "gtts", "google.cloud.texttospeech",
     "segno",   # imported lazily inside app/ui/android_promo.qr_pixmap
+    "pyphen",  # imported lazily inside app/core/hyphenation._dictionary
 ]
 # i18n loads locale modules dynamically (importlib.import_module("locales.uk")),
 # which static analysis can't see — collect them explicitly so the Ukrainian

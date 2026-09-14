@@ -48,6 +48,7 @@ from app.i18n import fill_lang_combo, ntr, tr
 from app.core import progression
 from app.core import srs
 from app.core import exporters
+from app.core import hyphenation
 from app.core import translator
 from app.core.audio import stop_playback
 from app.core.backup_management import backup_database
@@ -3325,7 +3326,7 @@ class MainWindow(QMainWindow):
 
     def _on_reader_sentence(self, start, end):
         self._mini_text_start = start
-        self.mini_player.set_line(self.texts_page.plain_text()[start:end])
+        self.mini_player.set_line(hyphenation.strip(self.texts_page.plain_text()[start:end]))
         self._sync_mini_player()
 
     def _on_reader_word(self, start, end):

@@ -74,6 +74,7 @@ pydub==0.25.1
 pygame==2.6.1
 PyJWT==2.13.0
 pynput==1.8.2
+pyphen==0.18.1
 PySide6==6.11.2
 PySide6_Addons==6.11.2
 PySide6_Essentials==6.11.2

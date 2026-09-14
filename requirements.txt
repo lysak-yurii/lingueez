@@ -34,6 +34,9 @@ python-dotenv>=1.0.0
 # QR codes for the desktop→phone handoff (Android app). Pure Python, no deps.
 segno>=1.6.0
 
+# Hyphenation dictionaries for the justified text reader. Pure Python, no deps.
+pyphen>=0.18.1
+
 # Secure credential storage (auth session tokens)
 keyring>=24.0.0          # OS keychain; falls back to an encrypted local file
 cryptography>=41.0.0     # encrypts the local session fallback when no keychain

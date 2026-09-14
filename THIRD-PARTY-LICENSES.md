@@ -26,6 +26,7 @@ License v3.0.
 | supabase | Cloud sync client | MIT |
 | python-dotenv | Environment configuration | BSD-3-Clause |
 | segno | QR codes (desktop→phone app handoff) | BSD-3-Clause |
+| pyphen | Hyphenation for the text reader (bundles the LibreOffice hyphenation dictionaries) | LGPL-2.1+ / GPL-2.0+ / MPL-1.1 |
 | keyring | Secure credential storage (OS keychain) | MIT |
 | cryptography | Encrypts the local session fallback | Apache-2.0 / BSD-3-Clause |
 | keyboard | Global hotkey (Windows) | MIT |
