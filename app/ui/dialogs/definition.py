@@ -22,25 +22,28 @@
 """Definition viewer/editor with AI generation.
 
 Renders the stored '***' / '**' / '*' markup as rich text, supports
-editing the raw definition, switching between Definition (Word1) and
-Definition2 (Word2), and generating missing definitions via the
-configured AI provider (ChatGPT or Gemini).
+editing the raw definition, switching between Definition (written in
+Language1) and Definition2 (written in Language2), and generating
+definitions "for <word> in <language>" via the configured AI provider
+(ChatGPT or Gemini).
 """
 import html
 import logging
 import re
 from datetime import datetime
 
-from PySide6.QtCore import QSize, Qt, Signal
+import shiboken6
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, Signal
 from PySide6.QtGui import (
     QColor, QFont, QKeySequence, QShortcut, QTextBlockFormat, QTextCharFormat,
     QTextCursor, QTextListFormat,
 )
 from PySide6.QtWidgets import (
-    QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QTextEdit,
+    QComboBox, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QTextEdit,
     QVBoxLayout, QWidget,
 )
 
+from app.config import load_settings, save_settings
 from app.core import ai
 from app.i18n import full_date, lang_label, tr
 from app.ui import icons
@@ -183,6 +186,38 @@ def _added_captions(value):
     return f"{tr('Added')} · {when}", f"{tr('Added')} · {exact}"
 
 
+def remembered_sides():
+    """The last "for <word side> in <language side>" choice, validated."""
+    settings = load_settings()
+    word_side = settings.get("definition_ai_word", "Word1")
+    language_side = settings.get("definition_ai_language", "Language2")
+    return (word_side if word_side in ai.WORD_SIDES else "Word1",
+            language_side if language_side in ai.LANGUAGE_SIDES else "Language2")
+
+
+def remember_side(key, value):
+    settings = load_settings()
+    if settings.get(key) != value:
+        settings[key] = value
+        save_settings(settings)
+
+
+def build_for_in_row(word_combo, language_combo):
+    """Lay out the localized "for {word} in {language}" phrase around the two
+    combos, so translations can reorder them."""
+    row = QWidget()
+    lay = QHBoxLayout(row)
+    lay.setContentsMargins(0, 0, 0, 0)
+    lay.setSpacing(6)
+    widgets = {"{word}": word_combo, "{language}": language_combo}
+    for part in re.split(r'(\{word\}|\{language\})', tr("for {word} in {language}")):
+        if part in widgets:
+            lay.addWidget(widgets[part])
+        elif part.strip():
+            lay.addWidget(QLabel(part.strip(), objectName="dimLabel"))
+    return row
+
+
 class _DefinitionEditor(QTextEdit):
     """Editor that pastes as plain text, so web content can't inject fonts or
     structures the markup can't represent (keeps the round-trip lossless)."""
@@ -202,6 +237,9 @@ class DefinitionDialog(FramelessDialog):
         self.current_field = 'Word1'   # which word's definition is shown
         self._pick_initial_field = True  # on first load, open the side that has a definition
         self.editing = False
+        self._busy = False
+        self._pending = None           # (stored column, text) awaiting Keep new / Keep old
+        self._mirrored = False         # record shows the stored row's sides flipped
         self.ai_label = ai.provider_label()
 
         self.setMinimumSize(620, 480)
@@ -225,9 +263,9 @@ class DefinitionDialog(FramelessDialog):
         head.addWidget(self._build_added_caption(), 0, Qt.AlignVCenter)
         layout.addLayout(head)
 
-        # Segmented toggle: pick which side's definition to show — the word's or
-        # its translation's. Replaces the old "Show … definition" text button.
-        # It shares its slot with the formatting toolbar (shown while editing).
+        # Segmented toggle between the two stored definitions, by the language
+        # they're written in; only shown once both exist. It shares its slot with
+        # the formatting toolbar (shown while editing).
         self.chips_row = QWidget()
         toggle = QHBoxLayout(self.chips_row)
         toggle.setContentsMargins(0, 0, 0, 0)
@@ -247,6 +285,10 @@ class DefinitionDialog(FramelessDialog):
         self.format_row = self._build_format_toolbar()
         self.format_row.hide()
         layout.addWidget(self.format_row)
+
+        self.pending_bar = self._build_pending_bar()
+        self.pending_bar.hide()
+        layout.addWidget(self.pending_bar)
 
         # Definition body inside a soft card: a rich-text view that doubles as the
         # WYSIWYG editor, with a centered empty state when nothing is stored.
@@ -286,8 +328,9 @@ class DefinitionDialog(FramelessDialog):
         self.generate_btn.setIcon(icons.icon("sparkles", self.colors["accent_text"], 15))
         self.generate_btn.setIconSize(QSize(15, 15))
         self.generate_btn.setCursor(Qt.PointingHandCursor)
-        self.generate_btn.clicked.connect(self.generate_definition)
+        self.generate_btn.clicked.connect(self._on_generate_clicked)
         buttons.addWidget(self.generate_btn)
+        buttons.addWidget(self._build_generate_picker())
         buttons.addStretch(1)
 
         self.edit_btn = QPushButton(tr("Edit"))
@@ -376,6 +419,158 @@ class DefinitionDialog(FramelessDialog):
         show_empty = empty and not self.editing
         self.text.setVisible(not show_empty)
         self.empty_widget.setVisible(show_empty)
+
+    # ------------------------------------------------------ generate picker
+
+    def _build_generate_picker(self):
+        """The "for <word> in <language>" choice that slides open beside the
+        Generate button on its first click; the choice persists in settings."""
+        word_side, language_side = remembered_sides()
+        self.word_combo = QComboBox()
+        self.word_combo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.word_combo.setMaximumWidth(180)
+        for side in ai.WORD_SIDES:
+            text = str(self.record.get(side) or "").strip()
+            if text:
+                self.word_combo.addItem(text, side)
+        index = self.word_combo.findData(word_side)
+        self.word_combo.setCurrentIndex(max(index, 0))
+        self.language_combo = QComboBox()
+        self.language_combo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self._fill_language_combo(language_side)
+        self.word_combo.currentIndexChanged.connect(self._on_word_side_changed)
+        self.language_combo.currentIndexChanged.connect(self._on_language_side_changed)
+
+        self.picker = build_for_in_row(self.word_combo, self.language_combo)
+        self.picker.setMaximumWidth(0)
+        self.picker.hide()
+        self._picker_open = False
+        self._picker_anim = QPropertyAnimation(self.picker, b"maximumWidth", self)
+        self._picker_anim.setDuration(180)
+        self._picker_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._picker_anim.finished.connect(
+            lambda: self.picker.setVisible(self._picker_open))
+        return self.picker
+
+    def _fill_language_combo(self, language_side):
+        """Both languages, or just the word's own when the pair shares one."""
+        lang1 = str(self.record.get('Language1') or "")
+        lang2 = str(self.record.get('Language2') or "")
+        self.language_combo.blockSignals(True)
+        self.language_combo.clear()
+        if lang1.strip().lower() == lang2.strip().lower():
+            own = 'Language2' if self.word_combo.currentData() == 'Word2' else 'Language1'
+            self.language_combo.addItem(lang_label(lang1), own)
+        else:
+            self.language_combo.addItem(lang_label(lang1), 'Language1')
+            self.language_combo.addItem(lang_label(lang2), 'Language2')
+        index = self.language_combo.findData(language_side)
+        self.language_combo.setCurrentIndex(max(index, 0))
+        self.language_combo.blockSignals(False)
+
+    def _on_word_side_changed(self, _index):
+        remember_side("definition_ai_word", self.word_combo.currentData())
+        self._fill_language_combo(self.language_combo.currentData())
+        self._sync_generate_label()
+
+    def _on_language_side_changed(self, _index):
+        remember_side("definition_ai_language", self.language_combo.currentData())
+        self._sync_generate_label()
+
+    def _set_picker_open(self, open_):
+        if open_ == self._picker_open:
+            return
+        self._picker_open = open_
+        self._picker_anim.stop()
+        if open_:
+            self.picker.show()
+        self._picker_anim.setStartValue(self.picker.maximumWidth())
+        self._picker_anim.setEndValue(self.picker.sizeHint().width() if open_ else 0)
+        self._picker_anim.start()
+        self._sync_generate_label()
+
+    def _sync_generate_label(self):
+        if not self._picker_open:
+            self.generate_btn.setText(tr("Generate with AI"))
+            return
+        column = ai.definition_column(self.language_combo.currentData())
+        exists = bool(str(self.word.get(column) or "").strip())
+        self.generate_btn.setText(tr("Regenerate") if exists else tr("Generate"))
+
+    def _on_generate_clicked(self):
+        if self._picker_open:
+            self.generate_definition()
+        else:
+            self._set_picker_open(True)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self._picker_open and not self._busy:
+            self._set_picker_open(False)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    # --------------------------------------------------- replace confirmation
+
+    def _build_pending_bar(self):
+        """Keep new / Keep old choice shown when a generation would replace a
+        stored definition; the new text previews in the card meanwhile."""
+        bar = QFrame(objectName="PendingDefinitionBar")
+        bar.setStyleSheet(
+            f"#PendingDefinitionBar{{background:{self.colors['surface']};"
+            f" border:1px solid {self.colors['accent']}; border-radius:8px;}}")
+        row = QHBoxLayout(bar)
+        row.setContentsMargins(12, 6, 6, 6)
+        row.setSpacing(8)
+        label = QLabel(tr("New definition — keep it or restore the previous one?"))
+        label.setWordWrap(True)
+        row.addWidget(label, 1)
+        keep_old = QPushButton(tr("Keep old"))
+        keep_old.setCursor(Qt.PointingHandCursor)
+        keep_old.clicked.connect(self._keep_old)
+        row.addWidget(keep_old)
+        keep_new = QPushButton(tr("Keep new"), objectName="primaryButton")
+        keep_new.setCursor(Qt.PointingHandCursor)
+        keep_new.clicked.connect(self._keep_new)
+        row.addWidget(keep_new)
+        return bar
+
+    def _set_busy(self, busy):
+        """Lock every control that could change the shown or stored definition."""
+        self._busy = busy
+        idle = not busy and self._pending is None
+        for widget in (self.generate_btn, self.edit_btn, self.chips_row,
+                       self.word_combo, self.language_combo):
+            widget.setEnabled(idle)
+        self.pending_bar.setVisible(self._pending is not None)
+
+    def _keep_new(self):
+        column, text = self._pending
+        self.pending_bar.setEnabled(False)
+
+        def done(_result):
+            if not shiboken6.isValid(self):
+                return
+            self._pending = None
+            self.pending_bar.setEnabled(True)
+            self._set_busy(False)
+            self.definition_changed.emit()
+            self.reload_word()
+
+        def failed(error):
+            if not shiboken6.isValid(self):
+                return
+            self.pending_bar.setEnabled(True)
+            QMessageBox.critical(self, tr("Error"),
+                                 tr("Failed to save definition:\n{error}").format(error=error))
+
+        run_in_thread(ai.store_definition, self.word_id, column, text,
+                      on_result=done, on_error=failed)
+
+    def _keep_old(self):
+        self._pending = None
+        self._set_busy(False)
+        self.refresh_view()
 
     # --------------------------------------------------------- formatting
 
@@ -619,7 +814,11 @@ class DefinitionDialog(FramelessDialog):
     # ------------------------------------------------------------------
 
     def reload_word(self):
-        word = self.db_adapter.get_word(self.word_id) or self.record
+        row = self.db_adapter.get_word(self.word_id)
+        # The words table flips a row's sides to match a language filter; work
+        # in the orientation the user saw and flip columns back only on save.
+        self._mirrored = ai.is_mirrored(row, self.record)
+        word = ai.oriented(row, self._mirrored) if row else self.record
         self.word = word
         if self._pick_initial_field:
             self._pick_initial_field = False
@@ -632,26 +831,28 @@ class DefinitionDialog(FramelessDialog):
     def _definition_column(self):
         return 'Definition' if self.current_field == 'Word1' else 'Definition2'
 
-    def _displayed_word(self):
-        return self.word.get(self.current_field) or ""
+    def _header_text(self):
+        words = (str(self.word.get(side) or "").strip() for side in ai.WORD_SIDES)
+        return " · ".join(w for w in words if w)
 
     def refresh_view(self):
         definition = str(self.word.get(self._definition_column()) or "").strip()
-        self.header_label.set_full_text(str(self._displayed_word()))
+        self.header_label.set_full_text(self._header_text())
         self._refresh_added_caption()
+        both = all(str(self.word.get(c) or "").strip() for c in ('Definition', 'Definition2'))
+        self.chips_row.setVisible(both and not self.editing)
         for chip, field in self.lang_chips:
             chip.setChecked(field == self.current_field)
+        self._sync_generate_label()
         if definition:
             self.text.setHtml(markup_to_html(definition))
-            self.generate_btn.setText(tr("Regenerate with AI"))
             self._show_body(empty=False)
         else:
-            self.generate_btn.setText(tr("Generate with AI"))
             self.empty_hint.setText(tr("Generate one with AI, or write your own with Edit."))
             self._show_body(empty=True)
 
     def _select_field(self, field):
-        if self.editing or field == self.current_field:
+        if self.editing or self._busy or field == self.current_field:
             return
         self.current_field = field
         self.refresh_view()
@@ -671,6 +872,7 @@ class DefinitionDialog(FramelessDialog):
         self.save_btn.show()
         self.cancel_btn.show()
         self.generate_btn.setEnabled(False)
+        self.picker.setEnabled(False)
         self._sync_toolbar()
         self.text.setFocus()
 
@@ -678,18 +880,19 @@ class DefinitionDialog(FramelessDialog):
         self.editing = False
         self.text.setReadOnly(True)
         self.format_row.hide()
-        self.chips_row.show()
         self.edit_btn.show()
         self.close_btn.show()
         self.save_btn.hide()
         self.cancel_btn.hide()
         self.generate_btn.setEnabled(True)
+        self.picker.setEnabled(True)
         self.refresh_view()
 
     def save_definition(self):
         new_text = self._editor_to_markup()
         try:
-            self.db_adapter.update_word(self.word_id, {self._definition_column(): new_text})
+            column = ai.stored_column(self._definition_column(), self._mirrored)
+            self.db_adapter.update_word(self.word_id, {column: new_text})
             self.definition_changed.emit()
         except Exception as exc:
             logging.error(f"Error saving definition: {exc}")
@@ -701,38 +904,51 @@ class DefinitionDialog(FramelessDialog):
     # --------------------------------------------------------------- gpt
 
     def generate_definition(self):
-        word = self._displayed_word()
-        if not str(word).strip():
+        word_side = self.word_combo.currentData()
+        language_side = self.language_combo.currentData()
+        request = ai.definition_request(self.word, word_side, language_side)
+        if not request["word"]:
             QMessageBox.warning(self, tr("No word"), tr("There is no word to define."))
             return
         if not ai.has_api_key():
             QMessageBox.warning(self, tr("API key missing"),
                                 tr("Set your {ai} API key in Settings → Translation & AI → AI first.").format(ai=self.ai_label))
             return
-        lang1 = self.word.get('Language1') or "English"
-        lang2 = self.word.get('Language2') or "English"
-        if self.current_field == 'Word2':
-            lang1, lang2 = lang2, lang1
+        shown_column = ai.definition_column(language_side)
+        replacing = bool(str(self.word.get(shown_column) or "").strip())
+        column = ai.stored_column(shown_column, self._mirrored)
+        word_id = self.word_id
 
-        self.generate_btn.setEnabled(False)
+        self.current_field = 'Word1' if language_side == 'Language1' else 'Word2'
+        self.refresh_view()
+        self._set_busy(True)
         self._show_body(empty=False)
         self.text.setHtml(f"<p><i>{tr('Generating definition…')}</i></p>")
 
-        field = self.current_field
-
         def work():
-            return ai.update_definition_in_db(str(word), lang1, lang2, field, self.word_id)
+            text = ai.get_definition(**request)
+            # Written straight away when nothing is overwritten, so closing the
+            # dialog mid-request doesn't lose the result.
+            if not replacing:
+                ai.store_definition(word_id, column, text)
+            return text
 
-        def done(result):
-            ok, message = result
-            if ok:
+        def done(text):
+            if not shiboken6.isValid(self):
+                return
+            if replacing:
+                self._pending = (column, text)
+                self.text.setHtml(markup_to_html(text))
+            else:
                 self.definition_changed.emit()
                 self.reload_word()
-            else:
-                self.refresh_view()
-                QMessageBox.warning(self, self.ai_label, message)
+            self._set_busy(False)
 
-        run_in_thread(work, on_result=done,
-                      on_error=lambda e: (self.refresh_view(),
-                                          QMessageBox.critical(self, self.ai_label, e)),
-                      on_finished=lambda: self.generate_btn.setEnabled(True))
+        def failed(error):
+            if not shiboken6.isValid(self):
+                return
+            self._set_busy(False)
+            self.refresh_view()
+            QMessageBox.critical(self, self.ai_label, error)
+
+        run_in_thread(work, on_result=done, on_error=failed)

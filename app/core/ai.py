@@ -248,13 +248,100 @@ def _render(template, **values):
                       f"Fix it in Settings → Translation & AI → AI.")
 
 
-def get_definition(word, language1, language2):
-    """Fetch a definition with the active provider; raises AIError."""
+WORD_SIDES = ("Word1", "Word2")
+LANGUAGE_SIDES = ("Language1", "Language2")
+
+
+_PAIRED_COLUMNS = (('Word1', 'Word2'), ('Language1', 'Language2'),
+                   ('Definition', 'Definition2'))
+
+
+def definition_column(language_side):
+    """The column a definition written in *language_side* is stored in."""
+    return 'Definition' if language_side == 'Language1' else 'Definition2'
+
+
+def is_mirrored(row, shown):
+    """True when *shown* presents the stored *row* with its sides flipped — the
+    words table does that for rows matching a language filter."""
+    return (bool(shown) and bool(row)
+            and shown.get('Language1') != row.get('Language1')
+            and shown.get('Language1') == row.get('Language2'))
+
+
+def oriented(row, mirrored):
+    """*row* with Word/Language/Definition sides flipped when *mirrored*."""
+    if not mirrored:
+        return dict(row)
+    out = dict(row)
+    for first, second in _PAIRED_COLUMNS:
+        out[first], out[second] = row.get(second), row.get(first)
+    return out
+
+
+def stored_column(column, mirrored):
+    """Map a Definition column of an oriented row back to the stored one."""
+    if not mirrored:
+        return column
+    return 'Definition2' if column == 'Definition' else 'Definition'
+
+
+def definition_request(record, word_side, language_side):
+    """``get_definition`` kwargs for defining *word_side* of a word row in
+    *language_side*; the other side supplies the translation hint."""
+    first = word_side != 'Word2'
+    other_side = 'Word2' if first else 'Word1'
+    return {
+        "word": str(record.get(word_side) or "").strip(),
+        "word_language": record.get('Language1' if first else 'Language2') or "English",
+        "language": record.get(language_side) or "English",
+        "translation": str(record.get(other_side) or "").strip(),
+        "translation_language": record.get('Language2' if first else 'Language1') or "",
+    }
+
+
+def build_definition_prompt(template, word, word_language, language,
+                            translation="", translation_language=""):
+    """Render a definition prompt template; raises AIError on a broken one."""
+    same = word_language.strip().lower() == language.strip().lower()
+    sense_hint = ""
+    if translation and translation_language:
+        sense_hint = (f'The learner saved it with the {translation_language} '
+                      f'translation "{translation}": start with that sense, but '
+                      f"don't leave out the word's other common senses. ")
+    if same:
+        sections = "'Definition', 'Example Sentences' and 'Synonyms'"
+        language_rules = f"Write the whole entry solely in {language}."
+    else:
+        sections = "'Definition', 'Translations', 'Example Sentences' and 'Synonyms'"
+        language_rules = (
+            f"Write the grammar line and the definition in {language}. Under "
+            f"'Translations', give the word's possible {language} translations as "
+            f"one list item per sense: the translations in bold, then a short "
+            f"italic note on when they apply, most common first. Keep the example "
+            f"sentences and synonyms in {word_language}, following each example "
+            f"sentence with its {language} translation in parentheses, and let the "
+            f"examples show the different senses.")
+    return _render(template, word=word, word_language=word_language,
+                   language=language, translation=translation,
+                   translation_language=translation_language,
+                   sense_hint=sense_hint, sections=sections,
+                   language_rules=language_rules,
+                   # legacy placeholders of hand-edited templates
+                   language1=language,
+                   language2=translation_language if same else word_language)
+
+
+def get_definition(word, word_language, language, translation="",
+                   translation_language=""):
+    """Define *word* (in *word_language*) writing in *language*; raises AIError."""
     settings = load_settings()
     provider = get_provider(settings)
     params = _task_params(settings, provider)
-    prompt = _render(params.pop("template"),
-                     word=word, language1=language1, language2=language2)
+    prompt = build_definition_prompt(params.pop("template"), word, word_language,
+                                     language, translation, translation_language)
+    # senses, translations and translated examples outgrow old 400-token configs
+    params["max_tokens"] = max(params["max_tokens"], 1000)
     return provider.complete(prompt, **params)
 
 
@@ -342,23 +429,68 @@ def _make_db_adapter():
     return DatabaseAdapter(use_cloud=cloud_backend_active())
 
 
-def update_definition_in_db(word, language1, language2, word_field, word_id):
-    """Fetch a definition and store it. Returns (ok, message)."""
+def store_definition(word_id, column, text, db_adapter=None):
+    """Save a definition into its stored *column* and snapshot the database."""
+    db_adapter = db_adapter or _make_db_adapter()
     try:
-        definition = get_definition(word, language1, language2)
-        db_adapter = _make_db_adapter()
-        if not db_adapter.get_word(word_id):
-            return False, f"Word with ID {word_id} not found."
-        definition_column = 'Definition' if word_field == 'Word1' else 'Definition2'
-        db_adapter.update_word(word_id, {definition_column: definition})
-        return True, f"Definition for '{word}' was successfully updated."
-    except AIError as exc:
-        return False, str(exc)
-    except Exception as exc:
-        logging.error(f"Error updating definition: {exc}")
-        return False, f"An error occurred: {exc}"
+        db_adapter.update_word(word_id, {column: text})
     finally:
         backup_database()
+
+
+def generate_definitions(records, word_side, language_side, skip_existing=True,
+                         db_adapter=None, is_cancelled=lambda: False,
+                         progress_callback=None):
+    """Generate and store definitions for many words, one request each.
+
+    *records* are rows as the table shows them; the sides are read in that
+    orientation. Returns ``{"generated", "skipped", "failed", "error",
+    "cancelled"}``; ``error`` is the last AI error message. Stops early once the
+    same error repeats, since quota, key and connection failures never recover
+    mid-run.
+    """
+    db_adapter = db_adapter or _make_db_adapter()
+    column = definition_column(language_side)
+    stats = {"generated": 0, "skipped": 0, "failed": 0, "error": "", "cancelled": False}
+    last_error = None
+    try:
+        for index, record in enumerate(records):
+            if is_cancelled():
+                stats["cancelled"] = True
+                break
+            if progress_callback:
+                progress_callback(index, len(records))
+            word_id = record["ID"]
+            row = db_adapter.get_word(word_id)
+            mirrored = is_mirrored(row, record)
+            view = oriented(row or {}, mirrored)
+            request = definition_request(view, word_side, language_side)
+            if not row or not request["word"]:
+                stats["failed"] += 1
+                continue
+            if skip_existing and str(view.get(column) or "").strip():
+                stats["skipped"] += 1
+                continue
+            try:
+                text = get_definition(**request)
+                db_adapter.update_word(word_id, {stored_column(column, mirrored): text})
+                stats["generated"] += 1
+                last_error = None
+            except AIError as exc:
+                stats["failed"] += 1
+                stats["error"] = str(exc)
+                if str(exc) == last_error:
+                    break
+                last_error = str(exc)
+            except Exception as exc:
+                logging.error(f"Error generating definition for {word_id}: {exc}")
+                stats["failed"] += 1
+        if progress_callback:
+            progress_callback(len(records), len(records))
+    finally:
+        if stats["generated"]:
+            backup_database()
+    return stats
 
 
 def save_generated_text_to_db(row_number, title, text, words, language,

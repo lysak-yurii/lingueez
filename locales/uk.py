@@ -447,6 +447,22 @@ TRANSLATIONS: dict[str, str] = {
     "API key missing": "Відсутній ключ API",
     "Set your {ai} API key in Settings → Translation & AI → AI first.": "Спочатку вкажіть ключ {ai} у Налаштуваннях → Переклад та ШІ → ШІ.",
     "Generating definition…": "Генерується визначення…",
+    "for {word} in {language}": "для {word} мовою {language}",
+    "Regenerate": "Перегенерувати",
+    "New definition — keep it or restore the previous one?": "Нове визначення — залишити його чи повернути попереднє?",
+    "Keep new": "Залишити нове",
+    "Keep old": "Залишити старе",
+
+    # ── batch_definitions.py ───────────────────────────────────────────────
+    "Generate Definitions": "Генерування визначень",
+    "Generate Definitions…": "Згенерувати визначення…",
+    "Words selected: {n}": "Вибрано слів: {n}",
+    "the word's language": "мова слова",
+    "the translation's language": "мова перекладу",
+    "Skip words that already have one": "Пропускати слова, що вже мають визначення",
+    "Stopping…": "Зупинка…",
+    "Only the first 100 words will be used.": "Буде використано лише перші 100 слів.",
+    "Generated: {generated} · Skipped: {skipped} · Failed: {failed}": "Згенеровано: {generated} · Пропущено: {skipped} · З помилками: {failed}",
 
     # ── tags.py ────────────────────────────────────────────────────────────
     "Tags — {count} word(s)": "Теги — {count} слово(слів)",

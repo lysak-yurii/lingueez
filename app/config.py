@@ -30,6 +30,42 @@ import threading
 
 SETTINGS_FILE = "settings.cfg"
 
+# Placeholders are filled by app.core.ai.get_definition. Must stay on one line:
+# settings.cfg is line-based.
+DEFINITION_PROMPT = (
+    "Write a learner's dictionary entry for the {word_language} word \"{word}\". "
+    "{sense_hint}"
+    "Start with one line wrapped in '*': part of speech, IPA pronunciation and, "
+    "where relevant in {word_language}, gender, plural or principal verb forms. "
+    "Then write the sections {sections}, each headed on its own line with its "
+    "{language} name wrapped in '***'. Under the definition, cover the word's "
+    "common senses, most common first, each as its own list item when there are "
+    "several. {language_rules} "
+    "Put each list item on its own line starting with '- '. Other possible "
+    "markups: '**' for bold and '*' for italic. Output only the entry."
+)
+
+# Earlier shipped defaults; save_settings wrote them into every settings.cfg, so
+# load_settings swaps them for the current one.
+_LEGACY_DEFINITION_PROMPTS = (
+    "Define the word: {word} in {language1}. "
+    "Also provide example sentences (in different contexts) with that word, "
+    "and synonyms, all solely in {language1}. Markups: '***' for 'Definition', "
+    "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'. "
+    "Put each list item (e.g. each synonym) on its own line starting with '- '.",
+
+    "Write a learner's dictionary entry for the {word_language} word \"{word}\". "
+    "{sense_hint}"
+    "Start with one line wrapped in '*': part of speech, IPA pronunciation and, "
+    "where relevant in {word_language}, gender, plural or principal verb forms. "
+    "Then write three sections headed with the {language} words for 'Definition', "
+    "'Example Sentences' and 'Synonyms', each heading on its own line wrapped in '***'. "
+    "{language_rules} "
+    "Put each list item (each example sentence, each synonym) on its own line "
+    "starting with '- '. Other possible markups: '**' for bold and '*' for italic. "
+    "Output only the entry.",
+)
+
 DEFAULTS = {
     # Appearance
     "appearance_mode": "System",        # System | Light | Dark
@@ -144,13 +180,7 @@ DEFAULTS = {
     "chatgpt_max_tokens": "400",
     "chatgpt_temperature": "0.3",
     "chatgpt_role": "assistant",
-    "chatgpt_content": (
-        "Define the word: {word} in {language1}. "
-        "Also provide example sentences (in different contexts) with that word, "
-        "and synonyms, all solely in {language1}. Markups: '***' for 'Definition', "
-        "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'. "
-        "Put each list item (e.g. each synonym) on its own line starting with '- '."
-    ),
+    "chatgpt_content": DEFINITION_PROMPT,
     "chatgpt_texts_model": "gpt-4o-mini",
     "chatgpt_texts_max_tokens": "300",
     "chatgpt_texts_temperature": "0.7",
@@ -186,13 +216,7 @@ DEFAULTS = {
     "gemini_thinking_budget": "0",    # 0 = off, -1 = dynamic (model decides)
     "gemini_max_tokens": "400",
     "gemini_temperature": "0.3",
-    "gemini_content": (
-        "Define the word: {word} in {language1}. "
-        "Also provide example sentences (in different contexts) with that word, "
-        "and synonyms, all solely in {language1}. Markups: '***' for 'Definition', "
-        "'Example Sentences' and 'Synonyms'; other possible markups: '**' and '*'. "
-        "Put each list item (e.g. each synonym) on its own line starting with '- '."
-    ),
+    "gemini_content": DEFINITION_PROMPT,
     "gemini_texts_model": "gemini-2.5-flash",
     "gemini_texts_max_tokens": "400",
     "gemini_texts_temperature": "0.7",
@@ -231,6 +255,9 @@ DEFAULTS = {
     "addtext_level": "",              # last-used CEFR level in the Add Text dialog
     # Add Word dialog
     "addword_target_language": "",    # last-used translation (target) language
+    # Definition generation: last "for <word> in <language>" choice, as sides
+    "definition_ai_word": "Word1",     # Word1 | Word2
+    "definition_ai_language": "Language2",  # Language1 | Language2
     # Legal consent: the Terms/Privacy version accepted on this device (compared
     # against app.version.POLICY_VERSION) and when. Empty until first acceptance.
     "policy_accepted_version": "",
@@ -265,6 +292,9 @@ def load_settings(path=SETTINGS_FILE):
                 settings[key.strip()] = value
     except FileNotFoundError:
         logging.warning("Settings file not found, using defaults.")
+    for key in ("chatgpt_content", "gemini_content"):
+        if str(settings.get(key, "")).strip() in _LEGACY_DEFINITION_PROMPTS:
+            settings[key] = DEFINITION_PROMPT
     return settings
 
 
