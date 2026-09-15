@@ -3140,6 +3140,7 @@ class MainWindow(QMainWindow):
             return
         menu = QMenu(self)
         menu.addAction(tr("View Definition"), self.view_definition)
+        menu.addAction(tr("Generate Definitions…"), self.generate_definitions_action)
         menu.addAction(tr("Edit"), self.edit_row)
         menu.addAction(tr("Delete"), self.delete_rows)
         menu.addSeparator()
@@ -3680,6 +3681,27 @@ class MainWindow(QMainWindow):
         dialog = GenerateTextDialog(self, words, language)
         dialog.text_saved.connect(self._on_text_generated)
         dialog.show()
+
+    def generate_definitions_action(self):
+        records = self._require_selection("generate definitions for")
+        if not records:
+            return
+        if len(records) > 100:
+            records = records[:100]
+            show_toast(self, tr("Selection limit"), tr("Only the first 100 words will be used."), "info")
+
+        def done(stats):
+            self.load_data()
+            if stats is None:
+                return
+            summary = tr("Generated: {generated} · Skipped: {skipped} · Failed: {failed}").format(**stats)
+            if stats["error"]:
+                summary += f"\n{stats['error']}"
+            show_toast(self, tr("Definitions"), summary,
+                       "warning" if stats["failed"] else "success")
+
+        from app.ui.dialogs.batch_definitions import BatchDefinitionsDialog
+        BatchDefinitionsDialog(self, records, done).show()
 
     def _on_text_generated(self):
         show_toast(self, tr("Texts"), tr("Generated text saved."), "success")

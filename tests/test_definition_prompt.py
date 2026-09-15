@@ -19,14 +19,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import config  # noqa: E402
 from app.core import ai  # noqa: E402
 
-RECORD = {"ID": "w1", "Word1": "Bank", "Word2": "bench",
-          "Language1": "German", "Language2": "English"}
+RECORD = {
+    "ID": "w1",
+    "Word1": "Bank",
+    "Word2": "bench",
+    "Language1": "German",
+    "Language2": "English",
+}
 
 
 class PromptTests(unittest.TestCase):
     def render(self, **overrides):
-        kwargs = dict(word="Bank", word_language="German", language="German",
-                      translation="bench", translation_language="English")
+        kwargs = dict(
+            word="Bank",
+            word_language="German",
+            language="German",
+            translation="bench",
+            translation_language="English",
+        )
         kwargs.update(overrides)
         return ai.build_definition_prompt(config.DEFINITION_PROMPT, **kwargs)
 
@@ -52,7 +62,8 @@ class PromptTests(unittest.TestCase):
 
     def test_legacy_template_still_renders(self):
         prompt = ai.build_definition_prompt(
-            config._LEGACY_DEFINITION_PROMPTS[0], "Haus", "German", "English", "house", "English")
+            config._LEGACY_DEFINITION_PROMPTS[0], "Haus", "German", "English", "house", "English"
+        )
         self.assertIn("Define the word: Haus in English", prompt)
 
     def test_broken_template_raises_ai_error(self):
@@ -67,24 +78,41 @@ class RequestTests(unittest.TestCase):
 
     def test_word1_explained_in_language2(self):
         request = ai.definition_request(RECORD, "Word1", "Language2")
-        self.assertEqual(request, {"word": "Bank", "word_language": "German",
-                                   "language": "English", "translation": "bench",
-                                   "translation_language": "English"})
+        self.assertEqual(
+            request,
+            {
+                "word": "Bank",
+                "word_language": "German",
+                "language": "English",
+                "translation": "bench",
+                "translation_language": "English",
+            },
+        )
 
     def test_word2_uses_word1_as_its_translation(self):
         request = ai.definition_request(RECORD, "Word2", "Language2")
-        self.assertEqual((request["word"], request["word_language"], request["translation"]),
-                         ("bench", "English", "Bank"))
+        self.assertEqual(
+            (request["word"], request["word_language"], request["translation"]),
+            ("bench", "English", "Bank"),
+        )
 
 
 class OrientationTests(unittest.TestCase):
-    STORED = {"Word1": "ξετυλίγω", "Word2": "розгортати", "Language1": "Greek",
-              "Language2": "Ukrainian", "Definition": "el", "Definition2": "uk"}
+    STORED = {
+        "Word1": "ξετυλίγω",
+        "Word2": "розгортати",
+        "Language1": "Greek",
+        "Language2": "Ukrainian",
+        "Definition": "el",
+        "Definition2": "uk",
+    }
 
     def test_detects_a_flipped_record(self):
         shown = ai.oriented(self.STORED, True)
-        self.assertEqual((shown["Word1"], shown["Language1"], shown["Definition"]),
-                         ("розгортати", "Ukrainian", "uk"))
+        self.assertEqual(
+            (shown["Word1"], shown["Language1"], shown["Definition"]),
+            ("розгортати", "Ukrainian", "uk"),
+        )
         self.assertTrue(ai.is_mirrored(self.STORED, shown))
         self.assertFalse(ai.is_mirrored(self.STORED, dict(self.STORED)))
 
@@ -147,8 +175,15 @@ class BatchTests(unittest.TestCase):
 
     def test_filtered_table_rows_are_read_as_shown(self):
         # The language filter shows the stored row with its sides flipped.
-        stored = {"ID": "g", "Word1": "ξετυλίγω", "Word2": "розгортати", "Language1": "Greek",
-                  "Language2": "Ukrainian", "Definition": "", "Definition2": ""}
+        stored = {
+            "ID": "g",
+            "Word1": "ξετυλίγω",
+            "Word2": "розгортати",
+            "Language1": "Greek",
+            "Language2": "Ukrainian",
+            "Definition": "",
+            "Definition2": "",
+        }
         shown = ai.oriented(stored, True)
         adapter = _FakeAdapter({"g": stored})
         with mock.patch.object(ai, "get_definition", return_value="new") as get:
@@ -161,26 +196,34 @@ class BatchTests(unittest.TestCase):
     def test_skips_existing_and_writes_the_rest(self):
         adapter = _FakeAdapter(self.rows())
         with mock.patch.object(ai, "get_definition", return_value="new") as get:
-            stats = ai.generate_definitions(self.records("a", "b", "c"), "Word1", "Language2",
-                                            db_adapter=adapter)
+            stats = ai.generate_definitions(
+                self.records("a", "b", "c"), "Word1", "Language2", db_adapter=adapter
+            )
         self.assertEqual((stats["generated"], stats["skipped"], stats["failed"]), (2, 1, 0))
-        self.assertEqual(adapter.updates, [("a", {"Definition2": "new"}),
-                                           ("c", {"Definition2": "new"})])
+        self.assertEqual(
+            adapter.updates, [("a", {"Definition2": "new"}), ("c", {"Definition2": "new"})]
+        )
         self.assertEqual(get.call_count, 2)
 
     def test_overwrites_when_not_skipping(self):
         adapter = _FakeAdapter(self.rows())
         with mock.patch.object(ai, "get_definition", return_value="new"):
-            stats = ai.generate_definitions(self.records("b"), "Word1", "Language2",
-                                            skip_existing=False, db_adapter=adapter)
+            stats = ai.generate_definitions(
+                self.records("b"), "Word1", "Language2", skip_existing=False, db_adapter=adapter
+            )
         self.assertEqual(stats["generated"], 1)
 
     def test_stops_when_the_same_error_repeats(self):
         adapter = _FakeAdapter(self.rows())
         error = ai.AIError("quota exhausted")
         with mock.patch.object(ai, "get_definition", side_effect=error) as get:
-            stats = ai.generate_definitions(self.records("a", "c", "a"), "Word1", "Language2",
-                                            skip_existing=False, db_adapter=adapter)
+            stats = ai.generate_definitions(
+                self.records("a", "c", "a"),
+                "Word1",
+                "Language2",
+                skip_existing=False,
+                db_adapter=adapter,
+            )
         self.assertEqual(get.call_count, 2)
         self.assertEqual(stats["error"], "quota exhausted")
         self.assertEqual(adapter.updates, [])
@@ -189,8 +232,12 @@ class BatchTests(unittest.TestCase):
         adapter = _FakeAdapter(self.rows())
         with mock.patch.object(ai, "get_definition", return_value="new"):
             stats = ai.generate_definitions(
-                self.records("a", "c"), "Word1", "Language2", db_adapter=adapter,
-                is_cancelled=lambda: bool(adapter.updates))
+                self.records("a", "c"),
+                "Word1",
+                "Language2",
+                db_adapter=adapter,
+                is_cancelled=lambda: bool(adapter.updates),
+            )
         self.assertTrue(stats["cancelled"])
         self.assertEqual(stats["generated"], 1)
 
