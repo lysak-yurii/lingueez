@@ -20,17 +20,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """Add Word dialog — compact two-row capture with DeepL translation,
-language detect and inline TTS preview. New words are saved as 'New'."""
+language detect and inline TTS preview. New words are saved as 'New'.
+
+A definition can ride along: a folded panel to type one, or to have the AI
+write it after the save (see :mod:`app.core.definition_autogen`)."""
 import logging
 
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
-    QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
-    QPushButton,
+    QCheckBox, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
+    QPlainTextEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget,
 )
 
 from app.config import load_settings, save_settings
-from app.core import ai
+from app.core import ai, definition_autogen
 from app.core.audio import is_language_supported, speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
@@ -40,7 +44,79 @@ from app.core.translator import translate
 from app.i18n import fill_lang_combo, get_lang, lang_label, set_lang, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
+from app.ui.dialogs.definition import build_for_in_row, remember_side, remembered_sides
+from app.ui.widgets import ContentComboBox, ElidedLabel
 from app.ui.workers import run_in_thread
+
+
+class _DotButton(QPushButton):
+    """An icon button that can wear a small accent dot on its glyph's corner."""
+
+    def __init__(self, dot_color):
+        super().__init__(objectName="iconButton")
+        self._dot = False
+        self._dot_color = QColor(dot_color)
+
+    def set_dot(self, on):
+        if on != self._dot:
+            self._dot = on
+            self.update()
+
+    def has_dot(self):
+        return self._dot
+
+    def paintEvent(self, event):  # noqa: N802
+        super().paintEvent(event)
+        if not self._dot:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        p.setBrush(self._dot_color)
+        p.drawEllipse(QPointF(self.width() / 2 + 7, self.height() / 2 - 7), 3.5, 3.5)
+        p.end()
+
+
+class _Switch(QCheckBox):
+    """A compact pill switch, painted instead of the square checkbox indicator."""
+
+    def __init__(self, colors):
+        super().__init__()
+        self._colors = colors
+        self.setFixedSize(30, 18)
+        self.setCursor(Qt.PointingHandCursor)
+
+    def hitButton(self, pos):  # noqa: N802
+        return self.rect().contains(pos)
+
+    def paintEvent(self, event):  # noqa: N802
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        on, enabled = self.isChecked(), self.isEnabled()
+        track = QColor(self._colors["accent"] if on else self._colors["border"])
+        knob = QColor("#ffffff")
+        if not enabled:
+            track.setAlphaF(0.45)
+            knob.setAlphaF(0.7)
+        rect = QRectF(0.5, 1.5, 29, 15)
+        p.setBrush(track)
+        p.drawRoundedRect(rect, 7.5, 7.5)
+        p.setBrush(knob)
+        x = rect.right() - 13.5 if on else rect.left() + 1.5
+        p.drawEllipse(QRectF(x, rect.top() + 1.5, 12, 12))
+        p.end()
+
+
+class _DefinitionEdit(QPlainTextEdit):
+    """Plain-text definition box where Ctrl+Enter saves and Enter is a new line."""
+    submit = Signal()
+
+    def keyPressEvent(self, event):  # noqa: N802
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter) and event.modifiers() & Qt.ControlModifier:
+            self.submit.emit()
+            return
+        super().keyPressEvent(event)
 
 
 class AddWordDialog(FramelessDialog):
@@ -48,6 +124,12 @@ class AddWordDialog(FramelessDialog):
     # Emitted (with the existing word's ID) when the user chooses to open an
     # already-existing entry instead of adding a duplicate.
     open_existing = Signal(str)
+    # The saved row, when the AI should define it once the dialog has closed;
+    # the dialog is deleted on close, so its owner runs the request.
+    definition_requested = Signal(dict, str, str)
+    # A setting was written; the main window writes its whole settings dict
+    # back elsewhere, so it has to re-read these keys or undo the change.
+    settings_saved = Signal()
 
     def __init__(self, parent, prefill=None, auto_translate=False, language1=None,
                  language2=None):
@@ -126,6 +208,8 @@ class AddWordDialog(FramelessDialog):
         self.info_label.hide()
         layout.addWidget(self.info_label)
 
+        layout.addWidget(self._build_definition_panel(settings))
+
         buttons = QHBoxLayout()
         self.translate_btn = QPushButton(f"  {tr('Translate')}")
         self.translate_btn.setIcon(icons.icon("globe", colors["text"], 15))
@@ -140,6 +224,12 @@ class AddWordDialog(FramelessDialog):
         self.ai_btn.setCursor(Qt.PointingHandCursor)
         self.ai_btn.clicked.connect(self.do_ai_fill)
         buttons.addWidget(self.ai_btn)
+        self.definition_btn = _DotButton(colors["accent"])
+        self.definition_btn.setIconSize(QSize(16, 16))
+        self.definition_btn.setToolTip(tr("Add definition"))
+        self.definition_btn.setCursor(Qt.PointingHandCursor)
+        self.definition_btn.clicked.connect(self.toggle_definition_panel)
+        buttons.addWidget(self.definition_btn)
         buttons.addStretch(1)
         cancel = QPushButton(tr("Cancel"))
         cancel.setCursor(Qt.PointingHandCursor)
@@ -165,6 +255,9 @@ class AddWordDialog(FramelessDialog):
         self.lang1_combo.currentIndexChanged.connect(self._sync_speak_actions)
         self.lang2_combo.currentIndexChanged.connect(self._sync_speak_actions)
         self._sync_speak_actions()
+        self.lang1_combo.currentIndexChanged.connect(self._fill_definition_languages)
+        self.lang2_combo.currentIndexChanged.connect(self._fill_definition_languages)
+        self._sync_definition_button()
 
         if prefill:
             self.apply_prefill(prefill, language1=language1, auto_translate=auto_translate)
@@ -185,6 +278,126 @@ class AddWordDialog(FramelessDialog):
             self._info(tr("The text was truncated to the first 100 words."))
         if auto_translate:
             self.do_translate()
+
+    # ------------------------------------------------------------ definition
+
+    def _build_definition_panel(self, settings):
+        """The folded definition box, its "Generate on save" switch and the
+        "for <word> in <language>" choice both of them use."""
+        self.definition_panel = QWidget()
+        column = QVBoxLayout(self.definition_panel)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(8)
+
+        self.definition_edit = _DefinitionEdit()
+        self.definition_edit.setPlaceholderText(tr("Add a definition…"))
+        self.definition_edit.setTabChangesFocus(True)
+        self.definition_edit.setFixedHeight(self.definition_edit.fontMetrics().lineSpacing() * 4 + 16)
+        self.definition_edit.submit.connect(self.save_word)
+        self.definition_edit.textChanged.connect(self._sync_definition_button)
+        column.addWidget(self.definition_edit)
+
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        self.autogen_switch = _Switch(self.colors)
+        # the one part of the row that may give way when a translation runs long
+        self.autogen_label = ElidedLabel(min_width=60)
+        self.autogen_label.set_full_text(tr("Generate on save"))
+        self.autogen_label.setCursor(Qt.PointingHandCursor)
+        self.autogen_label.mousePressEvent = lambda _e: (
+            self.autogen_switch.isEnabled() and self.autogen_switch.toggle())
+        if definition_autogen.disable_if_unavailable(settings):
+            save_settings(settings)
+        has_key = ai.has_api_key()
+        self.autogen_switch.setChecked(definition_autogen.enabled(settings))
+        for widget in (self.autogen_switch, self.autogen_label):
+            widget.setEnabled(has_key)
+            if not has_key:
+                widget.setToolTip(tr("Set up an AI key in Settings → Translation & AI to use this"))
+        self.autogen_switch.toggled.connect(self._on_autogen_toggled)
+        row.addWidget(self.autogen_switch)
+        row.addWidget(self.autogen_label, 1)
+        row.addSpacing(10)
+
+        word_side, language_side = remembered_sides()
+        self._definition_language_side = language_side
+        self.def_word_combo = ContentComboBox()
+        self.def_word_combo.addItem(tr("Word"), "Word1")
+        self.def_word_combo.addItem(tr("Translation"), "Word2")
+        self.def_word_combo.setCurrentIndex(max(self.def_word_combo.findData(word_side), 0))
+        self.def_language_combo = ContentComboBox()
+        for combo in (self.def_word_combo, self.def_language_combo):
+            combo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            combo.setCursor(Qt.PointingHandCursor)
+        self.def_word_combo.currentIndexChanged.connect(self._on_definition_word_changed)
+        self.def_language_combo.currentIndexChanged.connect(self._on_definition_language_changed)
+        row.addWidget(build_for_in_row(self.def_word_combo, self.def_language_combo))
+        column.addLayout(row)
+
+        self._definition_open = False
+        self.definition_panel.hide()
+        return self.definition_panel
+
+    def _fill_definition_languages(self, *_args):
+        """Both languages of the entry, or just one when the pair shares it."""
+        lang1, lang2 = get_lang(self.lang1_combo), get_lang(self.lang2_combo)
+        combo = self.def_language_combo
+        combo.blockSignals(True)
+        combo.clear()
+        if lang1 == lang2:
+            own = "Language2" if self.def_word_combo.currentData() == "Word2" else "Language1"
+            combo.addItem(lang_label(lang1), own)
+        else:
+            combo.addItem(lang_label(lang1), "Language1")
+            combo.addItem(lang_label(lang2), "Language2")
+        combo.setCurrentIndex(max(combo.findData(self._definition_language_side), 0))
+        combo.blockSignals(False)
+
+    def _on_definition_word_changed(self, _index):
+        self._remember("definition_ai_word", self.def_word_combo.currentData())
+        self._fill_definition_languages()
+
+    def _on_definition_language_changed(self, _index):
+        self._definition_language_side = self.def_language_combo.currentData()
+        self._remember("definition_ai_language", self._definition_language_side)
+
+    def _remember(self, key, value):
+        remember_side(key, value)
+        self.settings_saved.emit()
+
+    def _on_autogen_toggled(self, on):
+        settings = load_settings()
+        definition_autogen.set_enabled(settings, on)
+        save_settings(settings)
+        self.settings_saved.emit()
+        self._sync_definition_button()
+
+    def _sync_definition_button(self):
+        typed = bool(self.definition_edit.toPlainText().strip())
+        color = self.colors["accent"] if typed else self.colors["text_dim"]
+        self.definition_btn.setIcon(icons.icon("file-text", color, 16))
+        self.definition_btn.set_dot(self.autogen_switch.isChecked())
+
+    def is_definition_panel_open(self):
+        return self._definition_open
+
+    def toggle_definition_panel(self):
+        self._definition_open = not self._definition_open
+        if not self.def_language_combo.count():
+            self._fill_definition_languages()
+        self.definition_panel.setVisible(self._definition_open)
+        if self._definition_open:
+            self.definition_edit.setFocus()
+        else:
+            self.word1_edit.setFocus()
+        self._fit_height()
+        # a layout keeps a just-hidden child's size until the hide event is
+        # processed, so refit once more on the next event-loop turn
+        QTimer.singleShot(0, self._fit_height)
+
+    def _fit_height(self):
+        self.layout().activate()
+        self.resize(self.width(), self.sizeHint().height())
 
     # ------------------------------------------------------------------
 
@@ -341,18 +554,32 @@ class AddWordDialog(FramelessDialog):
             self._info(tr("Please select the source language before saving."))
             return
 
+        if not self.def_language_combo.count():
+            self._fill_definition_languages()
+        definition = self.definition_edit.toPlainText().strip()
+        word_side = self.def_word_combo.currentData()
+        language_side = self.def_language_combo.currentData()
+        payload = {
+            'Language1': lang1, 'Word1': word1,
+            'Language2': lang2, 'Word2': word2,
+            'Status': 'New', 'Source': 'manual',
+        }
+        if definition:
+            payload[ai.definition_column(language_side)] = definition
+
         try:
-            self.db_adapter.insert_word({
-                'Language1': lang1, 'Word1': word1,
-                'Language2': lang2, 'Word2': word2,
-                'Status': 'New', 'Source': 'manual',
-            })
+            row = self.db_adapter.insert_word(payload)
             backup_database()
             # Remember the translation language for the next time the dialog opens.
             settings = load_settings()
             settings["addword_target_language"] = lang2
+            generate = (not definition and row and self.autogen_switch.isChecked()
+                        and not definition_autogen.disable_if_unavailable(settings))
             save_settings(settings)
+            self.settings_saved.emit()
             self.word_saved.emit()
+            if generate:
+                self.definition_requested.emit(dict(row), word_side, language_side)
             self.accept()
         except DuplicateWordError as exc:
             self._handle_duplicate(exc)

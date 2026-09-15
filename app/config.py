@@ -255,6 +255,8 @@ DEFAULTS = {
     "addtext_level": "",              # last-used CEFR level in the Add Text dialog
     # Add Word dialog
     "addword_target_language": "",    # last-used translation (target) language
+    "addword_generate_definition": "False",  # AI definition for each quick-saved word
+    "addword_definition_failures": "0",      # consecutive failures; 3 turns it off
     # Definition generation: last "for <word> in <language>" choice, as sides
     "definition_ai_word": "Word1",     # Word1 | Word2
     "definition_ai_language": "Language2",  # Language1 | Language2

@@ -47,6 +47,7 @@ from app.core import db as dbq
 from app.i18n import fill_lang_combo, ntr, tr
 from app.core import progression
 from app.core import srs
+from app.core import ai, definition_autogen
 from app.core import exporters
 from app.core import hyphenation
 from app.core import translator
@@ -2791,6 +2792,8 @@ class MainWindow(QMainWindow):
                                language1=language1, language2=language2)
         dialog.word_saved.connect(self._after_db_change)
         dialog.open_existing.connect(self.select_word_by_id)
+        dialog.settings_saved.connect(self._adopt_quick_save_settings)
+        dialog.definition_requested.connect(self._generate_definition_on_save)
         if parent is None:
             self._open_dialogs["add_word"] = dialog  # keep it alive
         dialog.show()
@@ -2800,6 +2803,45 @@ class MainWindow(QMainWindow):
             # open_add_word_and_translate). Retry a few times in case keyboard focus
             # / the selection offer lands a beat after the window is activated.
             QTimer.singleShot(120, lambda: self._fill_add_word_from_clipboard(dialog))
+
+    _QUICK_SAVE_KEYS = ("addword_target_language", definition_autogen.ENABLED_KEY,
+                        definition_autogen.FAILURES_KEY, "definition_ai_word",
+                        "definition_ai_language")
+
+    def _adopt_quick_save_settings(self):
+        fresh = load_settings()
+        for key in self._QUICK_SAVE_KEYS:
+            self.settings[key] = fresh[key]
+
+    def _generate_definition_on_save(self, row, word_side, language_side):
+        """Define a word Quick Save has just stored, once its dialog is gone."""
+        run_in_thread(
+            ai.generate_definitions, [row], word_side, language_side,
+            on_result=lambda stats: self._definition_on_save_finished(
+                stats.get("generated") == 1, stats.get("error") or ""),
+            on_error=lambda error: self._definition_on_save_finished(False, str(error)))
+
+    def _definition_on_save_finished(self, ok, error):
+        settings = load_settings()
+        outcome = definition_autogen.record_outcome(settings, ok)
+        save_settings(settings)
+        self._adopt_quick_save_settings()
+        if ok:
+            self._after_db_change()
+            return
+        if outcome == "turned_off":
+            title = tr("Definitions on save turned off")
+            message = tr("Turned off after {n} failed attempts in a row.").format(
+                n=definition_autogen.MAX_FAILURES)
+        else:
+            title = tr("Definition not generated")
+            message = ""
+        message = " ".join(part for part in (message, error) if part)
+        tray = getattr(self, "tray", None)
+        if self.isVisible() and not self.isMinimized():
+            show_toast(self, title, message, "warning", 6000)
+        elif tray is not None and tray.isVisible():
+            tray.showMessage(title, message, tray.icon(), 6000)
 
     def _fill_add_word_from_clipboard(self, dialog, attempts=4):
         if dialog is None or not dialog.isVisible():
