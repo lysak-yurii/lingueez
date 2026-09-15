@@ -1971,7 +1971,7 @@ class FlashcardsPage(QWidget):
             state = None
         for grade, label in labels.items():
             try:
-                days = srs.apply_grade(state, grade)["interval_days"]
+                days = srs.CREDITS.schedule(wid, state, grade)["interval_days"]
                 label.setText(_interval_text(days))
             except Exception:
                 label.setText("")
@@ -2001,12 +2001,15 @@ class FlashcardsPage(QWidget):
         if wid is None or wid in self._graded:
             return
         try:
-            state = srs.apply_grade(dbq.srs_get(wid), grade, datetime.now())
+            now = datetime.now()
+            before = dbq.srs_get(wid)
+            state = srs.CREDITS.schedule(wid, before, grade, now)
             dbq.srs_upsert(wid, state)
-            dbq.log_review(wid, datetime.now().isoformat(timespec="seconds"))
+            dbq.log_review(wid, now.isoformat(timespec="seconds"))
         except Exception as exc:
             logging.error(f"Recording flashcard grade failed: {exc}")
             return
+        srs.CREDITS.record(wid, before, grade, now)
         self._graded.add(wid)
         self._grade_history[self._index] = grade
         for label in self._grade_interval_labels.values():
@@ -2023,13 +2026,9 @@ class FlashcardsPage(QWidget):
                 str(wid), previous, str(rec.get("Word1") or ""))
             self.card.refresh_status()
         elif grade != "hard":
-            # A wrong answer never promotes. The rungs come from cumulative
-            # SM-2 state, which one Hard barely moves, so a word whose state had
-            # run ahead of its label used to be "caught up" — promoted by
-            # getting it wrong. What it has earned still stands; the next
-            # correct grade applies it.
+            # A wrong answer never promotes.
             mapped = srs.status_from_progress(
-                state["review_count"], state["ease_factor"], state["correct_count"])
+                state["review_count"], state["interval_days"])
             target = srs.promotion_target(rec.get("Status"), mapped)
             if target:
                 rec["Status"] = target
@@ -2189,9 +2188,8 @@ class FlashcardsPage(QWidget):
     def _practice_hard_clicked(self):
         """Re-run just the Hard cards of the session that finished.
 
-        Grading in the drill goes through SM-2 exactly as it does anywhere
-        else, so a card recalled on the second pass earns its longer interval
-        instead of staying stuck at one day."""
+        These cards were graded earlier today, so ``srs.CREDITS`` scores the
+        drill as re-grades, not fresh reviews."""
         records = list(self._hard_deck)
         if not records:
             self._show_picker()

@@ -28,17 +28,26 @@ implementation, so a word graded on either client schedules the same way:
     Good (difficulty 3, correct)  → interval × ease,       ease +0.10
     Hard (difficulty 5, incorrect)→ interval = 1,          ease −0.20
 
+Only a word's first grade of the day is a review. Later ones the same day —
+a hard-words drill, another session — are re-grades (see :func:`regrade`):
+no time has passed, so neither the interval nor the ease grows.
+
 Ease is clamped to [1.3, 2.5] (it never grows past its starting value —
 a web-app quirk kept for parity) and intervals cap at ten years. Scheduling
 state lives only in the local ``srs_progress`` table; the resulting Status
 promotion goes through the normal synced update path, reusing the same
 never-demote semantics as the listening ladder in :mod:`progression`.
+
+The status reads the interval a word has earned, not how many answers it has
+had: Learning from ``LEARNING_INTERVAL_DAYS``, Mastered from
+``MASTERED_INTERVAL_DAYS``.
 """
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 
 from app.core import progression
+from app.core.db import parse_progress_ts
 
 GRADES = ("easy", "good", "hard")
 _GRADE_DIFFICULTY = {"easy": 1, "good": 3, "hard": 5}
@@ -48,10 +57,11 @@ INITIAL_EASE = 2.5
 MAX_EASE = 2.5
 MIN_EASE = 1.3
 MAX_INTERVAL_DAYS = 3650
+LEARNING_INTERVAL_DAYS = 7
+MASTERED_INTERVAL_DAYS = 21
 
-# The ease a lapse pulls a word down *to* — just under the 2.0 gate in
-# ``status_from_progress``, so it maps to Reviewing whatever its counters say.
-# A ceiling rather than a fixed drop, because a lapse can follow a Hard grade
+# The ease a lapse pulls a word down *to*, so its interval regrows slowly. A
+# ceiling rather than a fixed drop, because a lapse can follow a Hard grade
 # that has already taken 0.2 off: subtracting again would punish one click
 # twice. A word already below it is only rescheduled, not pushed lower.
 LAPSE_EASE = 1.9
@@ -103,18 +113,101 @@ def apply_grade(card, grade: str, now: datetime | None = None) -> dict:
     }
 
 
+def regrade(card, grade: str, now: datetime | None = None,
+            credit: bool = True) -> dict:
+    """Return the scheduling state for a word graded again in the same sitting.
+
+    No time has passed since its last grade, so there is nothing for ease to
+    multiply: Hard resets to one day, Good keeps the interval, and Easy lifts a
+    one-day reset to two — never more, or same-day Easy grades would climb the
+    interval rungs without any time passing.
+    Ease and ``review_count`` stay as the sitting's first grade left them.
+    ``credit`` adds a correct recall — a day counts at most one.
+    """
+    if grade not in _GRADE_DIFFICULTY:
+        raise ValueError(f"unknown grade: {grade!r}")
+    now = now or datetime.now()
+    card = card or {}
+    interval = int(card.get("interval_days") or 1)
+    if grade == "hard":
+        interval = 1
+    elif grade == "easy":
+        interval = max(interval, 2)
+    interval = max(1, min(interval, MAX_INTERVAL_DAYS))
+    correct_count = int(card.get("correct_count") or 0)
+    if credit and _GRADE_CORRECT[grade]:
+        correct_count += 1
+    return {
+        "ease_factor": round(float(card.get("ease_factor") or INITIAL_EASE), 4),
+        "interval_days": interval,
+        "next_review": (now + timedelta(days=interval)).isoformat(timespec="seconds"),
+        "review_count": int(card.get("review_count") or 0),
+        "correct_count": correct_count,
+    }
+
+
+def graded_today(card, now: datetime | None = None) -> bool:
+    """Whether ``card`` was last graded on ``now``'s local calendar day.
+
+    ``last_reviewed`` is UTC — SQLite ``CURRENT_TIMESTAMP`` without an offset,
+    or an offset stamp from sync — unlike the naive local ``next_review``.
+    """
+    if not card or int(card.get("review_count") or 0) == 0:
+        return False
+    reviewed = parse_progress_ts(card.get("last_reviewed"))
+    if reviewed is None:
+        return False
+    return reviewed.astimezone().date() == _local_date(now or datetime.now())
+
+
+def _local_date(now: datetime):
+    return (now.astimezone() if now.tzinfo else now).date()
+
+
+class RecallCredits:
+    """Which words already had today's correct recall counted.
+
+    Process memory only. A same-day re-grade it knows nothing about — after a
+    restart, or graded first on another device — gets no credit, so a word can
+    miss one but never gets two.
+    """
+
+    def __init__(self):
+        self._days = {}  # word id → (local date, credited)
+
+    def schedule(self, wid, card, grade: str, now: datetime | None = None) -> dict:
+        """The row grading ``wid`` now would write; records nothing."""
+        now = now or datetime.now()
+        if not graded_today(card, now):
+            return apply_grade(card, grade, now)
+        return regrade(card, grade, now, credit=not self._credited(str(wid), now))
+
+    def record(self, wid, card, grade: str, now: datetime | None = None) -> None:
+        """Note a written grade. ``card`` is the row as it was *before* it."""
+        now = now or datetime.now()
+        credited = graded_today(card, now) and self._credited(str(wid), now)
+        self._days[str(wid)] = (_local_date(now), credited or _GRADE_CORRECT[grade])
+
+    def _credited(self, wid, now):
+        day, credited = self._days.get(wid, (None, True))
+        return credited if day == _local_date(now) else True
+
+
+CREDITS = RecallCredits()
+
+
 def lapse(card, now: datetime | None = None) -> dict:
     """Return the scheduling state for a word the user says they have forgotten.
 
-    Due immediately, interval back to one day, and ease dropped below the
-    Learning gate so the word has to climb ``status_from_progress`` again
-    instead of snapping back to Mastered on its next correct grade.
+    Due immediately, interval back to one day so it maps to Reviewing, and ease
+    capped at ``LAPSE_EASE`` so the interval has to regrow slowly instead of
+    snapping back to Mastered in a couple of correct grades.
 
     The counters are deliberately left untouched. ``review_count`` and
     ``correct_count`` are monotonic across devices — :func:`db.merge_progress_rows`
     merges them by ``max`` — so zeroing them here would be undone by the next
     sync pull. The scheduling fields travel as one group from the side with the
-    newer ``updated_at``, which is why the lapse has to work through ease.
+    newer ``updated_at``, which is why the lapse works through the schedule.
     """
     now = now or datetime.now()
     ease = float((card or {}).get("ease_factor") or INITIAL_EASE)
@@ -130,10 +223,8 @@ def lapse(card, now: datetime | None = None) -> dict:
 def lapses_on_grade(status, grade: str) -> bool:
     """Whether ``grade`` on a word at ``status`` means "I have forgotten this".
 
-    Only a Hard grade on the top rung. That is the one case where the SM-2
-    mapping and the label disagree in a way worth acting on — the mapping keeps
-    saying Mastered because ``correct_count`` never falls, while the user has
-    just said the opposite. Lower rungs are left alone: the interval reset the
+    Only a Hard grade on the top rung. Statuses never demote, so the label would
+    keep saying Mastered while the user has just said the opposite. Lower rungs are left alone: the interval reset the
     grade itself applied is already the right answer there.
     """
     return (grade == "hard"
@@ -162,13 +253,13 @@ def seconds_until_due(next_review, now: datetime | None = None) -> float | None:
     return (due - now).total_seconds()
 
 
-def status_from_progress(review_count: int, ease: float, correct_count: int) -> str:
-    """The familiarity status a card's scheduling state maps to (web-app rules)."""
+def status_from_progress(review_count: int, interval_days: int) -> str:
+    """The familiarity status a card's scheduling state maps to."""
     if int(review_count or 0) == 0:
         return "New"
-    if float(ease) >= 2.3 and int(correct_count) >= 5:
+    if int(interval_days or 0) >= MASTERED_INTERVAL_DAYS:
         return "Mastered"
-    if float(ease) >= 2.0 and int(correct_count) >= 3:
+    if int(interval_days or 0) >= LEARNING_INTERVAL_DAYS:
         return "Learning"
     return "Reviewing"
 

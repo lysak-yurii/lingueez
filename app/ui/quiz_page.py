@@ -1623,12 +1623,15 @@ class QuizPage(QWidget):
             return None
         grade = quiz.GRADE_FOR_VERDICT[verdict]
         try:
-            state = srs.apply_grade(dbq.srs_get(wid), grade, datetime.now())
+            now = datetime.now()
+            before = dbq.srs_get(wid)
+            state = srs.CREDITS.schedule(wid, before, grade, now)
             dbq.srs_upsert(wid, state)
-            dbq.log_review(wid, datetime.now().isoformat(timespec="seconds"))
+            dbq.log_review(wid, now.isoformat(timespec="seconds"))
         except Exception as exc:
             logging.error(f"Recording quiz answer failed: {exc}")
             return None
+        srs.CREDITS.record(wid, before, grade, now)
         self._graded.add(wid)
         if srs.lapses_on_grade(question.record.get("Status"), grade):
             # Getting a Mastered word wrong is the user saying they have
@@ -1642,7 +1645,7 @@ class QuizPage(QWidget):
             # A wrong answer never promotes — see FlashcardsPage._grade.
             return None
         mapped = srs.status_from_progress(
-            state["review_count"], state["ease_factor"], state["correct_count"])
+            state["review_count"], state["interval_days"])
         target = srs.promotion_target(question.record.get("Status"), mapped)
         if target:
             question.record["Status"] = target
@@ -1892,8 +1895,8 @@ class QuizPage(QWidget):
     def _practice_missed_clicked(self):
         """Re-ask just the words missed, as a fresh quiz over the same options.
 
-        Grading still goes through SM-2, so a word recalled on the second pass
-        earns its longer interval instead of staying stuck at one day.
+        These words were graded earlier today, so ``srs.CREDITS`` scores the
+        drill as re-grades, not fresh reviews.
         """
         records = list(self._missed_deck)
         if not records:

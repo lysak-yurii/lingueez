@@ -86,15 +86,11 @@ class LapseTests(unittest.TestCase):
         self.assertEqual(state["interval_days"], 1)
         self.assertEqual(state["next_review"], NOW.isoformat(timespec="seconds"))
 
-    def test_ease_drops_below_the_learning_gate(self):
+    def test_maps_to_reviewing_with_the_ease_capped(self):
         state = srs.lapse(_mastered_card(), NOW)
         self.assertEqual(state["ease_factor"], 1.9)
-        # The whole point: the mapping must not still say Mastered, even though
-        # correct_count is untouched and far past the gate.
         self.assertEqual(
-            srs.status_from_progress(
-                state["review_count"], state["ease_factor"], state["correct_count"]
-            ),
+            srs.status_from_progress(state["review_count"], state["interval_days"]),
             "Reviewing",
         )
 
@@ -163,7 +159,7 @@ class LapsesOnGradeTests(unittest.TestCase):
 
 
 class ReclimbTests(unittest.TestCase):
-    """What the user actually sees after flagging: four correct grades back to
+    """What the user actually sees after flagging: six correct grades back to
     Mastered, on any client — the phone runs this same arithmetic."""
 
     def _grades(self, n):
@@ -172,26 +168,29 @@ class ReclimbTests(unittest.TestCase):
         seen = []
         for _ in range(n):
             card = srs.apply_grade(card, "good", NOW)
-            mapped = srs.status_from_progress(
-                card["review_count"], card["ease_factor"], card["correct_count"]
-            )
+            mapped = srs.status_from_progress(card["review_count"], card["interval_days"])
             status = srs.promotion_target(status, mapped) or status
             seen.append((card["interval_days"], status))
         return seen
 
     def test_the_climb_back(self):
         self.assertEqual(
-            self._grades(4),
-            [(1, "Learning"), (2, "Learning"), (4, "Learning"), (8, "Mastered")],
+            self._grades(6),
+            [
+                (1, "Reviewing"),
+                (2, "Reviewing"),
+                (4, "Reviewing"),
+                (8, "Learning"),
+                (18, "Learning"),
+                (43, "Mastered"),
+            ],
         )
 
     def test_a_hard_grade_knocks_it_back_down(self):
         card = dict(_mastered_card(), **srs.lapse(_mastered_card(), NOW))
         card = srs.apply_grade(card, "hard", NOW)
         self.assertEqual(
-            srs.status_from_progress(
-                card["review_count"], card["ease_factor"], card["correct_count"]
-            ),
+            srs.status_from_progress(card["review_count"], card["interval_days"]),
             "Reviewing",
         )
 
@@ -268,25 +267,18 @@ class ImmediateProgressPushTests(unittest.TestCase):
 
 
 class WrongAnswerNeverPromotesTests(unittest.TestCase):
-    """A word whose SM-2 state has run ahead of its label used to be promoted
-    by getting it *wrong*: one Hard barely moves cumulative counters, so the
-    mapping still read higher than the rung and promotion_target applied it."""
+    """A word whose SM-2 state had run ahead of its label used to be promoted
+    by getting it *wrong*, back when the rungs read cumulative counters."""
 
-    def test_the_mapping_can_outrun_the_label(self):
-        # The setup that made this reachable: ease still high, plenty correct,
-        # but the word is only labelled Learning.
+    def test_a_hard_grade_maps_to_the_bottom_rung(self):
         graded = srs.apply_grade(
             {"ease_factor": 2.5, "interval_days": 30, "review_count": 25, "correct_count": 20},
             "hard",
             NOW,
         )
-        mapped = srs.status_from_progress(
-            graded["review_count"], graded["ease_factor"], graded["correct_count"]
-        )
-        self.assertEqual(mapped, "Mastered")
-        # promotion_target is pure and still says "yes" — the grade is what the
-        # pages now refuse to promote on, so the rule lives at the call site.
-        self.assertEqual(srs.promotion_target("Learning", mapped), "Mastered")
+        mapped = srs.status_from_progress(graded["review_count"], graded["interval_days"])
+        self.assertEqual(mapped, "Reviewing")
+        self.assertIsNone(srs.promotion_target("Learning", mapped))
 
     def test_pages_do_not_promote_on_hard(self):
         import inspect

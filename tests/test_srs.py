@@ -114,22 +114,166 @@ class ApplyGradeSequenceTests(unittest.TestCase):
         self.assertEqual(state["next_review"], _iso(state["interval_days"]))
 
 
+LEARNING = {"ease_factor": 2.5, "interval_days": 6, "review_count": 4, "correct_count": 4}
+YESTERDAY_UTC = (NOW - timedelta(days=1)).astimezone(timezone.utc).isoformat()
+
+
+def _learning():
+    return dict(LEARNING, last_reviewed=YESTERDAY_UTC)
+
+
+def _written(state, now=NOW):
+    """The row as ``srs_upsert`` leaves it: stamped reviewed, in SQLite's UTC shape."""
+    stamp = now.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return dict(state, last_reviewed=stamp)
+
+
+class GradedTodayTests(unittest.TestCase):
+    def test_sqlite_stamp_is_read_as_utc(self):
+        self.assertTrue(srs.graded_today(_written(LEARNING), NOW))
+
+    def test_offset_stamp_from_sync(self):
+        card = dict(LEARNING, last_reviewed=NOW.astimezone(timezone.utc).isoformat())
+        self.assertTrue(srs.graded_today(card, NOW))
+
+    def test_yesterday_or_never(self):
+        self.assertFalse(srs.graded_today(_learning(), NOW))
+        self.assertFalse(srs.graded_today(LEARNING, NOW))
+        self.assertFalse(srs.graded_today(None, NOW))
+
+    def test_a_listen_only_row_was_never_graded(self):
+        card = {"review_count": 0, "last_reviewed": NOW.isoformat()}
+        self.assertFalse(srs.graded_today(card, NOW))
+
+
+class RecallCreditsTests(unittest.TestCase):
+    def _grade(self, credits, wid, card, grade, now=NOW):
+        state = credits.schedule(wid, card, grade, now)
+        credits.record(wid, card, grade, now)
+        return _written(state, now)
+
+    def test_first_grade_of_the_day_is_a_plain_review(self):
+        card = _learning()
+        self.assertEqual(
+            srs.RecallCredits().schedule("w", card, "good", NOW),
+            srs.apply_grade(card, "good", NOW),
+        )
+
+    def test_drill_after_hard_does_not_grow_by_ease(self):
+        credits = srs.RecallCredits()
+        after_hard = self._grade(credits, "w", _learning(), "hard")
+        days = {g: credits.schedule("w", after_hard, g, NOW)["interval_days"] for g in srs.GRADES}
+        self.assertEqual(days, {"hard": 1, "good": 1, "easy": 2})
+
+    def test_repeated_hard_drops_ease_and_counts_a_review_once(self):
+        credits = srs.RecallCredits()
+        state = self._grade(credits, "w", _learning(), "hard")
+        state = self._grade(credits, "w", state, "hard")
+        state = self._grade(credits, "w", state, "hard")
+        self.assertEqual(state["ease_factor"], 2.3)
+        self.assertEqual(state["review_count"], 5)
+        self.assertEqual(state["next_review"], _iso(1))
+
+    def test_a_recovery_is_credited_once(self):
+        credits = srs.RecallCredits()
+        state = self._grade(credits, "w", _learning(), "hard")
+        state = self._grade(credits, "w", state, "good")
+        self.assertEqual((state["correct_count"], state["ease_factor"]), (5, 2.3))
+        state = self._grade(credits, "w", state, "hard")
+        state = self._grade(credits, "w", state, "easy")
+        self.assertEqual(state["correct_count"], 5)
+
+    def test_a_correct_first_grade_is_the_credit(self):
+        credits = srs.RecallCredits()
+        state = self._grade(credits, "w", _learning(), "good")
+        state = self._grade(credits, "w", state, "easy")
+        self.assertEqual(state["correct_count"], 5)
+
+    def test_a_later_session_the_same_day_is_still_a_regrade(self):
+        credits = srs.RecallCredits()
+        after_hard = self._grade(credits, "w", _learning(), "hard")
+        later = NOW + timedelta(hours=3)
+        state = credits.schedule("w", after_hard, "good", later)
+        self.assertEqual((state["interval_days"], state["review_count"]), (1, 5))
+        self.assertEqual(state["correct_count"], 5)
+
+    def test_after_a_restart_a_same_day_regrade_is_not_credited(self):
+        after_hard = self._grade(srs.RecallCredits(), "w", _learning(), "hard")
+        state = srs.RecallCredits().schedule("w", after_hard, "good", NOW)
+        self.assertEqual((state["interval_days"], state["correct_count"]), (1, 4))
+
+    def test_the_next_day_is_a_plain_review_again(self):
+        credits = srs.RecallCredits()
+        after_hard = self._grade(credits, "w", _learning(), "hard")
+        tomorrow = NOW + timedelta(days=1)
+        self.assertEqual(
+            credits.schedule("w", after_hard, "good", tomorrow),
+            srs.apply_grade(after_hard, "good", tomorrow),
+        )
+
+    def test_regrade_after_a_lapse_keeps_the_lowered_ease(self):
+        mastered = {
+            "ease_factor": 2.5,
+            "interval_days": 60,
+            "review_count": 12,
+            "correct_count": 11,
+            "last_reviewed": YESTERDAY_UTC,
+        }
+        credits = srs.RecallCredits()
+        after_hard = self._grade(credits, "w", mastered, "hard")
+        lapsed = dict(srs.lapse(after_hard, NOW), last_reviewed=after_hard["last_reviewed"])
+        state = self._grade(credits, "w", lapsed, "good")
+        self.assertEqual((state["interval_days"], state["ease_factor"]), (1, 1.9))
+        self.assertEqual((state["review_count"], state["correct_count"]), (13, 12))
+
+    def test_word_ids_match_whatever_their_type(self):
+        credits = srs.RecallCredits()
+        state = self._grade(credits, 7, _learning(), "hard")
+        self.assertEqual(credits.schedule("7", state, "good", NOW)["correct_count"], 5)
+
+    def test_same_day_easy_never_climbs_past_two_days(self):
+        credits = srs.RecallCredits()
+        state = self._grade(credits, "w", _learning(), "good")
+        self.assertEqual(state["interval_days"], 15)
+        for _ in range(8):
+            state = self._grade(credits, "w", state, "easy")
+        self.assertEqual(state["interval_days"], 15)
+
+    def test_regrade_rejects_unknown_grades(self):
+        with self.assertRaises(ValueError):
+            srs.regrade(LEARNING, "meh", NOW)
+
+
 class StatusFromProgressTests(unittest.TestCase):
     def test_zero_reviews_is_new(self):
-        self.assertEqual(srs.status_from_progress(0, 2.5, 0), "New")
+        self.assertEqual(srs.status_from_progress(0, 30), "New")
 
     def test_mastered_boundary(self):
-        self.assertEqual(srs.status_from_progress(5, 2.3, 5), "Mastered")
-        self.assertEqual(srs.status_from_progress(5, 2.29, 5), "Learning")
-        self.assertEqual(srs.status_from_progress(5, 2.3, 4), "Learning")
+        self.assertEqual(srs.status_from_progress(5, 21), "Mastered")
+        self.assertEqual(srs.status_from_progress(5, 20), "Learning")
 
     def test_learning_boundary(self):
-        self.assertEqual(srs.status_from_progress(3, 2.0, 3), "Learning")
-        self.assertEqual(srs.status_from_progress(3, 1.9, 3), "Reviewing")
-        self.assertEqual(srs.status_from_progress(3, 2.0, 2), "Reviewing")
+        self.assertEqual(srs.status_from_progress(3, 7), "Learning")
+        self.assertEqual(srs.status_from_progress(3, 6), "Reviewing")
 
     def test_reviewed_but_struggling_is_reviewing(self):
-        self.assertEqual(srs.status_from_progress(1, 1.3, 0), "Reviewing")
+        self.assertEqual(srs.status_from_progress(1, 1), "Reviewing")
+        self.assertEqual(srs.status_from_progress(1, None), "Reviewing")
+
+    def _mastered_on(self, grade):
+        state, day = None, 0
+        while True:
+            state = srs.apply_grade(state, grade, NOW + timedelta(days=day))
+            if (
+                srs.status_from_progress(state["review_count"], state["interval_days"])
+                == "Mastered"
+            ):
+                return day
+            day += state["interval_days"]
+
+    def test_easy_masters_no_later_than_good(self):
+        self.assertEqual(self._mastered_on("good"), 20)
+        self.assertEqual(self._mastered_on("easy"), 15)
 
 
 class PromotionTargetTests(unittest.TestCase):
