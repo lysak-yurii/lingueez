@@ -32,7 +32,7 @@ directory per part, and `ffmpeg/` plus `backups/` push that past 1.3 GB even tho
 both are gitignored. Tracked content is ~150 MB.
 
 ```bash
-git worktree add /tmp/lingueez-snap v2.0.9 && cd /tmp/lingueez-snap && snapcraft
+git worktree add /tmp/lingueez-snap v2.1.0 && cd /tmp/lingueez-snap && snapcraft
 ```
 
 ## Install and connect
