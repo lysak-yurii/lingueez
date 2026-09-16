@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Tambah definisi…",
     "Generate on save": "Jana semasa menyimpan",
     "Set up an AI key in Settings → Translation & AI to use this": "Sediakan kunci AI dalam Tetapan → Terjemahan & AI untuk menggunakan ini",
+    "Select the source language first.": "Sila pilih bahasa sumber dahulu.",
+    "The definition in the box will be replaced by a generated one.": "Definisi dalam kotak akan diganti dengan definisi yang dijana.",
     "Definitions on save turned off": "Definisi semasa menyimpan dimatikan",
     "Turned off after {n} failed attempts in a row.": "Dimatikan selepas {n} percubaan gagal berturut-turut.",
     "Definition not generated": "Definisi tidak dijana",

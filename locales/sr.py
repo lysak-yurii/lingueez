@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Додајте дефиницију…",
     "Generate on save": "Генериши при чувању",
     "Set up an AI key in Settings → Translation & AI to use this": "Подесите кључ за вештачку интелигенцију у Подешавања → Превод и вештачка интелигенција да бисте ово користили",
+    "Select the source language first.": "Прво изаберите изворни језик.",
+    "The definition in the box will be replaced by a generated one.": "Дефиниција у пољу биће замењена генерисаном.",
     "Definitions on save turned off": "Дефиниције при чувању су искључене",
     "Turned off after {n} failed attempts in a row.": "Искључено после {n} неуспелих покушаја заредом.",
     "Definition not generated": "Дефиниција није генерисана",

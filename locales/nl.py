@@ -450,6 +450,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Voeg een definitie toe…",
     "Generate on save": "Genereren bij opslaan",
     "Set up an AI key in Settings → Translation & AI to use this": "Stel een AI-sleutel in onder Instellingen → Vertaling & AI om dit te gebruiken",
+    "Select the source language first.": "Selecteer eerst de brontaal.",
+    "The definition in the box will be replaced by a generated one.": "De definitie in het veld wordt vervangen door een gegenereerde.",
     "Definitions on save turned off": "Definities bij opslaan uitgeschakeld",
     "Turned off after {n} failed attempts in a row.": "Uitgeschakeld na {n} mislukte pogingen op rij.",
     "Definition not generated": "Definitie niet gegenereerd",

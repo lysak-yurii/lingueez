@@ -451,6 +451,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "정의를 추가하세요…",
     "Generate on save": "저장할 때 생성",
     "Set up an AI key in Settings → Translation & AI to use this": "이 기능을 사용하려면 설정 → 번역 및 AI에서 AI 키를 설정하세요",
+    "Select the source language first.": "먼저 출발어 언어를 선택하세요.",
+    "The definition in the box will be replaced by a generated one.": "상자의 정의가 생성된 정의로 바뀝니다.",
     "Definitions on save turned off": "저장 시 정의 생성이 꺼졌습니다",
     "Turned off after {n} failed attempts in a row.": "{n}번 연속 실패하여 꺼졌습니다.",
     "Definition not generated": "정의를 생성하지 못했습니다",

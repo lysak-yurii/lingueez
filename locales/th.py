@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "เพิ่มคำนิยาม…",
     "Generate on save": "สร้างเมื่อบันทึก",
     "Set up an AI key in Settings → Translation & AI to use this": "ตั้งค่าคีย์ AI ใน ตั้งค่า → การแปล & AI เพื่อใช้ฟีเจอร์นี้",
+    "Select the source language first.": "โปรดเลือกภาษาต้นทางก่อน",
+    "The definition in the box will be replaced by a generated one.": "คำนิยามในช่องจะถูกแทนที่ด้วยคำนิยามที่สร้างขึ้น",
     "Definitions on save turned off": "ปิดการสร้างคำนิยามเมื่อบันทึกแล้ว",
     "Turned off after {n} failed attempts in a row.": "ปิดหลังจากล้มเหลวติดต่อกัน {n} ครั้ง",
     "Definition not generated": "ไม่ได้สร้างคำนิยาม",

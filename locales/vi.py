@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Thêm định nghĩa…",
     "Generate on save": "Tạo khi lưu",
     "Set up an AI key in Settings → Translation & AI to use this": "Thiết lập khóa AI trong Cài đặt → Dịch & AI để dùng tính năng này",
+    "Select the source language first.": "Vui lòng chọn ngôn ngữ nguồn trước.",
+    "The definition in the box will be replaced by a generated one.": "Định nghĩa trong ô sẽ được thay bằng định nghĩa được tạo.",
     "Definitions on save turned off": "Đã tắt tạo định nghĩa khi lưu",
     "Turned off after {n} failed attempts in a row.": "Đã tắt sau {n} lần thất bại liên tiếp.",
     "Definition not generated": "Chưa tạo được định nghĩa",

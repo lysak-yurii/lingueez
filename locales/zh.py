@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "添加释义…",
     "Generate on save": "保存时生成",
     "Set up an AI key in Settings → Translation & AI to use this": "要使用此功能，请在 设置 → 翻译与 AI 中设置 AI 密钥",
+    "Select the source language first.": "请先选择源语言。",
+    "The definition in the box will be replaced by a generated one.": "框中的释义将被替换为生成的释义。",
     "Definitions on save turned off": "已关闭保存时生成释义",
     "Turned off after {n} failed attempts in a row.": "连续失败 {n} 次后已关闭。",
     "Definition not generated": "未能生成释义",

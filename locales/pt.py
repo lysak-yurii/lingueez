@@ -452,6 +452,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Adicione uma definição…",
     "Generate on save": "Gerar ao guardar",
     "Set up an AI key in Settings → Translation & AI to use this": "Configure uma chave de IA em Definições → Tradução e IA para usar isto",
+    "Select the source language first.": "Selecione primeiro o idioma de origem.",
+    "The definition in the box will be replaced by a generated one.": "A definição na caixa será substituída por uma definição gerada.",
     "Definitions on save turned off": "Definições ao guardar desativadas",
     "Turned off after {n} failed attempts in a row.": "Desativado após {n} tentativas falhadas seguidas.",
     "Definition not generated": "A definição não foi gerada",

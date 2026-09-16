@@ -58,6 +58,7 @@ class _DialogCase(unittest.TestCase):
             mock.patch.object(DatabaseAdapter, "_use_cloud", lambda self: False),
             mock.patch.object(auth_manager, "cloud_backend_active", lambda: False),
             mock.patch.object(ai, "has_api_key", lambda: self.has_key),
+            mock.patch.object(add_word, "translate", lambda *a, **kw: ("", None)),
         ):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -120,9 +121,110 @@ class TypedDefinitionTests(_DialogCase):
         self.assertEqual(self.requested, [])
 
 
+class GenerateNowTests(_DialogCase):
+    """The sparkles button in the box's corner: write one now, edit, then save."""
+
+    has_key = True
+    switched_on = True
+
+    def generate(self, text="a building people live in"):
+        button = self.dialog.definition_edit.generate_btn
+        with mock.patch.object(ai, "get_definition", return_value=text) as call:
+            self.dialog.do_generate_definition()
+            for _ in range(200):
+                if call.called and button.isEnabled():
+                    break
+                QTest.qWait(10)
+        return call
+
+    def test_the_text_lands_in_the_box(self):
+        self.fill()
+        self.open_panel()
+        call = self.generate()
+        request = call.call_args.kwargs
+        self.assertEqual((request["word"], request["word_language"]), ("haus", "English"))
+        self.assertEqual(self.dialog.definition_edit.toPlainText(), "a building people live in")
+
+    def test_saving_stores_it_and_generates_nothing_more(self):
+        self.fill()
+        self.open_panel()
+        self.generate()
+        self.dialog.save_word()
+        self.assertEqual(self.stored("haus")["Definition2"], "a building people live in")
+        self.assertEqual(self.requested, [])
+
+    def test_an_edit_before_saving_is_what_gets_stored(self):
+        self.fill()
+        self.open_panel()
+        self.generate()
+        self.dialog.definition_edit.setPlainText("a house, edited by hand")
+        self.dialog.save_word()
+        self.assertEqual(self.stored("haus")["Definition2"], "a house, edited by hand")
+
+    def test_a_filled_box_is_left_alone_when_the_replacement_is_declined(self):
+        self.fill()
+        self.open_panel()
+        self.dialog.definition_edit.setPlainText("mine")
+        with (
+            mock.patch.object(add_word.AddWordDialog, "_confirm_replace", return_value=False),
+            mock.patch.object(ai, "get_definition") as call,
+        ):
+            self.dialog.do_generate_definition()
+        call.assert_not_called()
+        self.assertEqual(self.dialog.definition_edit.toPlainText(), "mine")
+
+    def test_a_filled_box_is_replaced_once_confirmed(self):
+        self.fill()
+        self.open_panel()
+        self.dialog.definition_edit.setPlainText("mine")
+        with mock.patch.object(add_word.AddWordDialog, "_confirm_replace", return_value=True):
+            self.generate("the generated one")
+        self.assertEqual(self.dialog.definition_edit.toPlainText(), "the generated one")
+
+    def test_without_a_word_it_says_so_and_asks_for_nothing(self):
+        self.open_panel()
+        with mock.patch.object(ai, "get_definition") as call:
+            self.dialog.do_generate_definition()
+        call.assert_not_called()
+        self.assertIn("word", self.dialog.info_label.text().lower())
+
+    def test_an_undetected_source_language_is_refused(self):
+        self.fill()
+        self.dialog._set_lang(self.dialog.lang1_combo, "Detect language")
+        self.open_panel()
+        with mock.patch.object(ai, "get_definition") as call:
+            self.dialog.do_generate_definition()
+        call.assert_not_called()
+        self.assertTrue(self.dialog.info_label.text())
+
+    def test_a_failure_is_shown_and_leaves_box_and_switch_alone(self):
+        self.fill()
+        self.open_panel()
+        self.dialog.definition_edit.setPlainText("mine")
+        with (
+            mock.patch.object(add_word.AddWordDialog, "_confirm_replace", return_value=True),
+            mock.patch.object(ai, "get_definition", side_effect=ai.AIError("no quota")),
+        ):
+            self.dialog.do_generate_definition()
+            for _ in range(100):  # the button comes back when the worker is done
+                if self.dialog.definition_edit.generate_btn.isEnabled():
+                    break
+                QTest.qWait(10)
+        self.assertEqual(self.dialog.definition_edit.toPlainText(), "mine")
+        self.assertEqual(self.dialog.info_label.text(), "no quota")
+        self.assertTrue(self.dialog.definition_edit.generate_btn.isEnabled())
+        # the three-strikes counter belongs to unattended generation only
+        settings = load_settings()
+        self.assertTrue(get_bool(settings, autogen.ENABLED_KEY))
+        self.assertEqual(settings[autogen.FAILURES_KEY], "0")
+
+
 class NoKeyTests(_DialogCase):
     has_key = False
     switched_on = True
+
+    def test_the_generate_button_is_disabled(self):
+        self.assertFalse(self.dialog.definition_edit.generate_btn.isEnabled())
 
     def test_switch_is_disabled_and_the_setting_turned_off(self):
         self.assertFalse(self.dialog.autogen_switch.isEnabled())

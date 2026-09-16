@@ -26,8 +26,9 @@ A definition can ride along: a folded panel to type one, or to have the AI
 write it after the save (see :mod:`app.core.definition_autogen`)."""
 import logging
 
+import shiboken6
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
     QPlainTextEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget,
@@ -110,14 +111,49 @@ class _Switch(QCheckBox):
 
 
 class _DefinitionEdit(QPlainTextEdit):
-    """Plain-text definition box where Ctrl+Enter saves and Enter is a new line."""
+    """Plain-text definition box where Ctrl+Enter saves and Enter is a new line.
+
+    Carries the AI button in its own bottom-right corner, so asking for a
+    definition costs the dialog no room.
+    """
     submit = Signal()
+    generate = Signal()
+
+    def __init__(self, colors):
+        super().__init__()
+        self.generate_btn = QPushButton(self, objectName="iconButton")
+        # #iconButton's own min-width and padding would make it 42px wide, and a
+        # transparent button would sit in the middle of whatever line is under it.
+        self.generate_btn.setStyleSheet(
+            f"QPushButton {{ min-width: 0px; padding: 0px; border-radius: 6px;"
+            f" background: {colors['surface']}; }}"
+            f"QPushButton:hover {{ background: {colors['surface_alt']}; }}")
+        self.generate_btn.setFixedSize(24, 24)
+        self.generate_btn.setIcon(icons.icon("sparkles", colors["text_dim"], 16))
+        self.generate_btn.setIconSize(QSize(16, 16))
+        self.generate_btn.setCursor(Qt.PointingHandCursor)
+        self.generate_btn.setFocusPolicy(Qt.NoFocus)
+        self.generate_btn.clicked.connect(self.generate)
+        self.verticalScrollBar().rangeChanged.connect(self._place_generate_btn)
 
     def keyPressEvent(self, event):  # noqa: N802
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and event.modifiers() & Qt.ControlModifier:
             self.submit.emit()
             return
         super().keyPressEvent(event)
+
+    def resizeEvent(self, event):  # noqa: N802
+        super().resizeEvent(event)
+        self._place_generate_btn()
+
+    def _place_generate_btn(self, *_range):
+        bar = self.verticalScrollBar()
+        # maximum(), not isVisible(): the panel is folded shut most of its life,
+        # and nothing inside a hidden parent reports itself visible.
+        reserved = bar.width() if bar.maximum() else 0
+        self.generate_btn.move(self.width() - reserved - self.generate_btn.width() - 6,
+                               self.height() - self.generate_btn.height() - 6)
+        self.generate_btn.raise_()
 
 
 class AddWordDialog(FramelessDialog):
@@ -294,7 +330,9 @@ class AddWordDialog(FramelessDialog):
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(8)
 
-        self.definition_edit = _DefinitionEdit()
+        self.definition_edit = _DefinitionEdit(self.colors)
+        self.definition_edit.generate.connect(self.do_generate_definition)
+        self.definition_edit.generate_btn.setToolTip(tr("Generate with AI"))
         self.definition_edit.setPlaceholderText(tr("Add a definition…"))
         self.definition_edit.setTabChangesFocus(True)
         self.definition_edit.setFixedHeight(self.definition_edit.fontMetrics().lineSpacing() * 4 + 16)
@@ -315,7 +353,8 @@ class AddWordDialog(FramelessDialog):
             save_settings(settings)
         has_key = ai.has_api_key()
         self.autogen_switch.setChecked(definition_autogen.enabled(settings))
-        for widget in (self.autogen_switch, self.autogen_label):
+        for widget in (self.autogen_switch, self.autogen_label,
+                       self.definition_edit.generate_btn):
             widget.setEnabled(has_key)
             if not has_key:
                 widget.setToolTip(tr("Set up an AI key in Settings → Translation & AI to use this"))
@@ -411,7 +450,12 @@ class AddWordDialog(FramelessDialog):
 
     def _info(self, message):
         self.info_label.setText(message)
-        self.info_label.setVisible(bool(message))
+        if self.info_label.isVisibleTo(self) != bool(message):
+            # showing the label raises the minimum height and resizes the window
+            # on the spot, and hiding it never gives that height back
+            self._frame_sync.hold()
+            self.info_label.setVisible(bool(message))
+        self._fit_height()
 
     def _set_lang(self, combo, language):
         """set_lang() that doesn't wake the auto-translate handler — the dialog
@@ -548,6 +592,66 @@ class AddWordDialog(FramelessDialog):
             self.translate_btn.setEnabled(True)
 
         run_in_thread(work, on_result=done, on_error=self._info, on_finished=finished)
+
+    def do_generate_definition(self):
+        """Write a definition into the box now, for the user to edit before saving.
+
+        The word doesn't have to be saved first: ai.get_definition() hands back
+        the text and stores nothing, unlike the generate-on-save route, which
+        defines the row the main window has already written.
+        """
+        if not self.def_language_combo.count():
+            self._fill_definition_languages()
+        record = {
+            "Word1": self.word1_edit.text().strip(),
+            "Word2": self.word2_edit.text().strip(),
+            "Language1": get_lang(self.lang1_combo),
+            "Language2": get_lang(self.lang2_combo),
+        }
+        request = ai.definition_request(record, self.def_word_combo.currentData(),
+                                        self.def_language_combo.currentData())
+        if not request["word"]:
+            self._info(tr("There is no word to define."))
+            return
+        if "Detect language" in (request["word_language"], request["language"]):
+            # the combo's text goes straight into the prompt as the language
+            self._info(tr("Select the source language first."))
+            return
+        if self.definition_edit.toPlainText().strip() and not self._confirm_replace():
+            return
+
+        button = self.definition_edit.generate_btn
+        button.setEnabled(False)
+        self._info(tr("Generating definition…"))
+
+        def done(text):
+            if not shiboken6.isValid(self):
+                return
+            self.definition_edit.setPlainText(text.strip())
+            self.definition_edit.moveCursor(QTextCursor.Start)
+            self.definition_edit.ensureCursorVisible()
+            self._info("")
+
+        def failed(error):
+            if shiboken6.isValid(self):
+                self._info(error)
+
+        def finished():
+            if shiboken6.isValid(self):
+                button.setEnabled(True)
+
+        run_in_thread(lambda: ai.get_definition(**request), on_result=done,
+                      on_error=failed, on_finished=finished)
+
+    def _confirm_replace(self):
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        box.setWindowTitle(tr("Definition"))
+        box.setText(tr("The definition in the box will be replaced by a generated one."))
+        generate = box.addButton(tr("Generate"), QMessageBox.AcceptRole)
+        box.addButton(tr("Cancel"), QMessageBox.RejectRole)
+        box.exec()
+        return box.clickedButton() is generate
 
     def save_word(self):
         word1 = self.word1_edit.text().strip()

@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Bir tanım ekleyin…",
     "Generate on save": "Kaydederken oluştur",
     "Set up an AI key in Settings → Translation & AI to use this": "Bunu kullanmak için Ayarlar → Çeviri ve Yapay Zeka bölümünden bir yapay zeka anahtarı ayarlayın",
+    "Select the source language first.": "Önce kaynak dili seçin.",
+    "The definition in the box will be replaced by a generated one.": "Kutudaki tanım, oluşturulan bir tanımla değiştirilecek.",
     "Definitions on save turned off": "Kaydederken tanım oluşturma kapatıldı",
     "Turned off after {n} failed attempts in a row.": "Art arda {n} başarısız denemeden sonra kapatıldı.",
     "Definition not generated": "Tanım oluşturulmadı",

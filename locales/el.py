@@ -451,6 +451,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Προσθέστε έναν ορισμό…",
     "Generate on save": "Δημιουργία κατά την αποθήκευση",
     "Set up an AI key in Settings → Translation & AI to use this": "Ορίστε ένα κλειδί AI στις Ρυθμίσεις → Μετάφραση & AI για να το χρησιμοποιήσετε",
+    "Select the source language first.": "Επιλέξτε πρώτα τη γλώσσα πηγής.",
+    "The definition in the box will be replaced by a generated one.": "Ο ορισμός στο πεδίο θα αντικατασταθεί από έναν παραγόμενο.",
     "Definitions on save turned off": "Οι ορισμοί κατά την αποθήκευση απενεργοποιήθηκαν",
     "Turned off after {n} failed attempts in a row.": "Απενεργοποιήθηκε μετά από {n} συνεχόμενες αποτυχημένες προσπάθειες.",
     "Definition not generated": "Ο ορισμός δεν δημιουργήθηκε",

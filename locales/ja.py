@@ -450,6 +450,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "定義を追加…",
     "Generate on save": "保存時に生成",
     "Set up an AI key in Settings → Translation & AI to use this": "これを使うには、設定 → 翻訳 & AI で AI キーを設定してください",
+    "Select the source language first.": "先に翻訳元の言語を選択してください。",
+    "The definition in the box will be replaced by a generated one.": "ボックス内の定義は、生成された定義に置き換えられます。",
     "Definitions on save turned off": "保存時の定義生成をオフにしました",
     "Turned off after {n} failed attempts in a row.": "{n} 回連続で失敗したためオフにしました。",
     "Definition not generated": "定義を生成できませんでした",

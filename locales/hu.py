@@ -451,6 +451,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Adjon hozzá meghatározást…",
     "Generate on save": "Generálás mentéskor",
     "Set up an AI key in Settings → Translation & AI to use this": "A használathoz állítson be AI-kulcsot a Beállítások → Fordítás és AI menüben",
+    "Select the source language first.": "Először válassza ki a forrásnyelvet.",
+    "The definition in the box will be replaced by a generated one.": "A mezőben lévő meghatározást egy generált meghatározás váltja fel.",
     "Definitions on save turned off": "A mentéskori meghatározások kikapcsolva",
     "Turned off after {n} failed attempts in a row.": "Kikapcsolva {n} egymást követő sikertelen próbálkozás után.",
     "Definition not generated": "A meghatározás nem jött létre",

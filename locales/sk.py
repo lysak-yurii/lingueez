@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Pridajte definíciu…",
     "Generate on save": "Generovať pri uložení",
     "Set up an AI key in Settings → Translation & AI to use this": "Ak to chcete používať, nastavte kľúč AI v Nastavenia → Preklad a AI",
+    "Select the source language first.": "Najprv vyberte zdrojový jazyk.",
+    "The definition in the box will be replaced by a generated one.": "Definícia v poli bude nahradená vygenerovanou.",
     "Definitions on save turned off": "Definície pri uložení vypnuté",
     "Turned off after {n} failed attempts in a row.": "Vypnuté po {n} neúspešných pokusoch za sebou.",
     "Definition not generated": "Definícia nebola vygenerovaná",

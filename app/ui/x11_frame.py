@@ -172,7 +172,9 @@ class FrameSync(QObject):
 
     def hold(self):
         """Ask the compositor to keep showing this frame until the next repaint."""
-        if self._counter is None:
+        # a window that isn't on screen yet has no frame to hold and may never
+        # paint to release it
+        if self._counter is None or not self._window.isVisible():
             return
         self._token += 1
         token = self._token

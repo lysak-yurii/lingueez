@@ -450,6 +450,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Adaugă o definiție…",
     "Generate on save": "Generează la salvare",
     "Set up an AI key in Settings → Translation & AI to use this": "Configurează o cheie AI în Setări → Traducere și AI pentru a folosi asta",
+    "Select the source language first.": "Selectează mai întâi limba sursă.",
+    "The definition in the box will be replaced by a generated one.": "Definiția din casetă va fi înlocuită cu una generată.",
     "Definitions on save turned off": "Definițiile la salvare au fost dezactivate",
     "Turned off after {n} failed attempts in a row.": "Dezactivat după {n} încercări eșuate la rând.",
     "Definition not generated": "Definiția nu a fost generată",

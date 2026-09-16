@@ -449,6 +449,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Добавьте определение…",
     "Generate on save": "Генерировать при сохранении",
     "Set up an AI key in Settings → Translation & AI to use this": "Чтобы использовать это, настройте ключ ИИ в Настройки → Перевод и ИИ",
+    "Select the source language first.": "Сначала выберите исходный язык.",
+    "The definition in the box will be replaced by a generated one.": "Определение в поле будет заменено сгенерированным.",
     "Definitions on save turned off": "Определения при сохранении отключены",
     "Turned off after {n} failed attempts in a row.": "Отключено после {n} неудачных попыток подряд.",
     "Definition not generated": "Определение не создано",

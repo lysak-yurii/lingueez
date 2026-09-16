@@ -451,6 +451,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Lisää määritelmä…",
     "Generate on save": "Luo tallennettaessa",
     "Set up an AI key in Settings → Translation & AI to use this": "Määritä tekoälyavain kohdassa Asetukset → Käännös ja tekoäly käyttääksesi tätä",
+    "Select the source language first.": "Valitse ensin lähdekieli.",
+    "The definition in the box will be replaced by a generated one.": "Kentän määritelmä korvataan luodulla.",
     "Definitions on save turned off": "Määritelmät tallennettaessa poistettu käytöstä",
     "Turned off after {n} failed attempts in a row.": "Poistettu käytöstä {n} peräkkäisen epäonnistuneen yrityksen jälkeen.",
     "Definition not generated": "Määritelmää ei luotu",

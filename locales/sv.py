@@ -450,6 +450,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "Lägg till en definition…",
     "Generate on save": "Generera när du sparar",
     "Set up an AI key in Settings → Translation & AI to use this": "Konfigurera en AI-nyckel under Inställningar → Översättning & AI för att använda detta",
+    "Select the source language first.": "Välj källspråk först.",
+    "The definition in the box will be replaced by a generated one.": "Definitionen i rutan ersätts med en genererad.",
     "Definitions on save turned off": "Definitioner vid sparande avstängda",
     "Turned off after {n} failed attempts in a row.": "Avstängt efter {n} misslyckade försök i rad.",
     "Definition not generated": "Definitionen genererades inte",

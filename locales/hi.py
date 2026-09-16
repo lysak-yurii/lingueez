@@ -454,6 +454,8 @@ TRANSLATIONS: dict[str, str] = {
     "Add a definition…": "परिभाषा जोड़ें…",
     "Generate on save": "सहेजते समय जनरेट करें",
     "Set up an AI key in Settings → Translation & AI to use this": "इसका उपयोग करने के लिए सेटिंग्स → अनुवाद और AI में AI कुंजी सेट करें",
+    "Select the source language first.": "पहले स्रोत भाषा चुनें।",
+    "The definition in the box will be replaced by a generated one.": "बॉक्स में दी गई परिभाषा को जनरेट की गई परिभाषा से बदल दिया जाएगा।",
     "Definitions on save turned off": "सहेजते समय परिभाषाएँ बंद कर दी गईं",
     "Turned off after {n} failed attempts in a row.": "लगातार {n} असफल प्रयासों के बाद बंद कर दिया गया।",
     "Definition not generated": "परिभाषा जनरेट नहीं हुई",
