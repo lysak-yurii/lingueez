@@ -26,7 +26,7 @@ A definition can ride along: a folded panel to type one, or to have the AI
 write it after the save (see :mod:`app.core.definition_autogen`)."""
 import logging
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
@@ -47,6 +47,7 @@ from app.ui.dialogs.base import FramelessDialog
 from app.ui.dialogs.definition import build_for_in_row, remember_side, remembered_sides
 from app.ui.widgets import ContentComboBox, ElidedLabel
 from app.ui.workers import run_in_thread
+from app.ui.x11_frame import FrameSync
 
 
 class _DotButton(QPushButton):
@@ -139,6 +140,10 @@ class AddWordDialog(FramelessDialog):
         # Set while the dialog writes a combo itself, so those writes don't
         # come back through the auto-translate handler (see _set_lang).
         self._suppress_lang_signal = False
+
+        # Installed before the dialog is shown: the compositor reads the window's
+        # sync counters when it maps the window (see x11_frame).
+        self._frame_sync = FrameSync(self)
 
         settings = load_settings()
         # Cloud writes follow the backend identity (account *or* personal server),
@@ -382,6 +387,9 @@ class AddWordDialog(FramelessDialog):
         return self._definition_open
 
     def toggle_definition_panel(self):
+        # Before anything touches the layout: showing the panel raises the
+        # window's minimum height, which resizes the window then and there.
+        self._frame_sync.hold()
         self._definition_open = not self._definition_open
         if not self.def_language_combo.count():
             self._fill_definition_languages()
@@ -391,11 +399,11 @@ class AddWordDialog(FramelessDialog):
         else:
             self.word1_edit.setFocus()
         self._fit_height()
-        # a layout keeps a just-hidden child's size until the hide event is
-        # processed, so refit once more on the next event-loop turn
-        QTimer.singleShot(0, self._fit_height)
 
     def _fit_height(self):
+        # the outer layout caches the body's size hint, so the inner layout has to
+        # be activated first or the just-hidden panel still counts towards it
+        self.content_layout.activate()
         self.layout().activate()
         self.resize(self.width(), self.sizeHint().height())
 
