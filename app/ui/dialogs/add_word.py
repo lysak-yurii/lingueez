@@ -440,6 +440,10 @@ class AddWordDialog(FramelessDialog):
         self._fit_height()
 
     def _fit_height(self):
+        # Not shown yet: show() sizes the window itself. Resizing now would keep
+        # the width it has before that, 640px for a parentless window.
+        if not self.isVisible():
+            return
         # the outer layout caches the body's size hint, so the inner layout has to
         # be activated first or the just-hidden panel still counts towards it
         self.content_layout.activate()
