@@ -159,6 +159,13 @@ class _DefinitionEdit(QTextEdit):
         extra = 2 * (self.document().documentMargin() + self.frameWidth())
         return int(self.fontMetrics().lineSpacing() * lines + extra)
 
+    def sizeHint(self):  # noqa: N802
+        # QAbstractScrollArea hints a flat 256x192 whatever it holds, which would
+        # open the panel far taller than the four lines it asks for.
+        hint = super().sizeHint()
+        hint.setHeight(self.minimumHeight())
+        return hint
+
     def set_markup(self, markup):
         load_markup_into_editor(self, markup, self._colors)
 
@@ -339,7 +346,7 @@ class AddWordDialog(FramelessDialog):
         self.info_label.hide()
         layout.addWidget(self.info_label)
 
-        layout.addWidget(self._build_definition_panel(settings))
+        layout.addWidget(self._build_definition_panel(settings), 1)
 
         buttons = QHBoxLayout()
         self.translate_btn = QPushButton(f"  {tr('Translate')}")
@@ -425,10 +432,13 @@ class AddWordDialog(FramelessDialog):
         self.definition_edit.generate_btn.setToolTip(tr("Generate with AI"))
         self.definition_edit.setPlaceholderText(tr("Add a definition…"))
         self.definition_edit.setTabChangesFocus(True)
-        self.definition_edit.setFixedHeight(self.definition_edit.height_for_lines(4))
+        # Four lines when the dialog is at its natural height; the extra goes to
+        # the box when the window is dragged taller (see the stretch below).
+        self.definition_edit.setMinimumHeight(self.definition_edit.height_for_lines(4))
+        self.definition_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.definition_edit.submit.connect(self.save_word)
         self.definition_edit.textChanged.connect(self._sync_definition_button)
-        column.addWidget(self.definition_edit)
+        column.addWidget(self.definition_edit, 1)
 
         row = QHBoxLayout()
         row.setSpacing(8)

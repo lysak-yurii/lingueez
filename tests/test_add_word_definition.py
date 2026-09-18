@@ -94,6 +94,15 @@ class AtRestTests(_DialogCase):
         self.assertFalse(self.dialog.definition_btn.has_dot())
         self.assertFalse(self.dialog.is_definition_panel_open())
 
+    def test_the_box_takes_the_height_a_taller_window_gains(self):
+        self.dialog.show()
+        self.open_panel()
+        box = self.dialog.definition_edit
+        four_lines = box.height()
+        self.dialog.resize(self.dialog.width(), self.dialog.height() + 200)
+        QTest.qWait(50)
+        self.assertAlmostEqual(box.height(), four_lines + 200, delta=8)
+
     def test_opens_and_folds_keeping_the_text(self):
         self.dialog.show()
         folded = self.dialog.height()
