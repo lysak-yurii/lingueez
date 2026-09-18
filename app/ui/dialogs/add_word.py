@@ -25,13 +25,17 @@ language detect and inline TTS preview. New words are saved as 'New'.
 A definition can ride along: a folded panel to type one, or to have the AI
 write it after the save (see :mod:`app.core.definition_autogen`)."""
 import logging
+import re
 
 import shiboken6
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QTextCursor
+from PySide6.QtGui import (
+    QColor, QFont, QPainter, QTextBlockFormat, QTextCharFormat, QTextCursor,
+    QTextListFormat,
+)
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
-    QPlainTextEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget,
+    QPushButton, QSizePolicy, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from app.config import load_settings, save_settings
@@ -45,10 +49,18 @@ from app.core.translator import translate
 from app.i18n import fill_lang_combo, get_lang, lang_label, set_lang, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
-from app.ui.dialogs.definition import build_for_in_row, remember_side, remembered_sides
+from app.ui.dialogs.definition import (
+    build_for_in_row, document_to_markup, heading_char_format, insert_markup,
+    load_markup_into_editor, remember_side, remembered_sides,
+)
 from app.ui.widgets import ContentComboBox, ElidedLabel
 from app.ui.workers import run_in_thread
 from app.ui.x11_frame import FrameSync
+
+
+# A run the user has just closed by typing its last asterisk. The lookbehind
+# keeps ``***x***`` from being read as an italic ``*x*`` inside two stray stars.
+_TYPED_RUN_RE = re.compile(r'(?<!\*)(\*\*\*|\*\*|\*)([^*]+)\1$')
 
 
 class _DotButton(QPushButton):
@@ -110,17 +122,20 @@ class _Switch(QCheckBox):
         p.end()
 
 
-class _DefinitionEdit(QPlainTextEdit):
-    """Plain-text definition box where Ctrl+Enter saves and Enter is a new line.
+class _DefinitionEdit(QTextEdit):
+    """Definition box where Ctrl+Enter saves and Enter is a new line.
 
-    Carries the AI button in its own bottom-right corner, so asking for a
-    definition costs the dialog no room.
+    Shows the stored ``***``/``**``/``*`` markup as formatted text, the same way
+    the definition dialog does, and hands it back as markup on save. Carries the
+    AI button in its own bottom-right corner, so asking for a definition costs
+    the dialog no room.
     """
     submit = Signal()
     generate = Signal()
 
     def __init__(self, colors):
         super().__init__()
+        self._colors = colors
         self.generate_btn = QPushButton(self, objectName="iconButton")
         # #iconButton's own min-width and padding would make it 42px wide, and a
         # transparent button would sit in the middle of whatever line is under it.
@@ -136,11 +151,86 @@ class _DefinitionEdit(QPlainTextEdit):
         self.generate_btn.clicked.connect(self.generate)
         self.verticalScrollBar().rangeChanged.connect(self._place_generate_btn)
 
+    def height_for_lines(self, lines):
+        # A rich-text document keeps its own margin inside the frame, and the
+        # frame here carries the stylesheet's padding: both sit outside the text.
+        # Unpolished, the frame is still the plain 1px one, not the styled 11.
+        self.ensurePolished()
+        extra = 2 * (self.document().documentMargin() + self.frameWidth())
+        return int(self.fontMetrics().lineSpacing() * lines + extra)
+
+    def set_markup(self, markup):
+        load_markup_into_editor(self, markup, self._colors)
+
+    def markup(self):
+        return document_to_markup(self.document())
+
+    def insertFromMimeData(self, source):  # noqa: N802
+        # The plain text, never the HTML: web content would bring in fonts and
+        # structures the markup can't represent. Asterisks in it become format.
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        cursor.removeSelectedText()
+        insert_markup(cursor, source.text(), self._colors)
+        cursor.endEditBlock()
+        self.setTextCursor(cursor)
+
     def keyPressEvent(self, event):  # noqa: N802
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and event.modifiers() & Qt.ControlModifier:
             self.submit.emit()
             return
         super().keyPressEvent(event)
+        if event.text() == "*":
+            self._format_typed_run()
+        elif event.text() == " ":
+            self._format_typed_bullet()
+
+    def _format_typed_run(self):
+        """Turn a just-closed ``*italic*``, ``**bold**`` or ``***heading***``
+        into the formatting it asks for, asterisks and all."""
+        cursor = self.textCursor()
+        block = cursor.block()
+        match = _TYPED_RUN_RE.search(block.text()[:cursor.positionInBlock()])
+        if not match:
+            return
+        heading = match.group(1) == "***" and match.group(0) == block.text().strip()
+        fmt = QTextCharFormat()
+        if heading:
+            fmt = heading_char_format(self.document(), self._colors, True)
+        elif match.group(1) == "*":
+            fmt.setFontItalic(True)
+        else:
+            fmt.setFontWeight(QFont.Bold)
+        cursor.beginEditBlock()
+        cursor.setPosition(block.position() + match.start())
+        cursor.setPosition(block.position() + match.end(), QTextCursor.KeepAnchor)
+        cursor.removeSelectedText()
+        if heading:
+            bf = QTextBlockFormat()
+            bf.setHeadingLevel(3)
+            cursor.setBlockFormat(bf)
+        cursor.insertText(match.group(2), fmt)
+        cursor.endEditBlock()
+        self.setTextCursor(cursor)
+        # The cursor inherits the format it just inserted, so without this the
+        # rest of the line keeps coming out bold.
+        self.setCurrentCharFormat(fmt if heading else QTextCharFormat())
+
+    def _format_typed_bullet(self):
+        """``- `` at the head of a line starts a bullet list."""
+        cursor = self.textCursor()
+        block = cursor.block()
+        if block.textList() is not None or block.text()[:cursor.positionInBlock()] != "- ":
+            return
+        cursor.beginEditBlock()
+        cursor.setPosition(block.position())
+        cursor.setPosition(block.position() + 2, QTextCursor.KeepAnchor)
+        cursor.removeSelectedText()
+        fmt = QTextListFormat()
+        fmt.setStyle(QTextListFormat.ListDisc)
+        cursor.createList(fmt)
+        cursor.endEditBlock()
+        self.setTextCursor(cursor)
 
     def resizeEvent(self, event):  # noqa: N802
         super().resizeEvent(event)
@@ -335,7 +425,7 @@ class AddWordDialog(FramelessDialog):
         self.definition_edit.generate_btn.setToolTip(tr("Generate with AI"))
         self.definition_edit.setPlaceholderText(tr("Add a definition…"))
         self.definition_edit.setTabChangesFocus(True)
-        self.definition_edit.setFixedHeight(self.definition_edit.fontMetrics().lineSpacing() * 4 + 16)
+        self.definition_edit.setFixedHeight(self.definition_edit.height_for_lines(4))
         self.definition_edit.submit.connect(self.save_word)
         self.definition_edit.textChanged.connect(self._sync_definition_button)
         column.addWidget(self.definition_edit)
@@ -631,7 +721,7 @@ class AddWordDialog(FramelessDialog):
         def done(text):
             if not shiboken6.isValid(self):
                 return
-            self.definition_edit.setPlainText(text.strip())
+            self.definition_edit.set_markup(text.strip())
             self.definition_edit.moveCursor(QTextCursor.Start)
             self.definition_edit.ensureCursorVisible()
             self._info("")
@@ -672,7 +762,7 @@ class AddWordDialog(FramelessDialog):
 
         if not self.def_language_combo.count():
             self._fill_definition_languages()
-        definition = self.definition_edit.toPlainText().strip()
+        definition = self.definition_edit.markup()
         word_side = self.def_word_combo.currentData()
         language_side = self.def_language_combo.currentData()
         payload = {

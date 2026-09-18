@@ -152,6 +152,140 @@ def markup_to_html(text):
     return "".join(out)
 
 
+def heading_char_format(document, colors, on):
+    """Character format for a heading block (or the format that undoes one),
+    sized from the document's own font so it scales with the editor."""
+    fmt = QTextCharFormat()
+    size = document.defaultFont().pointSizeF()
+    if on:
+        fmt.setFontWeight(QFont.Bold)
+        fmt.setForeground(QColor(colors["accent_text"]))
+        if size > 0:
+            fmt.setFontPointSize(size + 3)
+    else:
+        fmt.setFontWeight(QFont.Normal)
+        fmt.setForeground(QColor(colors["text"]))
+        if size > 0:
+            fmt.setFontPointSize(size)
+    return fmt
+
+
+def _insert_runs(cursor, runs, heading, colors):
+    base = heading_char_format(cursor.document(), colors, True) if heading else None
+    for text, bold, italic in runs:
+        fmt = QTextCharFormat(base) if base is not None else QTextCharFormat()
+        if bold and not heading:
+            fmt.setFontWeight(QFont.Bold)
+        if italic:
+            fmt.setFontItalic(True)
+        # Soft line breaks within a block use the Unicode line separator.
+        cursor.insertText(text.replace("\n", "\u2028"), fmt)
+
+
+def insert_markup(cursor, markup, colors):
+    """Insert markup at *cursor*. A leading paragraph joins the block the cursor
+    sits in; headings, lists and later paragraphs each start a block of their own."""
+    started = False
+    for kind, payload in parse_markup(markup):
+        if started or (kind != "para" and cursor.block().text()):
+            cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
+        started = True
+        if kind == "heading":
+            bf = QTextBlockFormat()
+            bf.setHeadingLevel(3)
+            cursor.setBlockFormat(bf)
+            _insert_runs(cursor, payload, True, colors)
+        elif kind == "list":
+            lst_fmt = QTextListFormat()
+            lst_fmt.setStyle(QTextListFormat.ListDisc)
+            lst = None
+            for i, item in enumerate(payload):
+                if i == 0:
+                    lst = cursor.createList(lst_fmt)
+                else:
+                    cursor.insertBlock()
+                    lst.add(cursor.block())
+                _insert_runs(cursor, item, False, colors)
+        else:
+            _insert_runs(cursor, payload, False, colors)
+
+
+def load_markup_into_editor(edit, markup, colors):
+    """Build a QTextEdit's document from stored markup so the user edits
+    formatted text — headings, bold/italic runs and bullet lists — never the
+    raw asterisks."""
+    doc = edit.document()
+    doc.blockSignals(True)
+    doc.clear()
+    insert_markup(QTextCursor(doc), markup, colors)
+    doc.blockSignals(False)
+    edit.moveCursor(QTextCursor.Start)
+    # blockSignals() swallowed contentsChanged; nothing watching the editor
+    # would hear about the new text otherwise.
+    doc.contentsChanged.emit()
+
+
+def _block_runs(block):
+    runs = []
+    it = block.begin()
+    while not it.atEnd():
+        frag = it.fragment()
+        if frag.isValid():
+            cf = frag.charFormat()
+            text = frag.text().replace("\u2028", "\n").replace("\u2029", "\n")
+            runs.append((text, cf.fontWeight() >= QFont.Bold, cf.fontItalic()))
+        it += 1
+    return runs
+
+
+def _runs_to_markup(runs):
+    merged = []
+    for text, bold, italic in runs:
+        if not text:
+            continue
+        if merged and merged[-1][1] == bold and merged[-1][2] == italic:
+            merged[-1] = (merged[-1][0] + text, bold, italic)
+        else:
+            merged.append([text, bold, italic])
+    parts = []
+    for text, bold, italic in merged:
+        marker = "**" if bold else ("*" if italic else "")
+        if marker and text.strip():
+            lead = text[:len(text) - len(text.lstrip())]
+            trail = text[len(text.rstrip()):]
+            parts.append(f"{lead}{marker}{text.strip()}{marker}{trail}")
+        else:
+            parts.append(text)
+    return "".join(parts)
+
+
+def document_to_markup(doc):
+    """Serialize an edited document back to the stored ``***/**/*`` + ``- ``
+    markup so AI regenerate, export and sync keep working unchanged."""
+    out, pending_list = [], []
+    block = doc.begin()
+    while block.isValid():
+        runs = _block_runs(block)
+        if block.textList() is not None:
+            pending_list.append("- " + _runs_to_markup(runs))
+        else:
+            if pending_list:
+                out.append("\n".join(pending_list))
+                pending_list = []
+            if block.blockFormat().headingLevel() >= 1:
+                plain = "".join(t for t, _b, _i in runs).strip()
+                if plain:
+                    out.append(f"***{plain}***")
+            else:
+                line = _runs_to_markup(runs)
+                if line.strip():
+                    out.append(line)
+        block = block.next()
+    if pending_list:
+        out.append("\n".join(pending_list))
+    return "\n\n".join(out).strip()
+
+
 def _parse_dt(value):
     """Stored timestamp -> naive local datetime, or None if unusable."""
     if not value:
@@ -607,19 +741,7 @@ class DefinitionDialog(FramelessDialog):
         handler()
 
     def _heading_char_format(self, on):
-        fmt = QTextCharFormat()
-        size = self.text.document().defaultFont().pointSizeF()
-        if on:
-            fmt.setFontWeight(QFont.Bold)
-            fmt.setForeground(QColor(self.colors["accent_text"]))
-            if size > 0:
-                fmt.setFontPointSize(size + 3)
-        else:
-            fmt.setFontWeight(QFont.Normal)
-            fmt.setForeground(QColor(self.colors["text"]))
-            if size > 0:
-                fmt.setFontPointSize(size)
-        return fmt
+        return heading_char_format(self.text.document(), self.colors, on)
 
     def _selected_blocks(self):
         doc = self.text.document()
@@ -705,111 +827,10 @@ class DefinitionDialog(FramelessDialog):
     # ------------------------------------------------- markup <-> document
 
     def _load_markup_into_editor(self, markup):
-        """Build the editor document from stored markup so the user edits
-        formatted text — headings, bold/italic runs and bullet lists — never the
-        raw asterisks."""
-        doc = self.text.document()
-        doc.blockSignals(True)
-        doc.clear()
-        cursor = QTextCursor(doc)
-        first = True
-        for kind, payload in parse_markup(markup):
-            if not first:
-                cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
-            first = False
-            if kind == "heading":
-                bf = QTextBlockFormat()
-                bf.setHeadingLevel(3)
-                cursor.setBlockFormat(bf)
-                self._insert_runs(cursor, payload, heading=True)
-            elif kind == "list":
-                lst_fmt = QTextListFormat()
-                lst_fmt.setStyle(QTextListFormat.ListDisc)
-                lst = None
-                for i, item in enumerate(payload):
-                    if i == 0:
-                        lst = cursor.createList(lst_fmt)
-                    else:
-                        cursor.insertBlock()
-                        lst.add(cursor.block())
-                    self._insert_runs(cursor, item, heading=False)
-            else:
-                cursor.setBlockFormat(QTextBlockFormat())
-                self._insert_runs(cursor, payload, heading=False)
-        doc.blockSignals(False)
-        self.text.moveCursor(QTextCursor.Start)
-
-    def _insert_runs(self, cursor, runs, heading):
-        base = self._heading_char_format(True) if heading else None
-        for text, bold, italic in runs:
-            fmt = QTextCharFormat(base) if base is not None else QTextCharFormat()
-            if bold and not heading:
-                fmt.setFontWeight(QFont.Bold)
-            if italic:
-                fmt.setFontItalic(True)
-            # Soft line breaks within a block use the Unicode line separator.
-            cursor.insertText(text.replace("\n", "\u2028"), fmt)
+        load_markup_into_editor(self.text, markup, self.colors)
 
     def _editor_to_markup(self):
-        """Serialize the edited document back to the stored ``***/**/*`` + ``- ``
-        markup so AI regenerate, export and sync keep working unchanged."""
-        doc = self.text.document()
-        out, pending_list = [], []
-        block = doc.begin()
-        while block.isValid():
-            runs = self._block_runs(block)
-            if block.textList() is not None:
-                pending_list.append("- " + self._runs_to_markup(runs))
-            else:
-                if pending_list:
-                    out.append("\n".join(pending_list))
-                    pending_list = []
-                if block.blockFormat().headingLevel() >= 1:
-                    plain = "".join(t for t, _b, _i in runs).strip()
-                    if plain:
-                        out.append(f"***{plain}***")
-                else:
-                    line = self._runs_to_markup(runs)
-                    if line.strip():
-                        out.append(line)
-            block = block.next()
-        if pending_list:
-            out.append("\n".join(pending_list))
-        return "\n\n".join(out).strip()
-
-    @staticmethod
-    def _block_runs(block):
-        runs = []
-        it = block.begin()
-        while not it.atEnd():
-            frag = it.fragment()
-            if frag.isValid():
-                cf = frag.charFormat()
-                text = frag.text().replace("\u2028", "\n").replace("\u2029", "\n")
-                runs.append((text, cf.fontWeight() >= QFont.Bold, cf.fontItalic()))
-            it += 1
-        return runs
-
-    @staticmethod
-    def _runs_to_markup(runs):
-        merged = []
-        for text, bold, italic in runs:
-            if not text:
-                continue
-            if merged and merged[-1][1] == bold and merged[-1][2] == italic:
-                merged[-1] = (merged[-1][0] + text, bold, italic)
-            else:
-                merged.append([text, bold, italic])
-        parts = []
-        for text, bold, italic in merged:
-            marker = "**" if bold else ("*" if italic else "")
-            if marker and text.strip():
-                lead = text[:len(text) - len(text.lstrip())]
-                trail = text[len(text.rstrip()):]
-                parts.append(f"{lead}{marker}{text.strip()}{marker}{trail}")
-            else:
-                parts.append(text)
-        return "".join(parts)
+        return document_to_markup(self.text.document())
 
     # ------------------------------------------------------------------
 

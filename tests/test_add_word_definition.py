@@ -21,6 +21,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
@@ -217,6 +218,67 @@ class GenerateNowTests(_DialogCase):
         settings = load_settings()
         self.assertTrue(get_bool(settings, autogen.ENABLED_KEY))
         self.assertEqual(settings[autogen.FAILURES_KEY], "0")
+
+
+class FormattedDefinitionTests(_DialogCase):
+    """The box shows the markup as formatted text, and hands it back as markup."""
+
+    has_key = True
+    switched_on = True
+
+    MARKUP = "***Meaning***\nA **building** where people *live*.\n- a detached house"
+
+    def test_a_generated_definition_shows_no_asterisks(self):
+        self.fill()
+        self.open_panel()
+        with mock.patch.object(ai, "get_definition", return_value=self.MARKUP) as call:
+            self.dialog.do_generate_definition()
+            for _ in range(200):
+                if call.called and self.dialog.definition_edit.generate_btn.isEnabled():
+                    break
+                QTest.qWait(10)
+        shown = self.dialog.definition_edit.toPlainText()
+        self.assertNotIn("*", shown)
+        self.assertIn("A building where people live.", shown)
+
+    def test_the_formatting_survives_the_save(self):
+        self.fill()
+        self.open_panel()
+        self.dialog.definition_edit.set_markup(self.MARKUP)
+        self.dialog.save_word()
+        stored = self.stored("haus")["Definition2"]
+        self.assertIn("***Meaning***", stored)
+        self.assertIn("**building**", stored)
+        self.assertIn("- a detached house", stored)
+
+    def test_typed_markup_formats_itself(self):
+        self.fill()
+        self.open_panel()
+        edit = self.dialog.definition_edit
+        edit.setFocus()
+        QTest.keyClicks(edit, "***Meaning***")
+        QTest.keyClick(edit, Qt.Key_Return)
+        QTest.keyClicks(edit, "A **building** where people *live*.")
+        QTest.keyClick(edit, Qt.Key_Return)
+        QTest.keyClicks(edit, "- a detached house")
+        self.assertNotIn("*", edit.toPlainText())
+        self.dialog.save_word()
+        self.assertEqual(
+            self.stored("haus")["Definition2"],
+            "***Meaning***\n\nA **building** where people *live*.\n\n- a detached house",
+        )
+
+    def test_pasted_markup_formats_itself(self):
+        self.fill()
+        self.open_panel()
+        edit = self.dialog.definition_edit
+        QApplication.clipboard().setText(self.MARKUP)
+        edit.paste()
+        self.assertNotIn("*", edit.toPlainText())
+        self.dialog.save_word()
+        stored = self.stored("haus")["Definition2"]
+        self.assertIn("***Meaning***", stored)
+        self.assertIn("- a detached house", stored)
 
 
 class NoKeyTests(_DialogCase):
