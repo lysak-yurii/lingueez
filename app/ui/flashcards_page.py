@@ -2179,7 +2179,8 @@ class FlashcardsPage(QWidget):
             tr("Hard words cleared!") if self._drill and not self._hard_deck
             else tr("Session complete!"))
         self.continue_btn.setVisible(self._deck_kind == "due"
-                                     and not self._autoplay_listened)
+                                     and not self._autoplay_listened
+                                     and bool(self._fetch_deck("due", 1)))
         self._stack.setCurrentIndex(self.STATE_COMPLETE)
 
     def _tag_hard_words(self):
