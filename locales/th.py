@@ -1549,6 +1549,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "คอลัมน์เสริม: Definition, Definition2 และ Tags (คั่นด้วยจุลภาค) — จะถูกรวมเข้ากับคำที่คุณมีอยู่แล้ว โดยไม่เขียนทับ"
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "คำแปลเดียวกัน",
+    "Same word family": "ตระกูลคำเดียวกัน",
+    "Study": "การเรียน",
+    "Related words": "คำที่เกี่ยวข้อง",
+    "Jump to word": "ไปที่คำ",
+    "Related": "ที่เกี่ยวข้อง",
+    "Click to open its definition": "คลิกเพื่อเปิดคำจำกัดความ",
+    "Show related words": "แสดงคำที่เกี่ยวข้อง",
+    "Synonyms and words from the same family, on flashcards and in definitions": "คำพ้องความหมายและคำในตระกูลเดียวกัน บนการ์ดและในคำจำกัดความ",
 }
 
 MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",

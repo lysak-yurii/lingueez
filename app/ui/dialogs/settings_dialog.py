@@ -101,6 +101,7 @@ class SettingsDialog(FramelessDialog):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._general_tab(), tr("General"))
         self.tabs.addTab(self._read_aloud_tab(), tr("Read-aloud"))
+        self.tabs.addTab(self._study_tab(), tr("Study"))
         # A lone "&" in a tab title marks a mnemonic and is not drawn.
         self.tabs.addTab(self._apis_tab(), tr("Translation & AI").replace("&", "&&"))
         self.tabs.addTab(self._data_tab(), tr("Data"))
@@ -477,24 +478,6 @@ class SettingsDialog(FramelessDialog):
         promote.toggled.connect(toggle_enabled)
         toggle_enabled(promote.isChecked())
 
-        flash_group = QGroupBox(tr("Flashcards"))
-        fform = QFormLayout(flash_group)
-        fform.addRow(tr("Open Flashcards when Read Aloud starts"),
-                     self._check("flashcards_autoswitch", True))
-        fform.addRow(tr("Default deck size"),
-                     self._spin("flashcards_deck_size", 1, 200, 20))
-        form.addRow(flash_group)
-
-        # The rest of the quiz options (format, direction, shuffle) live on the
-        # picker itself, where they are chosen per session and remembered.
-        quiz_group = QGroupBox(tr("Quiz"))
-        qform = QFormLayout(quiz_group)
-        qform.addRow(tr("Default number of questions"),
-                     self._spin("quiz_deck_size", 1, 200, 20))
-        qform.addRow(tr("Move on after a correct answer"),
-                     self._check("quiz_auto_advance", True))
-        form.addRow(quiz_group)
-
         note = QLabel(tr("Fully listening to a word in Read Aloud promotes it along the "
                          "familiarity ladder New → Reviewing → Learning → Mastered. Each "
                          "number is the total completed listens needed to reach that level — "
@@ -504,6 +487,41 @@ class SettingsDialog(FramelessDialog):
         note.setObjectName("dimLabel")
         note.setWordWrap(True)
         form.addRow(note)
+        return _scrollable(page)
+
+    def _study_tab(self):
+        """Flashcards, the quiz and the related words shown while studying."""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(18, 18, 18, 18)
+
+        flash_group = QGroupBox(tr("Flashcards"))
+        fform = QFormLayout(flash_group)
+        fform.addRow(tr("Open Flashcards when Read Aloud starts"),
+                     self._check("flashcards_autoswitch", True))
+        fform.addRow(tr("Default deck size"),
+                     self._spin("flashcards_deck_size", 1, 200, 20))
+        layout.addWidget(flash_group)
+
+        # The rest of the quiz options (format, direction, shuffle) live on the
+        # picker itself, where they are chosen per session and remembered.
+        quiz_group = QGroupBox(tr("Quiz"))
+        qform = QFormLayout(quiz_group)
+        qform.addRow(tr("Default number of questions"),
+                     self._spin("quiz_deck_size", 1, 200, 20))
+        qform.addRow(tr("Move on after a correct answer"),
+                     self._check("quiz_auto_advance", True))
+        layout.addWidget(quiz_group)
+
+        related_group = QGroupBox(tr("Related words"))
+        rform = QFormLayout(related_group)
+        related = self._check("flashcards_related_words", True)
+        related.setToolTip(tr("Synonyms and words from the same family, on "
+                              "flashcards and in definitions"))
+        rform.addRow(tr("Show related words"), related)
+        layout.addWidget(related_group)
+
+        layout.addStretch(1)
         return _scrollable(page)
 
     def _import_tab(self):

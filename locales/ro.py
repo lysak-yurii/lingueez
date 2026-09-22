@@ -1652,6 +1652,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Coloane opționale: Definition, Definition2 și Tags (separate prin virgule) — sunt adăugate la cuvintele pe care le ai deja, fără a le suprascrie."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Aceeași traducere",
+    "Same word family": "Aceeași familie de cuvinte",
+    "Study": "Studiu",
+    "Related words": "Cuvinte înrudite",
+    "Jump to word": "Salt la cuvânt",
+    "Related": "Înrudite",
+    "Click to open its definition": "Dă clic pentru a deschide definiția",
+    "Show related words": "Afișează cuvinte înrudite",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinonime și cuvinte din aceeași familie, pe carduri și în definiții",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case (or standard Romanian names used for formatting).

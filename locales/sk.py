@@ -1544,6 +1544,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Voliteľné stĺpce: Definition, Definition2 a Tags (oddelené čiarkami) — pridajú sa k slovám, ktoré už máte, bez prepísania."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Rovnaký preklad",
+    "Same word family": "Rovnaká slovná rodina",
+    "Study": "Štúdium",
+    "Related words": "Súvisiace slová",
+    "Jump to word": "Prejsť na slovo",
+    "Related": "Súvisiace",
+    "Click to open its definition": "Kliknutím otvoríte definíciu",
+    "Show related words": "Zobraziť súvisiace slová",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonymá a slová z rovnakej slovnej rodiny — na kartách a v definíciách",
 }
 
 MONTHS = ["januára", "februára", "marca", "apríla", "mája", "júna",

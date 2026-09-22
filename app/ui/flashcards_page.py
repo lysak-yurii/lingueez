@@ -67,7 +67,9 @@ from app.ui.dialogs.definition import (
     DefinitionDialog, _runs_to_html, parse_markup,
 )
 from app.ui.charts import FlowLayout, status_color
-from app.ui.widgets import ProgressionMeter, SessionWordList, session_tag_name
+from app.ui.widgets import (
+    ProgressionMeter, RelatedWordsLabel, SessionWordList, session_tag_name,
+)
 from app.ui.workers import run_in_thread
 
 DECK_KINDS = ("due", "filtered", "newest", "selected")
@@ -859,6 +861,9 @@ class FlashcardWidget(QWidget):
         div_row.addStretch(1)
         lay.addLayout(div_row)
         lay.addWidget(self.body_scroll)
+        self.related = RelatedWordsLabel(clickable=True, jumpable=True)
+        self.related.setAlignment(Qt.AlignCenter)
+        lay.addWidget(self.related)
         lay.addStretch(1)
 
         self.hint = QLabel(alignment=Qt.AlignCenter)
@@ -874,6 +879,7 @@ class FlashcardWidget(QWidget):
     def set_card(self, record, hint_text=""):
         self._record = record or {}
         self._definition = ""
+        self.related.set_groups([])
         self._side = 0
         self._hint_text = hint_text
         self._refresh_faces()
@@ -891,6 +897,11 @@ class FlashcardWidget(QWidget):
         self._definition = str(text or "").strip()
         if self._side == 1:
             self._refresh_faces()
+
+    def set_related(self, groups):
+        """``groups``: ``[(kind, [record, ...])]``; empty clears the line."""
+        self.related.set_groups(groups)
+        self._refresh_faces()
 
     def show_side(self, side, animate=True, duration=FLIP_MS):
         side = 1 if side else 0
@@ -959,6 +970,7 @@ class FlashcardWidget(QWidget):
         self.divider.setVisible(self._side == 1 and bool(self.body.text()))
         self.body_scroll.setVisible(bool(self.body.text()))
         self.body_scroll.refresh()
+        self.related.setVisible(self._side == 1 and self.related.has_words())
         self.hint.setVisible(bool(self.hint.text()))
 
     def _style_favorite(self):
@@ -996,6 +1008,7 @@ class FlashcardWidget(QWidget):
         self.hint.setStyleSheet(
             f"color:{_soft(c['text_dim'], 150)};background:transparent;"
             f"font-size:{theme.font_pt('caption')}pt;")
+        self.related.refresh_theme()
         self.divider.setStyleSheet(  # only ever visible on the answer side
             f"background:{_soft(c['accent_text'], 130)};border:none;")
         self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 16))
@@ -1015,8 +1028,9 @@ class FlashcardWidget(QWidget):
         p.end()
 
     def mouseReleaseEvent(self, event):  # noqa: N802
-        if event.button() == Qt.LeftButton and self.rect().contains(
-                event.position().toPoint()):
+        if (event.button() == Qt.LeftButton
+                and self.rect().contains(event.position().toPoint())
+                and not self.related.hovered_link()):  # a related word, not a flip
             self.clicked.emit()
         super().mouseReleaseEvent(event)
 
@@ -1025,6 +1039,7 @@ class FlashcardsPage(QWidget):
     """Deck picker → review session → completion summary, plus autoplay sync."""
 
     play_requested = Signal(list)               # records → start read-aloud
+    jump_requested = Signal(str)                # word ID → show it in the Words list
     status_change_requested = Signal(str, str, str)  # word_id, status, label
     ignore_requested = Signal(str, str, str)         # word_id, previous, label
     relearn_requested = Signal(str, str, str)        # word_id, previous, label
@@ -1040,12 +1055,13 @@ class FlashcardsPage(QWidget):
     STATE_PICKER, STATE_SESSION, STATE_COMPLETE = 0, 1, 2
 
     def __init__(self, db_adapter, colors, deck_provider, settings_provider,
-                 parent=None):
+                 related_provider=None, parent=None):
         super().__init__(parent)
         self.db_adapter = db_adapter
         self._colors = colors
         self._deck_provider = deck_provider
         self._settings_provider = settings_provider
+        self._related_provider = related_provider or (lambda word_id: [])
 
         self._deck = []
         self._index = 0
@@ -1274,6 +1290,8 @@ class FlashcardsPage(QWidget):
         self.card.ignore_clicked.connect(self._ignore_current)
         self.card.relearn_clicked.connect(self._relearn_current)
         self.card.favorite_clicked.connect(self._toggle_favorite_current)
+        self.card.related.word_clicked.connect(self._open_definition)
+        self.card.related.jump_requested.connect(self._jump_to)
         self.card_stack = _CardStack(self.card, self._colors)
         # Bounded, not free-expanding: the stretches above and below centre the
         # card, but without a ceiling it grew to the full height of the page and
@@ -1663,9 +1681,13 @@ class FlashcardsPage(QWidget):
             self._preview_flow.addWidget(card)
             self._preview_cards.append(card)
 
-    def _open_definition(self, record, card):
-        """Open the shared definition dialog for a preview tile — read the
-        full text, edit it, or generate one for a word that has none."""
+    def _jump_to(self, record):
+        self.jump_requested.emit(str(record.get("ID")))
+
+    def _open_definition(self, record, card=None):
+        """Open the shared definition dialog for a preview tile or a related
+        word — read the full text, edit it, or generate one for a word that
+        has none."""
         wid = record.get("ID")
         existing = self._def_dialogs.get(wid)
         try:
@@ -1675,7 +1697,8 @@ class FlashcardsPage(QWidget):
                 return
         except RuntimeError:
             pass  # WA_DeleteOnClose: the C++ widget is already gone
-        dialog = DefinitionDialog(self.window(), record, self.db_adapter)
+        dialog = DefinitionDialog(self.window(), record, self.db_adapter,
+                                  self._related_provider, jump_to=self._jump_to)
         dialog.definition_changed.connect(
             lambda r=record, c=card: self._on_definition_edited(r, c))
         self._def_dialogs[wid] = dialog
@@ -1841,6 +1864,10 @@ class FlashcardsPage(QWidget):
             self._index + 1, total,
             None if self._autoplay else self._grade_history)
 
+    def _fill_back(self, record):
+        self.card.set_definition(self._definition_for(record))
+        self.card.set_related(self._related_provider(record.get("ID")))
+
     def _definition_for(self, record):
         wid = record.get("ID")
         if wid is None:
@@ -1948,7 +1975,7 @@ class FlashcardsPage(QWidget):
             return
         target = 1 - self.card.side
         if target == 1:
-            self.card.set_definition(self._definition_for(self._deck[self._index]))
+            self._fill_back(self._deck[self._index])
             self._refresh_grade_previews()
         self.card.flip()
         self._update_controls(side=target)
@@ -2244,7 +2271,7 @@ class FlashcardsPage(QWidget):
             return
         target = 1 if slot else 0
         if target == 1 and self.card.side == 0:
-            self.card.set_definition(self._definition_for(self._deck[self._index]))
+            self._fill_back(self._deck[self._index])
         self.card.show_side(target, duration=FLIP_MS_AUTOPLAY)
 
     def on_autoplay_state(self, paused):

@@ -1842,6 +1842,16 @@ TRANSLATIONS: dict[str, str] = {
         "Смужка показує склад набору за статусами. Кожна відповідь живить той самий "
         "графік інтервального повторення, що й флеш-картки: слово, яке ви згадали, "
         "повернеться пізніше, а те, у якому помилилися, — раніше.",
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Той самий переклад",
+    "Same word family": "Спільнокореневі слова",
+    "Study": "Навчання",
+    "Related words": "Пов'язані слова",
+    "Jump to word": "Перейти до слова",
+    "Related": "Пов'язані",
+    "Click to open its definition": "Натисніть, щоб відкрити визначення",
+    "Show related words": "Показувати пов'язані слова",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Синоніми та спільнокореневі слова — на картках і у визначеннях",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

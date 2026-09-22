@@ -1836,6 +1836,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Kolumny opcjonalne: Definition, Definition2 i Tags (rozdzielone przecinkami) — są dołączane do słów, które już masz, bez nadpisywania ich."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "To samo tłumaczenie",
+    "Same word family": "Ta sama rodzina wyrazów",
+    "Study": "Nauka",
+    "Related words": "Powiązane słowa",
+    "Jump to word": "Przejdź do słowa",
+    "Related": "Powiązane",
+    "Click to open its definition": "Kliknij, aby otworzyć definicję",
+    "Show related words": "Pokazuj powiązane słowa",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonimy i wyrazy z tej samej rodziny — na fiszkach i w definicjach",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -1543,6 +1543,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Optionele kolommen: Definition, Definition2 en Tags (komma-gescheiden) — worden samengevoegd met woorden die je al hebt, zonder ze te overschrijven."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Dezelfde vertaling",
+    "Same word family": "Dezelfde woordfamilie",
+    "Study": "Leren",
+    "Related words": "Verwante woorden",
+    "Jump to word": "Naar het woord",
+    "Related": "Verwant",
+    "Click to open its definition": "Klik om de definitie te openen",
+    "Show related words": "Verwante woorden tonen",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synoniemen en woorden uit dezelfde woordfamilie, op kaarten en in definities",
 }
 
 # Date names, read by app.i18n. Months are in lowercase for Dutch formatting.

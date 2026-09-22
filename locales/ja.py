@@ -1811,6 +1811,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "任意の列: Definition、Definition2、Tags（カンマ区切り）— すでにある単語に統合され、上書きはされません。"
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "同じ訳語",
+    "Same word family": "同じ語族",
+    "Study": "学習",
+    "Related words": "関連語",
+    "Jump to word": "単語へ移動",
+    "Related": "関連語",
+    "Click to open its definition": "クリックして定義を開く",
+    "Show related words": "関連語を表示",
+    "Synonyms and words from the same family, on flashcards and in definitions": "同義語や同じ語族の単語を、カードと定義に表示します",
 }
 
 # Date names, read by app.i18n. Months use standard Japanese calendar names.

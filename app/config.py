@@ -109,6 +109,7 @@ DEFAULTS = {
     "flashcards_shuffle": "False",         # shuffle manual decks
     "flashcards_autoswitch": "True",       # jump to Flashcards when Read Aloud starts
     "flashcards_pronounce": "True",        # speak cards on show/flip in manual review
+    "flashcards_related_words": "True",    # related words on cards and in definitions
     # Quiz
     "quiz_deck_size": "20",                # default number of questions
     "quiz_format": "choices",              # choices | typing

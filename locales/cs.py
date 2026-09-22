@@ -1837,6 +1837,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Volitelné sloupce: Definition, Definition2 a Tags (oddělené čárkami) — doplní se ke slovům, která už máte, aniž by je přepsaly."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Stejný překlad",
+    "Same word family": "Stejná slovní rodina",
+    "Study": "Studium",
+    "Related words": "Související slova",
+    "Jump to word": "Přejít na slovo",
+    "Related": "Související",
+    "Click to open its definition": "Kliknutím otevřete definici",
+    "Show related words": "Zobrazit související slova",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonyma a slova ze stejné slovní rodiny — na kartách a v definicích",
 }
 
 # Date names, read by app.i18n.

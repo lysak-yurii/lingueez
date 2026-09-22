@@ -1837,6 +1837,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Optionale Spalten: Definition, Definition2 und Tags (durch Kommas getrennt) — werden zu bereits vorhandenen Wörtern hinzugefügt, ohne sie zu überschreiben."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Gleiche Übersetzung",
+    "Same word family": "Gleiche Wortfamilie",
+    "Study": "Lernen",
+    "Related words": "Verwandte Wörter",
+    "Jump to word": "Zum Wort springen",
+    "Related": "Verwandt",
+    "Click to open its definition": "Klicken, um die Definition zu öffnen",
+    "Show related words": "Verwandte Wörter anzeigen",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonyme und Wörter derselben Wortfamilie – auf Karteikarten und in Definitionen",
 }
 
 # Date names, read by app.i18n. Months are in standard nominative/genitive German format.

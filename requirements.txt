@@ -37,6 +37,10 @@ segno>=1.6.0
 # Hyphenation dictionaries for the justified text reader. Pure Python, no deps.
 pyphen>=0.18.1
 
+# Stems for related words on the flashcard back. Optional at runtime (a prefix
+# rule is used without it). Pure Python, no deps.
+snowballstemmer>=2.2.0
+
 # Secure credential storage (auth session tokens)
 keyring>=24.0.0          # OS keychain; falls back to an encrypted local file
 cryptography>=41.0.0     # encrypts the local session fallback when no keychain

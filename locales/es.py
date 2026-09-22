@@ -1834,6 +1834,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Columnas opcionales: Definition, Definition2 y Tags (separadas por comas): se añaden a las palabras que ya tienes, sin sobrescribirlas."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Misma traducción",
+    "Same word family": "Misma familia de palabras",
+    "Study": "Estudio",
+    "Related words": "Palabras relacionadas",
+    "Jump to word": "Ir a la palabra",
+    "Related": "Relacionadas",
+    "Click to open its definition": "Haz clic para abrir su definición",
+    "Show related words": "Mostrar palabras relacionadas",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinónimos y palabras de la misma familia, en las tarjetas y en las definiciones",
 }
 
 # Date names, read by app.i18n. Months are in lowercase as standard in Spanish dates.

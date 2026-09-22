@@ -1839,6 +1839,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Colonne facoltative: Definition, Definition2 e Tags (separati da virgole) — vengono uniti alle parole che hai già, senza mai sovrascriverle."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Stessa traduzione",
+    "Same word family": "Stessa famiglia di parole",
+    "Study": "Studio",
+    "Related words": "Parole correlate",
+    "Jump to word": "Vai alla parola",
+    "Related": "Correlate",
+    "Click to open its definition": "Fai clic per aprirne la definizione",
+    "Show related words": "Mostra parole correlate",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinonimi e parole della stessa famiglia, sulle schede e nelle definizioni",
 }
 
 # Date names, read by app.i18n. Months are in the format used for dates

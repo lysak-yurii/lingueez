@@ -1554,6 +1554,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Lajur pilihan: Definition, Definition2 dan Tags (dipisahkan koma) — digabungkan ke dalam perkataan yang sudah anda ada, tanpa menimpanya."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Terjemahan yang sama",
+    "Same word family": "Keluarga perkataan yang sama",
+    "Study": "Belajar",
+    "Related words": "Perkataan berkaitan",
+    "Jump to word": "Lompat ke perkataan",
+    "Related": "Berkaitan",
+    "Click to open its definition": "Klik untuk membuka definisinya",
+    "Show related words": "Tunjukkan perkataan berkaitan",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinonim dan perkataan daripada keluarga yang sama, pada kad dan dalam definisi",
 }
 
 MONTHS = ["Januari", "Februari", "Mac", "April", "Mei", "Jun",

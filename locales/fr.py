@@ -1838,6 +1838,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Colonnes facultatives : Definition, Definition2 et Tags (séparées par des virgules) — fusionnées avec les mots que vous avez déjà, sans jamais les écraser."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Même traduction",
+    "Same word family": "Même famille de mots",
+    "Study": "Étude",
+    "Related words": "Mots liés",
+    "Jump to word": "Aller au mot",
+    "Related": "Liés",
+    "Click to open its definition": "Cliquez pour ouvrir sa définition",
+    "Show related words": "Afficher les mots liés",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonymes et mots de la même famille, sur les cartes et dans les définitions",
 }
 
 # Date names, read by app.i18n. Months are in lowercase standard French form.

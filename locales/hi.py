@@ -1813,6 +1813,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "वैकल्पिक कॉलम: Definition, Definition2 और Tags (अल्पविराम से अलग) — आपके पास पहले से मौजूद शब्दों में जोड़े जाते हैं, उन्हें कभी अधिलेखित नहीं करते।"
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "समान अनुवाद",
+    "Same word family": "समान शब्द परिवार",
+    "Study": "अध्ययन",
+    "Related words": "संबंधित शब्द",
+    "Jump to word": "शब्द पर जाएँ",
+    "Related": "संबंधित",
+    "Click to open its definition": "इसकी परिभाषा खोलने के लिए क्लिक करें",
+    "Show related words": "संबंधित शब्द दिखाएँ",
+    "Synonyms and words from the same family, on flashcards and in definitions": "पर्यायवाची और एक ही शब्द परिवार के शब्द — कार्ड और परिभाषाओं में",
 }
 
 # Date names, read by app.i18n.

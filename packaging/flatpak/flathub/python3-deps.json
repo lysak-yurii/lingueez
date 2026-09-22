@@ -460,6 +460,20 @@
             ]
         },
         {
+            "name": "python3-snowballstemmer",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"snowballstemmer>=2.2.0\" --no-build-isolation"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/4c/07/2ebca9b11fb9be7340a818d8d6f63feaebb146be2c4afbd6061701d6df6e/snowballstemmer-3.1.1-py3-none-any.whl",
+                    "sha256": "7e207fa178741da09cdee59d3ecec3827ad5f92b1fc5c9ff3755b639f71f5752"
+                }
+            ]
+        },
+        {
             "name": "python3-supabase",
             "buildsystem": "simple",
             "build-commands": [

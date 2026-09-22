@@ -1571,6 +1571,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Cột tùy chọn: Definition, Definition2 và Tags (phân tách bằng dấu phẩy) — được gộp vào các từ bạn đã có, không bao giờ ghi đè."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Cùng bản dịch",
+    "Same word family": "Cùng họ từ",
+    "Study": "Học tập",
+    "Related words": "Từ liên quan",
+    "Jump to word": "Đi tới từ",
+    "Related": "Liên quan",
+    "Click to open its definition": "Nhấp để mở định nghĩa",
+    "Show related words": "Hiển thị từ liên quan",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Từ đồng nghĩa và từ cùng họ, trên thẻ và trong định nghĩa",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

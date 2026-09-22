@@ -1839,6 +1839,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Kolom opsional: Definition, Definition2, dan Tags (dipisahkan koma) — digabungkan ke kata yang sudah Anda miliki, tanpa menimpanya."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Terjemahan yang sama",
+    "Same word family": "Keluarga kata yang sama",
+    "Study": "Belajar",
+    "Related words": "Kata terkait",
+    "Jump to word": "Lompat ke kata",
+    "Related": "Terkait",
+    "Click to open its definition": "Klik untuk membuka definisinya",
+    "Show related words": "Tampilkan kata terkait",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinonim dan kata dari keluarga yang sama, di kartu dan definisi",
 }
 
 # Date names read by app.i18n.

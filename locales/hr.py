@@ -1594,6 +1594,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Neobavezni stupci: Definition, Definition2 i Tags (odvojeni zarezima) — dodaju se riječima koje već imate, bez prepisivanja."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Isti prijevod",
+    "Same word family": "Ista porodica riječi",
+    "Study": "Učenje",
+    "Related words": "Povezane riječi",
+    "Jump to word": "Idi na riječ",
+    "Related": "Povezano",
+    "Click to open its definition": "Kliknite za otvaranje definicije",
+    "Show related words": "Prikaži povezane riječi",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Sinonimi i riječi iz iste porodice — na karticama i u definicijama",
 }
 
 # Date names, read by app.i18n.

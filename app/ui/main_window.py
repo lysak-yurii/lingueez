@@ -50,6 +50,7 @@ from app.core import srs
 from app.core import ai, definition_autogen
 from app.core import exporters
 from app.core import hyphenation
+from app.core import related
 from app.core import translator
 from app.core.audio import stop_playback
 from app.core.backup_management import backup_database
@@ -348,6 +349,10 @@ class MainWindow(QMainWindow):
 
         self.word_filter = WordFilter()
         self.df = None
+        self._related = {}           # word ID → related word IDs, per kind
+        self._related_records = {}
+        self._related_words = []     # last loaded words, to build on re-enable
+        self._related_gen = 0
         self._known_word_ids = None   # vocabulary IDs seen so far (None = first load)
         self.is_reading_active = False
         self.word_player = WordPlayer(self)
@@ -1205,7 +1210,9 @@ class MainWindow(QMainWindow):
         self.flashcards_page = FlashcardsPage(
             self.db_adapter, self.colors,
             deck_provider=self._flashcards_deck,
-            settings_provider=lambda: self.settings)
+            settings_provider=lambda: self.settings,
+            related_provider=self._related_for)
+        self.flashcards_page.jump_requested.connect(self.jump_to_word)
         self.flashcards_page.play_requested.connect(self._read_records_action)
         self.flashcards_page.status_change_requested.connect(
             self._apply_status_change)
@@ -2342,6 +2349,7 @@ class MainWindow(QMainWindow):
                 return
             words = self.db_adapter.get_words()
             self.df = words_to_dataframe(words)
+            self._rebuild_related(words)
             # Cache the text count (cheap COUNT) for the local-only sync nudge, so
             # refresh_display -> _update_words_empty can size/word the prompt without
             # re-querying on every filter change.
@@ -2929,6 +2937,60 @@ class MainWindow(QMainWindow):
             self.table.scrollTo(self.model.index(rows[0], COL_WORD1),
                                 QAbstractItemView.PositionAtCenter)
 
+    def _related_enabled(self):
+        return get_bool(self.settings, "flashcards_related_words", True)
+
+    def _rebuild_related(self, words):
+        self._related_words = words
+        self._related_gen += 1
+        gen = self._related_gen
+        if not self._related_enabled():
+            self._related, self._related_records = {}, {}
+            return
+
+        def done(result):
+            if gen == self._related_gen:
+                self._related, self._related_records = result
+
+        run_in_thread(lambda: (related.build_related(words),
+                               {w.get("ID"): w for w in words}),
+                      on_result=done,
+                      on_error=lambda msg: logging.error("Related words failed: %s", msg))
+
+    def _related_for(self, word_id, limit=4):
+        """Related-word groups for one word, as flashcards and the definition
+        dialog show them; empty while the setting is off."""
+        if not self._related_enabled():
+            return []
+        links = self._related.get(word_id)
+        if not links:
+            return []
+        groups = []
+        for kind in related.KINDS:
+            records = [self._related_records[i] for i in links[kind]
+                       if i in self._related_records]
+            if records:
+                groups.append((kind, records[:limit]))
+        return groups
+
+    def jump_to_word(self, word_id):
+        """Show a word in the Words list: switch there, clear the search and
+        filters only if they hide it, then select it and let its row glow."""
+        if self._file_view:
+            self.load_data()   # an opened Excel file isn't the vocabulary
+        self.switch_page(PAGE_WORDS)
+        rows = self.model.flash_words([word_id])
+        if not rows:
+            self._clear_word_filters()
+            rows = self.model.flash_words([word_id])
+        if not rows:
+            return
+        index = self.model.index(rows[0], COL_WORD1)
+        self.table.setCurrentIndex(index)
+        self.table.selectRow(rows[0])
+        self.table.scrollTo(index, QAbstractItemView.PositionAtCenter)
+        self.table.setFocus()
+
     def edit_row(self):
         records = self._require_selection("edit")
         if not records:
@@ -3145,7 +3207,8 @@ class MainWindow(QMainWindow):
                 return
         except RuntimeError:
             pass  # WA_DeleteOnClose: the C++ widget is already gone
-        dialog = DefinitionDialog(self, record, self.db_adapter)
+        dialog = DefinitionDialog(self, record, self.db_adapter, self._related_for,
+                                  jump_to=lambda rec: self.jump_to_word(rec.get("ID")))
         dialog.definition_changed.connect(self.load_data)
         self._open_dialogs[("def", key)] = dialog
         dialog.show()
@@ -4930,6 +4993,8 @@ class MainWindow(QMainWindow):
                                  message=tr("Applying theme…"))
             self._apply_global_hotkey()
             self._reapply_sync()
+            if self._related_enabled() != bool(self._related):
+                self._rebuild_related(self._related_words)
             show_toast(self, tr("Settings"), tr("Settings saved."), "success")
 
     def open_log_window(self):

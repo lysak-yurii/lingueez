@@ -1834,6 +1834,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Valinnaiset sarakkeet: Definition, Definition2 ja Tags (pilkuin eroteltuna) — yhdistetään sanoihin, jotka sinulla jo on, korvaamatta niitä."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Sama käännös",
+    "Same word family": "Sama sanaperhe",
+    "Study": "Opiskelu",
+    "Related words": "Liittyvät sanat",
+    "Jump to word": "Siirry sanaan",
+    "Related": "Liittyvät",
+    "Click to open its definition": "Avaa määritelmä napsauttamalla",
+    "Show related words": "Näytä liittyvät sanat",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonyymit ja saman sanaperheen sanat – korteissa ja määritelmissä",
 }
 
 # Date names, read by app.i18n. Months are in genitive / partitive form for date displays.

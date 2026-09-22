@@ -105,6 +105,7 @@ hiddenimports = [
     "pydub", "gtts", "google.cloud.texttospeech",
     "segno",   # imported lazily inside app/ui/android_promo.qr_pixmap
     "pyphen",  # imported lazily inside app/core/hyphenation._dictionary
+    "snowballstemmer",  # optional import in app/core/related
 ]
 # i18n loads locale modules dynamically (importlib.import_module("locales.uk")),
 # which static analysis can't see — collect them explicitly so the Ukrainian

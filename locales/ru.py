@@ -1577,6 +1577,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Необязательные столбцы: Definition, Definition2 и Tags (через запятую) — добавляются к уже имеющимся словам, ничего не перезаписывая."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Тот же перевод",
+    "Same word family": "Однокоренные слова",
+    "Study": "Обучение",
+    "Related words": "Связанные слова",
+    "Jump to word": "Перейти к слову",
+    "Related": "Связанные",
+    "Click to open its definition": "Нажмите, чтобы открыть определение",
+    "Show related words": "Показывать связанные слова",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Синонимы и однокоренные слова — на карточках и в определениях",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

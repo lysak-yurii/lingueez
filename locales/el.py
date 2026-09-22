@@ -1773,6 +1773,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Προαιρετικές στήλες: Definition, Definition2 και Tags (χωρισμένες με κόμμα) — συγχωνεύονται στις λέξεις που ήδη έχετε, χωρίς να τις αντικαθιστούν."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Ίδια μετάφραση",
+    "Same word family": "Ίδια οικογένεια λέξεων",
+    "Study": "Μελέτη",
+    "Related words": "Σχετικές λέξεις",
+    "Jump to word": "Μετάβαση στη λέξη",
+    "Related": "Σχετικές",
+    "Click to open its definition": "Κάντε κλικ για να ανοίξει ο ορισμός",
+    "Show related words": "Εμφάνιση σχετικών λέξεων",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Συνώνυμα και λέξεις της ίδιας οικογένειας — στις κάρτες και στους ορισμούς",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

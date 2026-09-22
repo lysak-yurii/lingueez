@@ -1836,6 +1836,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Nem kötelező oszlopok: Definition, Definition2 és Tags (vesszővel elválasztva) — a már meglévő szavakhoz adódnak hozzá, felülírás nélkül."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Azonos fordítás",
+    "Same word family": "Azonos szócsalád",
+    "Study": "Tanulás",
+    "Related words": "Kapcsolódó szavak",
+    "Jump to word": "Ugrás a szóhoz",
+    "Related": "Kapcsolódó",
+    "Click to open its definition": "Kattints a definíció megnyitásához",
+    "Show related words": "Kapcsolódó szavak megjelenítése",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Szinonimák és azonos szócsaládba tartozó szavak – a kártyákon és a definíciókban",
 }
 
 # Date names, read by app.i18n. Months in Hungarian usually use nominative or -i suffix.

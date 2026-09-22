@@ -1560,6 +1560,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "İsteğe bağlı sütunlar: Definition, Definition2 ve Tags (virgülle ayrılmış) — hâlihazırda sahip olduğunuz kelimelere eklenir, asla üzerine yazmaz."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Aynı çeviri",
+    "Same word family": "Aynı kelime ailesi",
+    "Study": "Çalışma",
+    "Related words": "İlgili kelimeler",
+    "Jump to word": "Kelimeye git",
+    "Related": "İlgili",
+    "Click to open its definition": "Tanımını açmak için tıklayın",
+    "Show related words": "İlgili kelimeleri göster",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Eş anlamlılar ve aynı kelime ailesinden kelimeler; kartlarda ve tanımlarda",
 }
 
 # Date names, read by app.i18n.

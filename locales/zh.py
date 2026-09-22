@@ -1558,6 +1558,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "可选列：Definition、Definition2 和 Tags（以逗号分隔）——会合并到你已有的单词中，不会覆盖原有内容。"
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "相同译文",
+    "Same word family": "同一词族",
+    "Study": "学习",
+    "Related words": "相关单词",
+    "Jump to word": "跳转到单词",
+    "Related": "相关",
+    "Click to open its definition": "点击打开其释义",
+    "Show related words": "显示相关单词",
+    "Synonyms and words from the same family, on flashcards and in definitions": "同义词和同一词族的单词，显示在卡片和释义中",
 }
 
 # Date names, read by app.i18n. Months in Simplified Chinese numbers/names ("1月", "2月" etc.)

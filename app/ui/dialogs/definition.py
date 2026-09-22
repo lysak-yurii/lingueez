@@ -33,7 +33,7 @@ import re
 from datetime import datetime
 
 import shiboken6
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, Signal
+from PySide6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, Signal
 from PySide6.QtGui import (
     QColor, QFont, QKeySequence, QShortcut, QTextBlockFormat, QTextCharFormat,
     QTextCursor, QTextListFormat,
@@ -48,7 +48,7 @@ from app.core import ai
 from app.i18n import full_date, lang_label, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
-from app.ui.widgets import ElidedLabel
+from app.ui.widgets import ElidedLabel, RelatedWordsLabel
 from app.ui.workers import run_in_thread
 
 
@@ -363,10 +363,13 @@ class _DefinitionEditor(QTextEdit):
 class DefinitionDialog(FramelessDialog):
     definition_changed = Signal()
 
-    def __init__(self, parent, record, db_adapter):
+    def __init__(self, parent, record, db_adapter, related_provider=None,
+                 jump_to=None):
         super().__init__(parent, title=tr("Definition — {word}").format(word=record.get('Word1', '')))
         self.record = record
         self.db_adapter = db_adapter
+        self._related_provider = related_provider or (lambda word_id: [])
+        self._jump_to = jump_to        # record → show it in the Words list
         self.word_id = record["ID"]
         self.current_field = 'Word1'   # which word's definition is shown
         self._pick_initial_field = True  # on first load, open the side that has a definition
@@ -454,6 +457,7 @@ class DefinitionDialog(FramelessDialog):
         self.empty_widget = self._build_empty_state()
         card_lay.addWidget(self.empty_widget, 1)
         layout.addWidget(card, 1)
+        layout.addWidget(self._build_related_row())
 
         # Footer: the AI action on the left; edit/save/cancel + close on the right.
         buttons = QHBoxLayout()
@@ -525,6 +529,33 @@ class DefinitionDialog(FramelessDialog):
         for widget in (self.added_row, self.added_glyph, self.added_label):
             widget.setToolTip(exact)
         self.added_row.setVisible(bool(caption))
+
+    def _build_related_row(self):
+        """Synonyms and word-family members under the definition; each opens
+        its own definition. Hidden when the word has none."""
+        row = QWidget()
+        lay = QHBoxLayout(row)
+        lay.setContentsMargins(4, 0, 4, 0)
+        lay.setSpacing(10)
+        caption = QLabel(tr("Related"), objectName="dimLabel")
+        lay.addWidget(caption, 0, Qt.AlignTop)
+        self.related = RelatedWordsLabel(clickable=True,
+                                         jumpable=self._jump_to is not None)
+        self.related.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.related.word_clicked.connect(self._open_related)
+        if self._jump_to is not None:
+            self.related.jump_requested.connect(self._jump_to)
+        lay.addWidget(self.related, 1)
+        self.related.set_groups(self._related_provider(self.word_id))
+        row.setVisible(self.related.has_words())
+        return row
+
+    def _open_related(self, record):
+        dialog = DefinitionDialog(self.parentWidget(), record, self.db_adapter,
+                                  self._related_provider, self._jump_to)
+        dialog.definition_changed.connect(self.definition_changed)
+        dialog.show()
+        dialog.move(self.pos() + QPoint(28, 28))
 
     def _build_empty_state(self):
         """Centered placeholder shown in the card when no definition is stored."""

@@ -20,6 +20,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """Small reusable widgets."""
+import html
 import re
 from datetime import date
 
@@ -27,11 +28,12 @@ from PySide6.QtCore import (
     QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QRectF, QSize, Qt,
     QTimer, Signal,
 )
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QCursor, QGuiApplication, QPainter
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QFrame, QGridLayout,
     QHBoxLayout, QLabel, QLayout, QLineEdit, QMenu, QPushButton, QScrollArea,
-    QSizePolicy, QStyle, QStyleOptionComboBox, QToolButton, QVBoxLayout, QWidget,
+    QSizePolicy, QStyle, QStyleOptionComboBox, QToolButton, QToolTip, QVBoxLayout,
+    QWidget,
 )
 
 from app.core import progression
@@ -950,3 +952,112 @@ class SessionWordList(QWidget):
         if not self._expanded:
             self.scroll.verticalScrollBar().setValue(0)
         self._apply_state()
+
+
+# --------------------------------------------------------------------------- #
+# related words
+# --------------------------------------------------------------------------- #
+RELATED_MARKS = {"translation": "≈", "root": "⌂"}
+RELATED_TIPS = {"translation": "Same translation", "root": "Same word family"}
+
+
+class RelatedWordsLabel(QLabel):
+    """One line of related words — "≈ fröhlich · heiter   ⌂ Glück" — each
+    tinted with its status. Hovering explains a word or mark; with
+    ``clickable`` a click emits ``word_clicked(record)``, and with ``jumpable``
+    the right-click menu offers "Jump to word" (``jump_requested(record)``)
+    beside "Copy"."""
+
+    word_clicked = Signal(dict)
+    jump_requested = Signal(dict)
+
+    def __init__(self, clickable=False, jumpable=False, parent=None):
+        super().__init__(parent, objectName="RelatedWords")
+        self._clickable = clickable
+        self._jumpable = jumpable
+        self._groups = []
+        self._records = {}     # link target → record
+        self._hovered = ""
+        self.setWordWrap(True)
+        self.setTextFormat(Qt.RichText)
+        self.setTextInteractionFlags(Qt.LinksAccessibleByMouse)
+        self.linkHovered.connect(self._on_hovered)
+        self.linkActivated.connect(self._on_activated)
+        self.refresh_theme()
+
+    def set_groups(self, groups):
+        """``groups``: ``[(kind, [record, ...])]`` with kind "translation" or
+        "root"; an empty list clears the line."""
+        self._groups = [(kind, records) for kind, records in groups if records]
+        self._render()
+
+    def has_words(self):
+        return bool(self._records)
+
+    def hovered_link(self):
+        """The link under the mouse, or "" — lets a host ignore that click."""
+        return self._hovered
+
+    def refresh_theme(self):
+        c = theme.current_colors()
+        # Scoped by name: a bare rule also restyles the QToolTip (a QLabel)
+        # shown for this label, leaving it transparent with dim text.
+        self.setStyleSheet(
+            f"#RelatedWords{{color:{c['text_dim']};background:transparent;"
+            f"font-size:{theme.font_pt('body')}pt;}}")
+        self._render()
+
+    def _render(self):
+        dim = theme.current_colors()["text_dim"]
+        sep = f" <span style='color:{dim}'>·</span> "
+        self._records = {}
+        parts = []
+        for kind, records in self._groups:
+            words = []
+            for rec in records:
+                target = f"w{len(self._records)}"  # never the word ID: Qt can expose it
+                self._records[target] = rec
+                ink = theme.status_style(str(rec.get("Status") or ""))["ink"]
+                words.append(f'<a href="{target}" style="color:{ink};text-decoration:none">'
+                             f'{html.escape(str(rec.get("Word1") or ""))}</a>')
+            parts.append(f'<a href="kind:{kind}" style="color:{dim};text-decoration:none">'
+                         f'{RELATED_MARKS[kind]}</a>&nbsp;{sep.join(words)}')
+        self.setText("&nbsp;&nbsp;&nbsp;&nbsp; ".join(parts))
+
+    def _on_hovered(self, link):
+        self._hovered = link
+        if not link:
+            QToolTip.hideText()
+            return
+        if link.startswith("kind:"):
+            text = tr(RELATED_TIPS[link[5:]])
+        else:
+            rec = self._records.get(link, {})
+            status = str(rec.get("Status") or "")
+            lines = [f"<b>{html.escape(str(rec.get('Word1') or ''))}</b>"]
+            lines += [html.escape(str(x)) for x in (rec.get("Word2"), tr(status) if status else "") if x]
+            if self._clickable:
+                lines.append(f"<i>{html.escape(tr('Click to open its definition'))}</i>")
+            text = "<br>".join(lines)
+        QToolTip.showText(QCursor.pos(), text, self)
+
+    def _on_activated(self, link):
+        rec = self._records.get(link)
+        if rec is not None and self._clickable:
+            self.word_clicked.emit(rec)
+
+    def contextMenuEvent(self, event):  # noqa: N802
+        # Replaces Qt's link menu, whose "Copy Link Location" copied the target.
+        rec = self._records.get(self._hovered)
+        if rec is None:
+            event.ignore()
+            return
+        self.menu_for(rec).exec(event.globalPos())
+
+    def menu_for(self, rec):
+        word = str(rec.get("Word1") or "")
+        menu = QMenu(self)
+        if self._jumpable:
+            menu.addAction(tr("Jump to word"), lambda: self.jump_requested.emit(rec))
+        menu.addAction(tr("Copy"), lambda: QGuiApplication.clipboard().setText(word))
+        return menu

@@ -1578,6 +1578,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Valgfrie kolonner: Definition, Definition2 og Tags (kommaseparert) — slås sammen med ord du allerede har, uten å overskrive dem."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Samme oversettelse",
+    "Same word family": "Samme ordfamilie",
+    "Study": "Læring",
+    "Related words": "Relaterte ord",
+    "Jump to word": "Gå til ordet",
+    "Related": "Relaterte",
+    "Click to open its definition": "Klikk for å åpne definisjonen",
+    "Show related words": "Vis relaterte ord",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonymer og ord fra samme ordfamilie – på kort og i definisjoner",
 }
 
 # Date names, read by app.i18n.

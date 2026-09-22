@@ -1570,6 +1570,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Valfria kolumner: Definition, Definition2 och Tags (kommaseparerade) — slås samman med ord du redan har, utan att skriva över dem."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Samma översättning",
+    "Same word family": "Samma ordfamilj",
+    "Study": "Studier",
+    "Related words": "Relaterade ord",
+    "Jump to word": "Gå till ordet",
+    "Related": "Relaterade",
+    "Click to open its definition": "Klicka för att öppna definitionen",
+    "Show related words": "Visa relaterade ord",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Synonymer och ord från samma ordfamilj – på kort och i definitioner",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

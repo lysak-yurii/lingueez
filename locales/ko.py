@@ -1572,6 +1572,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "선택 열: Definition, Definition2, Tags(쉼표로 구분) — 이미 있는 단어에 병합되며 덮어쓰지 않습니다."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "같은 번역",
+    "Same word family": "같은 단어 가족",
+    "Study": "학습",
+    "Related words": "관련 단어",
+    "Jump to word": "단어로 이동",
+    "Related": "관련 단어",
+    "Click to open its definition": "클릭하여 정의 열기",
+    "Show related words": "관련 단어 표시",
+    "Synonyms and words from the same family, on flashcards and in definitions": "동의어와 같은 단어 가족의 단어를 카드와 정의에 표시합니다",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -1552,6 +1552,16 @@ TRANSLATIONS: dict[str, str] = {
     "never overwriting them.": (
         "Опционе колоне: Definition, Definition2 и Tags (раздвојене зарезима) — додају се речима које већ имате, без преписивања."
     ),
+    # ── Flashcards: related words ─────────────────────────────────────────
+    "Same translation": "Исти превод",
+    "Same word family": "Иста породица речи",
+    "Study": "Учење",
+    "Related words": "Повезане речи",
+    "Jump to word": "Иди на реч",
+    "Related": "Повезано",
+    "Click to open its definition": "Кликните да отворите дефиницију",
+    "Show related words": "Прикажи повезане речи",
+    "Synonyms and words from the same family, on flashcards and in definitions": "Синоними и речи из исте породице — на картицама и у дефиницијама",
 }
 
 # Date names, read by app.i18n. Months in Serbian (nominative/standard format).
