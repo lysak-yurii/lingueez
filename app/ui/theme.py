@@ -822,9 +822,10 @@ QLineEdit#BigInput:focus {{
 
 def apply_theme(app: QApplication, mode="System", scaling=1.0):
     """Apply palette + QSS. Returns the resolved color dict."""
-    global _current_colors
+    global _current_colors, _current_status
     c = palette_colors(mode)
     _current_colors = c
+    _current_status = palette_status(mode)
     base_font_size = max(8, round(10 * scaling))
 
     pal = QPalette()
