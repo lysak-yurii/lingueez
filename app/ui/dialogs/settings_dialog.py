@@ -101,7 +101,8 @@ class SettingsDialog(FramelessDialog):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._general_tab(), tr("General"))
         self.tabs.addTab(self._read_aloud_tab(), tr("Read-aloud"))
-        self.tabs.addTab(self._apis_tab(), tr("Translation & AI"))
+        # A lone "&" in a tab title marks a mnemonic and is not drawn.
+        self.tabs.addTab(self._apis_tab(), tr("Translation & AI").replace("&", "&&"))
         self.tabs.addTab(self._data_tab(), tr("Data"))
         self.tabs.addTab(self._sync_tab(), tr("Sync"))
         layout.addWidget(self.tabs, 1)
