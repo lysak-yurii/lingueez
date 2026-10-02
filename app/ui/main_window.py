@@ -2766,20 +2766,18 @@ class MainWindow(QMainWindow):
         # reader — carry their own source language and keep it.
         if not prefill and not language1:
             language1, language2 = self._default_add_word_languages()
-        # Wayland focus workaround (pre-GlobalShortcuts-portal desktops, e.g.
-        # GNOME 46/47). Such sessions give a global-shortcut launch no activation
-        # token, so a freshly mapped dialog can't take focus while any window of
-        # ours is still mapped — the compositor shows a "… is ready" notification
-        # instead of the dialog. Worse, Wayland won't even tell us the window is
-        # minimized: isMinimized()/isExposed() both read "normal" a moment after
-        # the user minimises. So for an external launch (hotkey / tray menu) on
-        # such a session, drop to the tray first — the zero-window state that DOES
-        # focus, same as the normal tray case — and open the dialog on a LATER
-        # event-loop turn, once the compositor has processed the unmap. Gated to
-        # Wayland with no token, so it never runs on X11/Windows and auto-disables
-        # once a token is available (GNOME 48+ portal), where focus just works.
-        if (from_hotkey and _is_wayland() and not self._pending_activation_token
-                and self.isVisible()):
+        # A Wayland hotkey launch carries no activation token (GNOME hands custom
+        # keybindings none), and a token-less dialog only takes focus from another
+        # app when it is parentless: a child of our unfocused main window is left
+        # unfocused behind a "… is ready" notification.
+        tokenless = (from_hotkey and _is_wayland()
+                     and not self._pending_activation_token)
+        # GNOME 46/47 refuse even a parentless dialog while any window of ours is
+        # mapped, and Wayland won't say whether the main window is minimized. So
+        # there, drop to the tray first — the zero-window state that does focus —
+        # and open the dialog once the compositor has processed the unmap. The
+        # GlobalShortcuts portal marks GNOME 48+, where this isn't needed.
+        if tokenless and self.isVisible() and not _global_shortcuts_portal_available():
             self.hide()
             self._sync_mini_player()
             QTimer.singleShot(300, lambda: self._spawn_add_word_dialog(
@@ -2789,7 +2787,7 @@ class MainWindow(QMainWindow):
         # Otherwise open the dialog without a parent when the main window isn't on
         # screen, so it doesn't drag the main window up behind it.
         main_on_screen = self.isVisible() and not self.isMinimized()
-        parent = self if main_on_screen else None
+        parent = self if main_on_screen and not tokenless else None
         self._spawn_add_word_dialog(parent, prefill, auto_translate, language1,
                                     fill_from_clipboard, language2)
 
