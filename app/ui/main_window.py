@@ -28,7 +28,8 @@ import sys
 from datetime import datetime, timedelta
 
 from PySide6.QtCore import (QAbstractAnimation, QEasingCurve,
-                            QEvent, QPoint, QPropertyAnimation, QSize, Qt,
+                            QEvent, QItemSelection, QItemSelectionModel, QPoint,
+                            QPropertyAnimation, QSize, Qt,
                             QTimer, QVariantAnimation, Signal)
 from PySide6.QtNetwork import QLocalServer
 from PySide6.QtGui import (
@@ -2671,7 +2672,9 @@ class MainWindow(QMainWindow):
         wf.search_query = self.search_box.text()
 
         filtered = wf.apply(self.df)
+        selected_ids = self._selected_ids()
         self.model.set_dataframe(filtered)
+        self._restore_selection(selected_ids)
         self._update_words_empty(len(filtered), len(self.df))
 
         # Fit the meta columns to content once, after the first rows arrive;
@@ -2733,8 +2736,43 @@ class MainWindow(QMainWindow):
         rows = sorted({ix.row() for ix in self.table.selectionModel().selectedRows()})
         return [self.model.row_record(r) for r in rows]
 
-    def _require_selection(self, action="continue"):
+    def _selected_ids(self):
+        ids = self.model.dataframe()["ID"]
+        return {ids.iat[ix.row()] for ix in self.table.selectionModel().selectedRows()}
+
+    def _restore_selection(self, word_ids):
+        """Reselect the words that survived a model reset, by ID."""
+        if word_ids:
+            rows = [r for r, wid in enumerate(self.model.dataframe()["ID"].tolist())
+                    if wid in word_ids]
+            selection = QItemSelection()
+            last_col = self.model.columnCount() - 1
+            start = prev = None
+            for row in rows + [None]:
+                if start is not None and row != prev + 1:
+                    selection.select(self.model.index(start, 0),
+                                     self.model.index(prev, last_col))
+                    start = None
+                if start is None:
+                    start = row
+                prev = row
+            self.table.selectionModel().select(
+                selection, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+        # A model reset drops the selection without emitting selectionChanged.
+        self._on_selection_changed()
+
+    def _action_records(self):
+        """The words a toolbar action applies to: the selection, or — while
+        reading aloud with nothing selected — the word being read."""
         records = self.selected_records()
+        if not records and self.is_reading_active:
+            row = self.model.playing_row()
+            if row >= 0:
+                records = [self.model.row_record(row)]
+        return records
+
+    def _require_selection(self, action="continue"):
+        records = self._action_records()
         if not records:
             show_toast(self, tr("No selection"), tr("Please select at least one word."), "warning")
         return records
@@ -3214,7 +3252,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------- copy
 
     def copy_selected(self):
-        records = self.selected_records()
+        records = self._action_records()
         if not records:
             return
         text = "\n".join(f"{r.get('Word1', '')}\t{r.get('Word2', '')}" for r in records)
@@ -3247,8 +3285,8 @@ class MainWindow(QMainWindow):
         menu.addAction(tr("Edit"), self.edit_row)
         menu.addAction(tr("Delete"), self.delete_rows)
         menu.addSeparator()
-        menu.addAction(tr("Copy Word"), lambda: self._copy_field(self.selected_records(), 'Word1'))
-        menu.addAction(tr("Copy Translation"), lambda: self._copy_field(self.selected_records(), 'Word2'))
+        menu.addAction(tr("Copy Word"), lambda: self._copy_field(self._action_records(), 'Word1'))
+        menu.addAction(tr("Copy Translation"), lambda: self._copy_field(self._action_records(), 'Word2'))
         menu.addSeparator()
         menu.addAction(tr("Toggle Favorite"), self.toggle_favorite)
         menu.addAction(tr("Mark for relearning"), self.mark_words_to_learn)
@@ -3754,7 +3792,7 @@ class MainWindow(QMainWindow):
             self._refresh_stats()
 
     def save_audio_action(self):
-        records = self.selected_records()
+        records = self._action_records()
         if not records:
             show_toast(self, tr("No selection"), tr("Select words to save as audio."), "warning")
             return

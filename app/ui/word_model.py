@@ -190,6 +190,10 @@ class WordTableModel(QAbstractTableModel):
                                       [Qt.BackgroundRole])
         return self._playing_row
 
+    def playing_row(self):
+        """Row of the word being read aloud, or -1 if none / not visible."""
+        return self._playing_row
+
     def flash_words(self, word_ids):
         """Briefly highlight the rows of freshly appeared words with a soft accent
         glow that holds, then fades out — the way polished apps confirm new items
