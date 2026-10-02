@@ -14,8 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QEvent, QPointF, Qt  # noqa: E402
-from PySide6.QtGui import QMouseEvent  # noqa: E402
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt  # noqa: E402
+from PySide6.QtGui import QMouseEvent, QWheelEvent  # noqa: E402
+from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from app import config as app_config  # noqa: E402
@@ -154,6 +155,58 @@ class SwipeGradesTests(unittest.TestCase):
         self.page._show_card(0)
         self._drag(120, 0)
         self.assertEqual(self.page._grade_history, {0: "hard"})
+
+
+class CardZoomTests(SwipeGradesTests):
+    def _wheel(self, target, dy, modifiers=Qt.ControlModifier):
+        # Qt only walks an ignored wheel event up the parents when it came from
+        # the window system, so a synthetic one has to be walked by hand.
+        while target is not None:
+            pos = QPointF(target.rect().center())
+            event = QWheelEvent(
+                pos,
+                QPointF(target.mapToGlobal(pos.toPoint())),
+                QPoint(0, 0),
+                QPoint(0, dy),
+                Qt.NoButton,
+                modifiers,
+                Qt.NoScrollPhase,
+                False,
+            )
+            if QApplication.sendEvent(target, event) and event.isAccepted():
+                return
+            target = target.parentWidget()
+
+    def test_ctrl_scroll_grows_the_card_and_its_buttons(self):
+        font_before = self.card.word.font().pointSize()
+        width_before = self.page.hard_btn.minimumWidth()
+        self._wheel(self.card, 120)
+        self._wheel(self.card, 120)
+        self.assertEqual(self.page._zoom_step, 2)
+        self.assertGreater(self.card.maximumWidth(), 640)
+        self.assertGreater(self.page.hard_btn.minimumWidth(), width_before)
+        _app.processEvents()
+        self.assertGreater(self.card.word.font().pointSize(), font_before)
+
+    def test_it_reaches_the_page_from_over_the_definition(self):
+        self._wheel(self.card.body_scroll.viewport(), -120)
+        self.assertEqual(self.page._zoom_step, -1)
+
+    def test_a_plain_scroll_does_not_zoom(self):
+        self._wheel(self.card, 120, Qt.NoModifier)
+        self.assertEqual(self.page._zoom_step, 0)
+
+    def test_the_zoom_is_clamped_and_ctrl_0_resets_it(self):
+        for _ in range(40):
+            self._wheel(self.card, 120)
+        self.assertEqual(self.page._zoom_step, fp.ZOOM_MAX)
+        QTest.keyClick(self.page, Qt.Key_0, Qt.ControlModifier)
+        self.assertEqual(self.page._zoom_step, 0)
+        self.assertEqual(self.card.maximumWidth(), 640)
+
+    def test_the_step_is_remembered(self):
+        self._wheel(self.card, 120)
+        self.assertEqual(self.settings["flashcards_zoom"], "1")
 
 
 if __name__ == "__main__":

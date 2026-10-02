@@ -970,6 +970,7 @@ class RelatedWordsLabel(QLabel):
 
     word_clicked = Signal(dict)
     jump_requested = Signal(dict)
+    font_scale = 1.0  # a zoomed host sets this, then calls refresh_theme()
 
     def __init__(self, clickable=False, jumpable=False, parent=None):
         super().__init__(parent, objectName="RelatedWords")
@@ -1004,7 +1005,7 @@ class RelatedWordsLabel(QLabel):
         # shown for this label, leaving it transparent with dim text.
         self.setStyleSheet(
             f"#RelatedWords{{color:{c['text_dim']};background:transparent;"
-            f"font-size:{theme.font_pt('body')}pt;}}")
+            f"font-size:{round(theme.font_pt('body') * self.font_scale)}pt;}}")
         self._render()
 
     def _render(self):

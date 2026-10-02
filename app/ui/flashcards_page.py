@@ -79,6 +79,8 @@ DECK_KINDS = ("due", "filtered", "newest", "selected")
 PICKER_LOGO_SCALE = 0.62
 FLIP_MS = 220
 FLIP_MS_AUTOPLAY = 160
+#: Card zoom (Ctrl+scroll / Ctrl +/- / Ctrl+0), in steps of ZOOM_STEP.
+ZOOM_MIN, ZOOM_MAX, ZOOM_STEP = -3, 8, 0.1
 #: The hover wash shared with the Quiz page's answers, so a tile under the
 #: cursor and an answer under the cursor read as the same gesture.
 HOVER_MS = 110
@@ -390,6 +392,12 @@ class _ScrollBody(QScrollArea):
         width = self.viewport().width() or self.width()
         height = self._label.heightForWidth(width) if width > 0 else 0
         return QSize(self._label.sizeHint().width(), max(0, height))
+
+    def wheelEvent(self, event):  # noqa: N802
+        if event.modifiers() & Qt.ControlModifier:
+            event.ignore()  # the page zooms the card
+            return
+        super().wheelEvent(event)
 
     def minimumSizeHint(self):  # noqa: N802
         # Claim no floor: the card decides what is left over, and anything
@@ -784,6 +792,20 @@ class _CardStack(QWidget):
         p.end()
 
 
+class _FloorVBox(QVBoxLayout):
+    """A vertical box that asks for at least `floor` pixels of height.
+
+    A parent layout sizes a widget from its layout's height-for-width and
+    ignores the widget's own sizeHint, so a preferred height above what the
+    content needs has to be claimed here. Unlike a minimum height it still
+    lets the widget shrink when the window is short."""
+
+    floor = 0
+
+    def heightForWidth(self, width):  # noqa: N802
+        return max(self.floor, super().heightForWidth(width))
+
+
 class FlashcardWidget(QWidget):
     """The card itself: word on the front, translation + definition on the back."""
 
@@ -806,12 +828,13 @@ class FlashcardWidget(QWidget):
         self._swipe_under = None  # callable → snapshot of the next card
         self._press = None   # global position of the left-button press
         self._swipe = None   # SwipeOverlay while the card is off its slot
+        self._zoom = 1.0
         self.setMinimumSize(380, 320)
         self.setMaximumWidth(640)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setCursor(Qt.PointingHandCursor)
 
-        lay = QVBoxLayout(self)
+        lay = _FloorVBox(self)
         lay.setContentsMargins(32, 24, 32, 24)
         lay.setSpacing(12)
 
@@ -890,6 +913,32 @@ class FlashcardWidget(QWidget):
         if not enabled:
             self._drop_swipe()
 
+    def set_zoom(self, zoom):
+        """Scale the card's type, icons and padding by `zoom`."""
+        self._drop_swipe()
+        self._zoom = float(zoom)
+        shrink = min(self._zoom, 1.0)
+        self.setMinimumSize(round(380 * shrink), round(320 * shrink))
+        self.setMaximumWidth(self._px(640))
+        self.layout().setContentsMargins(
+            self._px(32), self._px(24), self._px(32), self._px(24))
+        self.layout().floor = self._px(320)
+        icon = QSize(self._px(16), self._px(16))
+        for btn in (self.favorite_btn, self.relearn_btn, self.ignore_btn,
+                    self.speak_btn):
+            btn.setIconSize(icon)
+        self.divider.setFixedSize(self._px(120), 1)
+        self.related.font_scale = self._zoom
+        self.updateGeometry()
+        self._apply_styles()
+        self._refresh_faces()
+
+    def _pt(self, key):
+        return max(6, round(theme.font_pt(key) * self._zoom))
+
+    def _px(self, value):
+        return max(1, round(value * self._zoom))
+
     def set_card(self, record, hint_text=""):
         self._drop_swipe()
         self._record = record or {}
@@ -962,7 +1011,7 @@ class FlashcardWidget(QWidget):
         self.caption.setStyleSheet(
             f"color:{c['text_dim'] if self._side == 0 else c['accent_text']};"
             "background:transparent;"
-            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;letter-spacing:2px;")
+            f"font-size:{self._pt('caption')}pt;font-weight:600;letter-spacing:2px;")
         # Both sides set the word in the content face at full text color: the
         # sides are told apart by what appears (translation, definition), not
         # by tinting the word accent-blue, which has to keep meaning "click me".
@@ -971,14 +1020,14 @@ class FlashcardWidget(QWidget):
             self.caption.setText(str(rec.get("Language1") or "").upper())
             self.word.setText(str(rec.get("Word1") or ""))
             self.word.setStyleSheet(
-                word_css + f"font-size:{theme.font_pt('hero')}pt;")
+                word_css + f"font-size:{self._pt('hero')}pt;")
             self.body.setText("")
             self.hint.setText(self._hint_text)
         else:
             self.caption.setText(str(rec.get("Language2") or "").upper())
             self.word.setText(str(rec.get("Word2") or ""))
             self.word.setStyleSheet(
-                word_css + f"font-size:{theme.font_pt('display')}pt;")
+                word_css + f"font-size:{self._pt('display')}pt;")
             self.body.setTextFormat(Qt.RichText)  # definitions carry markup
             self.body.setText(_definition_html(self._definition, c)
                               if self._definition else "")
@@ -998,7 +1047,7 @@ class FlashcardWidget(QWidget):
         # with (word_model._fav_stripe), so the two read as one marking.
         self.favorite_btn.setIcon(icons.icon(
             "star-filled" if favorite else "star",
-            c["warning"] if favorite else c["text_dim"], 16))
+            c["warning"] if favorite else c["text_dim"], self._px(16)))
         self.favorite_btn.setToolTip(
             tr("Remove from favorites") if favorite else tr("Add to favorites"))
 
@@ -1009,29 +1058,29 @@ class FlashcardWidget(QWidget):
         self.status_chip.setStyleSheet(
             f"color:{st['ink']};background:{_soft(st['ink'], st['fill'])};"
             "border:none;"
-            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;"
-            "padding:3px 10px;border-radius:9px;")
+            f"font-size:{self._pt('caption')}pt;font-weight:600;"
+            f"padding:{self._px(3)}px {self._px(10)}px;border-radius:9px;")
 
     def _apply_styles(self):
         c = self._colors
         self._style_status_chip()
         self.body.setStyleSheet(
             f"color:{c['text_dim']};background:transparent;"
-            f"font-size:{theme.font_pt('body_lg')}pt;")
+            f"font-size:{self._pt('body_lg')}pt;")
         self.body_scroll.setStyleSheet(
             "QScrollArea{background:transparent;}"
             "QScrollArea > QWidget > QWidget{background:transparent;}")
         self.hint.setStyleSheet(
             f"color:{_soft(c['text_dim'], 150)};background:transparent;"
-            f"font-size:{theme.font_pt('caption')}pt;")
+            f"font-size:{self._pt('caption')}pt;")
         self.related.refresh_theme()
         self.divider.setStyleSheet(  # only ever visible on the answer side
             f"background:{_soft(c['accent_text'], 130)};border:none;")
-        self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], 16))
+        self.speak_btn.setIcon(icons.icon("volume", c["text_dim"], self._px(16)))
         # Grey, not the danger red: parking a word is reversible bookkeeping,
         # and the Ignored ramp is deliberately off to one side of the ladder.
-        self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], 16))
-        self.relearn_btn.setIcon(icons.icon("rotate-ccw", c["text_dim"], 16))
+        self.ignore_btn.setIcon(icons.icon("slash", c["text_dim"], self._px(16)))
+        self.relearn_btn.setIcon(icons.icon("rotate-ccw", c["text_dim"], self._px(16)))
         self._style_favorite()
 
     def paintEvent(self, _event):  # noqa: N802
@@ -1169,7 +1218,8 @@ class FlashcardsPage(QWidget):
         deck_size = max(1, min(200, get_int(settings, "flashcards_deck_size", 20)))
         shuffle_on = get_bool(settings, "flashcards_shuffle", False)
         pronounce_on = get_bool(settings, "flashcards_pronounce", True)
-
+        self._zoom_step = max(ZOOM_MIN, min(
+            ZOOM_MAX, get_int(settings, "flashcards_zoom", 0)))
 
         # ---- state 0: deck picker ------------------------------------
         # A full-width setup bar on top (identity + deck controls) with the
@@ -1413,7 +1463,6 @@ class FlashcardsPage(QWidget):
         self.flip_btn.setCursor(Qt.PointingHandCursor)
         self.flip_btn.clicked.connect(self.flip)
         self.flip_pad = QLabel("")  # keeps row height stable across the flip
-        self.flip_pad.setFixedHeight(15)
         flip_col = QVBoxLayout()
         flip_col.setSpacing(3)
         flip_col.addWidget(self.flip_btn)
@@ -1426,10 +1475,8 @@ class FlashcardsPage(QWidget):
         for btn, grade in ((self.hard_btn, "hard"), (self.good_btn, "good"),
                            (self.easy_btn, "easy")):
             btn.setCursor(Qt.PointingHandCursor)
-            btn.setMinimumWidth(104)
             btn.clicked.connect(lambda _=False, g=grade: self._grade(g))
             interval = QLabel("", alignment=Qt.AlignCenter)
-            interval.setFixedHeight(15)
             self._grade_interval_labels[grade] = interval
             col = QVBoxLayout()
             col.setSpacing(3)
@@ -1509,6 +1556,66 @@ class FlashcardsPage(QWidget):
         bind(Qt.Key_Right, self._next_card_skip)
         bind(Qt.Key_I, self._ignore_current)
         bind(Qt.Key_R, self._relearn_current)
+
+    # -------------------------------------------------------------- zoom
+
+    def _zoom(self):
+        return 1.0 + ZOOM_STEP * self._zoom_step
+
+    def _zoom_card(self, delta):
+        """Step (or reset) the size of the card and its buttons and persist it."""
+        new = 0 if delta == "reset" else max(
+            ZOOM_MIN, min(ZOOM_MAX, self._zoom_step + delta))
+        if new == self._zoom_step:
+            return
+        self._zoom_step = new
+        try:
+            from app.config import save_settings
+            settings = self._settings_provider()
+            settings["flashcards_zoom"] = str(new)
+            save_settings(settings)
+        except Exception as exc:
+            logging.error(f"Saving flashcard zoom failed: {exc}")
+        self._apply_styles()
+
+    def _apply_zoom(self):
+        z = self._zoom()
+
+        def px(value):
+            return max(1, round(value * z))
+
+        self.card.set_zoom(z)
+        self._ghost_card.set_zoom(z)
+        self.card_stack.setMaximumSize(px(640), px(380))
+        self.card_stack.setMinimumHeight(round(230 * min(z, 1.0)))
+        self.flip_btn.setStyleSheet(
+            f"font-size:{round(theme.font_pt('body') * z)}pt;"
+            f"padding:{px(6)}px {px(14)}px;")
+        for btn in (self.hard_btn, self.good_btn, self.easy_btn):
+            btn.setMinimumWidth(px(104))
+        for label in (self.flip_pad, *self._grade_interval_labels.values()):
+            label.setFixedHeight(px(15))
+
+    def wheelEvent(self, event):  # noqa: N802
+        if (event.modifiers() & Qt.ControlModifier
+                and self._stack.currentIndex() == self.STATE_SESSION):
+            dy = event.angleDelta().y()
+            if dy:
+                self._zoom_card(1 if dy > 0 else -1)
+            event.accept()
+            return
+        super().wheelEvent(event)
+
+    def keyPressEvent(self, event):  # noqa: N802
+        if (event.modifiers() & Qt.ControlModifier
+                and self._stack.currentIndex() == self.STATE_SESSION):
+            delta = {Qt.Key_Plus: 1, Qt.Key_Equal: 1, Qt.Key_Minus: -1,
+                     Qt.Key_Underscore: -1, Qt.Key_0: "reset"}.get(event.key())
+            if delta is not None:
+                self._zoom_card(delta)
+                event.accept()
+                return
+        super().keyPressEvent(event)
 
     # -------------------------------------------------------------- deck
 
@@ -2423,6 +2530,8 @@ class FlashcardsPage(QWidget):
 
     def _apply_styles(self):
         c = self._colors
+        z = self._zoom()
+        self._apply_zoom()
         dim = f"color:{c['text_dim']};background:transparent;"
         self.picker_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
@@ -2455,7 +2564,8 @@ class FlashcardsPage(QWidget):
             f"color:{c['success']};background:transparent;font-weight:600;")
         self.autoplay_caption.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         for label in self._grade_interval_labels.values():
-            label.setStyleSheet(dim + f"font-size:{theme.font_pt('caption')}pt;")
+            label.setStyleSheet(
+                dim + f"font-size:{round(theme.font_pt('caption') * z)}pt;")
         self.complete_breakdown.setStyleSheet(dim + f"font-size:{theme.font_pt('body')}pt;")
         self.complete_title.setStyleSheet(
             f"color:{c['text']};background:transparent;"
@@ -2481,21 +2591,23 @@ class FlashcardsPage(QWidget):
         self.shuffle_btn.setIcon(toggle_icon("shuffle"))
         self.pronounce_btn.setIcon(toggle_icon("volume"))
 
-        def grade_style(tint):
+        def grade_style(tint, z=1.0):
             # These are the only decision in the session, so they carry real
             # fill and a solid edge; at the old alphas Hard was dark red on
             # near-black and the three grades barely separated from each other.
             return (f"QPushButton {{ background:{_soft(tint, 58)};"
                     f"color:{c['text']}; border:1px solid {_soft(tint, 150)};"
                     "border-radius:9px;"
-                    "padding:9px 22px; font-weight:600; }"
+                    f"font-size:{round(theme.font_pt('body') * z)}pt;"
+                    f"padding:{round(9 * z)}px {round(22 * z)}px;"
+                    " font-weight:600; }"
                     f"QPushButton:hover {{ background:{_soft(tint, 92)};"
                     f" border-color:{tint}; }}"
                     f"QPushButton:disabled {{ color:{c['text_dim']};"
                     f"background:{_soft(tint, 16)};"
                     f" border-color:{_soft(tint, 50)}; }}")
 
-        self.hard_btn.setStyleSheet(grade_style(c["danger"]))
-        self.good_btn.setStyleSheet(grade_style(c["warning"]))
-        self.easy_btn.setStyleSheet(grade_style(c["success"]))
+        self.hard_btn.setStyleSheet(grade_style(c["danger"], z))
+        self.good_btn.setStyleSheet(grade_style(c["warning"], z))
+        self.easy_btn.setStyleSheet(grade_style(c["success"], z))
         self.hard_again_btn.setStyleSheet(grade_style(c["danger"]))
