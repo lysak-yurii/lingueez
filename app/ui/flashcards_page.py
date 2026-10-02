@@ -52,8 +52,8 @@ from PySide6.QtGui import (
     QTextLayout, QTextOption,
 )
 from PySide6.QtWidgets import (
-    QButtonGroup, QFrame, QHBoxLayout, QLabel, QLayout, QPushButton,
-    QScrollArea, QSizePolicy, QSpinBox, QStackedLayout, QVBoxLayout, QWidget,
+    QApplication, QButtonGroup, QFrame, QHBoxLayout, QLabel, QLayout,
+    QPushButton, QScrollArea, QSizePolicy, QSpinBox, QStackedLayout, QVBoxLayout, QWidget,
 )
 
 from app.core import audio
@@ -67,6 +67,7 @@ from app.ui.dialogs.definition import (
     DefinitionDialog, _runs_to_html, parse_markup,
 )
 from app.ui.charts import FlowLayout, status_color
+from app.ui.swipe import SwipeOverlay, grade_for_drag
 from app.ui.widgets import (
     ProgressionMeter, RelatedWordsLabel, SessionWordList, session_tag_name,
 )
@@ -787,6 +788,7 @@ class FlashcardWidget(QWidget):
     """The card itself: word on the front, translation + definition on the back."""
 
     clicked = Signal()
+    swiped = Signal(str)  # grade key
     speak_clicked = Signal()
     ignore_clicked = Signal()
     relearn_clicked = Signal()
@@ -800,6 +802,10 @@ class FlashcardWidget(QWidget):
         self._side = 0  # 0 = front (word), 1 = back (translation)
         self._flipping = False
         self._hint_text = ""
+        self._swipe_enabled = False
+        self._swipe_under = None  # callable → snapshot of the next card
+        self._press = None   # global position of the left-button press
+        self._swipe = None   # SwipeOverlay while the card is off its slot
         self.setMinimumSize(380, 320)
         self.setMaximumWidth(640)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -876,7 +882,16 @@ class FlashcardWidget(QWidget):
     def side(self):
         return self._side
 
+    def set_swipe(self, enabled, under=None):
+        """Allow dragging the card to grade it; `under` returns a snapshot of
+        the card waiting underneath, None when there is none."""
+        self._swipe_enabled = bool(enabled)
+        self._swipe_under = under
+        if not enabled:
+            self._drop_swipe()
+
     def set_card(self, record, hint_text=""):
+        self._drop_swipe()
         self._record = record or {}
         self._definition = ""
         self.related.set_groups([])
@@ -912,6 +927,7 @@ class FlashcardWidget(QWidget):
     def flip(self, animate=True, duration=FLIP_MS):
         if self._flipping:
             return
+        self._drop_swipe()
         if animate and self.isVisible():
             self._flipping = True
             flip_swap(self, self._turn, duration, bg=self._colors["bg"])
@@ -1027,11 +1043,56 @@ class FlashcardWidget(QWidget):
         p.drawRoundedRect(rect, 18, 18)
         p.end()
 
+    def _drop_swipe(self):
+        if self._swipe is not None:
+            self._swipe.hide()
+            self._swipe.deleteLater()
+            self._swipe = None
+
+    def hideEvent(self, event):  # noqa: N802
+        self._press = None
+        self._drop_swipe()
+        super().hideEvent(event)
+
+    def mousePressEvent(self, event):  # noqa: N802
+        if event.button() != Qt.LeftButton:
+            super().mousePressEvent(event)
+            return
+        self._drop_swipe()  # a swipe still settling home
+        self._press = event.globalPosition()
+        event.accept()
+
+    def mouseMoveEvent(self, event):  # noqa: N802
+        if self._press is None or not event.buttons() & Qt.LeftButton:
+            super().mouseMoveEvent(event)
+            return
+        delta = event.globalPosition() - self._press
+        if self._swipe is None:
+            if (not self._swipe_enabled or self._flipping
+                    or delta.manhattanLength()
+                    < QApplication.startDragDistance()):
+                return
+            under = self._swipe_under() if self._swipe_under else None
+            self._swipe = SwipeOverlay(self, self._colors, under)
+        self._swipe.set_drag(delta)
+
     def mouseReleaseEvent(self, event):  # noqa: N802
-        if (event.button() == Qt.LeftButton
-                and self.rect().contains(event.position().toPoint())
-                and not self.related.hovered_link()):  # a related word, not a flip
-            self.clicked.emit()
+        if event.button() == Qt.LeftButton:
+            pressed, self._press = self._press is not None, None
+            if pressed and self._swipe is not None:
+                drag = self._swipe.drag
+                grade = grade_for_drag(drag.x(), drag.y(),
+                                       self.width(), self.height())
+                if grade:
+                    overlay, self._swipe = self._swipe, None
+                    self.swiped.emit(grade)
+                    overlay.fly_out()
+                else:
+                    self._swipe.settle(self._drop_swipe)
+                return
+            if (self.rect().contains(event.position().toPoint())
+                    and not self.related.hovered_link()):  # a related word, not a flip
+                self.clicked.emit()
         super().mouseReleaseEvent(event)
 
 
@@ -1108,6 +1169,7 @@ class FlashcardsPage(QWidget):
         deck_size = max(1, min(200, get_int(settings, "flashcards_deck_size", 20)))
         shuffle_on = get_bool(settings, "flashcards_shuffle", False)
         pronounce_on = get_bool(settings, "flashcards_pronounce", True)
+
 
         # ---- state 0: deck picker ------------------------------------
         # A full-width setup bar on top (identity + deck controls) with the
@@ -1286,6 +1348,7 @@ class FlashcardsPage(QWidget):
         card_row.addStretch(1)
         self.card = FlashcardWidget(self._colors)
         self.card.clicked.connect(self._card_clicked)
+        self.card.swiped.connect(lambda g: self._grade(g, swiped=True))
         self.card.speak_clicked.connect(self._speak_current_clicked)
         self.card.ignore_clicked.connect(self._ignore_current)
         self.card.relearn_clicked.connect(self._relearn_current)
@@ -1293,6 +1356,9 @@ class FlashcardsPage(QWidget):
         self.card.related.word_clicked.connect(self._open_definition)
         self.card.related.jump_requested.connect(self._jump_to)
         self.card_stack = _CardStack(self.card, self._colors)
+        # Never shown: renders the next card for the slot a swipe uncovers.
+        self._ghost_card = FlashcardWidget(self._colors, self)
+        self._ghost_card.hide()
         # Bounded, not free-expanding: the stretches above and below centre the
         # card, but without a ceiling it grew to the full height of the page and
         # left a word or two floating in a very large empty box.
@@ -2017,11 +2083,15 @@ class FlashcardsPage(QWidget):
         else:
             self.flip()
 
-    def _grade(self, grade):
+    def _grade(self, grade, swiped=False):
+        """Record `grade` for the current card. A swipe may grade from the
+        front — a word known on sight, as on the phone — and has already shown
+        the next card under the one dragged away, so it advances without the
+        fade."""
         if (self._stack.currentIndex() != self.STATE_SESSION or not self._deck
                 or (self._autoplay and not self._autoplay_paused)):
             return
-        if self.card.side != 1:
+        if not swiped and self.card.side != 1:
             return
         rec = self._deck[self._index]
         wid = rec.get("ID")
@@ -2065,9 +2135,16 @@ class FlashcardsPage(QWidget):
         if self._autoplay:
             self._update_controls()  # stay on the card; the player owns position
         elif self._index + 1 < len(self._deck):
-            self._show_card(self._index + 1)
+            self._show_card(self._index + 1, animate=not swiped)
         else:
             self._complete()
+
+    def _next_card_pixmap(self):
+        ghost = self._ghost_card
+        ghost.resize(self.card.size())
+        ghost.set_card(self._deck[self._index + 1],
+                       hint_text=tr("Space or click to flip"))
+        return ghost.grab()
 
     def _toggle_favorite_current(self):
         """Star or unstar the card on screen. Allowed at any point in the run —
@@ -2322,6 +2399,10 @@ class FlashcardsPage(QWidget):
             btn.setEnabled(not graded)
         for label in self._grade_interval_labels.values():
             label.setVisible(manual_review and side == 1)
+        # Under autoplay a grade does not advance, so nothing waits underneath.
+        advances = not self._autoplay and self._index + 1 < len(self._deck)
+        self.card.set_swipe(manual_review and bool(self._deck) and not graded,
+                            under=self._next_card_pixmap if advances else None)
         self.end_btn.setVisible(True)
 
     # -------------------------------------------------------------- theme
@@ -2329,6 +2410,7 @@ class FlashcardsPage(QWidget):
     def refresh_theme(self, colors):
         self._colors = colors
         self.card.refresh_theme(colors)
+        self._ghost_card.refresh_theme(colors)
         self.card_stack.refresh_theme(colors)
         self.slim_bar.refresh_theme(colors)
         self.picker_panel.refresh_theme(colors)
