@@ -1783,6 +1783,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Κάντε κλικ για να ανοίξει ο ορισμός",
     "Show related words": "Εμφάνιση σχετικών λέξεων",
     "Synonyms and words from the same family, on flashcards and in definitions": "Συνώνυμα και λέξεις της ίδιας οικογένειας — στις κάρτες και στους ορισμούς",
+    "Plugins": "Πρόσθετα",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Τα πρόσθετα έχουν πλήρη πρόσβαση στο Lingueez και στα δεδομένα σας, συμπεριλαμβανομένων των λέξεων, των ρυθμίσεων και των αρχείων σε αυτόν τον υπολογιστή. Προσθέστε πρόσθετα μόνο από πηγές που εμπιστεύεστε.",
+    "Active": "Ενεργό",
+    "Disabled": "Απενεργοποιημένο",
+    "Failed to load": "Η φόρτωση απέτυχε",
+    "Needs Lingueez {version} or newer": "Απαιτεί Lingueez {version} ή νεότερο",
+    "Not tested with this version of Lingueez": "Δεν έχει δοκιμαστεί με αυτήν την έκδοση του Lingueez",
+    "Turned off after Lingueez did not start properly": "Απενεργοποιήθηκε επειδή το Lingueez δεν ξεκίνησε σωστά",
+    "Open plugins folder": "Άνοιγμα φακέλου προσθέτων",
+    "Plugin changes apply after a restart.": "Οι αλλαγές στα πρόσθετα εφαρμόζονται μετά από επανεκκίνηση.",
+    "Your plugin changes need a restart. Restart now?": "Οι αλλαγές στα πρόσθετα απαιτούν επανεκκίνηση. Επανεκκίνηση τώρα;",
+    "by {author}": "από {author}",
+    "Plugins turned off": "Τα πρόσθετα απενεργοποιήθηκαν",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Το Lingueez δεν ξεκίνησε σωστά την τελευταία φορά, οπότε αυτά τα πρόσθετα απενεργοποιήθηκαν: {names}. Μπορείτε να τα ενεργοποιήσετε ξανά στις Ρυθμίσεις.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

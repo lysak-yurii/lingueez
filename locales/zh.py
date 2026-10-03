@@ -1568,6 +1568,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "点击打开其释义",
     "Show related words": "显示相关单词",
     "Synonyms and words from the same family, on flashcards and in definitions": "同义词和同一词族的单词，显示在卡片和释义中",
+    "Plugins": "插件",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "插件可以完全访问 Lingueez 和您的数据，包括您的单词、设置以及此计算机上的文件。请只添加来自可信来源的插件。",
+    "Active": "已启用",
+    "Disabled": "已停用",
+    "Failed to load": "加载失败",
+    "Needs Lingueez {version} or newer": "需要 Lingueez {version} 或更高版本",
+    "Not tested with this version of Lingueez": "未在此版本的 Lingueez 上测试",
+    "Turned off after Lingueez did not start properly": "因 Lingueez 未能正常启动而被停用",
+    "Open plugins folder": "打开插件文件夹",
+    "Plugin changes apply after a restart.": "插件更改将在重启后生效。",
+    "Your plugin changes need a restart. Restart now?": "您的插件更改需要重启才能生效。现在重启吗？",
+    "by {author}": "作者：{author}",
+    "Plugins turned off": "插件已停用",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez 上次未能正常启动，因此已停用以下插件：{names}。您可以在设置中重新启用它们。",
 }
 
 # Date names, read by app.i18n. Months in Simplified Chinese numbers/names ("1月", "2月" etc.)

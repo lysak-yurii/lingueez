@@ -1570,6 +1570,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Tanımını açmak için tıklayın",
     "Show related words": "İlgili kelimeleri göster",
     "Synonyms and words from the same family, on flashcards and in definitions": "Eş anlamlılar ve aynı kelime ailesinden kelimeler; kartlarda ve tanımlarda",
+    "Plugins": "Eklentiler",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Eklentiler Lingueez'e ve sözcükleriniz, ayarlarınız ve bu bilgisayardaki dosyalarınız dahil verilerinize tam erişime sahiptir. Yalnızca güvendiğiniz kaynaklardan eklenti ekleyin.",
+    "Active": "Etkin",
+    "Disabled": "Devre dışı",
+    "Failed to load": "Yüklenemedi",
+    "Needs Lingueez {version} or newer": "Lingueez {version} veya daha yeni bir sürüm gerekir",
+    "Not tested with this version of Lingueez": "Lingueez'in bu sürümüyle test edilmedi",
+    "Turned off after Lingueez did not start properly": "Lingueez düzgün başlamadığı için kapatıldı",
+    "Open plugins folder": "Eklenti klasörünü aç",
+    "Plugin changes apply after a restart.": "Eklenti değişiklikleri yeniden başlatmanın ardından uygulanır.",
+    "Your plugin changes need a restart. Restart now?": "Eklenti değişiklikleriniz yeniden başlatma gerektiriyor. Şimdi yeniden başlatılsın mı?",
+    "by {author}": "geliştiren: {author}",
+    "Plugins turned off": "Eklentiler kapatıldı",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez geçen sefer düzgün başlamadı, bu yüzden şu eklentiler kapatıldı: {names}. Bunları Ayarlar'dan yeniden açabilirsiniz.",
 }
 
 # Date names, read by app.i18n.

@@ -1844,6 +1844,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Avaa määritelmä napsauttamalla",
     "Show related words": "Näytä liittyvät sanat",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonyymit ja saman sanaperheen sanat – korteissa ja määritelmissä",
+    "Plugins": "Lisäosat",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Lisäosilla on täysi pääsy Lingueeziin ja tietoihisi, mukaan lukien sanasi, asetuksesi ja tämän tietokoneen tiedostot. Lisää lisäosia vain luotettavista lähteistä.",
+    "Active": "Käytössä",
+    "Disabled": "Pois käytöstä",
+    "Failed to load": "Lataus epäonnistui",
+    "Needs Lingueez {version} or newer": "Vaatii Lingueezin version {version} tai uudemman",
+    "Not tested with this version of Lingueez": "Ei testattu tällä Lingueezin versiolla",
+    "Turned off after Lingueez did not start properly": "Poistettu käytöstä, koska Lingueez ei käynnistynyt kunnolla",
+    "Open plugins folder": "Avaa lisäosakansio",
+    "Plugin changes apply after a restart.": "Lisäosien muutokset tulevat voimaan uudelleenkäynnistyksen jälkeen.",
+    "Your plugin changes need a restart. Restart now?": "Lisäosien muutokset vaativat uudelleenkäynnistyksen. Käynnistetäänkö nyt uudelleen?",
+    "by {author}": "tekijä: {author}",
+    "Plugins turned off": "Lisäosia poistettu käytöstä",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez ei käynnistynyt viimeksi kunnolla, joten nämä lisäosat poistettiin käytöstä: {names}. Voit ottaa ne uudelleen käyttöön asetuksissa.",
 }
 
 # Date names, read by app.i18n. Months are in genitive / partitive form for date displays.

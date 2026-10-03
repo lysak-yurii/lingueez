@@ -1846,6 +1846,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Kattints a definíció megnyitásához",
     "Show related words": "Kapcsolódó szavak megjelenítése",
     "Synonyms and words from the same family, on flashcards and in definitions": "Szinonimák és azonos szócsaládba tartozó szavak – a kártyákon és a definíciókban",
+    "Plugins": "Bővítmények",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "A bővítmények teljes hozzáféréssel rendelkeznek a Lingueezhez és az Ön adataihoz, beleértve a szavakat, a beállításokat és a számítógépen lévő fájlokat. Csak megbízható forrásból származó bővítményeket adjon hozzá.",
+    "Active": "Aktív",
+    "Disabled": "Kikapcsolva",
+    "Failed to load": "Nem sikerült betölteni",
+    "Needs Lingueez {version} or newer": "A Lingueez {version} vagy újabb verziója szükséges",
+    "Not tested with this version of Lingueez": "Nincs tesztelve a Lingueez ezen verziójával",
+    "Turned off after Lingueez did not start properly": "Kikapcsolva, miután a Lingueez nem indult el megfelelően",
+    "Open plugins folder": "Bővítmények mappájának megnyitása",
+    "Plugin changes apply after a restart.": "A bővítmények módosításai újraindítás után lépnek életbe.",
+    "Your plugin changes need a restart. Restart now?": "A bővítmények módosításaihoz újraindítás szükséges. Újraindítja most?",
+    "by {author}": "szerző: {author}",
+    "Plugins turned off": "Bővítmények kikapcsolva",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "A Lingueez legutóbb nem indult el megfelelően, ezért ezek a bővítmények ki lettek kapcsolva: {names}. A beállításokban újra bekapcsolhatja őket.",
 }
 
 # Date names, read by app.i18n. Months in Hungarian usually use nominative or -i suffix.

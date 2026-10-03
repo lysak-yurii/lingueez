@@ -1582,6 +1582,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "클릭하여 정의 열기",
     "Show related words": "관련 단어 표시",
     "Synonyms and words from the same family, on flashcards and in definitions": "동의어와 같은 단어 가족의 단어를 카드와 정의에 표시합니다",
+    "Plugins": "플러그인",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "플러그인은 단어, 설정, 이 컴퓨터의 파일을 포함하여 Lingueez와 사용자 데이터에 대한 모든 접근 권한을 가집니다. 신뢰할 수 있는 출처의 플러그인만 추가하세요.",
+    "Active": "사용 중",
+    "Disabled": "사용 안 함",
+    "Failed to load": "불러오지 못했습니다",
+    "Needs Lingueez {version} or newer": "Lingueez {version} 이상이 필요합니다",
+    "Not tested with this version of Lingueez": "이 버전의 Lingueez에서 테스트되지 않았습니다",
+    "Turned off after Lingueez did not start properly": "Lingueez가 정상적으로 시작되지 않아 꺼졌습니다",
+    "Open plugins folder": "플러그인 폴더 열기",
+    "Plugin changes apply after a restart.": "플러그인 변경 사항은 다시 시작한 후 적용됩니다.",
+    "Your plugin changes need a restart. Restart now?": "플러그인 변경 사항을 적용하려면 다시 시작해야 합니다. 지금 다시 시작할까요?",
+    "by {author}": "제작: {author}",
+    "Plugins turned off": "플러그인이 꺼졌습니다",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "지난번에 Lingueez가 정상적으로 시작되지 않아 다음 플러그인이 꺼졌습니다: {names}. 설정에서 다시 켤 수 있습니다.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -1580,6 +1580,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Klicka för att öppna definitionen",
     "Show related words": "Visa relaterade ord",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonymer och ord från samma ordfamilj – på kort och i definitioner",
+    "Plugins": "Insticksprogram",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Insticksprogram har full åtkomst till Lingueez och dina data, inklusive dina ord, inställningar och filer på den här datorn. Lägg bara till insticksprogram från källor som du litar på.",
+    "Active": "Aktiv",
+    "Disabled": "Inaktiverad",
+    "Failed to load": "Kunde inte läsas in",
+    "Needs Lingueez {version} or newer": "Kräver Lingueez {version} eller senare",
+    "Not tested with this version of Lingueez": "Inte testad med den här versionen av Lingueez",
+    "Turned off after Lingueez did not start properly": "Avstängd efter att Lingueez inte startade korrekt",
+    "Open plugins folder": "Öppna mappen för insticksprogram",
+    "Plugin changes apply after a restart.": "Ändringar av insticksprogram börjar gälla efter en omstart.",
+    "Your plugin changes need a restart. Restart now?": "Dina ändringar av insticksprogram kräver en omstart. Starta om nu?",
+    "by {author}": "av {author}",
+    "Plugins turned off": "Insticksprogram avstängda",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez startade inte korrekt förra gången, så dessa insticksprogram stängdes av: {names}. Du kan slå på dem igen i Inställningar.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

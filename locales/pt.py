@@ -1847,6 +1847,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Clique para abrir a definição",
     "Show related words": "Mostrar palavras relacionadas",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinónimos e palavras da mesma família, nos cartões e nas definições",
+    "Plugins": "Plugins",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Os plugins têm acesso total ao Lingueez e aos seus dados, incluindo as suas palavras, definições e ficheiros neste computador. Adicione apenas plugins de fontes em que confia.",
+    "Active": "Ativo",
+    "Disabled": "Desativado",
+    "Failed to load": "Falha ao carregar",
+    "Needs Lingueez {version} or newer": "Requer o Lingueez {version} ou posterior",
+    "Not tested with this version of Lingueez": "Não testado com esta versão do Lingueez",
+    "Turned off after Lingueez did not start properly": "Desativado depois de o Lingueez não ter arrancado corretamente",
+    "Open plugins folder": "Abrir pasta de plugins",
+    "Plugin changes apply after a restart.": "As alterações aos plugins são aplicadas após reiniciar.",
+    "Your plugin changes need a restart. Restart now?": "As alterações aos plugins requerem um reinício. Reiniciar agora?",
+    "by {author}": "por {author}",
+    "Plugins turned off": "Plugins desativados",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "O Lingueez não arrancou corretamente da última vez, pelo que estes plugins foram desativados: {names}. Pode voltar a ativá-los nas Definições.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

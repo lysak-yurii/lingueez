@@ -1553,6 +1553,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Klik om de definitie te openen",
     "Show related words": "Verwante woorden tonen",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synoniemen en woorden uit dezelfde woordfamilie, op kaarten en in definities",
+    "Plugins": "Plug-ins",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Plug-ins hebben volledige toegang tot Lingueez en je gegevens, waaronder je woorden, instellingen en bestanden op deze computer. Voeg alleen plug-ins toe uit bronnen die je vertrouwt.",
+    "Active": "Actief",
+    "Disabled": "Uitgeschakeld",
+    "Failed to load": "Laden mislukt",
+    "Needs Lingueez {version} or newer": "Vereist Lingueez {version} of nieuwer",
+    "Not tested with this version of Lingueez": "Niet getest met deze versie van Lingueez",
+    "Turned off after Lingueez did not start properly": "Uitgeschakeld nadat Lingueez niet goed was opgestart",
+    "Open plugins folder": "Map met plug-ins openen",
+    "Plugin changes apply after a restart.": "Wijzigingen in plug-ins worden na opnieuw opstarten toegepast.",
+    "Your plugin changes need a restart. Restart now?": "Je wijzigingen in plug-ins vereisen een herstart. Nu opnieuw opstarten?",
+    "by {author}": "door {author}",
+    "Plugins turned off": "Plug-ins uitgeschakeld",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez is de vorige keer niet goed opgestart, dus deze plug-ins zijn uitgeschakeld: {names}. Je kunt ze weer inschakelen in Instellingen.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase for Dutch formatting.

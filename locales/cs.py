@@ -1847,6 +1847,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Kliknutím otevřete definici",
     "Show related words": "Zobrazit související slova",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonyma a slova ze stejné slovní rodiny — na kartách a v definicích",
+    "Plugins": "Pluginy",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Pluginy mají plný přístup k Lingueez a vašim datům, včetně slov, nastavení a souborů v tomto počítači. Přidávejte pluginy pouze ze zdrojů, kterým důvěřujete.",
+    "Active": "Aktivní",
+    "Disabled": "Vypnuto",
+    "Failed to load": "Nepodařilo se načíst",
+    "Needs Lingueez {version} or newer": "Vyžaduje Lingueez {version} nebo novější",
+    "Not tested with this version of Lingueez": "Netestováno s touto verzí Lingueez",
+    "Turned off after Lingueez did not start properly": "Vypnuto poté, co se Lingueez nespustil správně",
+    "Open plugins folder": "Otevřít složku pluginů",
+    "Plugin changes apply after a restart.": "Změny pluginů se projeví po restartu.",
+    "Your plugin changes need a restart. Restart now?": "Změny pluginů vyžadují restart. Restartovat nyní?",
+    "by {author}": "autor: {author}",
+    "Plugins turned off": "Pluginy vypnuty",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez se minule nespustil správně, proto byly vypnuty tyto pluginy: {names}. Znovu je můžete zapnout v nastavení.",
 }
 
 # Date names, read by app.i18n.

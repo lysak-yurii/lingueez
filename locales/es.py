@@ -1844,6 +1844,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Haz clic para abrir su definición",
     "Show related words": "Mostrar palabras relacionadas",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinónimos y palabras de la misma familia, en las tarjetas y en las definiciones",
+    "Plugins": "Complementos",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Los complementos tienen acceso total a Lingueez y a tus datos, incluidas tus palabras, tus ajustes y los archivos de este equipo. Añade solo complementos de fuentes en las que confíes.",
+    "Active": "Activo",
+    "Disabled": "Desactivado",
+    "Failed to load": "Error al cargar",
+    "Needs Lingueez {version} or newer": "Requiere Lingueez {version} o posterior",
+    "Not tested with this version of Lingueez": "No probado con esta versión de Lingueez",
+    "Turned off after Lingueez did not start properly": "Desactivado después de que Lingueez no se iniciara correctamente",
+    "Open plugins folder": "Abrir carpeta de complementos",
+    "Plugin changes apply after a restart.": "Los cambios en los complementos se aplican tras reiniciar.",
+    "Your plugin changes need a restart. Restart now?": "Los cambios en los complementos requieren reiniciar. ¿Reiniciar ahora?",
+    "by {author}": "por {author}",
+    "Plugins turned off": "Complementos desactivados",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez no se inició correctamente la última vez, por lo que se desactivaron estos complementos: {names}. Puedes volver a activarlos en Ajustes.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase as standard in Spanish dates.

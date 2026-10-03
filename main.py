@@ -282,6 +282,20 @@ def main():
                             f"(looked for qtbase_{qt_code}); standard dialog "
                             f"buttons stay English.")
 
+    # After set_language (a plugin may import UI modules) and before MainWindow
+    # is imported, so plugins can patch app classes before they are used.
+    from app.system.plugins import PluginManager, join_ids, split_ids
+    plugins = PluginManager(disabled=split_ids(settings.get("plugins_disabled")),
+                            crashed=split_ids(settings.get("plugins_crashed")),
+                            safe_mode="--no-plugins" in sys.argv)
+    plugins.load_all()
+    if plugins.crashed:
+        from app.config import save_settings
+        settings["plugins_disabled"] = join_ids(plugins.disabled)
+        settings["plugins_crashed"] = join_ids(
+            split_ids(settings.get("plugins_crashed")) | set(plugins.crashed))
+        save_settings(settings)
+
     from app.ui.main_window import MainWindow
 
     os.makedirs('backups', exist_ok=True)
@@ -303,8 +317,18 @@ def main():
                         open_add_word=add_word, activation_token=activation_token)
     if not (start_hidden or add_word):
         window.show()
+    plugins.window_ready(window)
+    if plugins.crashed and window.isVisible():
+        from app.i18n import tr
+        from app.ui.toast import show_toast
+        names = ", ".join(plugins.plugins[pid].name for pid in plugins.crashed)
+        show_toast(window, tr("Plugins turned off"),
+                   tr("Lingueez did not start properly last time, so these plugins "
+                      "were turned off: {names}. You can turn them back on in "
+                      "Settings.").format(names=names), "warning", 12000)
 
     rc = app.exec()
+    plugins.shutdown()
 
     # Give background workers (sync, TTS) a moment to wind down cleanly
     from PySide6.QtCore import QThreadPool

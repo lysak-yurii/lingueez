@@ -1662,6 +1662,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Dă clic pentru a deschide definiția",
     "Show related words": "Afișează cuvinte înrudite",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinonime și cuvinte din aceeași familie, pe carduri și în definiții",
+    "Plugins": "Pluginuri",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Pluginurile au acces complet la Lingueez și la datele dvs., inclusiv la cuvinte, setări și fișierele de pe acest computer. Adăugați doar pluginuri din surse în care aveți încredere.",
+    "Active": "Activ",
+    "Disabled": "Dezactivat",
+    "Failed to load": "Încărcarea a eșuat",
+    "Needs Lingueez {version} or newer": "Necesită Lingueez {version} sau o versiune mai nouă",
+    "Not tested with this version of Lingueez": "Netestat cu această versiune de Lingueez",
+    "Turned off after Lingueez did not start properly": "Dezactivat după ce Lingueez nu a pornit corect",
+    "Open plugins folder": "Deschide dosarul de pluginuri",
+    "Plugin changes apply after a restart.": "Modificările pluginurilor se aplică după repornire.",
+    "Your plugin changes need a restart. Restart now?": "Modificările pluginurilor necesită o repornire. Reporniți acum?",
+    "by {author}": "de {author}",
+    "Plugins turned off": "Pluginuri dezactivate",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez nu a pornit corect data trecută, așa că aceste pluginuri au fost dezactivate: {names}. Le puteți reactiva în Setări.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case (or standard Romanian names used for formatting).

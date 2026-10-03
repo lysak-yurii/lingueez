@@ -30,7 +30,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QGuiApplication, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDoubleSpinBox,
-    QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QKeySequenceEdit,
+    QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QKeySequenceEdit,
     QLabel, QLineEdit, QMenu, QMessageBox, QProgressBar, QPushButton, QScrollArea,
     QSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
 )
@@ -39,6 +39,7 @@ from app.config import get_bool, get_float, get_int, load_settings, save_setting
 from app.core import exporters, translator
 from app.core.auth_manager import get_auth_manager
 from app.i18n import available_languages, tr
+from app.system import plugins
 from app.system.autostart import get_autostart_enabled, set_autostart
 from app.ui.dialogs.account_dialog import AccountDialog
 from app.ui.dialogs.base import FramelessDialog, ask_text, confirm
@@ -98,6 +99,7 @@ class SettingsDialog(FramelessDialog):
 
         # Five task-based top-level tabs; related settings are grouped under each
         # (e.g. Read-aloud holds both the voice/playback and the progress thresholds).
+        self._plugin_checks = {}
         self.tabs = QTabWidget()
         self.tabs.addTab(self._general_tab(), tr("General"))
         self.tabs.addTab(self._read_aloud_tab(), tr("Read-aloud"))
@@ -233,11 +235,15 @@ class SettingsDialog(FramelessDialog):
             self._general_tabs.setCurrentWidget(self._behavior_page)
 
     def _general_tab(self):
-        """Look & feel + app behavior (startup, hotkey, updates)."""
+        """Look & feel + app behavior (startup, hotkey, updates), and the
+        plugins once the user has added any."""
         tabs = QTabWidget()
         tabs.addTab(self._appearance_tab(), tr("Appearance"))
         self._behavior_page = self._system_tab()
         tabs.addTab(self._behavior_page, tr("Behavior"))
+        manager = plugins.current()
+        if manager is not None and manager.plugins:
+            tabs.addTab(self._plugins_tab(manager), tr("Plugins"))
         self._general_tabs = tabs
         return tabs
 
@@ -874,6 +880,100 @@ class SettingsDialog(FramelessDialog):
                 render("●", colors["danger"], on_text + "  " + tr("(can't connect)"))
 
         run_in_thread(probe, on_result=done, on_error=lambda _e: done(False))
+
+    def _plugins_tab(self, manager):
+        widget = QWidget()
+        box = QVBoxLayout(widget)
+        box.setContentsMargins(18, 18, 18, 18)
+        box.setSpacing(10)
+        warning = QLabel(
+            tr("Plugins have full access to Lingueez and your data, including "
+               "your words, settings and files on this computer. Only add "
+               "plugins from sources you trust."), objectName="dimLabel")
+        warning.setWordWrap(True)
+        box.addWidget(warning)
+        disabled = plugins.split_ids(self.settings.get("plugins_disabled"))
+        for info in manager.plugins.values():
+            box.addWidget(self._plugin_card(info, info.id not in disabled))
+        box.addStretch(1)
+        foot = QHBoxLayout()
+        note = QLabel(tr("Plugin changes apply after a restart."),
+                      objectName="dimLabel")
+        foot.addWidget(note, 1)
+        open_btn = QPushButton(tr("Open plugins folder"))
+        open_btn.clicked.connect(lambda: QDesktopServices.openUrl(
+            QUrl.fromLocalFile(os.path.abspath(manager.directory))))
+        foot.addWidget(open_btn)
+        box.addLayout(foot)
+        return _scrollable(widget)
+
+    def _plugin_card(self, info, enabled):
+        card = QFrame(objectName="PluginCard")
+        card.setStyleSheet(
+            f"#PluginCard{{background:{self.colors['surface']};"
+            f" border:1px solid {self.colors['border']}; border-radius:10px;}}")
+        lay = QVBoxLayout(card)
+        lay.setContentsMargins(12, 10, 12, 10)
+        lay.setSpacing(4)
+
+        head = QHBoxLayout()
+        check = QCheckBox(info.name)
+        check.setChecked(enabled)
+        font = check.font()
+        font.setBold(True)
+        check.setFont(font)
+        self._plugin_checks[info.id] = check
+        head.addWidget(check)
+        credit = " · ".join(part for part in (
+            info.version,
+            tr("by {author}").format(author=info.author) if info.author else "",
+        ) if part)
+        head.addWidget(QLabel(credit, objectName="dimLabel"))
+        head.addStretch(1)
+        text, color = {
+            plugins.ACTIVE: (tr("Active"), "success"),
+            plugins.DISABLED: (tr("Disabled"), "text_dim"),
+            plugins.FAILED: (tr("Failed to load"), "danger"),
+            plugins.INCOMPATIBLE: (
+                tr("Needs Lingueez {version} or newer").format(
+                    version=info.min_app_version), "warning"),
+            plugins.CRASHED: (
+                tr("Turned off after Lingueez did not start properly"), "warning"),
+        }[info.status]
+        status = QLabel(text)
+        status.setStyleSheet(f"color:{self.colors[color]};")
+        head.addWidget(status)
+        lay.addLayout(head)
+
+        if info.description:
+            description = QLabel(info.description)
+            description.setWordWrap(True)
+            lay.addWidget(description)
+        if info.untested and info.status == plugins.ACTIVE:
+            untested = QLabel(tr("Not tested with this version of Lingueez"))
+            untested.setStyleSheet(f"color:{self.colors['warning']};")
+            lay.addWidget(untested)
+
+        links = QHBoxLayout()
+        if info.homepage.startswith(("https://", "http://")):
+            site = QLabel(f'<a href="{info.homepage}">{tr("Website")}</a>')
+            site.setOpenExternalLinks(True)
+            links.addWidget(site)
+        if info.error:
+            details = QPushButton(tr("Details"))
+            style_as_link(details)
+            details.clicked.connect(lambda: self._show_plugin_error(info))
+            links.addWidget(details)
+        if links.count():
+            links.addStretch(1)
+            lay.addLayout(links)
+        return card
+
+    def _show_plugin_error(self, info):
+        box = QMessageBox(QMessageBox.Warning, info.name, tr("Failed to load"),
+                          QMessageBox.Ok, self)
+        box.setDetailedText(info.error)
+        box.exec()
 
     def _system_tab(self):
         widget = QWidget()
@@ -1591,6 +1691,18 @@ class SettingsDialog(FramelessDialog):
         # An explicit pick is final: never let first-run OS detection override it.
         updated["language_configured"] = "True"
 
+        plugins_changed = False
+        if self._plugin_checks:
+            before = plugins.split_ids(updated.get("plugins_disabled"))
+            off = {pid for pid, box in self._plugin_checks.items()
+                   if not box.isChecked()}
+            # Ids of plugins that are no longer on disk stay as they were.
+            disabled = (before - set(self._plugin_checks)) | off
+            plugins_changed = disabled != before
+            updated["plugins_disabled"] = plugins.join_ids(disabled)
+            updated["plugins_crashed"] = plugins.join_ids(
+                plugins.split_ids(updated.get("plugins_crashed")) & disabled)
+
         save_settings(updated)
 
         env_updates = {}
@@ -1644,16 +1756,21 @@ class SettingsDialog(FramelessDialog):
         language_changed = updated["language"] != self._initial_language
         self.accept()
         if language_changed:
-            self._offer_restart()
+            self._offer_restart(
+                tr("Interface language"),
+                tr("The interface language has changed. Restart now to apply it?"))
+        elif plugins_changed:
+            self._offer_restart(
+                tr("Plugins"),
+                tr("Your plugin changes need a restart. Restart now?"))
 
-    def _offer_restart(self):
-        """The language only fully applies on a fresh start (some UI strings are
-        resolved at import time), so offer to relaunch the app now."""
+    def _offer_restart(self, title, question):
+        """The language (some UI strings are resolved at import time) and the
+        set of plugins only apply on a fresh start, so offer to relaunch now."""
         from PySide6.QtCore import QProcess
         from PySide6.QtWidgets import QApplication
         reply = QMessageBox.question(
-            self.parent() or self, tr("Interface language"),
-            tr("The interface language has changed. Restart now to apply it?"),
+            self.parent() or self, title, question,
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply != QMessageBox.Yes:
             return

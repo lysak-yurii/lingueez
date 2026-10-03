@@ -24,6 +24,9 @@ window_geometry.json
 .last_cleanup
 .last_update_check
 
+# Local plugins (see app/system/plugins.py)
+plugins/
+
 # Generated assets (written at startup)
 assets/generated/
 

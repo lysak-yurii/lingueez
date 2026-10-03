@@ -1554,6 +1554,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Clique para abrir a definição",
     "Show related words": "Mostrar palavras relacionadas",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinônimos e palavras da mesma família, nos cartões e nas definições",
+    "Plugins": "Plugins",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Os plugins têm acesso total ao Lingueez e aos seus dados, incluindo suas palavras, configurações e arquivos neste computador. Adicione apenas plugins de fontes em que você confia.",
+    "Active": "Ativo",
+    "Disabled": "Desativado",
+    "Failed to load": "Falha ao carregar",
+    "Needs Lingueez {version} or newer": "Requer o Lingueez {version} ou mais recente",
+    "Not tested with this version of Lingueez": "Não testado com esta versão do Lingueez",
+    "Turned off after Lingueez did not start properly": "Desativado depois que o Lingueez não iniciou corretamente",
+    "Open plugins folder": "Abrir pasta de plugins",
+    "Plugin changes apply after a restart.": "As alterações nos plugins são aplicadas após reiniciar.",
+    "Your plugin changes need a restart. Restart now?": "As alterações nos plugins exigem uma reinicialização. Reiniciar agora?",
+    "by {author}": "por {author}",
+    "Plugins turned off": "Plugins desativados",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "O Lingueez não iniciou corretamente da última vez, então estes plugins foram desativados: {names}. Você pode reativá-los nas Configurações.",
 }
 
 # Date names, read by app.i18n.

@@ -1588,6 +1588,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Klikk for å åpne definisjonen",
     "Show related words": "Vis relaterte ord",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonymer og ord fra samme ordfamilie – på kort og i definisjoner",
+    "Plugins": "Programtillegg",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Programtillegg har full tilgang til Lingueez og dataene dine, inkludert ord, innstillinger og filer på denne datamaskinen. Legg bare til programtillegg fra kilder du stoler på.",
+    "Active": "Aktiv",
+    "Disabled": "Deaktivert",
+    "Failed to load": "Kunne ikke lastes inn",
+    "Needs Lingueez {version} or newer": "Krever Lingueez {version} eller nyere",
+    "Not tested with this version of Lingueez": "Ikke testet med denne versjonen av Lingueez",
+    "Turned off after Lingueez did not start properly": "Slått av etter at Lingueez ikke startet riktig",
+    "Open plugins folder": "Åpne mappen for programtillegg",
+    "Plugin changes apply after a restart.": "Endringer i programtillegg trer i kraft etter en omstart.",
+    "Your plugin changes need a restart. Restart now?": "Endringene i programtillegg krever en omstart. Starte på nytt nå?",
+    "by {author}": "av {author}",
+    "Plugins turned off": "Programtillegg slått av",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez startet ikke riktig forrige gang, så disse programtilleggene ble slått av: {names}. Du kan slå dem på igjen i Innstillinger.",
 }
 
 # Date names, read by app.i18n.

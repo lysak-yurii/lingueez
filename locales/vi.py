@@ -1581,6 +1581,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Nhấp để mở định nghĩa",
     "Show related words": "Hiển thị từ liên quan",
     "Synonyms and words from the same family, on flashcards and in definitions": "Từ đồng nghĩa và từ cùng họ, trên thẻ và trong định nghĩa",
+    "Plugins": "Tiện ích bổ sung",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Tiện ích bổ sung có toàn quyền truy cập Lingueez và dữ liệu của bạn, bao gồm từ vựng, cài đặt và tệp trên máy tính này. Chỉ thêm tiện ích bổ sung từ những nguồn bạn tin tưởng.",
+    "Active": "Đang hoạt động",
+    "Disabled": "Đã tắt",
+    "Failed to load": "Không tải được",
+    "Needs Lingueez {version} or newer": "Cần Lingueez {version} trở lên",
+    "Not tested with this version of Lingueez": "Chưa được kiểm thử với phiên bản Lingueez này",
+    "Turned off after Lingueez did not start properly": "Đã tắt sau khi Lingueez không khởi động được bình thường",
+    "Open plugins folder": "Mở thư mục tiện ích bổ sung",
+    "Plugin changes apply after a restart.": "Thay đổi về tiện ích bổ sung sẽ có hiệu lực sau khi khởi động lại.",
+    "Your plugin changes need a restart. Restart now?": "Các thay đổi về tiện ích bổ sung cần khởi động lại. Khởi động lại ngay?",
+    "by {author}": "bởi {author}",
+    "Plugins turned off": "Đã tắt tiện ích bổ sung",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lần trước Lingueez không khởi động được bình thường nên các tiện ích bổ sung sau đã bị tắt: {names}. Bạn có thể bật lại trong Cài đặt.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

@@ -1849,6 +1849,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Klik untuk membuka definisinya",
     "Show related words": "Tampilkan kata terkait",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinonim dan kata dari keluarga yang sama, di kartu dan definisi",
+    "Plugins": "Plugin",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Plugin memiliki akses penuh ke Lingueez dan data Anda, termasuk kata, pengaturan, dan file di komputer ini. Tambahkan plugin hanya dari sumber yang Anda percayai.",
+    "Active": "Aktif",
+    "Disabled": "Nonaktif",
+    "Failed to load": "Gagal dimuat",
+    "Needs Lingueez {version} or newer": "Memerlukan Lingueez {version} atau yang lebih baru",
+    "Not tested with this version of Lingueez": "Belum diuji dengan versi Lingueez ini",
+    "Turned off after Lingueez did not start properly": "Dimatikan setelah Lingueez tidak dapat dimulai dengan benar",
+    "Open plugins folder": "Buka folder plugin",
+    "Plugin changes apply after a restart.": "Perubahan plugin berlaku setelah aplikasi dimulai ulang.",
+    "Your plugin changes need a restart. Restart now?": "Perubahan plugin Anda memerlukan mulai ulang. Mulai ulang sekarang?",
+    "by {author}": "oleh {author}",
+    "Plugins turned off": "Plugin dimatikan",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez tidak dimulai dengan benar terakhir kali, sehingga plugin berikut dimatikan: {names}. Anda dapat mengaktifkannya kembali di Pengaturan.",
 }
 
 # Date names read by app.i18n.

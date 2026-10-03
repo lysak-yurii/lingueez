@@ -1848,6 +1848,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Cliquez pour ouvrir sa définition",
     "Show related words": "Afficher les mots liés",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonymes et mots de la même famille, sur les cartes et dans les définitions",
+    "Plugins": "Extensions",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Les extensions ont un accès complet à Lingueez et à vos données, y compris vos mots, vos paramètres et les fichiers de cet ordinateur. N'ajoutez que des extensions provenant de sources de confiance.",
+    "Active": "Active",
+    "Disabled": "Désactivée",
+    "Failed to load": "Échec du chargement",
+    "Needs Lingueez {version} or newer": "Nécessite Lingueez {version} ou une version ultérieure",
+    "Not tested with this version of Lingueez": "Non testée avec cette version de Lingueez",
+    "Turned off after Lingueez did not start properly": "Désactivée après un démarrage incorrect de Lingueez",
+    "Open plugins folder": "Ouvrir le dossier des extensions",
+    "Plugin changes apply after a restart.": "Les modifications des extensions s'appliquent après un redémarrage.",
+    "Your plugin changes need a restart. Restart now?": "Vos modifications des extensions nécessitent un redémarrage. Redémarrer maintenant ?",
+    "by {author}": "par {author}",
+    "Plugins turned off": "Extensions désactivées",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez n'a pas démarré correctement la dernière fois ; ces extensions ont donc été désactivées : {names}. Vous pouvez les réactiver dans les Paramètres.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase standard French form.

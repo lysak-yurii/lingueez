@@ -1847,6 +1847,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Щракнете, за да отворите определението",
     "Show related words": "Показване на свързани думи",
     "Synonyms and words from the same family, on flashcards and in definitions": "Синоними и думи от същото словно семейство — в картите и в определенията",
+    "Plugins": "Приставки",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Приставките имат пълен достъп до Lingueez и вашите данни, включително думите, настройките и файловете на този компютър. Добавяйте приставки само от източници, на които имате доверие.",
+    "Active": "Активна",
+    "Disabled": "Изключена",
+    "Failed to load": "Неуспешно зареждане",
+    "Needs Lingueez {version} or newer": "Изисква Lingueez {version} или по-нова версия",
+    "Not tested with this version of Lingueez": "Не е тествана с тази версия на Lingueez",
+    "Turned off after Lingueez did not start properly": "Изключена, след като Lingueez не се стартира правилно",
+    "Open plugins folder": "Отваряне на папката с приставки",
+    "Plugin changes apply after a restart.": "Промените по приставките се прилагат след рестартиране.",
+    "Your plugin changes need a restart. Restart now?": "Промените по приставките изискват рестартиране. Да се рестартира ли сега?",
+    "by {author}": "от {author}",
+    "Plugins turned off": "Приставките са изключени",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Миналия път Lingueez не се стартира правилно, затова тези приставки бяха изключени: {names}. Можете да ги включите отново в настройките.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

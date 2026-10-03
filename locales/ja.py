@@ -1821,6 +1821,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "クリックして定義を開く",
     "Show related words": "関連語を表示",
     "Synonyms and words from the same family, on flashcards and in definitions": "同義語や同じ語族の単語を、カードと定義に表示します",
+    "Plugins": "プラグイン",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "プラグインは、単語、設定、このコンピューター上のファイルを含め、Lingueez とお使いのデータにフルアクセスできます。信頼できる提供元のプラグインだけを追加してください。",
+    "Active": "有効",
+    "Disabled": "無効",
+    "Failed to load": "読み込みに失敗しました",
+    "Needs Lingueez {version} or newer": "Lingueez {version} 以降が必要です",
+    "Not tested with this version of Lingueez": "このバージョンの Lingueez ではテストされていません",
+    "Turned off after Lingueez did not start properly": "Lingueez が正常に起動しなかったため無効にしました",
+    "Open plugins folder": "プラグインフォルダーを開く",
+    "Plugin changes apply after a restart.": "プラグインの変更は再起動後に適用されます。",
+    "Your plugin changes need a restart. Restart now?": "プラグインの変更を適用するには再起動が必要です。今すぐ再起動しますか？",
+    "by {author}": "作者: {author}",
+    "Plugins turned off": "プラグインを無効にしました",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "前回 Lingueez が正常に起動しなかったため、次のプラグインを無効にしました: {names}。設定で再び有効にできます。",
 }
 
 # Date names, read by app.i18n. Months use standard Japanese calendar names.

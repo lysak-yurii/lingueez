@@ -1562,6 +1562,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Кликните да отворите дефиницију",
     "Show related words": "Прикажи повезане речи",
     "Synonyms and words from the same family, on flashcards and in definitions": "Синоними и речи из исте породице — на картицама и у дефиницијама",
+    "Plugins": "Додаци",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Додаци имају потпун приступ Lingueez-у и вашим подацима, укључујући речи, подешавања и датотеке на овом рачунару. Додајте додатке само из извора којима верујете.",
+    "Active": "Активан",
+    "Disabled": "Искључен",
+    "Failed to load": "Учитавање није успело",
+    "Needs Lingueez {version} or newer": "Захтева Lingueez {version} или новији",
+    "Not tested with this version of Lingueez": "Није тестирано са овом верзијом Lingueez-а",
+    "Turned off after Lingueez did not start properly": "Искључен након што се Lingueez није исправно покренуо",
+    "Open plugins folder": "Отвори фасциклу додатака",
+    "Plugin changes apply after a restart.": "Промене додатака примењују се након поновног покретања.",
+    "Your plugin changes need a restart. Restart now?": "Промене додатака захтевају поновно покретање. Поново покренути сада?",
+    "by {author}": "аутор: {author}",
+    "Plugins turned off": "Додаци искључени",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez се прошли пут није исправно покренуо, па су ови додаци искључени: {names}. Можете их поново укључити у подешавањима.",
 }
 
 # Date names, read by app.i18n. Months in Serbian (nominative/standard format).

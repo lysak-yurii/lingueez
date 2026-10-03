@@ -1852,6 +1852,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Натисніть, щоб відкрити визначення",
     "Show related words": "Показувати пов'язані слова",
     "Synonyms and words from the same family, on flashcards and in definitions": "Синоніми та спільнокореневі слова — на картках і у визначеннях",
+    "Plugins": "Плагіни",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Плагіни мають повний доступ до Lingueez і ваших даних, зокрема до слів, налаштувань і файлів на цьому комп'ютері. Додавайте плагіни лише з джерел, яким довіряєте.",
+    "Active": "Активний",
+    "Disabled": "Вимкнено",
+    "Failed to load": "Не вдалося завантажити",
+    "Needs Lingueez {version} or newer": "Потрібен Lingueez {version} або новіший",
+    "Not tested with this version of Lingueez": "Не перевірено з цією версією Lingueez",
+    "Turned off after Lingueez did not start properly": "Вимкнено після того, як Lingueez не зміг нормально запуститися",
+    "Open plugins folder": "Відкрити теку плагінів",
+    "Plugin changes apply after a restart.": "Зміни плагінів набудуть чинності після перезапуску.",
+    "Your plugin changes need a restart. Restart now?": "Зміни плагінів потребують перезапуску. Перезапустити зараз?",
+    "by {author}": "автор: {author}",
+    "Plugins turned off": "Плагіни вимкнено",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Минулого разу Lingueez не зміг нормально запуститися, тому ці плагіни було вимкнено: {names}. Їх можна знову ввімкнути в налаштуваннях.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

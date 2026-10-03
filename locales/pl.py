@@ -1846,6 +1846,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Kliknij, aby otworzyć definicję",
     "Show related words": "Pokazuj powiązane słowa",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonimy i wyrazy z tej samej rodziny — na fiszkach i w definicjach",
+    "Plugins": "Wtyczki",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Wtyczki mają pełny dostęp do Lingueez i Twoich danych, w tym słów, ustawień i plików na tym komputerze. Dodawaj wtyczki wyłącznie ze źródeł, którym ufasz.",
+    "Active": "Aktywna",
+    "Disabled": "Wyłączona",
+    "Failed to load": "Nie udało się załadować",
+    "Needs Lingueez {version} or newer": "Wymaga Lingueez {version} lub nowszej wersji",
+    "Not tested with this version of Lingueez": "Nie testowano z tą wersją Lingueez",
+    "Turned off after Lingueez did not start properly": "Wyłączona po tym, jak Lingueez nie uruchomił się poprawnie",
+    "Open plugins folder": "Otwórz folder wtyczek",
+    "Plugin changes apply after a restart.": "Zmiany wtyczek zostaną zastosowane po ponownym uruchomieniu.",
+    "Your plugin changes need a restart. Restart now?": "Zmiany wtyczek wymagają ponownego uruchomienia. Uruchomić ponownie teraz?",
+    "by {author}": "autor: {author}",
+    "Plugins turned off": "Wtyczki wyłączone",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Ostatnim razem Lingueez nie uruchomił się poprawnie, więc te wtyczki zostały wyłączone: {names}. Możesz włączyć je ponownie w ustawieniach.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

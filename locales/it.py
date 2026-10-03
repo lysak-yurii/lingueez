@@ -1849,6 +1849,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Fai clic per aprirne la definizione",
     "Show related words": "Mostra parole correlate",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinonimi e parole della stessa famiglia, sulle schede e nelle definizioni",
+    "Plugins": "Plugin",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "I plugin hanno accesso completo a Lingueez e ai tuoi dati, incluse le tue parole, le impostazioni e i file su questo computer. Aggiungi solo plugin provenienti da fonti attendibili.",
+    "Active": "Attivo",
+    "Disabled": "Disattivato",
+    "Failed to load": "Caricamento non riuscito",
+    "Needs Lingueez {version} or newer": "Richiede Lingueez {version} o versioni successive",
+    "Not tested with this version of Lingueez": "Non testato con questa versione di Lingueez",
+    "Turned off after Lingueez did not start properly": "Disattivato dopo che Lingueez non si è avviato correttamente",
+    "Open plugins folder": "Apri la cartella dei plugin",
+    "Plugin changes apply after a restart.": "Le modifiche ai plugin vengono applicate dopo il riavvio.",
+    "Your plugin changes need a restart. Restart now?": "Le modifiche ai plugin richiedono un riavvio. Riavviare ora?",
+    "by {author}": "di {author}",
+    "Plugins turned off": "Plugin disattivati",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "L'ultima volta Lingueez non si è avviato correttamente, quindi questi plugin sono stati disattivati: {names}. Puoi riattivarli nelle Impostazioni.",
 }
 
 # Date names, read by app.i18n. Months are in the format used for dates

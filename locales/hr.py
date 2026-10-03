@@ -1604,6 +1604,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Kliknite za otvaranje definicije",
     "Show related words": "Prikaži povezane riječi",
     "Synonyms and words from the same family, on flashcards and in definitions": "Sinonimi i riječi iz iste porodice — na karticama i u definicijama",
+    "Plugins": "Dodaci",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Dodaci imaju potpun pristup Lingueezu i vašim podacima, uključujući riječi, postavke i datoteke na ovom računalu. Dodajte dodatke samo iz izvora kojima vjerujete.",
+    "Active": "Aktivan",
+    "Disabled": "Isključen",
+    "Failed to load": "Učitavanje nije uspjelo",
+    "Needs Lingueez {version} or newer": "Zahtijeva Lingueez {version} ili noviji",
+    "Not tested with this version of Lingueez": "Nije testirano s ovom verzijom Lingueeza",
+    "Turned off after Lingueez did not start properly": "Isključen nakon što se Lingueez nije ispravno pokrenuo",
+    "Open plugins folder": "Otvori mapu dodataka",
+    "Plugin changes apply after a restart.": "Promjene dodataka primjenjuju se nakon ponovnog pokretanja.",
+    "Your plugin changes need a restart. Restart now?": "Promjene dodataka zahtijevaju ponovno pokretanje. Ponovno pokrenuti sada?",
+    "by {author}": "autor: {author}",
+    "Plugins turned off": "Dodaci isključeni",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez se prošli put nije ispravno pokrenuo pa su ovi dodaci isključeni: {names}. Možete ih ponovno uključiti u postavkama.",
 }
 
 # Date names, read by app.i18n.

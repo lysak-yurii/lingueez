@@ -1847,6 +1847,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "Klik for at åbne definitionen",
     "Show related words": "Vis relaterede ord",
     "Synonyms and words from the same family, on flashcards and in definitions": "Synonymer og ord fra samme ordfamilie — på kort og i definitioner",
+    "Plugins": "Plugins",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "Plugins har fuld adgang til Lingueez og dine data, herunder dine ord, indstillinger og filer på denne computer. Tilføj kun plugins fra kilder, du har tillid til.",
+    "Active": "Aktiv",
+    "Disabled": "Deaktiveret",
+    "Failed to load": "Kunne ikke indlæses",
+    "Needs Lingueez {version} or newer": "Kræver Lingueez {version} eller nyere",
+    "Not tested with this version of Lingueez": "Ikke testet med denne version af Lingueez",
+    "Turned off after Lingueez did not start properly": "Slået fra, efter at Lingueez ikke startede korrekt",
+    "Open plugins folder": "Åbn plugin-mappen",
+    "Plugin changes apply after a restart.": "Ændringer af plugins træder i kraft efter en genstart.",
+    "Your plugin changes need a restart. Restart now?": "Dine ændringer af plugins kræver en genstart. Genstart nu?",
+    "by {author}": "af {author}",
+    "Plugins turned off": "Plugins slået fra",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez startede ikke korrekt sidste gang, så disse plugins blev slået fra: {names}. Du kan slå dem til igen i Indstillinger.",
 }
 
 # Date names read by app.i18n.

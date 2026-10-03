@@ -1823,6 +1823,20 @@ TRANSLATIONS: dict[str, str] = {
     "Click to open its definition": "इसकी परिभाषा खोलने के लिए क्लिक करें",
     "Show related words": "संबंधित शब्द दिखाएँ",
     "Synonyms and words from the same family, on flashcards and in definitions": "पर्यायवाची और एक ही शब्द परिवार के शब्द — कार्ड और परिभाषाओं में",
+    "Plugins": "प्लगइन",
+    "Plugins have full access to Lingueez and your data, including your words, settings and files on this computer. Only add plugins from sources you trust.": "प्लगइन को Lingueez और आपके डेटा तक पूरी पहुँच होती है, जिसमें आपके शब्द, सेटिंग्स और इस कंप्यूटर की फ़ाइलें शामिल हैं। केवल उन्हीं स्रोतों से प्लगइन जोड़ें जिन पर आपको भरोसा हो।",
+    "Active": "सक्रिय",
+    "Disabled": "अक्षम",
+    "Failed to load": "लोड नहीं हो सका",
+    "Needs Lingueez {version} or newer": "Lingueez {version} या उससे नया संस्करण आवश्यक है",
+    "Not tested with this version of Lingueez": "Lingueez के इस संस्करण के साथ परीक्षण नहीं किया गया",
+    "Turned off after Lingueez did not start properly": "Lingueez के ठीक से शुरू न होने के बाद बंद किया गया",
+    "Open plugins folder": "प्लगइन फ़ोल्डर खोलें",
+    "Plugin changes apply after a restart.": "प्लगइन में किए गए बदलाव पुनः आरंभ करने के बाद लागू होंगे।",
+    "Your plugin changes need a restart. Restart now?": "आपके प्लगइन बदलावों के लिए पुनः आरंभ करना आवश्यक है। अभी पुनः आरंभ करें?",
+    "by {author}": "लेखक: {author}",
+    "Plugins turned off": "प्लगइन बंद किए गए",
+    "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "पिछली बार Lingueez ठीक से शुरू नहीं हुआ, इसलिए ये प्लगइन बंद कर दिए गए: {names}। आप इन्हें सेटिंग्स में फिर से चालू कर सकते हैं।",
 }
 
 # Date names, read by app.i18n.
