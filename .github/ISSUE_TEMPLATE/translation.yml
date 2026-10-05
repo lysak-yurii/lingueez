@@ -1,0 +1,79 @@
+name: Translation issue
+description: Report a wrong, awkward or missing translation
+title: "[Translation]: "
+labels: ["translation"]
+body:
+  - type: dropdown
+    id: application
+    attributes:
+      label: Application
+      description: Where did you see the text?
+      options:
+        - Desktop
+        - Mobile
+        - Web
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - English
+        - Bulgarian
+        - Chinese
+        - Croatian
+        - Czech
+        - Danish
+        - Dutch
+        - Finnish
+        - French
+        - German
+        - Greek
+        - Hindi
+        - Hungarian
+        - Indonesian
+        - Italian
+        - Japanese
+        - Korean
+        - Malay
+        - Norwegian Bokmål
+        - Polish
+        - Portuguese
+        - Portuguese (Brazil)
+        - Romanian
+        - Russian
+        - Serbian
+        - Slovak
+        - Spanish
+        - Swedish
+        - Thai
+        - Turkish
+        - Ukrainian
+        - Vietnamese
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+      description: Copy the text as it appears now, or attach a screenshot.
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where does it appear?
+      placeholder: Settings → Appearance, the Add Word dialog, a page URL …
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Why the current text is wrong, if it isn't obvious.

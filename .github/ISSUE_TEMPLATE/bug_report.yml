@@ -1,0 +1,61 @@
+name: Report a bug
+description: Something isn't working as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: application
+    attributes:
+      label: Application
+      description: Which Lingueez app did this happen in?
+      options:
+        - Desktop
+        - Mobile
+        - Web
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version (desktop and mobile only)
+      description: Leave empty for Web.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system or browser
+      placeholder: Ubuntu 24.04 (Wayland), Windows 11, Android 15, Firefox 131 …
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it? (desktop only)
+      options:
+        - Flatpak
+        - Snap
+        - AppImage
+        - Windows installer (.exe)
+        - Microsoft Store / MSIX
+        - From source
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or traceback
+      render: shell

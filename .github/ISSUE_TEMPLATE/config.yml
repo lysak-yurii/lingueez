@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help
+    url: https://github.com/lysak-yurii/lingueez/discussions
+    about: Ask how to do something or get help using Lingueez.
+  - name: Report a security vulnerability
+    url: https://github.com/lysak-yurii/lingueez/security/advisories/new
+    about: Report security problems privately, not in a public issue.

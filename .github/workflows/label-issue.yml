@@ -1,0 +1,26 @@
+name: Label issue by application
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || "";
+            const m = body.match(/### Application\s+([^\n]+)/);
+            if (!m) return;
+            const labels = m[1].split(",").map(s => s.trim().toLowerCase())
+              .filter(s => ["desktop", "mobile", "web"].includes(s));
+            if (labels.length) {
+              await github.rest.issues.addLabels({
+                ...context.repo, issue_number: context.issue.number, labels,
+              });
+            }
