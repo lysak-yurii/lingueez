@@ -1698,6 +1698,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Sesi baru",
     "Practice hard words": "Latih kata-kata sulit",
     "Hard words": "Kata-kata sulit",
+    "Zoom in": "Perbesar",
+    "Zoom out": "Perkecil",
+    "Reset zoom": "Atur ulang zoom",
     "Hard words cleared!": "Kata-kata sulit dibersihkan!",
     "Open Flashcards when Read Aloud starts":
         "Buka Kartu Flash saat Pembacaan Nyaring dimulai",

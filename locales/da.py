@@ -1695,6 +1695,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Ny session",
     "Practice hard words": "Øv svære ord",
     "Hard words": "Svære ord",
+    "Zoom in": "Zoom ind",
+    "Zoom out": "Zoom ud",
+    "Reset zoom": "Nulstil zoom",
     "Hard words cleared!": "Svære ord klaret!",
     "Open Flashcards when Read Aloud starts":
         "Åbn Flashcards når Oplæsning starter",

@@ -1700,6 +1700,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Nová relace",
     "Practice hard words": "Procvičovat těžká slova",
     "Hard words": "Těžká slova",
+    "Zoom in": "Přiblížit",
+    "Zoom out": "Oddálit",
+    "Reset zoom": "Obnovit přiblížení",
     "Hard words cleared!": "Těžká slova zvládnutá!",
     "Open Flashcards when Read Aloud starts":
         "Otevřít Kartičky při spuštění předčítání",

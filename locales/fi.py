@@ -1692,6 +1692,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Uusi istunto",
     "Practice hard words": "Harjoittele vaikeita sanoja",
     "Hard words": "Vaikeat sanat",
+    "Zoom in": "Lähennä",
+    "Zoom out": "Loitonna",
+    "Reset zoom": "Palauta zoomaus",
     "Hard words cleared!": "Vaikeat sanat käyty läpi!",
     "Open Flashcards when Read Aloud starts":
         "Avaa Muistikortit, kun Ääneenluku alkaa",

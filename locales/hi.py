@@ -1675,6 +1675,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "नया सत्र",
     "Practice hard words": "कठिन शब्दों का अभ्यास करें",
     "Hard words": "कठिन शब्द",
+    "Zoom in": "ज़ूम इन",
+    "Zoom out": "ज़ूम आउट",
+    "Reset zoom": "ज़ूम रीसेट करें",
     "Hard words cleared!": "कठिन शब्द साफ़ हो गए!",
     "Open Flashcards when Read Aloud starts":
         "सस्वर वाचन (Read Aloud) शुरू होने पर फ्लैशकार्ड खोलें",

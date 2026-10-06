@@ -1393,6 +1393,25 @@ class FlashcardsPage(QWidget):
         self.slim_bar = _SlimBar(self._colors)
         sv.addWidget(self.slim_bar)
 
+        zoom_row = QHBoxLayout()
+        zoom_row.setSpacing(2)
+        zoom_row.addStretch(1)
+        self.zoom_out_btn = QPushButton(objectName="iconButton")
+        self.zoom_out_btn.setToolTip(tr("Zoom out") + "  (Ctrl+−)")
+        self.zoom_out_btn.clicked.connect(lambda: self._zoom_card(-1))
+        self.zoom_reset_btn = QPushButton(objectName="iconButton")
+        self.zoom_reset_btn.setToolTip(tr("Reset zoom") + "  (Ctrl+0)")
+        self.zoom_reset_btn.clicked.connect(lambda: self._zoom_card("reset"))
+        self.zoom_in_btn = QPushButton(objectName="iconButton")
+        self.zoom_in_btn.setToolTip(tr("Zoom in") + "  (Ctrl++)")
+        self.zoom_in_btn.clicked.connect(lambda: self._zoom_card(1))
+        for btn in (self.zoom_out_btn, self.zoom_reset_btn, self.zoom_in_btn):
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setFocusPolicy(Qt.NoFocus)  # keep Space for flipping
+            btn.setIconSize(QSize(14, 14))
+            zoom_row.addWidget(btn)
+        sv.addLayout(zoom_row)
+
         sv.addStretch(1)
         card_row = QHBoxLayout()
         card_row.addStretch(1)
@@ -1595,6 +1614,9 @@ class FlashcardsPage(QWidget):
             btn.setMinimumWidth(px(104))
         for label in (self.flip_pad, *self._grade_interval_labels.values()):
             label.setFixedHeight(px(15))
+        self.zoom_reset_btn.setText(f"{round(z * 100)}%")
+        self.zoom_out_btn.setEnabled(self._zoom_step > ZOOM_MIN)
+        self.zoom_in_btn.setEnabled(self._zoom_step < ZOOM_MAX)
 
     def wheelEvent(self, event):  # noqa: N802
         if (event.modifiers() & Qt.ControlModifier
@@ -2572,6 +2594,12 @@ class FlashcardsPage(QWidget):
             f"font-size:{theme.font_pt('headline')}pt;font-weight:700;")
         self.complete_sub.setStyleSheet(dim + f"font-size:{theme.font_pt('body_lg')}pt;")
         self.end_btn.setIcon(icons.icon("x", c["text_dim"], 16))
+        self.zoom_out_btn.setIcon(icons.icon("minus", c["text_dim"], 14))
+        self.zoom_in_btn.setIcon(icons.icon("plus", c["text_dim"], 14))
+        self.zoom_reset_btn.setStyleSheet(
+            f"QPushButton{{color:{c['text_dim']};"
+            f"font-size:{theme.font_pt('caption')}pt;font-weight:600;"
+            "min-width:40px;}")
         self.config_btn.setIcon(icons.icon("sliders", c["text"], 16))
         self.prev_btn.setIcon(icons.icon("skip-back", c["text"], 18))
         self.next_btn.setIcon(icons.icon("skip-forward", c["text"], 18))

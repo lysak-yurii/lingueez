@@ -1695,6 +1695,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Új munkamenet",
     "Practice hard words": "Nehéz szavak gyakorlása",
     "Hard words": "Nehéz szavak",
+    "Zoom in": "Nagyítás",
+    "Zoom out": "Kicsinyítés",
+    "Reset zoom": "Nagyítás visszaállítása",
     "Hard words cleared!": "Nehéz szavak feldolgozva!",
     "Open Flashcards when Read Aloud starts":
         "Tanulókártyák megnyitása a Felolvasás indításakor",

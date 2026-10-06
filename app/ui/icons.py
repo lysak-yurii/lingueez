@@ -39,6 +39,7 @@ _SVG_TEMPLATE = (
 ICONS = {
     "search": '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
     "plus": '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    "minus": '<line x1="5" y1="12" x2="19" y2="12"/>',
     "sync": '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>'
             '<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
     "rotate-ccw": '<polyline points="1 4 1 10 7 10"/>'

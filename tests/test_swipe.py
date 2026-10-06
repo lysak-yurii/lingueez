@@ -204,6 +204,23 @@ class CardZoomTests(SwipeGradesTests):
         self.assertEqual(self.page._zoom_step, 0)
         self.assertEqual(self.card.maximumWidth(), 640)
 
+    def test_the_corner_buttons_step_reset_and_show_the_zoom(self):
+        self.page.zoom_in_btn.click()
+        self.page.zoom_in_btn.click()
+        self.assertEqual(self.page.zoom_reset_btn.text(), "120%")
+        self.page.zoom_out_btn.click()
+        self.assertEqual(self.page._zoom_step, 1)
+        self.page.zoom_reset_btn.click()
+        self.assertEqual(self.page._zoom_step, 0)
+        self.assertEqual(self.page.zoom_reset_btn.text(), "100%")
+
+    def test_the_buttons_stop_at_the_limits(self):
+        for _ in range(40):
+            self.page.zoom_out_btn.click()
+        self.assertEqual(self.page._zoom_step, fp.ZOOM_MIN)
+        self.assertFalse(self.page.zoom_out_btn.isEnabled())
+        self.assertTrue(self.page.zoom_in_btn.isEnabled())
+
     def test_the_step_is_remembered(self):
         self._wheel(self.card, 120)
         self.assertEqual(self.settings["flashcards_zoom"], "1")

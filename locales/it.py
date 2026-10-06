@@ -1697,6 +1697,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Nuova sessione",
     "Practice hard words": "Esercitati sulle parole difficili",
     "Hard words": "Parole difficili",
+    "Zoom in": "Ingrandisci",
+    "Zoom out": "Riduci",
+    "Reset zoom": "Reimposta zoom",
     "Hard words cleared!": "Parole difficili completate!",
     "Open Flashcards when Read Aloud starts":
         "Apri Flashcard all'avvio della Lettura ad alta voce",

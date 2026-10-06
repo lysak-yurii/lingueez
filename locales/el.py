@@ -1644,6 +1644,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Νέα συνεδρία",
     "Practice hard words": "Εξάσκηση στις δύσκολες λέξεις",
     "Hard words": "Δύσκολες λέξεις",
+    "Zoom in": "Μεγέθυνση",
+    "Zoom out": "Σμίκρυνση",
+    "Reset zoom": "Επαναφορά ζουμ",
     "Hard words cleared!": "Οι δύσκολες λέξεις ολοκληρώθηκαν!",
     "Open Flashcards when Read Aloud starts":
         "Άνοιγμα των καρτών εκμάθησης όταν ξεκινά η μεγαλόφωνη ανάγνωση",

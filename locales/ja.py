@@ -1681,6 +1681,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "新しいセッション",
     "Practice hard words": "苦手な単語を練習",
     "Hard words": "苦手な単語",
+    "Zoom in": "拡大",
+    "Zoom out": "縮小",
+    "Reset zoom": "ズームをリセット",
     "Hard words cleared!": "苦手な単語をすべてクリアしました！",
     "Open Flashcards when Read Aloud starts":
         "読み上げ開始時に単語カードを開く",

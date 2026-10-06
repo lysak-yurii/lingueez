@@ -1713,6 +1713,9 @@ TRANSLATIONS: dict[str, str] = {
     "New session": "Нова сесія",
     "Practice hard words": "Повторити важкі слова",
     "Hard words": "Важкі слова",
+    "Zoom in": "Збільшити",
+    "Zoom out": "Зменшити",
+    "Reset zoom": "Скинути масштаб",
     "Hard words cleared!": "Важкі слова опрацьовано!",
     "Open Flashcards when Read Aloud starts":
         "Відкривати Флеш-картки під час запуску читання вголос",
