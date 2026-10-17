@@ -52,6 +52,13 @@
   </screenshots>
 
   <releases>
+    <release version="2.1.1" date="2026-10-17">
+      <description>
+        <p>Flashcards and definitions show related words. Cards can be graded with a swipe, and the card zooms with Ctrl+scroll or the new buttons under the progress bar.</p>
+        <p>Local plugins load at startup and can be turned on or off in Settings.</p>
+        <p>Quick Save shows the definition's formatting, keeps its usual width when opened from the tray, and its definition box grows with the window. The word list keeps its selection when it refreshes, the Wayland Add-Word hotkey leaves the main window open, and light mode uses the light status colours.</p>
+      </description>
+    </release>
     <release version="2.1.0" date="2026-09-16">
       <description>
         <p>Definitions can be written for either word and in either language, with a translation for each meaning, and generated for many words at once. An existing definition is only replaced once you confirm.</p>
