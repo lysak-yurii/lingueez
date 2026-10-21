@@ -145,18 +145,18 @@ def _resolve_startup_language(settings):
     return detected
 
 
-def _forward_add_word(socket_name, activation_token=""):
-    """Tell the already-running instance to open the Add-Word dialog, over its
+def _forward_to_running(socket_name, command, activation_token=""):
+    """Send *command* (ADD_WORD or SHOW) to the already-running instance over its
     local socket. Forwards the desktop's xdg-activation token (if any) so the
-    dialog can take focus on Wayland. Returns True if the message was delivered."""
+    window can take focus on Wayland. Returns True if the message was delivered."""
     from PySide6.QtNetwork import QLocalSocket
-    logging.info(f"--add-word: forwarding to running instance; activation token "
+    logging.info(f"{command}: forwarding to running instance; activation token "
                  f"{'present' if activation_token else 'ABSENT'}")
     sock = QLocalSocket()
     sock.connectToServer(socket_name)
     if not sock.waitForConnected(1000):
         return False
-    msg = b"ADD_WORD"
+    msg = command.encode()
     if activation_token:
         msg += b" " + activation_token.encode()
     sock.write(msg + b"\n")
@@ -244,10 +244,11 @@ def main():
     lock_wait = 8000 if "--relaunch" in sys.argv else 100
     add_word = "--add-word" in sys.argv
     if not lock.tryLock(lock_wait):
-        # An instance is already running. If we were launched by the global
-        # Add-Word hotkey (e.g. a Wayland desktop keybinding), forward the request
-        # to it over the local socket and exit quietly instead of warning.
-        if add_word and _forward_add_word(f"{APP_ID}-add-word", activation_token):
+        # An instance is already running (possibly hidden in the tray). Hand the
+        # request to it over the local socket and exit quietly: the Add-Word
+        # hotkey opens the dialog there, a plain launch brings its window up.
+        command = "ADD_WORD" if add_word else "SHOW"
+        if _forward_to_running(f"{APP_ID}-add-word", command, activation_token):
             return 0
         QMessageBox.warning(None, APP_NAME, f"{APP_NAME} is already running.")
         return 0

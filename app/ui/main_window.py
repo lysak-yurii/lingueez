@@ -193,7 +193,7 @@ def _store_managed_updates():
 
 
 # Local-socket name the running instance listens on; a second launch with
-# --add-word connects here to open the dialog. Must match main.py's forwarder.
+# --add-word and plain relaunches connect here. Must match main.py's forwarder.
 IPC_SOCKET_NAME = f"{APP_ID}-add-word"
 
 # sync status -> (icon name, color key)
@@ -1839,17 +1839,20 @@ class MainWindow(QMainWindow):
             return
 
         def _read():
-            # Message is "ADD_WORD" optionally followed by an xdg-activation token:
-            # "ADD_WORD <token>". The token (when the desktop provides one) lets the
-            # dialog take focus on Wayland; without it, focus-stealing prevention
-            # shows a "… is ready" notification instead.
+            # Message is "ADD_WORD" or "SHOW", optionally followed by an
+            # xdg-activation token: "ADD_WORD <token>". The token (when the desktop
+            # provides one) lets the window take focus on Wayland; without it,
+            # focus-stealing prevention shows a "… is ready" notification instead.
             parts = bytes(conn.readAll()).strip().split(b" ", 1)
-            if parts and parts[0] == b"ADD_WORD":
+            if parts and parts[0] in (b"ADD_WORD", b"SHOW"):
                 token = parts[1].decode(errors="replace") if len(parts) > 1 else ""
                 self._pending_activation_token = token or None
-                logging.info(f"Add-Word hotkey: activation token "
+                logging.info(f"IPC {parts[0].decode()}: activation token "
                              f"{'received' if token else 'ABSENT'}")
-                self.hotkey_pressed.emit()
+                if parts[0] == b"ADD_WORD":
+                    self.hotkey_pressed.emit()
+                else:
+                    self.show_window()
             conn.disconnectFromServer()
 
         conn.readyRead.connect(_read)
@@ -2144,8 +2147,7 @@ class MainWindow(QMainWindow):
     def show_window(self):
         self.show()
         self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
-        self.raise_()
-        self.activateWindow()
+        self._activate_window_with_token(self)
         self._sync_mini_player()
 
     def changeEvent(self, event):
