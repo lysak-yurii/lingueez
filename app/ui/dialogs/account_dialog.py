@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QLabel, QLayout, QLineEdi
 
 from app.config import load_settings, save_settings
 from app.core.auth_manager import get_auth_manager
+from app.core.names import normalize_name
 from app.i18n import tr
 from app.ui.dialogs.base import FramelessDialog
 from app.ui.toast import show_toast
@@ -300,9 +301,13 @@ class AccountDialog(FramelessDialog):
             # Account creation requires explicit acceptance via the checkbox.
             if not self._consent_ok():
                 return
-            name = self.name.text().strip()
-            if not name:
+            if not self.name.text().strip():
                 self._set_status(tr("Enter your name."))
+                return
+            name = normalize_name(self.name.text())
+            if not name:
+                self._set_status(tr("Enter a name of 2 to 50 letters. Spaces, hyphens "
+                                    "and apostrophes are allowed."))
                 return
             if pw != self.confirm_password.text():
                 self._set_status(tr("Passwords don't match."))

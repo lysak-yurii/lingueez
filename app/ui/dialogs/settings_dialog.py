@@ -1331,6 +1331,10 @@ class SettingsDialog(FramelessDialog):
             more.setIcon(icons.icon("more", theme.current_colors()["text"], 16))
             more.setToolTip(tr("Account actions"))
             menu = QMenu(more)
+            self._account_menu_item(menu, tr("Change name…"), self._change_name)
+            if get_auth_manager().has_password():
+                self._account_menu_item(menu, tr("Change password…"), self._change_password)
+            menu.addSeparator()
             self._account_menu_item(menu, tr("Sync this device's data to my account…"),
                                     self._add_local_to_account)
             self._account_menu_item(menu, tr("Export my data…"), self._export_account_data)
@@ -1596,6 +1600,37 @@ class SettingsDialog(FramelessDialog):
 
         run_in_thread(self._sync_manager().export_user_data, path, on_result=done,
                       on_error=lambda e: show_toast(self, tr("Account"), str(e), "error", 6000))
+
+    def _change_name(self):
+        auth = get_auth_manager()
+        current = auth.current_user_name() or ""
+        text, ok = ask_text(self, tr("Change name"), tr("Name"),
+                            "" if current == auth.current_user() else current)
+        if not ok:
+            return
+        from app.core.names import normalize_name
+        name = normalize_name(text)
+        if not name:
+            show_toast(self, tr("Account"), tr("Enter a name of 2 to 50 letters. Spaces, "
+                                               "hyphens and apostrophes are allowed."),
+                       "error", 6000)
+            return
+
+        def done(result):
+            ok, err = result
+            if ok:
+                self._refresh_account_ui()
+                show_toast(self, tr("Account"), tr("Name updated."), "success")
+            else:
+                show_toast(self, tr("Account"), err or tr("Something went wrong."), "error", 6000)
+
+        run_in_thread(auth.change_name, name, on_result=done,
+                      on_error=lambda e: show_toast(self, tr("Account"), str(e), "error", 6000))
+
+    def _change_password(self):
+        from app.ui.dialogs.change_password import ChangePasswordDialog
+        if ChangePasswordDialog(self).exec():
+            show_toast(self, tr("Account"), tr("Password changed."), "success")
 
     def _delete_account(self):
         confirm = QMessageBox.warning(

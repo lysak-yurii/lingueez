@@ -45,6 +45,7 @@ from typing import Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from app.core.accounts import get_account_registry
+from app.core.names import normalize_name
 from app.core.secure_store import SecureStore
 from app.core.supabase_client import get_supabase
 from app.i18n import tr
@@ -175,8 +176,7 @@ class AuthManager:
             return False, self._account_limit_msg()
         try:
             credentials = {"email": email.strip(), "password": password}
-            # Store the display name capitalized (each word: "yurii lysak" -> "Yurii Lysak").
-            name = (name or "").strip().title()
+            name = normalize_name(name) or ""
             if name:
                 # Stored as user_metadata; `display_name` is what the Supabase
                 # dashboard shows (matching how a Google account's name appears),
@@ -256,6 +256,49 @@ class AuthManager:
             return False, self._account_limit_msg()
         try:
             auth.update_user({"password": new_password})
+        except Exception as exc:
+            return False, self._friendly(exc)
+        return True, None
+
+    def has_password(self) -> bool:
+        """Whether the signed-in account can sign in with a password (a Google-only
+        account has none to change)."""
+        meta = getattr(self._user, "app_metadata", None) or {}
+        return "email" in (meta.get("providers") or [meta.get("provider")])
+
+    def change_name(self, name: str) -> Result:
+        """Rename the signed-in account. ``display_name`` is the key every client
+        reads first, and the one a Google sign-in does not overwrite."""
+        auth = self.sb.get_auth()
+        if auth is None or not self._user:
+            return False, self._not_configured()
+        try:
+            res = auth.update_user({"data": {
+                "display_name": name, "full_name": name, "name": name}})
+        except Exception as exc:
+            return False, self._friendly(exc)
+        if getattr(res, "user", None) is not None:
+            self._user = res.user
+        self.registry.upsert(self.current_user_id(), self.current_user(), name)
+        return True, None
+
+    def change_password(self, current: str, new: str) -> Result:
+        """Set a new password after confirming the current one; GoTrue's own
+        update never asks for it."""
+        auth = self.sb.get_auth()
+        if auth is None or not self._user:
+            return False, self._not_configured()
+        try:
+            res = auth.sign_in_with_password(
+                {"email": self.current_user(), "password": current})
+        except Exception as exc:
+            if "invalid login credentials" in str(exc).lower():
+                return False, tr("Current password is incorrect.")
+            return False, self._friendly(exc)
+        if getattr(res, "session", None) and not self._on_session(res.session):
+            return False, self._account_limit_msg()
+        try:
+            auth.update_user({"password": new})
         except Exception as exc:
             return False, self._friendly(exc)
         return True, None
