@@ -2845,9 +2845,9 @@ class MainWindow(QMainWindow):
         dialog.show()
         self._activate_window_with_token(dialog)
         if fill_from_clipboard:
-            # Read the clipboard now that the dialog has focus (see Wayland note in
-            # open_add_word_and_translate). Retry a few times in case keyboard focus
-            # / the selection offer lands a beat after the window is activated.
+            # Read the clipboard once the dialog has focus (see Wayland note in
+            # open_add_word_and_translate), polling until focus and the selection
+            # offer land.
             QTimer.singleShot(120, lambda: self._fill_add_word_from_clipboard(dialog))
 
     _QUICK_SAVE_KEYS = ("addword_target_language", definition_autogen.ENABLED_KEY,
@@ -2889,10 +2889,13 @@ class MainWindow(QMainWindow):
         elif tray is not None and tray.isVisible():
             tray.showMessage(title, message, tray.icon(), 6000)
 
-    def _fill_add_word_from_clipboard(self, dialog, attempts=4):
+    def _fill_add_word_from_clipboard(self, dialog, attempts=12):
         if dialog is None or not dialog.isVisible():
             return
-        truncated = " ".join(QGuiApplication.clipboard().text().split()[:100])
+        # The current selection arrives just before keyboard focus; until then
+        # Qt's clipboard still holds the stale one.
+        text = QGuiApplication.clipboard().text() if dialog.isActiveWindow() else ""
+        truncated = " ".join(text.split()[:100])
         if truncated.strip():
             dialog.apply_prefill(truncated, auto_translate=True)
         elif attempts > 1:
@@ -2922,15 +2925,16 @@ class MainWindow(QMainWindow):
         self.open_add_word(prefill=word, auto_translate=True, language1=language)
 
     def open_add_word_and_translate(self, from_hotkey=False):
-        clipboard = QGuiApplication.clipboard().text()
-        words = clipboard.split()
-        truncated = " ".join(words[:100])
-        # Wayland only lets the FOCUSED client read the clipboard. On a hotkey
-        # launch we're unfocused (the user is in another app), so the read above
-        # usually comes back empty — fill it in once the dialog has taken focus.
-        defer_clipboard = from_hotkey and _is_wayland() and not truncated.strip()
+        # Wayland only sends the selection to the FOCUSED client. On a hotkey
+        # launch we're unfocused, so Qt answers with the last selection it saw
+        # while we had focus — a stale word, not an empty one. Read it only once
+        # the dialog has taken focus.
+        if from_hotkey and _is_wayland():
+            self.open_add_word(from_hotkey=True, fill_from_clipboard=True)
+            return
+        truncated = " ".join(QGuiApplication.clipboard().text().split()[:100])
         self.open_add_word(prefill=truncated, auto_translate=bool(truncated.strip()),
-                           from_hotkey=from_hotkey, fill_from_clipboard=defer_clipboard)
+                           from_hotkey=from_hotkey)
 
     def _after_db_change(self):
         self.load_data()
