@@ -46,6 +46,9 @@ class FakeAdapter:
         word_id = self._insert_ids.pop(0) if self._insert_ids else f"id-{len(self.inserted)}"
         return dict(word_data, ID=word_id)
 
+    def insert_words_bulk(self, words, progress=None):
+        return [self.insert_word(w) for w in words]
+
     def update_word(self, word_id, patch):
         self.updated.append((word_id, patch))
         return {"ID": word_id}

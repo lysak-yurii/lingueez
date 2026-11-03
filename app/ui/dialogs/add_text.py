@@ -39,6 +39,7 @@ from app.config import load_settings, save_settings
 from app.core import ai, text_sources
 from app.core.languages import TRANSLATION_CODES
 from app.core.backup_management import backup_database
+from app.core.errors import LimitError
 from app.i18n import fill_lang_combo, get_lang, set_lang, tr
 from app.ui import icons
 from app.ui.animations import fade_swap
@@ -598,6 +599,9 @@ class AddTextDialog(FramelessDialog):
                 self._set_status(tr("Failed to save the text."))
                 return
             backup_database()
+        except LimitError as exc:
+            self._set_status(str(exc))
+            return
         except Exception as exc:
             logging.error(f"Failed to save text: {exc}")
             self._set_status(tr("Failed to save the text: {error}").format(error=exc))

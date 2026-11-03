@@ -1749,13 +1749,18 @@ class FlashcardsPage(QWidget):
     def _refresh_picker_info(self):
         kind = self._checked_deck_kind()
         if kind == "due":
+            from app.config import get_int
+            per_day = get_int(self._settings_provider(), "flashcards_new_per_day", 20)
             try:
-                due = len(dbq.srs_due_word_ids(500))
+                reviews, waiting = dbq.srs_due_counts()
+                new = min(waiting, dbq.srs_new_allowance(per_day))
             except Exception:
-                due = 0
-            if due:
-                text = tr("{n} cards ready to review").format(
-                    n="500+" if due >= 500 else due)
+                reviews = waiting = new = 0
+            if reviews or new:
+                text = tr("Reviews: {reviews} · New words: {new}").format(
+                    reviews=reviews, new=new)
+            elif waiting and per_day:
+                text = tr("All caught up · more new words tomorrow")
             elif self._fetch_deck("newest", 1):
                 text = tr("No cards due — great job!")
             else:

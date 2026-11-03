@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import load_settings
+from app.core import limits
 from app.core.backup_management import backup_database
 from app.core.importer import (
     ACTION_ADD, ACTION_SKIP, ACTION_UPDATE, analyze_excel_import,
@@ -102,6 +103,8 @@ class ImportReviewDialog(FramelessDialog):
         self._applying = False
         self._populating = False
         self._row_payloads = []
+        self._limited = limits.active()
+        self._existing_words = db_adapter.count_words() if self._limited else 0
 
         self.setMinimumSize(860, 520)
         self.resize(1040, 660)
@@ -225,6 +228,12 @@ class ImportReviewDialog(FramelessDialog):
         self.progress.hide()
         status_bar.addWidget(self.progress)
         layout.addLayout(status_bar)
+
+        self.limit_label = QLabel("")
+        self.limit_label.setWordWrap(True)
+        self.limit_label.setStyleSheet(f"color: {level_color('error')};")
+        self.limit_label.hide()
+        layout.addWidget(self.limit_label)
 
         buttons = QHBoxLayout()
         self.recognized_only = QCheckBox(tr("Only recognized languages"))
@@ -525,9 +534,22 @@ class ImportReviewDialog(FramelessDialog):
             self.select_all.setCheckState(Qt.PartiallyChecked)
         self.select_all.blockSignals(False)
 
-        self.import_btn.setEnabled(selected > 0)
+        error = self._limit_error()
+        self.limit_label.setText(f"{error.title}. {error}" if error else "")
+        self.limit_label.setVisible(error is not None)
+        self.import_btn.setEnabled(selected > 0 and error is None)
         self.import_btn.setText(
             tr("Import {count} Item(s)").format(count=selected) if selected else tr("Import"))
+
+    def _limit_error(self):
+        if not self._limited:
+            return None
+        adds = sum(1 for p in self._selected_payloads() if p['action'] == ACTION_ADD)
+        if adds > limits.IMPORT_LIMIT:
+            return limits.import_limit_error(adds)
+        if self._existing_words + adds > limits.WORD_LIMIT:
+            return limits.import_room_error(self._existing_words, adds)
+        return None
 
     # --------------------------------------------------------------- apply
 
@@ -536,7 +558,7 @@ class ImportReviewDialog(FramelessDialog):
         adds = [p for p in payloads if p['action'] == ACTION_ADD]
         updates = [p for p in payloads if p['action'] == ACTION_UPDATE]
         total = len(adds) + len(updates)
-        if not total:
+        if not total or self._limit_error():
             return
 
         self._applying = True

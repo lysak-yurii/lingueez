@@ -447,35 +447,31 @@ def _collect_tags(tag_links, word_id, tags):
 def apply_additions(db_adapter, items_to_add, log=_noop_log, progress=None):
     """Insert the given rows with their definitions and tags.
 
-    Returns (added_count, failed_items).
+    Returns (added_count, failed_items). Raises LimitError, before anything is
+    written, when the rows would exceed the account's word limit.
     """
+    payloads = [{
+        'Language1': item['Language1'], 'Language2': item['Language2'],
+        'Word1': item['Word1'], 'Word2': item['Word2'],
+        'Definition': item.get('Definition') or None,
+        'Definition2': item.get('Definition2') or None,
+        'Status': 'New', 'Source': 'excel_import',
+    } for item in items_to_add]
+    results = db_adapter.insert_words_bulk(payloads, progress=progress)
+
     added, failed = 0, []
     tag_links = {}
-    for done, item in enumerate(items_to_add, start=1):
-        word_data = {
-            'Language1': item['Language1'], 'Language2': item['Language2'],
-            'Word1': item['Word1'], 'Word2': item['Word2'],
-            'Definition': item.get('Definition') or None,
-            'Definition2': item.get('Definition2') or None,
-            'Status': 'New', 'Source': 'excel_import',
-        }
-        try:
-            result = db_adapter.insert_word(word_data)
-            if not result:
-                log(f"Row {item.get('row', '?')}: could not add "
-                    f"\"{item['Word1']} – {item['Word2']}\".", level='error')
-        except Exception as exc:
-            result = None
-            log(f"Row {item.get('row', '?')}: insert failed: {exc}", level='error')
-        if result:
+    for item, result in zip(items_to_add, results, strict=True):
+        if isinstance(result, dict):
             added += 1
-            _collect_tags(tag_links,
-                          result.get('ID') if isinstance(result, dict) else item.get('ID'),
-                          item.get('Tags'))
+            _collect_tags(tag_links, result.get('ID'), item.get('Tags'))
+            continue
+        if isinstance(result, Exception):
+            log(f"Row {item.get('row', '?')}: insert failed: {result}", level='error')
         else:
-            failed.append(item)
-        if progress:
-            progress(done, len(items_to_add))
+            log(f"Row {item.get('row', '?')}: could not add "
+                f"\"{item['Word1']} – {item['Word2']}\".", level='error')
+        failed.append(item)
     _apply_tags(db_adapter, tag_links, log)
     log(f"Added {added} of {len(items_to_add)} new items.",
         level='success' if not failed else 'warning')

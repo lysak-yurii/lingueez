@@ -43,7 +43,7 @@ from app.core import ai, definition_autogen
 from app.core.audio import is_language_supported, speak_word
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
-from app.core.errors import DuplicateWordError
+from app.core.errors import DuplicateWordError, LimitError
 from app.core.languages import TRANSLATION_CODES
 from app.core.translator import translate
 from app.i18n import fill_lang_combo, get_lang, lang_label, set_lang, tr
@@ -799,6 +799,8 @@ class AddWordDialog(FramelessDialog):
             self.accept()
         except DuplicateWordError as exc:
             self._handle_duplicate(exc)
+        except LimitError as exc:
+            QMessageBox.information(self, exc.title, str(exc))
         except Exception as exc:
             logging.error(f"Error saving new word: {exc}")
             QMessageBox.critical(self, tr("Error"), tr("Failed to save word:\n{error}").format(error=exc))

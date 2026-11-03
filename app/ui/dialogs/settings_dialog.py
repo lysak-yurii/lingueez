@@ -507,6 +507,8 @@ class SettingsDialog(FramelessDialog):
                      self._check("flashcards_autoswitch", True))
         fform.addRow(tr("Default deck size"),
                      self._spin("flashcards_deck_size", 1, 200, 20))
+        fform.addRow(tr("New words per day"),
+                     self._spin("flashcards_new_per_day", 0, 200, 20))
         layout.addWidget(flash_group)
 
         # The rest of the quiz options (format, direction, shuffle) live on the

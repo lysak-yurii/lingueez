@@ -540,7 +540,8 @@ class SupabaseClient:
             logging.error(f"Error updating word {word_id} in Supabase: {e}")
             return None
     
-    def upsert_words_bulk(self, rows: List[Dict[str, Any]]) -> Tuple[List[str], List[str]]:
+    def upsert_words_bulk(self, rows: List[Dict[str, Any]], per_row_fallback: bool = True
+                          ) -> Tuple[List[str], List[str]]:
         """Upsert many words in one request; returns ``(pushed_ids, failed_ids)``.
 
         The per-word :meth:`upsert_word` costs a round trip each, so a bulk UI
@@ -549,7 +550,8 @@ class SupabaseClient:
 
         Falls back to per-row upserts when a chunk fails, so one bad row (e.g. a
         content collision that needs the id-adoption path) doesn't strand the
-        rest — failed ids are returned for the caller to queue.
+        rest — failed ids are returned for the caller to queue. Without
+        ``per_row_fallback`` a failed chunk's ids are returned as failed as-is.
         """
         if not self.client or not rows:
             return [], [str(r.get('ID') or r.get('id')) for r in rows or []]
@@ -564,6 +566,10 @@ class SupabaseClient:
                 self.client.table('words').upsert(payloads, on_conflict='id').execute()
                 pushed.extend(ids)
             except Exception as chunk_exc:
+                if not per_row_fallback:
+                    logging.warning(f"words chunk upsert failed: {chunk_exc}")
+                    failed.extend(ids)
+                    continue
                 logging.warning(f"words chunk upsert failed, retrying per row: {chunk_exc}")
                 for row, word_id in zip(chunk, ids, strict=False):
                     # Per-row goes through upsert_word so the content-collision

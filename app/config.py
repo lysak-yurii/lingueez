@@ -106,6 +106,7 @@ DEFAULTS = {
     "playback_mastered_listens": "100",    # listens to reach Mastered
     # Flashcards
     "flashcards_deck_size": "20",          # default review-deck size
+    "flashcards_new_per_day": "20",        # never-graded words the due deck adds per day
     "flashcards_shuffle": "False",         # shuffle manual decks
     "flashcards_autoswitch": "True",       # jump to Flashcards when Read Aloud starts
     "flashcards_pronounce": "True",        # speak cards on show/flip in manual review

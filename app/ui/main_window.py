@@ -3760,7 +3760,8 @@ class MainWindow(QMainWindow):
             # df is newest-first
             return self._studiable(self.df).head(n).to_dict("records")
         if kind == "due":
-            ids = dbq.srs_due_word_ids(n)
+            per_day = get_int(self.settings, "flashcards_new_per_day", 20)
+            ids = dbq.srs_due_word_ids(n, new_limit=dbq.srs_new_allowance(per_day))
             by_id = {rec["ID"]: rec
                      for rec in self.df[self.df["ID"].isin(ids)].to_dict("records")}
             return [by_id[i] for i in ids if i in by_id]

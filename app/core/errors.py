@@ -33,3 +33,12 @@ class DuplicateWordError(Exception):
         self.word2 = word2
         self.existing_id = existing_id
         super().__init__(f"{word1} – {word2} already exists")
+
+
+class LimitError(Exception):
+    """Raised when a write would exceed an account limit; ``str()`` is the
+    localized message and ``title`` its heading."""
+
+    def __init__(self, title: str, message: str):
+        self.title = title
+        super().__init__(message)

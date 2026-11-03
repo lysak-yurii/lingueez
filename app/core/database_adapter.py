@@ -24,6 +24,7 @@ from contextlib import contextmanager
 from typing import Optional, List, Dict, Any, Tuple
 from app.core.supabase_client import get_supabase
 from app.core.db import new_id, purge_orphan_tags, rekey_progress
+from app.core import limits
 from app.core.errors import DuplicateWordError
 import logging
 import os
@@ -872,40 +873,83 @@ class DatabaseAdapter:
         return [found[i] for i in ids if i in found]
 
     def insert_word(self, word_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Insert a word. Writes to both local and cloud if available."""
-        # Always write to local first
+        """Insert a word. Writes to both local and cloud if available.
+
+        Raises LimitError when the account's word limit is reached."""
+        if limits.active() and self.count_words() >= limits.WORD_LIMIT:
+            raise limits.word_limit_error()
         local_result = self._insert_word_sqlite(word_data)
-        
         if local_result:
-            word_id = local_result['ID']
-            
-            # If cloud is available, try to sync immediately
-            if self._use_cloud():
-                try:
-                    # Upsert on the shared UUID id. The only time the returned id
-                    # differs is a cross-device content collision — adopt it.
-                    cloud_result = self.supabase.upsert_word(local_result)
-                    if cloud_result:
-                        cloud_id = cloud_result.get('ID') or cloud_result.get('id')
-                        if cloud_id and cloud_id != word_id:
-                            self._rekey_word_sqlite(word_id, cloud_id)
-                            local_result = self._get_word_sqlite(cloud_id)
-                        return local_result
-                    else:
-                        # Queue operation for later sync
-                        self._queue_operation('INSERT', 'words', word_id, local_result)
-                        logging.warning(f"Failed to sync word {word_id} to cloud, queued for later")
-                except Exception as e:
-                    # Queue operation for later sync
-                    self._queue_operation('INSERT', 'words', word_id, local_result)
-                    logging.warning(f"Error syncing word {word_id} to cloud: {e}, queued for later")
-            else:
-                # Cloud not available, queue for later sync
-                self._queue_operation('INSERT', 'words', word_id, local_result)
-                logging.debug(f"Word {word_id} inserted locally, will sync when cloud is available")
-        
+            local_result = self._push_inserted_word(local_result)
         return local_result
-    
+
+    def insert_words_bulk(self, words: List[Dict[str, Any]], progress=None
+                          ) -> List[Optional[Dict[str, Any]]]:
+        """Insert many words, pushing them to the cloud in bulk requests.
+
+        Returns one entry per input, in order: the stored row, the exception the
+        local insert raised, or None. Raises LimitError before writing anything
+        when the batch would exceed the account's word limit."""
+        if limits.active() and self.count_words() + len(words) > limits.WORD_LIMIT:
+            raise limits.word_limit_error()
+        results: List[Any] = []
+        for done, data in enumerate(words, start=1):
+            try:
+                results.append(self._insert_word_sqlite(data))
+            except Exception as exc:
+                results.append(exc)
+            if progress:
+                progress(done, len(words))
+        inserted = [(i, r) for i, r in enumerate(results) if isinstance(r, dict)]
+        if not inserted:
+            return results
+        if not self._use_cloud():
+            for _i, row in inserted:
+                self._queue_operation('INSERT', 'words', row['ID'], row)
+            return results
+        try:
+            _pushed, failed = self.supabase.upsert_words_bulk(
+                [row for _i, row in inserted], per_row_fallback=False)
+        except Exception as exc:
+            logging.warning(f"Bulk cloud insert failed, retrying per word: {exc}")
+            failed = [str(row['ID']) for _i, row in inserted]
+        stranded = set(failed)
+        for i, row in inserted:
+            if str(row['ID']) in stranded:
+                results[i] = self._push_inserted_word(row)
+        return results
+
+    def count_words(self) -> int:
+        conn = self._connect()
+        try:
+            return conn.execute('SELECT COUNT(*) FROM words').fetchone()[0]
+        finally:
+            conn.close()
+
+    def _push_inserted_word(self, local_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Write a freshly inserted local word through to the cloud, or queue it."""
+        word_id = local_result['ID']
+        if not self._use_cloud():
+            self._queue_operation('INSERT', 'words', word_id, local_result)
+            logging.debug(f"Word {word_id} inserted locally, will sync when cloud is available")
+            return local_result
+        try:
+            # Upsert on the shared UUID id. The only time the returned id
+            # differs is a cross-device content collision — adopt it.
+            cloud_result = self.supabase.upsert_word(local_result)
+            if cloud_result:
+                cloud_id = cloud_result.get('ID') or cloud_result.get('id')
+                if cloud_id and cloud_id != word_id:
+                    self._rekey_word_sqlite(word_id, cloud_id)
+                    local_result = self._get_word_sqlite(cloud_id)
+                return local_result
+            self._queue_operation('INSERT', 'words', word_id, local_result)
+            logging.warning(f"Failed to sync word {word_id} to cloud, queued for later")
+        except Exception as e:
+            self._queue_operation('INSERT', 'words', word_id, local_result)
+            logging.warning(f"Error syncing word {word_id} to cloud: {e}, queued for later")
+        return local_result
+
     def _insert_word_sqlite(self, word_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Insert a word into SQLite.
 
@@ -1421,7 +1465,13 @@ class DatabaseAdapter:
         return dict(row) if row else None
     
     def insert_text(self, text_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Insert a text. Writes to both local and cloud if available."""
+        """Insert a text. Writes to both local and cloud if available.
+
+        Raises LimitError when the text is too long or the text limit is reached."""
+        if limits.active():
+            self._check_text_length(text_data)
+            if self.count_texts() >= limits.TEXT_LIMIT:
+                raise limits.text_count_error()
         local_result = self._insert_text_sqlite(text_data)
         
         if local_result:
@@ -1446,6 +1496,12 @@ class DatabaseAdapter:
         
         return local_result
     
+    @staticmethod
+    def _check_text_length(text_data: Dict[str, Any]) -> None:
+        body = text_data.get('Text', text_data.get('text')) or ''
+        if len(body) > limits.TEXT_LENGTH_LIMIT:
+            raise limits.text_length_error(len(body))
+
     def _insert_text_sqlite(self, text_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Insert a text into SQLite."""
         row_number = text_data.get('RowNumber', text_data.get('row_number'))
@@ -1466,7 +1522,14 @@ class DatabaseAdapter:
         return self._get_text_sqlite(text_id)
     
     def update_text(self, text_id: int, text_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Update a text. Updates both local and cloud if available."""
+        """Update a text. Updates both local and cloud if available.
+
+        Raises LimitError when a changed body is too long."""
+        if limits.active():
+            body = text_data.get('Text', text_data.get('text'))
+            stored = self._get_text_sqlite(text_id) or {}
+            if body is not None and body != stored.get('Text'):
+                self._check_text_length(text_data)
         local_result = self._update_text_sqlite(text_id, text_data)
         
         if local_result:

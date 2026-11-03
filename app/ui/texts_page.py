@@ -48,6 +48,7 @@ from app.config import get_float, get_int, load_settings, save_settings
 from app.core import hyphenation
 from app.core.audio import is_language_supported, speak_word
 from app.core.languages import TRANSLATION_CODES
+from app.core.errors import LimitError
 from app.i18n import fill_lang_combo, get_lang, lang_label, lang_value, set_lang, tr
 from app.core.backup_management import backup_database
 from app.core.translator import translate
@@ -818,15 +819,19 @@ class TextsPage(QWidget):
                 except OSError as exc:
                     errors.append(f"{Path(path).name}: {exc}")
                     continue
-                result = self.db_adapter.insert_text({
-                    'RowNumber': None,
-                    'Title': Path(path).stem,
-                    'Text': text.strip(),
-                    'Words': None,
-                    'Language': language,
-                    'Level': None,
-                    'Category': None,
-                })
+                try:
+                    result = self.db_adapter.insert_text({
+                        'RowNumber': None,
+                        'Title': Path(path).stem,
+                        'Text': text.strip(),
+                        'Words': None,
+                        'Language': language,
+                        'Level': None,
+                        'Category': None,
+                    })
+                except LimitError as exc:
+                    errors.append(f"{Path(path).name}: {exc}")
+                    continue
                 if result:
                     last_id, count = result['ID'], count + 1
                 else:
@@ -996,6 +1001,9 @@ class TextsPage(QWidget):
             backup_database()
             text.update(data)
             return True
+        except LimitError as exc:
+            QMessageBox.information(self, exc.title, str(exc))
+            return False
         except Exception as exc:
             logging.error(f"Failed to save text: {exc}")
             QMessageBox.critical(self, tr("Error"),

@@ -45,8 +45,7 @@ work (operational, not in this SQL):
 """
 
 # Run this once in the Supabase SQL editor of a fresh, EU-region project (paste,
-# then Run). Surfaced verbatim to the user via Settings → Sync ("Copy schema
-# SQL"). Keep it in sync with the cloud column names in supabase_client.py and
+# then Run). Keep it in sync with the cloud column names in supabase_client.py and
 # the per-user unique constraint upsert_word relies on. The script is idempotent
 # (safe to re-run). A RESET appendix at the bottom covers upgrading a project that
 # still has the older integer-id schema; a brand-new project ignores it.
@@ -231,6 +230,151 @@ create policy own_rows on word_context      for all using (auth.uid() = user_id)
 drop policy if exists own_rows on user_settings;
 create policy own_rows on user_settings     for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---- Limits -------------------------------------------------------------
+-- Lengths are checked only for values a write changes, so rows that predate the
+-- limits stay editable. The count triggers skip upserts that resolve to a row the
+-- user already has.
+create or replace function public.enforce_word_lengths()
+returns trigger language plpgsql set search_path = public as $$
+declare
+  o words%rowtype;
+begin
+  if tg_op = 'UPDATE' then
+    o := old;
+  else
+    select * into o from words where id = new.id;
+  end if;
+  if length(new.word1) > 500 and new.word1 is distinct from o.word1
+     or length(new.word2) > 500 and new.word2 is distinct from o.word2 then
+    raise exception 'A word can contain up to 500 characters.' using hint = 'word_too_long';
+  end if;
+  if length(new.definition) > 10000 and new.definition is distinct from o.definition
+     or length(new.definition2) > 10000 and new.definition2 is distinct from o.definition2 then
+    raise exception 'A definition can contain up to 10,000 characters.'
+      using hint = 'definition_too_long';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists words_lengths on words;
+create trigger words_lengths before insert or update on words
+  for each row execute function public.enforce_word_lengths();
+
+create or replace function public.enforce_text_lengths()
+returns trigger language plpgsql set search_path = public as $$
+declare
+  o texts%rowtype;
+begin
+  if tg_op = 'UPDATE' then
+    o := old;
+  else
+    select * into o from texts where id = new.id;
+  end if;
+  if length(new.text) > 50000 and new.text is distinct from o.text then
+    raise exception 'A text can contain up to 50,000 characters.' using hint = 'text_too_long';
+  end if;
+  if length(new.title) > 200 and new.title is distinct from o.title
+     or length(new.words) > 10000 and new.words is distinct from o.words then
+    raise exception 'A text title can contain up to 200 characters and its word list up to 10,000.'
+      using hint = 'text_field_too_long';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists texts_lengths on texts;
+create trigger texts_lengths before insert or update on texts
+  for each row execute function public.enforce_text_lengths();
+
+alter table tags drop constraint if exists tags_length_check;
+alter table tags add constraint tags_length_check check (length(tag_name) <= 50) not valid;
+
+create or replace function public.enforce_word_limit()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.deleted_at is not null or (tg_op = 'UPDATE' and old.deleted_at is null) then
+    return new;
+  end if;
+  perform pg_advisory_xact_lock(hashtext('words:' || new.user_id::text));
+  if tg_op = 'INSERT' and exists (
+      select 1 from words
+      where id = new.id
+         or (user_id = new.user_id and word1 = new.word1 and word2 = new.word2)) then
+    return new;
+  end if;
+  if (select count(*) from words
+      where user_id = new.user_id and deleted_at is null) >= 10000 then
+    raise exception 'An account can contain up to 10,000 words.'
+      using hint = 'word_limit_reached';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists words_limit on words;
+create trigger words_limit before insert or update of deleted_at on words
+  for each row execute function public.enforce_word_limit();
+
+create or replace function public.enforce_text_limit()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.deleted_at is not null or (tg_op = 'UPDATE' and old.deleted_at is null) then
+    return new;
+  end if;
+  perform pg_advisory_xact_lock(hashtext('texts:' || new.user_id::text));
+  if tg_op = 'INSERT' and exists (select 1 from texts where id = new.id) then
+    return new;
+  end if;
+  if (select count(*) from texts
+      where user_id = new.user_id and deleted_at is null) >= 100 then
+    raise exception 'An account can contain up to 100 texts.'
+      using hint = 'text_limit_reached';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists texts_limit on texts;
+create trigger texts_limit before insert or update of deleted_at on texts
+  for each row execute function public.enforce_text_limit();
+
+create or replace function public.enforce_tag_limit()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  perform pg_advisory_xact_lock(hashtext('tags:' || new.user_id::text));
+  if exists (
+      select 1 from tags
+      where tag_id = new.tag_id
+         or (user_id = new.user_id and tag_name = new.tag_name)) then
+    return new;
+  end if;
+  if (select count(*) from tags where user_id = new.user_id) >= 200 then
+    raise exception 'An account can contain up to 200 tags.'
+      using hint = 'tag_limit_reached';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists tags_limit on tags;
+create trigger tags_limit before insert on tags
+  for each row execute function public.enforce_tag_limit();
+
+create or replace function public.enforce_word_tag_limit()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  perform pg_advisory_xact_lock(hashtext('word_tags:' || new.word_id::text));
+  if exists (select 1 from word_tags
+             where word_id = new.word_id and tag_id = new.tag_id) then
+    return new;
+  end if;
+  if (select count(*) from word_tags where word_id = new.word_id) >= 20 then
+    raise exception 'A word can have up to 20 tags.'
+      using hint = 'word_tag_limit_reached';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists word_tags_limit on word_tags;
+create trigger word_tags_limit before insert on word_tags
+  for each row execute function public.enforce_word_tag_limit();
+
 -- ---- Open registration --------------------------------------------------
 -- Anyone may sign up; there is no invite allowlist. New accounts are verified by
 -- an email code (configure SMTP + the "Confirm signup" email template to
@@ -387,13 +531,26 @@ create table if not exists word_tags (
 );
 
 -- ---- Make the project personal (also converts an old multi-user one) --
--- Drop the old per-user policies and the user_id columns/constraints, if present.
--- (Policies reference user_id, so they must go before the column.)
+-- Drop the old per-user policies, triggers and the user_id columns/constraints,
+-- if present. (Policies and triggers reference user_id, so they go before the column.)
 drop policy if exists own_rows on words;
 drop policy if exists own_rows on texts;
 drop policy if exists own_rows on tags;
 drop policy if exists own_rows on word_tags;
+drop trigger if exists words_limit on words;
+drop trigger if exists texts_limit on texts;
+drop trigger if exists tags_limit on tags;
+drop trigger if exists word_tags_limit on word_tags;
+drop trigger if exists words_lengths on words;
+drop trigger if exists texts_lengths on texts;
+drop function if exists public.enforce_word_limit();
+drop function if exists public.enforce_text_limit();
+drop function if exists public.enforce_tag_limit();
+drop function if exists public.enforce_word_tag_limit();
+drop function if exists public.enforce_word_lengths();
+drop function if exists public.enforce_text_lengths();
 alter table words     drop constraint if exists words_user_word_key;
+alter table tags      drop constraint if exists tags_length_check;
 alter table tags      drop constraint if exists tags_user_name_key;
 alter table words     drop column if exists user_id;
 alter table texts     drop column if exists user_id;

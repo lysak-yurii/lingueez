@@ -987,28 +987,82 @@ def rekey_progress(cursor, old_id, new_id):
           new_id))
 
 
-def srs_due_word_ids(limit, now_iso=None, db_path=None):
-    """IDs of words due for flashcard review, most-overdue first.
+_STUDIABLE = "LOWER(TRIM(COALESCE(w.Status, ''))) != 'ignored'"
 
-    Never-graded words count as due (no srs row / NULL next_review), matching
-    the web app's ``next_review <= now OR NULL`` selection. ``Ignored`` words
-    are excluded — the user opted them out of studying.
+
+def srs_due_word_ids(limit, now_iso=None, db_path=None, new_limit=None):
+    """IDs of words due for flashcard review.
+
+    Graded words whose review is due come first, most overdue first; then
+    never-graded words, oldest first, at most ``new_limit`` of them (no cap when
+    None). ``Ignored`` words are excluded — the user opted them out of studying.
     """
+    db_path = db_path or get_active_db_path()
+    now_iso = now_iso or datetime.now().isoformat(timespec='seconds')
+    limit = int(limit)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute(f'''
+        SELECT w.ID
+        FROM words w JOIN srs_progress s ON s.word_id = w.ID
+        WHERE {_STUDIABLE} AND s.review_count > 0
+          AND (s.next_review IS NULL OR s.next_review <= ?)
+        ORDER BY s.next_review ASC, s.review_count ASC
+        LIMIT ?
+    ''', (now_iso, limit))
+    ids = [row[0] for row in cursor.fetchall()]
+    new_count = limit - len(ids)
+    if new_limit is not None:
+        new_count = min(new_count, int(new_limit))
+    if new_count > 0:
+        cursor.execute(f'''
+            SELECT w.ID
+            FROM words w LEFT JOIN srs_progress s ON s.word_id = w.ID
+            WHERE {_STUDIABLE} AND COALESCE(s.review_count, 0) = 0
+            ORDER BY w.created_at ASC, w.rowid ASC
+            LIMIT ?
+        ''', (new_count,))
+        ids += [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return ids
+
+
+def srs_due_counts(now_iso=None, db_path=None):
+    """``(reviews_due, new_waiting)``: graded words due now and never-graded
+    words, both excluding ``Ignored`` ones."""
     db_path = db_path or get_active_db_path()
     now_iso = now_iso or datetime.now().isoformat(timespec='seconds')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT w.ID
+    cursor.execute(f'''
+        SELECT
+            SUM(CASE WHEN COALESCE(s.review_count, 0) > 0
+                      AND (s.next_review IS NULL OR s.next_review <= ?) THEN 1 ELSE 0 END),
+            SUM(CASE WHEN COALESCE(s.review_count, 0) = 0 THEN 1 ELSE 0 END)
         FROM words w LEFT JOIN srs_progress s ON s.word_id = w.ID
-        WHERE LOWER(TRIM(COALESCE(w.Status, ''))) != 'ignored'
-          AND (s.next_review IS NULL OR s.next_review <= ?)
-        ORDER BY s.next_review ASC, COALESCE(s.review_count, 0) ASC
-        LIMIT ?
-    ''', (now_iso, int(limit)))
-    ids = [row[0] for row in cursor.fetchall()]
+        WHERE {_STUDIABLE}
+    ''', (now_iso,))
+    reviews, new = cursor.fetchone()
     conn.close()
-    return ids
+    return int(reviews or 0), int(new or 0)
+
+
+def srs_new_allowance(per_day, now_iso=None, db_path=None):
+    """How many never-graded words may still be introduced today.
+
+    A word counts as introduced today when its only graded sitting so far was
+    today, which also covers words first graded on another device."""
+    db_path = db_path or get_active_db_path()
+    today = (datetime.fromisoformat(now_iso) if now_iso else datetime.now()).date()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT COUNT(*) FROM srs_progress
+        WHERE review_count = 1 AND date(last_reviewed, 'localtime') = ?
+    ''', (today.isoformat(),))
+    introduced = cursor.fetchone()[0]
+    conn.close()
+    return max(0, int(per_day) - introduced)
 
 
 def get_review_aggregates(top=8, db_path=None):
