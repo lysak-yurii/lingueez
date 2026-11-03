@@ -375,6 +375,69 @@ drop trigger if exists word_tags_limit on word_tags;
 create trigger word_tags_limit before insert on word_tags
   for each row execute function public.enforce_word_tag_limit();
 
+-- ---- Housekeeping ---------------------------------------------------------
+-- Soft-deleted rows live 30 days so other devices can still pull the deletion;
+-- the desktop's stale-reconnect check (SyncManager._is_stale_reconnect) assumes
+-- this same window.
+create or replace function public.purge_soft_deleted()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  delete from words where deleted_at < now() - interval '30 days';
+  delete from texts where deleted_at < now() - interval '30 days';
+  delete from cron.job_run_details where end_time < now() - interval '7 days';
+end;
+$$;
+revoke all on function public.purge_soft_deleted() from public, anon, authenticated;
+
+create extension if not exists pg_cron;
+select cron.schedule('purge-soft-deleted', '17 3 * * *', 'select public.purge_soft_deleted()');
+
+-- ---- Inactive accounts ----------------------------------------------------
+-- Accounts unused for 2 years are deleted with all their data (privacy policy §4).
+-- Kept out of `public` so the API never exposes these emails.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
+create or replace view private.account_activity as
+select u.id, u.email, u.created_at,
+       greatest(
+         u.created_at, u.last_sign_in_at,
+         (select max(s.updated_at) from auth.sessions s where s.user_id = u.id),
+         (select max(greatest(r.created_at, r.updated_at)) from auth.refresh_tokens r
+           where r.user_id = u.id::text),
+         (select max(greatest(w.created_at, w.edited_at, w.deleted_at)) from public.words w
+           where w.user_id = u.id),
+         (select max(greatest(t.created_at, t.edited_at, t.deleted_at)) from public.texts t
+           where t.user_id = u.id),
+         (select max(p.updated_at) from public.word_progress p where p.user_id = u.id),
+         (select max(greatest(l.started_at, l.completed_at)) from public.learning_sessions l
+           where l.user_id = u.id)
+       ) as last_active,
+       (select count(*) from public.words w
+         where w.user_id = u.id and w.deleted_at is null) as words
+from auth.users u;
+revoke all on private.account_activity from public, anon, authenticated;
+
+-- At most 100 per run, so a mistake in the activity query can't wipe everyone at once.
+create or replace function private.delete_inactive_accounts()
+returns integer language plpgsql security definer set search_path = public as $$
+declare
+  deleted integer;
+begin
+  delete from auth.users where id in (
+    select id from private.account_activity
+    where last_active < now() - interval '2 years'
+    order by last_active
+    limit 100);
+  get diagnostics deleted = row_count;
+  return deleted;
+end;
+$$;
+revoke all on function private.delete_inactive_accounts() from public, anon, authenticated;
+
+select cron.schedule('delete-inactive-accounts', '41 3 * * 0',
+                     'select private.delete_inactive_accounts()');
+
 -- ---- Open registration --------------------------------------------------
 -- Anyone may sign up; there is no invite allowlist. New accounts are verified by
 -- an email code (configure SMTP + the "Confirm signup" email template to

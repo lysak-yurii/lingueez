@@ -14,7 +14,7 @@ supervisory authority on request.*
 
 | # | Processing activity | Categories of data subjects | Categories of personal data | Purpose | Legal basis | Recipients / processors | Transfers outside EU/EEA | Retention | Security measures |
 |---|---------------------|-----------------------------|------------------------------|---------|-------------|-------------------------|--------------------------|-----------|-------------------|
-| 1 | **Account management** | Registered users | Email, account UUID, display name, password hash | Create & authenticate accounts | Art. 6(1)(b) | Supabase (auth) | None (EU region) | Until account deletion | TLS, hashed passwords, RLS |
+| 1 | **Account management** | Registered users | Email, account UUID, display name, password hash | Create & authenticate accounts | Art. 6(1)(b) | Supabase (auth) | None (EU region) | Until account deletion, or after 2 years of inactivity | TLS, hashed passwords, RLS |
 | 2 | **Account emails** | Registered users | Email address | Email verification, password reset | Art. 6(1)(b) | Supabase (SMTP) / configured SMTP | Depends on SMTP provider | Transient | TLS |
 | 3 | **Content sync** | Registered users with sync on | Words, definitions, texts, tags, timestamps, status/favourite | Cloud backup & cross-device sync | Art. 6(1)(b) | Supabase (DB) | None (EU region) | Until deletion + 30-day grace | TLS, RLS |
 | 4 | **Optional translation (DeepL)** | Users who configure DeepL | Text submitted for translation | Translate user content | Art. 6(1)(a) | DeepL SE | None (Germany/EU) | Not retained by us | TLS |

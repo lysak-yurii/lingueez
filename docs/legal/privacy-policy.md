@@ -7,7 +7,7 @@ alt: /legal/uk/privacy-policy/
 
 # Privacy Policy — Lingueez
 
-**Last updated:** 2026-07-16 · **Version:** 1.1
+**Last updated:** 2026-11-03 · **Version:** 1.2
 
 > This Privacy Policy explains what personal data the Lingueez applications collect, why, and
 > what rights you have. It covers the **Lingueez desktop app** and the **Lingueez mobile app**
@@ -120,6 +120,9 @@ with legal effect, and **no sale of personal data**.
 - **Deleting your account:** when you **delete your account**, your account and all of your synced
   content are **deleted immediately and permanently** — there is no grace period and no way to
   recover them.
+- **Inactive accounts:** if an account isn't used for **2 years** (no sign-in and no activity from
+  any Lingueez app), it is deleted automatically and permanently, together with all of its synced
+  content. Data stored locally on your devices is not affected.
 - **Local data** on your device (settings, cache, and — on desktop — local backups) stays until
   you delete it or your storage rules prune it.
 - **Logs** rotate automatically and are capped at a few megabytes.
