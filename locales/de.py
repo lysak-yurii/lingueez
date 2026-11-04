@@ -1685,14 +1685,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Deckgröße",
     "Default deck size": "Standard-Deckgröße",
     "Dictionary limit reached": "Wörterbuchlimit erreicht",
-    "A dictionary can contain up to 10,000 words.": "Ein Wörterbuch kann bis zu 10.000 Wörter enthalten.",
+    "A dictionary can contain up to {max} words.": "Ein Wörterbuch kann bis zu {max} Wörter enthalten.",
     "Import limit exceeded": "Importlimit überschritten",
-    "A single import can add up to 500 new words (selected: {n}).": "Ein einzelner Import kann bis zu 500 neue Wörter hinzufügen (ausgewählt: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Ein Wörterbuch kann bis zu 10.000 Wörter enthalten (im Wörterbuch: {current}, für den Import ausgewählt: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Ein einzelner Import kann bis zu {max} neue Wörter hinzufügen (ausgewählt: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Ein Wörterbuch kann bis zu {max} Wörter enthalten (im Wörterbuch: {current}, für den Import ausgewählt: {n}).",
     "Text limit reached": "Textlimit erreicht",
-    "Up to 100 texts can be saved.": "Es können bis zu 100 Texte gespeichert werden.",
+    "Up to {max} texts can be saved.": "Es können bis zu {max} Texte gespeichert werden.",
     "Text too long": "Text zu lang",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Ein Text kann bis zu 50.000 Zeichen enthalten (dieser Text: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Ein Text kann bis zu {max} Zeichen enthalten (dieser Text: {n}).",
     "Reviews: {reviews} · New words: {new}": "Wiederholungen: {reviews} · Neue Wörter: {new}",
     "All caught up · more new words tomorrow": "Alles erledigt · morgen gibt es neue Wörter",
     "New words per day": "Neue Wörter pro Tag",
@@ -1888,6 +1888,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "von {author}",
     "Plugins turned off": "Plugins deaktiviert",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez ist beim letzten Mal nicht richtig gestartet, daher wurden diese Plugins deaktiviert: {names}. Sie können sie in den Einstellungen wieder aktivieren.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Lingueez aktualisieren",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Diese Version von Lingueez wird nicht mehr unterstützt. Aktualisiere auf die neueste Version, damit deine Wörter weiter synchronisiert werden.",
 }
 
 # Date names, read by app.i18n. Months are in standard nominative/genitive German format.

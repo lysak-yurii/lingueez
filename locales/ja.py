@@ -1671,14 +1671,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "デッキのサイズ",
     "Default deck size": "デフォルトのデッキサイズ",
     "Dictionary limit reached": "辞書の上限に達しました",
-    "A dictionary can contain up to 10,000 words.": "辞書に登録できる単語は最大 10,000 語です。",
+    "A dictionary can contain up to {max} words.": "辞書に登録できる単語は最大 {max} 語です。",
     "Import limit exceeded": "インポートの上限を超えています",
-    "A single import can add up to 500 new words (selected: {n}).": "1 回のインポートで追加できる新しい単語は最大 500 語です（選択中: {n}）。",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "辞書に登録できる単語は最大 10,000 語です（辞書内: {current}、インポート対象: {n}）。",
+    "A single import can add up to {max} new words (selected: {n}).": "1 回のインポートで追加できる新しい単語は最大 {max} 語です（選択中: {n}）。",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "辞書に登録できる単語は最大 {max} 語です（辞書内: {current}、インポート対象: {n}）。",
     "Text limit reached": "テキストの上限に達しました",
-    "Up to 100 texts can be saved.": "保存できるテキストは最大 100 件です。",
+    "Up to {max} texts can be saved.": "保存できるテキストは最大 {max} 件です。",
     "Text too long": "テキストが長すぎます",
-    "A text can contain up to 50,000 characters (this text: {n}).": "テキストは最大 50,000 文字までです（このテキスト: {n}）。",
+    "A text can contain up to {max} characters (this text: {n}).": "テキストは最大 {max} 文字までです（このテキスト: {n}）。",
     "Reviews: {reviews} · New words: {new}": "復習: {reviews} · 新しい単語: {new}",
     "All caught up · more new words tomorrow": "すべて完了 · 明日は新しい単語があります",
     "New words per day": "1 日あたりの新しい単語",
@@ -1862,6 +1862,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "作者: {author}",
     "Plugins turned off": "プラグインを無効にしました",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "前回 Lingueez が正常に起動しなかったため、次のプラグインを無効にしました: {names}。設定で再び有効にできます。",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Lingueez をアップデート",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "このバージョンの Lingueez はサポートが終了しました。単語の同期を続けるには、最新バージョンにアップデートしてください。",
 }
 
 # Date names, read by app.i18n. Months use standard Japanese calendar names.

@@ -1438,14 +1438,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Kích thước bộ thẻ",
     "Default deck size": "Kích thước bộ thẻ mặc định",
     "Dictionary limit reached": "Đã đạt giới hạn từ điển",
-    "A dictionary can contain up to 10,000 words.": "Một từ điển có thể chứa tối đa 10.000 từ.",
+    "A dictionary can contain up to {max} words.": "Một từ điển có thể chứa tối đa {max} từ.",
     "Import limit exceeded": "Đã vượt giới hạn nhập",
-    "A single import can add up to 500 new words (selected: {n}).": "Mỗi lần nhập có thể thêm tối đa 500 từ mới (đã chọn: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Một từ điển có thể chứa tối đa 10.000 từ (trong từ điển: {current}, đã chọn để nhập: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Mỗi lần nhập có thể thêm tối đa {max} từ mới (đã chọn: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Một từ điển có thể chứa tối đa {max} từ (trong từ điển: {current}, đã chọn để nhập: {n}).",
     "Text limit reached": "Đã đạt giới hạn văn bản",
-    "Up to 100 texts can be saved.": "Có thể lưu tối đa 100 văn bản.",
+    "Up to {max} texts can be saved.": "Có thể lưu tối đa {max} văn bản.",
     "Text too long": "Văn bản quá dài",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Một văn bản có thể chứa tối đa 50.000 ký tự (văn bản này: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Một văn bản có thể chứa tối đa {max} ký tự (văn bản này: {n}).",
     "Reviews: {reviews} · New words: {new}": "Ôn tập: {reviews} · Từ mới: {new}",
     "All caught up · more new words tomorrow": "Đã ôn xong · ngày mai có từ mới",
     "New words per day": "Số từ mới mỗi ngày",
@@ -1622,6 +1622,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "bởi {author}",
     "Plugins turned off": "Đã tắt tiện ích bổ sung",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lần trước Lingueez không khởi động được bình thường nên các tiện ích bổ sung sau đã bị tắt: {names}. Bạn có thể bật lại trong Cài đặt.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Cập nhật Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Phiên bản Lingueez này không còn được hỗ trợ. Hãy cập nhật lên phiên bản mới nhất để các từ của bạn tiếp tục được đồng bộ.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

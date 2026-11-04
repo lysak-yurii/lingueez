@@ -1682,14 +1682,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Pakan koko",
     "Default deck size": "Pakan oletuskoko",
     "Dictionary limit reached": "Sanakirjan raja saavutettu",
-    "A dictionary can contain up to 10,000 words.": "Sanakirjassa voi olla enintään 10 000 sanaa.",
+    "A dictionary can contain up to {max} words.": "Sanakirjassa voi olla enintään {max} sanaa.",
     "Import limit exceeded": "Tuontiraja ylitetty",
-    "A single import can add up to 500 new words (selected: {n}).": "Yhdellä tuonnilla voi lisätä enintään 500 uutta sanaa (valittu: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Sanakirjassa voi olla enintään 10 000 sanaa (sanakirjassa: {current}, tuontiin valittu: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Yhdellä tuonnilla voi lisätä enintään {max} uutta sanaa (valittu: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Sanakirjassa voi olla enintään {max} sanaa (sanakirjassa: {current}, tuontiin valittu: {n}).",
     "Text limit reached": "Tekstien raja saavutettu",
-    "Up to 100 texts can be saved.": "Tekstejä voi tallentaa enintään 100.",
+    "Up to {max} texts can be saved.": "Tekstejä voi tallentaa enintään {max}.",
     "Text too long": "Teksti on liian pitkä",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Tekstissä voi olla enintään 50 000 merkkiä (tässä tekstissä: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Tekstissä voi olla enintään {max} merkkiä (tässä tekstissä: {n}).",
     "Reviews: {reviews} · New words: {new}": "Kertaukset: {reviews} · Uudet sanat: {new}",
     "All caught up · more new words tomorrow": "Kaikki kerrattu · uusia sanoja huomenna",
     "New words per day": "Uusia sanoja päivässä",
@@ -1885,6 +1885,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "tekijä: {author}",
     "Plugins turned off": "Lisäosia poistettu käytöstä",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez ei käynnistynyt viimeksi kunnolla, joten nämä lisäosat poistettiin käytöstä: {names}. Voit ottaa ne uudelleen käyttöön asetuksissa.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Päivitä Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Tätä Lingueez-versiota ei enää tueta. Päivitä uusimpaan versioon, jotta sanasi synkronoituvat edelleen.",
 }
 
 # Date names, read by app.i18n. Months are in genitive / partitive form for date displays.

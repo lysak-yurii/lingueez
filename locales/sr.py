@@ -1420,14 +1420,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Величина шпила",
     "Default deck size": "Подразумевана величина шпила",
     "Dictionary limit reached": "Достигнуто је ограничење речника",
-    "A dictionary can contain up to 10,000 words.": "Речник може да садржи до 10.000 речи.",
+    "A dictionary can contain up to {max} words.": "Речник може да садржи до {max} речи.",
     "Import limit exceeded": "Прекорачено ограничење увоза",
-    "A single import can add up to 500 new words (selected: {n}).": "Један увоз може да дода до 500 нових речи (изабрано: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Речник може да садржи до 10.000 речи (у речнику: {current}, изабрано за увоз: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Један увоз може да дода до {max} нових речи (изабрано: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Речник може да садржи до {max} речи (у речнику: {current}, изабрано за увоз: {n}).",
     "Text limit reached": "Достигнуто је ограничење текстова",
-    "Up to 100 texts can be saved.": "Може да се сачува до 100 текстова.",
+    "Up to {max} texts can be saved.": "Може да се сачува до {max} текстова.",
     "Text too long": "Текст је предугачак",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Текст може да садржи до 50.000 знакова (овај текст: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Текст може да садржи до {max} знакова (овај текст: {n}).",
     "Reviews: {reviews} · New words: {new}": "Понављање: {reviews} · Нове речи: {new}",
     "All caught up · more new words tomorrow": "Све је поновљено · нове речи сутра",
     "New words per day": "Нових речи дневно",
@@ -1603,6 +1603,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "аутор: {author}",
     "Plugins turned off": "Додаци искључени",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez се прошли пут није исправно покренуо, па су ови додаци искључени: {names}. Можете их поново укључити у подешавањима.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Ажурирајте Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Ова верзија апликације Lingueez више није подржана. Ажурирајте на најновију верзију да би се ваше речи и даље синхронизовале.",
 }
 
 # Date names, read by app.i18n. Months in Serbian (nominative/standard format).

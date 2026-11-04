@@ -103,8 +103,9 @@ class ImportReviewDialog(FramelessDialog):
         self._applying = False
         self._populating = False
         self._row_payloads = []
-        self._limited = limits.active()
-        self._existing_words = db_adapter.count_words() if self._limited else 0
+        self._limits = limits.current()
+        self._existing_words = (db_adapter.count_words()
+                                if self._limits.words is not None else 0)
 
         self.setMinimumSize(860, 520)
         self.resize(1040, 660)
@@ -542,13 +543,12 @@ class ImportReviewDialog(FramelessDialog):
             tr("Import {count} Item(s)").format(count=selected) if selected else tr("Import"))
 
     def _limit_error(self):
-        if not self._limited:
-            return None
         adds = sum(1 for p in self._selected_payloads() if p['action'] == ACTION_ADD)
-        if adds > limits.IMPORT_LIMIT:
-            return limits.import_limit_error(adds)
-        if self._existing_words + adds > limits.WORD_LIMIT:
-            return limits.import_room_error(self._existing_words, adds)
+        batch, words = self._limits.import_batch, self._limits.words
+        if batch is not None and adds > batch:
+            return limits.import_limit_error(batch, adds)
+        if words is not None and self._existing_words + adds > words:
+            return limits.import_room_error(words, self._existing_words, adds)
         return None
 
     # --------------------------------------------------------------- apply

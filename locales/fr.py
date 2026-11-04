@@ -1686,14 +1686,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Taille du paquet",
     "Default deck size": "Taille par défaut du paquet",
     "Dictionary limit reached": "Limite du dictionnaire atteinte",
-    "A dictionary can contain up to 10,000 words.": "Un dictionnaire peut contenir jusqu'à 10 000 mots.",
+    "A dictionary can contain up to {max} words.": "Un dictionnaire peut contenir jusqu'à {max} mots.",
     "Import limit exceeded": "Limite d'importation dépassée",
-    "A single import can add up to 500 new words (selected: {n}).": "Une importation peut ajouter jusqu'à 500 nouveaux mots (sélectionnés : {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Un dictionnaire peut contenir jusqu'à 10 000 mots (dans le dictionnaire : {current}, sélectionnés pour l'importation : {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Une importation peut ajouter jusqu'à {max} nouveaux mots (sélectionnés : {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Un dictionnaire peut contenir jusqu'à {max} mots (dans le dictionnaire : {current}, sélectionnés pour l'importation : {n}).",
     "Text limit reached": "Limite de textes atteinte",
-    "Up to 100 texts can be saved.": "Vous pouvez enregistrer jusqu'à 100 textes.",
+    "Up to {max} texts can be saved.": "Vous pouvez enregistrer jusqu'à {max} textes.",
     "Text too long": "Texte trop long",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Un texte peut contenir jusqu'à 50 000 caractères (ce texte : {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Un texte peut contenir jusqu'à {max} caractères (ce texte : {n}).",
     "Reviews: {reviews} · New words: {new}": "Révisions : {reviews} · Nouveaux mots : {new}",
     "All caught up · more new words tomorrow": "Tout est révisé · de nouveaux mots demain",
     "New words per day": "Nouveaux mots par jour",
@@ -1889,6 +1889,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "par {author}",
     "Plugins turned off": "Extensions désactivées",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez n'a pas démarré correctement la dernière fois ; ces extensions ont donc été désactivées : {names}. Vous pouvez les réactiver dans les Paramètres.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Mettez à jour Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Cette version de Lingueez n'est plus prise en charge. Installez la dernière version pour que vos mots continuent d'être synchronisés.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase standard French form.

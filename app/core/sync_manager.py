@@ -19,6 +19,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+from app.core import limits
 from app.core.database_adapter import DatabaseAdapter
 from app.core.supabase_client import get_supabase, is_custom_server, custom_server_host
 from app.core.auth_manager import get_auth_manager
@@ -386,6 +387,9 @@ class SyncManager:
             logging.warning(f"Connectivity test failed: {connectivity_error} - skipping sync to preserve local data")
             return
         
+        # The server may have changed this account's limits since the last sync.
+        limits.refresh(self.supabase.client)
+
         # Acquire sync lock to prevent concurrent syncs
         if not self.db_adapter.acquire_sync_lock(self.instance_id, timeout_seconds=600):
             logging.warning("Sync already in progress, skipping this sync attempt")

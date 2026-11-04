@@ -1434,14 +1434,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "卡组大小",
     "Default deck size": "默认卡组大小",
     "Dictionary limit reached": "已达到词典上限",
-    "A dictionary can contain up to 10,000 words.": "词典最多可包含 10,000 个单词。",
+    "A dictionary can contain up to {max} words.": "词典最多可包含 {max} 个单词。",
     "Import limit exceeded": "超出导入上限",
-    "A single import can add up to 500 new words (selected: {n}).": "单次导入最多可添加 500 个新单词（已选择：{n}）。",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "词典最多可包含 10,000 个单词（词典中：{current}，已选择导入：{n}）。",
+    "A single import can add up to {max} new words (selected: {n}).": "单次导入最多可添加 {max} 个新单词（已选择：{n}）。",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "词典最多可包含 {max} 个单词（词典中：{current}，已选择导入：{n}）。",
     "Text limit reached": "已达到文本上限",
-    "Up to 100 texts can be saved.": "最多可保存 100 篇文本。",
+    "Up to {max} texts can be saved.": "最多可保存 {max} 篇文本。",
     "Text too long": "文本过长",
-    "A text can contain up to 50,000 characters (this text: {n}).": "文本最多可包含 50,000 个字符（此文本：{n}）。",
+    "A text can contain up to {max} characters (this text: {n}).": "文本最多可包含 {max} 个字符（此文本：{n}）。",
     "Reviews: {reviews} · New words: {new}": "复习：{reviews} · 新单词：{new}",
     "All caught up · more new words tomorrow": "全部完成 · 明天有新单词",
     "New words per day": "每日新单词数",
@@ -1609,6 +1609,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "作者：{author}",
     "Plugins turned off": "插件已停用",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez 上次未能正常启动，因此已停用以下插件：{names}。您可以在设置中重新启用它们。",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "更新 Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "此版本的 Lingueez 已不再受支持。请更新到最新版本，以便继续同步你的单词。",
 }
 
 # Date names, read by app.i18n. Months in Simplified Chinese numbers/names ("1月", "2月" etc.)

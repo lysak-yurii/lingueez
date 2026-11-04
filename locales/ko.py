@@ -1445,14 +1445,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "덱 크기",
     "Default deck size": "기본 덱 크기",
     "Dictionary limit reached": "사전 한도에 도달했습니다",
-    "A dictionary can contain up to 10,000 words.": "사전에는 최대 10,000개의 단어를 저장할 수 있습니다.",
+    "A dictionary can contain up to {max} words.": "사전에는 최대 {max}개의 단어를 저장할 수 있습니다.",
     "Import limit exceeded": "가져오기 한도를 초과했습니다",
-    "A single import can add up to 500 new words (selected: {n}).": "한 번에 가져올 수 있는 새 단어는 최대 500개입니다(선택됨: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "사전에는 최대 10,000개의 단어를 저장할 수 있습니다(사전에 있음: {current}, 가져오기 선택: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "한 번에 가져올 수 있는 새 단어는 최대 {max}개입니다(선택됨: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "사전에는 최대 {max}개의 단어를 저장할 수 있습니다(사전에 있음: {current}, 가져오기 선택: {n}).",
     "Text limit reached": "텍스트 한도에 도달했습니다",
-    "Up to 100 texts can be saved.": "텍스트는 최대 100개까지 저장할 수 있습니다.",
+    "Up to {max} texts can be saved.": "텍스트는 최대 {max}개까지 저장할 수 있습니다.",
     "Text too long": "텍스트가 너무 깁니다",
-    "A text can contain up to 50,000 characters (this text: {n}).": "텍스트는 최대 50,000자까지 가능합니다(이 텍스트: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "텍스트는 최대 {max}자까지 가능합니다(이 텍스트: {n}).",
     "Reviews: {reviews} · New words: {new}": "복습: {reviews} · 새 단어: {new}",
     "All caught up · more new words tomorrow": "모두 완료 · 내일 새 단어가 있습니다",
     "New words per day": "하루 새 단어 수",
@@ -1623,6 +1623,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "제작: {author}",
     "Plugins turned off": "플러그인이 꺼졌습니다",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "지난번에 Lingueez가 정상적으로 시작되지 않아 다음 플러그인이 꺼졌습니다: {names}. 설정에서 다시 켤 수 있습니다.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Lingueez 업데이트",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "이 버전의 Lingueez는 더 이상 지원되지 않습니다. 단어를 계속 동기화하려면 최신 버전으로 업데이트하세요.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

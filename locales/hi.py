@@ -1665,14 +1665,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "डेक का आकार",
     "Default deck size": "डिफ़ॉल्ट डेक आकार",
     "Dictionary limit reached": "शब्दकोश की सीमा पूरी हो गई",
-    "A dictionary can contain up to 10,000 words.": "एक शब्दकोश में अधिकतम 10,000 शब्द हो सकते हैं।",
+    "A dictionary can contain up to {max} words.": "एक शब्दकोश में अधिकतम {max} शब्द हो सकते हैं।",
     "Import limit exceeded": "आयात सीमा पार हो गई",
-    "A single import can add up to 500 new words (selected: {n}).": "एक बार के आयात में अधिकतम 500 नए शब्द जोड़े जा सकते हैं (चयनित: {n})।",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "एक शब्दकोश में अधिकतम 10,000 शब्द हो सकते हैं (शब्दकोश में: {current}, आयात के लिए चयनित: {n})।",
+    "A single import can add up to {max} new words (selected: {n}).": "एक बार के आयात में अधिकतम {max} नए शब्द जोड़े जा सकते हैं (चयनित: {n})।",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "एक शब्दकोश में अधिकतम {max} शब्द हो सकते हैं (शब्दकोश में: {current}, आयात के लिए चयनित: {n})।",
     "Text limit reached": "पाठ सीमा पूरी हो गई",
-    "Up to 100 texts can be saved.": "अधिकतम 100 पाठ सहेजे जा सकते हैं।",
+    "Up to {max} texts can be saved.": "अधिकतम {max} पाठ सहेजे जा सकते हैं।",
     "Text too long": "पाठ बहुत लंबा है",
-    "A text can contain up to 50,000 characters (this text: {n}).": "एक पाठ में अधिकतम 50,000 अक्षर हो सकते हैं (इस पाठ में: {n})।",
+    "A text can contain up to {max} characters (this text: {n}).": "एक पाठ में अधिकतम {max} अक्षर हो सकते हैं (इस पाठ में: {n})।",
     "Reviews: {reviews} · New words: {new}": "समीक्षा: {reviews} · नए शब्द: {new}",
     "All caught up · more new words tomorrow": "सब पूरा हो गया · कल नए शब्द",
     "New words per day": "प्रतिदिन नए शब्द",
@@ -1864,6 +1864,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "लेखक: {author}",
     "Plugins turned off": "प्लगइन बंद किए गए",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "पिछली बार Lingueez ठीक से शुरू नहीं हुआ, इसलिए ये प्लगइन बंद कर दिए गए: {names}। आप इन्हें सेटिंग्स में फिर से चालू कर सकते हैं।",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Lingueez अपडेट करें",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Lingueez का यह संस्करण अब समर्थित नहीं है। अपने शब्दों को सिंक रखने के लिए नवीनतम संस्करण में अपडेट करें।",
 }
 
 # Date names, read by app.i18n.

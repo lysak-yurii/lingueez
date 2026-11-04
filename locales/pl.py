@@ -1687,14 +1687,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Rozmiar talii",
     "Default deck size": "Domyślny rozmiar talii",
     "Dictionary limit reached": "Osiągnięto limit słownika",
-    "A dictionary can contain up to 10,000 words.": "Słownik może zawierać do 10 000 słów.",
+    "A dictionary can contain up to {max} words.": "Słownik może zawierać do {max} słów.",
     "Import limit exceeded": "Przekroczono limit importu",
-    "A single import can add up to 500 new words (selected: {n}).": "Jeden import może dodać do 500 nowych słów (zaznaczono: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Słownik może zawierać do 10 000 słów (w słowniku: {current}, zaznaczono do importu: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Jeden import może dodać do {max} nowych słów (zaznaczono: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Słownik może zawierać do {max} słów (w słowniku: {current}, zaznaczono do importu: {n}).",
     "Text limit reached": "Osiągnięto limit tekstów",
-    "Up to 100 texts can be saved.": "Można zapisać do 100 tekstów.",
+    "Up to {max} texts can be saved.": "Można zapisać do {max} tekstów.",
     "Text too long": "Tekst jest za długi",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Tekst może zawierać do 50 000 znaków (ten tekst: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Tekst może zawierać do {max} znaków (ten tekst: {n}).",
     "Reviews: {reviews} · New words: {new}": "Powtórki: {reviews} · Nowe słowa: {new}",
     "All caught up · more new words tomorrow": "Wszystko powtórzone · nowe słowa jutro",
     "New words per day": "Nowe słowa dziennie",
@@ -1887,6 +1887,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "autor: {author}",
     "Plugins turned off": "Wtyczki wyłączone",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Ostatnim razem Lingueez nie uruchomił się poprawnie, więc te wtyczki zostały wyłączone: {names}. Możesz włączyć je ponownie w ustawieniach.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Zaktualizuj Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Ta wersja Lingueez nie jest już obsługiwana. Zaktualizuj do najnowszej wersji, aby Twoje słowa nadal się synchronizowały.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

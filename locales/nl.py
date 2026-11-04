@@ -1411,14 +1411,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Stapelgrootte",
     "Default deck size": "Standaard stapelgrootte",
     "Dictionary limit reached": "Woordenboeklimiet bereikt",
-    "A dictionary can contain up to 10,000 words.": "Een woordenboek kan maximaal 10.000 woorden bevatten.",
+    "A dictionary can contain up to {max} words.": "Een woordenboek kan maximaal {max} woorden bevatten.",
     "Import limit exceeded": "Importlimiet overschreden",
-    "A single import can add up to 500 new words (selected: {n}).": "Eén import kan maximaal 500 nieuwe woorden toevoegen (geselecteerd: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Een woordenboek kan maximaal 10.000 woorden bevatten (in het woordenboek: {current}, geselecteerd voor import: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Eén import kan maximaal {max} nieuwe woorden toevoegen (geselecteerd: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Een woordenboek kan maximaal {max} woorden bevatten (in het woordenboek: {current}, geselecteerd voor import: {n}).",
     "Text limit reached": "Tekstlimiet bereikt",
-    "Up to 100 texts can be saved.": "Er kunnen maximaal 100 teksten worden opgeslagen.",
+    "Up to {max} texts can be saved.": "Er kunnen maximaal {max} teksten worden opgeslagen.",
     "Text too long": "Tekst te lang",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Een tekst kan maximaal 50.000 tekens bevatten (deze tekst: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Een tekst kan maximaal {max} tekens bevatten (deze tekst: {n}).",
     "Reviews: {reviews} · New words: {new}": "Herhalingen: {reviews} · Nieuwe woorden: {new}",
     "All caught up · more new words tomorrow": "Alles herhaald · morgen nieuwe woorden",
     "New words per day": "Nieuwe woorden per dag",
@@ -1594,6 +1594,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "door {author}",
     "Plugins turned off": "Plug-ins uitgeschakeld",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez is de vorige keer niet goed opgestart, dus deze plug-ins zijn uitgeschakeld: {names}. Je kunt ze weer inschakelen in Instellingen.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Werk Lingueez bij",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Deze versie van Lingueez wordt niet meer ondersteund. Werk bij naar de nieuwste versie zodat je woorden gesynchroniseerd blijven.",
 }
 
 # Date names, read by app.i18n. Months are in lowercase for Dutch formatting.

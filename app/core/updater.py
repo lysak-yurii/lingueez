@@ -125,6 +125,40 @@ def check_for_update(current=APP_VERSION):
     )
 
 
+# The oldest version the server still accepts, read from the shared Supabase
+# project's app_config table. Older builds ask to be updated before anything else.
+MIN_VERSION_KEY = "min_app_version_desktop"
+# PostgREST's "no such table": a server without app_config (a personal one).
+_MISSING_TABLE = "PGRST205"
+
+
+def fetch_min_version(client):
+    """The minimum version set on the server, or ``None`` when there is none.
+
+    Raises when the server can't be reached, so the caller keeps the last answer.
+    """
+    if client is None:
+        return None
+    try:
+        rows = (client.table("app_config").select("value")
+                .eq("key", MIN_VERSION_KEY).limit(1).execute().data) or []
+    except Exception as exc:
+        if getattr(exc, "code", None) == _MISSING_TABLE or _MISSING_TABLE in str(exc):
+            return None
+        raise
+    value = (rows[0].get("value") or "").strip() if rows else ""
+    return value or None
+
+
+def is_below_minimum(minimum, current=APP_VERSION):
+    """True when *current* is older than *minimum*; an unreadable minimum never blocks."""
+    m, c = parse_version(minimum), parse_version(current)
+    if m is None or c is None:
+        return False
+    width = max(len(m), len(c))
+    return c + (0,) * (width - len(c)) < m + (0,) * (width - len(m))
+
+
 def should_check_now(path=CHECK_STAMP_FILE, interval=CHECK_INTERVAL_SECONDS):
     """True when enough time has elapsed since the last recorded check."""
     try:

@@ -1426,14 +1426,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Deste boyutu",
     "Default deck size": "Varsayılan deste boyutu",
     "Dictionary limit reached": "Sözlük sınırına ulaşıldı",
-    "A dictionary can contain up to 10,000 words.": "Bir sözlük en fazla 10.000 kelime içerebilir.",
+    "A dictionary can contain up to {max} words.": "Bir sözlük en fazla {max} kelime içerebilir.",
     "Import limit exceeded": "İçe aktarma sınırı aşıldı",
-    "A single import can add up to 500 new words (selected: {n}).": "Tek bir içe aktarma en fazla 500 yeni kelime ekleyebilir (seçilen: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Bir sözlük en fazla 10.000 kelime içerebilir (sözlükte: {current}, içe aktarma için seçilen: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Tek bir içe aktarma en fazla {max} yeni kelime ekleyebilir (seçilen: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Bir sözlük en fazla {max} kelime içerebilir (sözlükte: {current}, içe aktarma için seçilen: {n}).",
     "Text limit reached": "Metin sınırına ulaşıldı",
-    "Up to 100 texts can be saved.": "En fazla 100 metin kaydedilebilir.",
+    "Up to {max} texts can be saved.": "En fazla {max} metin kaydedilebilir.",
     "Text too long": "Metin çok uzun",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Bir metin en fazla 50.000 karakter içerebilir (bu metin: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Bir metin en fazla {max} karakter içerebilir (bu metin: {n}).",
     "Reviews: {reviews} · New words: {new}": "Tekrarlar: {reviews} · Yeni kelimeler: {new}",
     "All caught up · more new words tomorrow": "Hepsi tamam · yarın yeni kelimeler var",
     "New words per day": "Günlük yeni kelime",
@@ -1611,6 +1611,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "geliştiren: {author}",
     "Plugins turned off": "Eklentiler kapatıldı",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez geçen sefer düzgün başlamadı, bu yüzden şu eklentiler kapatıldı: {names}. Bunları Ayarlar'dan yeniden açabilirsiniz.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Lingueez'i güncelleyin",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Lingueez'in bu sürümü artık desteklenmiyor. Kelimelerinizin senkronize olmaya devam etmesi için en son sürüme güncelleyin.",
 }
 
 # Date names, read by app.i18n.

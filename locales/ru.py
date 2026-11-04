@@ -1442,14 +1442,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Размер колоды",
     "Default deck size": "Стандартный размер колоды",
     "Dictionary limit reached": "Достигнут лимит словаря",
-    "A dictionary can contain up to 10,000 words.": "Словарь может содержать до 10 000 слов.",
+    "A dictionary can contain up to {max} words.": "Словарь может содержать до {max} слов.",
     "Import limit exceeded": "Превышен лимит импорта",
-    "A single import can add up to 500 new words (selected: {n}).": "За один импорт можно добавить до 500 новых слов (выбрано: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Словарь может содержать до 10 000 слов (в словаре: {current}, выбрано для импорта: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "За один импорт можно добавить до {max} новых слов (выбрано: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Словарь может содержать до {max} слов (в словаре: {current}, выбрано для импорта: {n}).",
     "Text limit reached": "Достигнут лимит текстов",
-    "Up to 100 texts can be saved.": "Можно сохранить до 100 текстов.",
+    "Up to {max} texts can be saved.": "Можно сохранить до {max} текстов.",
     "Text too long": "Текст слишком длинный",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Текст может содержать до 50 000 символов (в этом тексте: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Текст может содержать до {max} символов (в этом тексте: {n}).",
     "Reviews: {reviews} · New words: {new}": "Повторение: {reviews} · Новые слова: {new}",
     "All caught up · more new words tomorrow": "Всё повторено · новые слова — завтра",
     "New words per day": "Новых слов в день",
@@ -1628,6 +1628,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "автор: {author}",
     "Plugins turned off": "Плагины отключены",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "В прошлый раз Lingueez не смог нормально запуститься, поэтому эти плагины были отключены: {names}. Их можно снова включить в настройках.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Обновите Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Эта версия Lingueez больше не поддерживается. Обновите приложение до последней версии, чтобы ваши слова продолжали синхронизироваться.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

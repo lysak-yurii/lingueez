@@ -1410,14 +1410,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Tamanho do baralho",
     "Default deck size": "Tamanho padrão do baralho",
     "Dictionary limit reached": "Limite do dicionário atingido",
-    "A dictionary can contain up to 10,000 words.": "Um dicionário pode conter até 10.000 palavras.",
+    "A dictionary can contain up to {max} words.": "Um dicionário pode conter até {max} palavras.",
     "Import limit exceeded": "Limite de importação excedido",
-    "A single import can add up to 500 new words (selected: {n}).": "Uma única importação pode adicionar até 500 palavras novas (selecionadas: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Um dicionário pode conter até 10.000 palavras (no dicionário: {current}, selecionadas para importação: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Uma única importação pode adicionar até {max} palavras novas (selecionadas: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Um dicionário pode conter até {max} palavras (no dicionário: {current}, selecionadas para importação: {n}).",
     "Text limit reached": "Limite de textos atingido",
-    "Up to 100 texts can be saved.": "É possível salvar até 100 textos.",
+    "Up to {max} texts can be saved.": "É possível salvar até {max} textos.",
     "Text too long": "Texto muito longo",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Um texto pode conter até 50.000 caracteres (este texto: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Um texto pode conter até {max} caracteres (este texto: {n}).",
     "Reviews: {reviews} · New words: {new}": "Revisões: {reviews} · Palavras novas: {new}",
     "All caught up · more new words tomorrow": "Tudo revisado · novas palavras amanhã",
     "New words per day": "Palavras novas por dia",
@@ -1595,6 +1595,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "por {author}",
     "Plugins turned off": "Plugins desativados",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "O Lingueez não iniciou corretamente da última vez, então estes plugins foram desativados: {names}. Você pode reativá-los nas Configurações.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Atualize o Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Esta versão do Lingueez não é mais compatível. Atualize para a versão mais recente para que suas palavras continuem sincronizadas.",
 }
 
 # Date names, read by app.i18n.

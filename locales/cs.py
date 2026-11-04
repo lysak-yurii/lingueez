@@ -1690,14 +1690,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Velikost balíčku",
     "Default deck size": "Výchozí velikost balíčku",
     "Dictionary limit reached": "Dosažen limit slovníku",
-    "A dictionary can contain up to 10,000 words.": "Slovník může obsahovat až 10 000 slov.",
+    "A dictionary can contain up to {max} words.": "Slovník může obsahovat až {max} slov.",
     "Import limit exceeded": "Překročen limit importu",
-    "A single import can add up to 500 new words (selected: {n}).": "Jeden import může přidat až 500 nových slov (vybráno: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Slovník může obsahovat až 10 000 slov (ve slovníku: {current}, vybráno k importu: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Jeden import může přidat až {max} nových slov (vybráno: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Slovník může obsahovat až {max} slov (ve slovníku: {current}, vybráno k importu: {n}).",
     "Text limit reached": "Dosažen limit textů",
-    "Up to 100 texts can be saved.": "Lze uložit až 100 textů.",
+    "Up to {max} texts can be saved.": "Lze uložit až {max} textů.",
     "Text too long": "Text je příliš dlouhý",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Text může obsahovat až 50 000 znaků (tento text: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Text může obsahovat až {max} znaků (tento text: {n}).",
     "Reviews: {reviews} · New words: {new}": "Opakování: {reviews} · Nová slova: {new}",
     "All caught up · more new words tomorrow": "Vše hotovo · nová slova zítra",
     "New words per day": "Nových slov denně",
@@ -1888,6 +1888,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "autor: {author}",
     "Plugins turned off": "Pluginy vypnuty",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez se minule nespustil správně, proto byly vypnuty tyto pluginy: {names}. Znovu je můžete zapnout v nastavení.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Aktualizujte Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Tato verze Lingueez již není podporována. Aktualizujte na nejnovější verzi, aby se vaše slova dál synchronizovala.",
 }
 
 # Date names, read by app.i18n.

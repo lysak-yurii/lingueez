@@ -231,27 +231,151 @@ drop policy if exists own_rows on user_settings;
 create policy own_rows on user_settings     for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---- Limits -------------------------------------------------------------
+-- Every limit is data, not code: `plans` holds named sets of limits ('free' is the
+-- one every account uses), `user_plans` can assign an account a different set (no
+-- row = 'free'), and `user_limit_overrides` adjusts a single account. A null value
+-- means unlimited. `effective_limits()` resolves the three and is the one source
+-- both the triggers below and the apps read (the apps through `my_limits()`), so
+-- changing a number in the dashboard changes the rule and every message that names
+-- it. Accounts can read their own rows but never write them; only the project's
+-- administrators can. `import_batch_max` is enforced by the apps only: a
+-- server-side batch cap would also refuse legitimate bulk pushes such as a first
+-- upload of a local library.
+create table if not exists plans (
+  id                    text primary key,
+  words_max             integer,
+  import_batch_max      integer,
+  word_length_max       integer,
+  definition_length_max integer,
+  tags_max              integer,
+  tags_per_word_max     integer,
+  texts_max             integer,
+  text_length_max       integer
+);
+insert into plans (id, words_max, import_batch_max, word_length_max, definition_length_max,
+                   tags_max, tags_per_word_max, texts_max, text_length_max)
+values ('free', 10000, 500, 500, 10000, 200, 20, 100, 50000)
+on conflict (id) do nothing;
+
+create table if not exists user_plans (
+  user_id     uuid primary key references auth.users(id) on delete cascade,
+  plan_id     text not null references plans(id),
+  valid_until timestamptz
+);
+
+create table if not exists user_limit_overrides (
+  user_id               uuid primary key references auth.users(id) on delete cascade,
+  words_max             integer,
+  import_batch_max      integer,
+  word_length_max       integer,
+  definition_length_max integer,
+  tags_max              integer,
+  tags_per_word_max     integer,
+  texts_max             integer,
+  text_length_max       integer,
+  note                  text
+);
+
+-- App-wide settings readable before sign-in. min_app_version_android (mobile) and
+-- min_app_version_desktop name the oldest version still accepted; an older
+-- installed app asks to be updated before it does anything else.
+create table if not exists app_config (
+  key   text primary key,
+  value text not null
+);
+
+alter table plans                enable row level security;
+alter table user_plans           enable row level security;
+alter table user_limit_overrides enable row level security;
+alter table app_config           enable row level security;
+drop policy if exists read_all on plans;
+create policy read_all on plans for select using (true);
+drop policy if exists read_all on app_config;
+create policy read_all on app_config for select using (true);
+drop policy if exists read_own on user_plans;
+create policy read_own on user_plans for select using (auth.uid() = user_id);
+drop policy if exists read_own on user_limit_overrides;
+create policy read_own on user_limit_overrides for select using (auth.uid() = user_id);
+
+create or replace function public.effective_limits(uid uuid)
+returns table (
+  words_max integer, import_batch_max integer, word_length_max integer,
+  definition_length_max integer, tags_max integer, tags_per_word_max integer,
+  texts_max integer, text_length_max integer
+)
+language sql stable security definer set search_path = public as $$
+  select coalesce(o.words_max, p.words_max),
+         coalesce(o.import_batch_max, p.import_batch_max),
+         coalesce(o.word_length_max, p.word_length_max),
+         coalesce(o.definition_length_max, p.definition_length_max),
+         coalesce(o.tags_max, p.tags_max),
+         coalesce(o.tags_per_word_max, p.tags_per_word_max),
+         coalesce(o.texts_max, p.texts_max),
+         coalesce(o.text_length_max, p.text_length_max)
+  from plans p
+  left join user_limit_overrides o on o.user_id = uid
+  where p.id = coalesce(
+    (select up.plan_id from user_plans up
+     where up.user_id = uid and (up.valid_until is null or up.valid_until > now())),
+    'free');
+$$;
+revoke all on function public.effective_limits(uuid) from public, anon, authenticated;
+
+-- The signed-in account's own limits, for the apps to explain them up front.
+create or replace function public.my_limits()
+returns table (
+  words_max integer, import_batch_max integer, word_length_max integer,
+  definition_length_max integer, tags_max integer, tags_per_word_max integer,
+  texts_max integer, text_length_max integer
+)
+language sql stable security definer set search_path = public as $$
+  select * from public.effective_limits(auth.uid());
+$$;
+revoke all on function public.my_limits() from public, anon;
+grant execute on function public.my_limits() to authenticated;
+
+-- Limit errors carry a stable code in `hint` and the limit itself in `detail`,
+-- so an app can word the message in its own language with the current number.
+create or replace function public.limit_exceeded(message text, lim integer, code text)
+returns void language plpgsql as $$
+begin
+  raise exception '%', format(message, to_char(lim, 'FM999,999,999'))
+    using hint = code, detail = lim::text;
+end;
+$$;
+
+create index if not exists idx_words_user_active on words(user_id) where deleted_at is null;
+create index if not exists idx_texts_user_active on texts(user_id) where deleted_at is null;
+
 -- Lengths are checked only for values a write changes, so rows that predate the
 -- limits stay editable. The count triggers skip upserts that resolve to a row the
--- user already has.
+-- user already has. The trigger functions are security definer to read the
+-- limits; each one only counts rows of the account being written.
 create or replace function public.enforce_word_lengths()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   o words%rowtype;
+  lim record;
 begin
   if tg_op = 'UPDATE' then
     o := old;
   else
     select * into o from words where id = new.id;
   end if;
-  if length(new.word1) > 500 and new.word1 is distinct from o.word1
-     or length(new.word2) > 500 and new.word2 is distinct from o.word2 then
-    raise exception 'A word can contain up to 500 characters.' using hint = 'word_too_long';
+  select * into lim from effective_limits(new.user_id);
+  if lim.word_length_max is not null and (
+       length(new.word1) > lim.word_length_max and new.word1 is distinct from o.word1
+       or length(new.word2) > lim.word_length_max and new.word2 is distinct from o.word2) then
+    perform limit_exceeded('A word can contain up to %s characters.',
+                           lim.word_length_max, 'word_too_long');
   end if;
-  if length(new.definition) > 10000 and new.definition is distinct from o.definition
-     or length(new.definition2) > 10000 and new.definition2 is distinct from o.definition2 then
-    raise exception 'A definition can contain up to 10,000 characters.'
-      using hint = 'definition_too_long';
+  if lim.definition_length_max is not null and (
+       length(new.definition) > lim.definition_length_max
+         and new.definition is distinct from o.definition
+       or length(new.definition2) > lim.definition_length_max
+         and new.definition2 is distinct from o.definition2) then
+    perform limit_exceeded('A definition can contain up to %s characters.',
+                           lim.definition_length_max, 'definition_too_long');
   end if;
   return new;
 end;
@@ -261,17 +385,21 @@ create trigger words_lengths before insert or update on words
   for each row execute function public.enforce_word_lengths();
 
 create or replace function public.enforce_text_lengths()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   o texts%rowtype;
+  lim record;
 begin
   if tg_op = 'UPDATE' then
     o := old;
   else
     select * into o from texts where id = new.id;
   end if;
-  if length(new.text) > 50000 and new.text is distinct from o.text then
-    raise exception 'A text can contain up to 50,000 characters.' using hint = 'text_too_long';
+  select * into lim from effective_limits(new.user_id);
+  if lim.text_length_max is not null
+     and length(new.text) > lim.text_length_max and new.text is distinct from o.text then
+    perform limit_exceeded('A text can contain up to %s characters.',
+                           lim.text_length_max, 'text_too_long');
   end if;
   if length(new.title) > 200 and new.title is distinct from o.title
      or length(new.words) > 10000 and new.words is distinct from o.words then
@@ -289,9 +417,15 @@ alter table tags drop constraint if exists tags_length_check;
 alter table tags add constraint tags_length_check check (length(tag_name) <= 50) not valid;
 
 create or replace function public.enforce_word_limit()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  lim integer;
 begin
   if new.deleted_at is not null or (tg_op = 'UPDATE' and old.deleted_at is null) then
+    return new;
+  end if;
+  select words_max into lim from effective_limits(new.user_id);
+  if lim is null then
     return new;
   end if;
   perform pg_advisory_xact_lock(hashtext('words:' || new.user_id::text));
@@ -302,9 +436,8 @@ begin
     return new;
   end if;
   if (select count(*) from words
-      where user_id = new.user_id and deleted_at is null) >= 10000 then
-    raise exception 'An account can contain up to 10,000 words.'
-      using hint = 'word_limit_reached';
+      where user_id = new.user_id and deleted_at is null) >= lim then
+    perform limit_exceeded('An account can contain up to %s words.', lim, 'word_limit_reached');
   end if;
   return new;
 end;
@@ -314,9 +447,15 @@ create trigger words_limit before insert or update of deleted_at on words
   for each row execute function public.enforce_word_limit();
 
 create or replace function public.enforce_text_limit()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  lim integer;
 begin
   if new.deleted_at is not null or (tg_op = 'UPDATE' and old.deleted_at is null) then
+    return new;
+  end if;
+  select texts_max into lim from effective_limits(new.user_id);
+  if lim is null then
     return new;
   end if;
   perform pg_advisory_xact_lock(hashtext('texts:' || new.user_id::text));
@@ -324,9 +463,8 @@ begin
     return new;
   end if;
   if (select count(*) from texts
-      where user_id = new.user_id and deleted_at is null) >= 100 then
-    raise exception 'An account can contain up to 100 texts.'
-      using hint = 'text_limit_reached';
+      where user_id = new.user_id and deleted_at is null) >= lim then
+    perform limit_exceeded('An account can contain up to %s texts.', lim, 'text_limit_reached');
   end if;
   return new;
 end;
@@ -336,8 +474,14 @@ create trigger texts_limit before insert or update of deleted_at on texts
   for each row execute function public.enforce_text_limit();
 
 create or replace function public.enforce_tag_limit()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  lim integer;
 begin
+  select tags_max into lim from effective_limits(new.user_id);
+  if lim is null then
+    return new;
+  end if;
   perform pg_advisory_xact_lock(hashtext('tags:' || new.user_id::text));
   if exists (
       select 1 from tags
@@ -345,9 +489,8 @@ begin
          or (user_id = new.user_id and tag_name = new.tag_name)) then
     return new;
   end if;
-  if (select count(*) from tags where user_id = new.user_id) >= 200 then
-    raise exception 'An account can contain up to 200 tags.'
-      using hint = 'tag_limit_reached';
+  if (select count(*) from tags where user_id = new.user_id) >= lim then
+    perform limit_exceeded('An account can contain up to %s tags.', lim, 'tag_limit_reached');
   end if;
   return new;
 end;
@@ -357,16 +500,21 @@ create trigger tags_limit before insert on tags
   for each row execute function public.enforce_tag_limit();
 
 create or replace function public.enforce_word_tag_limit()
-returns trigger language plpgsql set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  lim integer;
 begin
+  select tags_per_word_max into lim from effective_limits(new.user_id);
+  if lim is null then
+    return new;
+  end if;
   perform pg_advisory_xact_lock(hashtext('word_tags:' || new.word_id::text));
   if exists (select 1 from word_tags
              where word_id = new.word_id and tag_id = new.tag_id) then
     return new;
   end if;
-  if (select count(*) from word_tags where word_id = new.word_id) >= 20 then
-    raise exception 'A word can have up to 20 tags.'
-      using hint = 'word_tag_limit_reached';
+  if (select count(*) from word_tags where word_id = new.word_id) >= lim then
+    perform limit_exceeded('A word can have up to %s tags.', lim, 'word_tag_limit_reached');
   end if;
   return new;
 end;

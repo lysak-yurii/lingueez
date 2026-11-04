@@ -1685,14 +1685,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Pakli mérete",
     "Default deck size": "Alapértelmezett pakliméret",
     "Dictionary limit reached": "Elérte a szótár korlátját",
-    "A dictionary can contain up to 10,000 words.": "Egy szótár legfeljebb 10 000 szót tartalmazhat.",
+    "A dictionary can contain up to {max} words.": "Egy szótár legfeljebb {max} szót tartalmazhat.",
     "Import limit exceeded": "Túllépte az importálási korlátot",
-    "A single import can add up to 500 new words (selected: {n}).": "Egy importálással legfeljebb 500 új szó adható hozzá (kijelölve: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Egy szótár legfeljebb 10 000 szót tartalmazhat (a szótárban: {current}, importálásra kijelölve: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Egy importálással legfeljebb {max} új szó adható hozzá (kijelölve: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Egy szótár legfeljebb {max} szót tartalmazhat (a szótárban: {current}, importálásra kijelölve: {n}).",
     "Text limit reached": "Elérte a szövegek korlátját",
-    "Up to 100 texts can be saved.": "Legfeljebb 100 szöveg menthető.",
+    "Up to {max} texts can be saved.": "Legfeljebb {max} szöveg menthető.",
     "Text too long": "Túl hosszú szöveg",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Egy szöveg legfeljebb 50 000 karaktert tartalmazhat (ez a szöveg: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Egy szöveg legfeljebb {max} karaktert tartalmazhat (ez a szöveg: {n}).",
     "Reviews: {reviews} · New words: {new}": "Ismétlések: {reviews} · Új szavak: {new}",
     "All caught up · more new words tomorrow": "Minden kész · holnap új szavak jönnek",
     "New words per day": "Új szavak naponta",
@@ -1887,6 +1887,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "szerző: {author}",
     "Plugins turned off": "Bővítmények kikapcsolva",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "A Lingueez legutóbb nem indult el megfelelően, ezért ezek a bővítmények ki lettek kapcsolva: {names}. A beállításokban újra bekapcsolhatja őket.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Frissítse a Lingueezt",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "A Lingueez ezen verziója már nem támogatott. Frissítsen a legújabb verzióra, hogy a szavai továbbra is szinkronizálódjanak.",
 }
 
 # Date names, read by app.i18n. Months in Hungarian usually use nominative or -i suffix.

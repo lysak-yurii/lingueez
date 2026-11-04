@@ -1686,14 +1686,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Размер на колодата",
     "Default deck size": "Стандартен размер на колодата",
     "Dictionary limit reached": "Достигнат е лимитът на речника",
-    "A dictionary can contain up to 10,000 words.": "Речникът може да съдържа до 10 000 думи.",
+    "A dictionary can contain up to {max} words.": "Речникът може да съдържа до {max} думи.",
     "Import limit exceeded": "Превишен е лимитът за импорт",
-    "A single import can add up to 500 new words (selected: {n}).": "С един импорт могат да се добавят до 500 нови думи (избрани: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Речникът може да съдържа до 10 000 думи (в речника: {current}, избрани за импорт: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "С един импорт могат да се добавят до {max} нови думи (избрани: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Речникът може да съдържа до {max} думи (в речника: {current}, избрани за импорт: {n}).",
     "Text limit reached": "Достигнат е лимитът на текстовете",
-    "Up to 100 texts can be saved.": "Могат да се запазят до 100 текста.",
+    "Up to {max} texts can be saved.": "Могат да се запазят до {max} текста.",
     "Text too long": "Текстът е твърде дълъг",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Текстът може да съдържа до 50 000 знака (този текст: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Текстът може да съдържа до {max} знака (този текст: {n}).",
     "Reviews: {reviews} · New words: {new}": "Преговор: {reviews} · Нови думи: {new}",
     "All caught up · more new words tomorrow": "Всичко е преговорено · нови думи утре",
     "New words per day": "Нови думи на ден",
@@ -1888,6 +1888,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "от {author}",
     "Plugins turned off": "Приставките са изключени",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Миналия път Lingueez не се стартира правилно, затова тези приставки бяха изключени: {names}. Можете да ги включите отново в настройките.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Обновете Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Тази версия на Lingueez вече не се поддържа. Обновете до последната версия, за да продължат думите ви да се синхронизират.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

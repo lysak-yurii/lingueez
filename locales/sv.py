@@ -1436,14 +1436,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Kortleksstorlek",
     "Default deck size": "Standardstorlek på kortlek",
     "Dictionary limit reached": "Ordbokens gräns har nåtts",
-    "A dictionary can contain up to 10,000 words.": "En ordbok kan innehålla upp till 10 000 ord.",
+    "A dictionary can contain up to {max} words.": "En ordbok kan innehålla upp till {max} ord.",
     "Import limit exceeded": "Importgränsen har överskridits",
-    "A single import can add up to 500 new words (selected: {n}).": "En enskild import kan lägga till upp till 500 nya ord (markerade: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "En ordbok kan innehålla upp till 10 000 ord (i ordboken: {current}, markerade för import: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "En enskild import kan lägga till upp till {max} nya ord (markerade: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "En ordbok kan innehålla upp till {max} ord (i ordboken: {current}, markerade för import: {n}).",
     "Text limit reached": "Gränsen för texter har nåtts",
-    "Up to 100 texts can be saved.": "Upp till 100 texter kan sparas.",
+    "Up to {max} texts can be saved.": "Upp till {max} texter kan sparas.",
     "Text too long": "Texten är för lång",
-    "A text can contain up to 50,000 characters (this text: {n}).": "En text kan innehålla upp till 50 000 tecken (den här texten: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "En text kan innehålla upp till {max} tecken (den här texten: {n}).",
     "Reviews: {reviews} · New words: {new}": "Repetitioner: {reviews} · Nya ord: {new}",
     "All caught up · more new words tomorrow": "Allt repeterat · nya ord i morgon",
     "New words per day": "Nya ord per dag",
@@ -1621,6 +1621,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "av {author}",
     "Plugins turned off": "Insticksprogram avstängda",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez startade inte korrekt förra gången, så dessa insticksprogram stängdes av: {names}. Du kan slå på dem igen i Inställningar.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Uppdatera Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Den här versionen av Lingueez stöds inte längre. Uppdatera till den senaste versionen så att dina ord fortsätter att synkroniseras.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

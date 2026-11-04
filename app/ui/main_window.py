@@ -60,7 +60,7 @@ from app.core.errors import DuplicateWordError
 from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager, SyncError
 from app.core.auth_manager import cloud_backend_active, get_auth_manager
-from app.core.supabase_client import is_custom_server
+from app.core.supabase_client import get_supabase, is_custom_server
 from app.core.data_management import open_words_from_excel
 from app.ui import icons, theme
 from app.ui.animations import AnimatedStackedWidget, crossfade_during, fade_swap
@@ -4540,6 +4540,7 @@ class MainWindow(QMainWindow):
                     on_done=lambda _up, cb=cb: run_in_thread(
                         self._run_startup_sync, on_finished=cb))
             QTimer.singleShot(0, self._maybe_require_policy_consent)
+            QTimer.singleShot(0, self._check_min_version)
             return
 
         # 3. One-time import of local-only words into the first account ever signed
@@ -4600,6 +4601,7 @@ class MainWindow(QMainWindow):
             if on_synced is not None:
                 on_synced()
         QTimer.singleShot(0, self._maybe_require_policy_consent)
+        QTimer.singleShot(0, self._check_min_version)
         # Catch a brand-new sign-in or an account switch here; a restored session
         # is covered by _on_account_restored instead. Either way the strip shows at
         # most once, and is harmless if a consent or adoption modal is still up
@@ -5068,6 +5070,56 @@ class MainWindow(QMainWindow):
             logging.warning(f"Could not enable autostart on first run: {exc}")
         self.settings["autostart_configured"] = "True"
         save_settings(self.settings)
+
+    def _check_min_version(self):
+        """Ask the server for the oldest version it still accepts; a build below it
+        can only be updated or closed. Only an account that syncs with the built-in
+        server is held to it: a local-only or personal-server user never writes to
+        that server, so there is nothing to protect. Offline, the last answer
+        stands, so a build that is already too old stays blocked. Runs after every
+        account switch, which includes the session restore at launch."""
+        if (not self.auth.is_logged_in() or self.auth.is_local_active()
+                or is_custom_server()):
+            return
+        from app.core import updater
+        run_in_thread(lambda: updater.fetch_min_version(get_supabase().client),
+                      on_result=self._on_min_version,
+                      on_error=lambda _msg: self._apply_min_version(
+                          self.settings.get("min_app_version", "")))
+
+    def _on_min_version(self, minimum):
+        self.settings["min_app_version"] = minimum or ""
+        save_settings(self.settings)
+        self._apply_min_version(minimum)
+
+    def _apply_min_version(self, minimum):
+        from app.core import updater
+        if self._quitting or not minimum or not updater.is_below_minimum(minimum):
+            return
+        from PySide6.QtCore import QUrl
+        from app.ui.dialogs.base import FramelessDialog
+        dialog = FramelessDialog(self, title=tr("Update Lingueez"))
+        dialog.setMinimumWidth(460)
+        body = QLabel(tr("This version of Lingueez is no longer supported. "
+                         "Update to the latest version to keep your words in sync."))
+        body.setWordWrap(True)
+        dialog.content_layout.addWidget(body)
+        row = QHBoxLayout()
+        row.addStretch(1)
+        quit_btn = QPushButton(tr("Quit"))
+        quit_btn.setCursor(Qt.PointingHandCursor)
+        quit_btn.clicked.connect(dialog.reject)
+        row.addWidget(quit_btn)
+        if not _store_managed_updates():
+            download = QPushButton(tr("Download"), objectName="primaryButton")
+            download.setCursor(Qt.PointingHandCursor)
+            download.setDefault(True)
+            download.clicked.connect(lambda: (QDesktopServices.openUrl(
+                QUrl(f"{updater.GITHUB_URL}/releases/latest")), dialog.accept()))
+            row.addWidget(download)
+        dialog.content_layout.addLayout(row)
+        dialog.exec()
+        self.quit_app()
 
     def _maybe_check_for_updates(self):
         """Startup check: respect the user's preference and the daily throttle."""

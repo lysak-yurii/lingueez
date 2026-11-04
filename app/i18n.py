@@ -99,6 +99,43 @@ def tr(text: str) -> str:
     return _translations.get(text, text)
 
 
+
+# Thousands separator per interface language (English and those not listed use a
+# comma), matching how each locale writes "10,000" in its own strings.
+_THOUSANDS = {
+    'bg': '\u00a0',
+    'cs': '\u00a0',
+    'da': '.',
+    'de': '.',
+    'el': '.',
+    'es': '.',
+    'fi': '\u00a0',
+    'fr': '\u00a0',
+    'hr': '.',
+    'hu': '\u00a0',
+    'id': '.',
+    'it': '.',
+    'nb': '\u00a0',
+    'nl': '.',
+    'pl': '\u00a0',
+    'pt': '\u00a0',
+    'pt_BR': '.',
+    'ro': '.',
+    'ru': '\u00a0',
+    'sk': '\u00a0',
+    'sr': '.',
+    'sv': '\u00a0',
+    'tr': '.',
+    'uk': '\u00a0',
+    'vi': '.',
+}
+
+
+def fmt_int(n: int) -> str:
+    """*n* with the current language's thousands separator, e.g. 10.000 in German."""
+    return f"{n:,}".replace(",", _THOUSANDS.get(_lang, ","))
+
+
 def ntr(count: int, one: str, few: str, many: str = None) -> str:
     """Return the right plural form for *count*.
 

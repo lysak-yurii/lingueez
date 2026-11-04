@@ -876,8 +876,9 @@ class DatabaseAdapter:
         """Insert a word. Writes to both local and cloud if available.
 
         Raises LimitError when the account's word limit is reached."""
-        if limits.active() and self.count_words() >= limits.WORD_LIMIT:
-            raise limits.word_limit_error()
+        cap = limits.current().words
+        if cap is not None and self.count_words() >= cap:
+            raise limits.word_limit_error(cap)
         local_result = self._insert_word_sqlite(word_data)
         if local_result:
             local_result = self._push_inserted_word(local_result)
@@ -890,8 +891,9 @@ class DatabaseAdapter:
         Returns one entry per input, in order: the stored row, the exception the
         local insert raised, or None. Raises LimitError before writing anything
         when the batch would exceed the account's word limit."""
-        if limits.active() and self.count_words() + len(words) > limits.WORD_LIMIT:
-            raise limits.word_limit_error()
+        cap = limits.current().words
+        if cap is not None and self.count_words() + len(words) > cap:
+            raise limits.word_limit_error(cap)
         results: List[Any] = []
         for done, data in enumerate(words, start=1):
             try:
@@ -1468,10 +1470,10 @@ class DatabaseAdapter:
         """Insert a text. Writes to both local and cloud if available.
 
         Raises LimitError when the text is too long or the text limit is reached."""
-        if limits.active():
-            self._check_text_length(text_data)
-            if self.count_texts() >= limits.TEXT_LIMIT:
-                raise limits.text_count_error()
+        self._check_text_length(text_data)
+        cap = limits.current().texts
+        if cap is not None and self.count_texts() >= cap:
+            raise limits.text_count_error(cap)
         local_result = self._insert_text_sqlite(text_data)
         
         if local_result:
@@ -1499,8 +1501,9 @@ class DatabaseAdapter:
     @staticmethod
     def _check_text_length(text_data: Dict[str, Any]) -> None:
         body = text_data.get('Text', text_data.get('text')) or ''
-        if len(body) > limits.TEXT_LENGTH_LIMIT:
-            raise limits.text_length_error(len(body))
+        cap = limits.current().text_length
+        if cap is not None and len(body) > cap:
+            raise limits.text_length_error(cap, len(body))
 
     def _insert_text_sqlite(self, text_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Insert a text into SQLite."""
@@ -1525,10 +1528,10 @@ class DatabaseAdapter:
         """Update a text. Updates both local and cloud if available.
 
         Raises LimitError when a changed body is too long."""
-        if limits.active():
-            body = text_data.get('Text', text_data.get('text'))
+        body = text_data.get('Text', text_data.get('text'))
+        if body is not None and limits.current().text_length is not None:
             stored = self._get_text_sqlite(text_id) or {}
-            if body is not None and body != stored.get('Text'):
+            if body != stored.get('Text'):
                 self._check_text_length(text_data)
         local_result = self._update_text_sqlite(text_id, text_data)
         

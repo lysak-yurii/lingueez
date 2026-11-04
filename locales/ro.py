@@ -1512,14 +1512,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Dimensiunea pachetului",
     "Default deck size": "Dimensiunea implicită a pachetului",
     "Dictionary limit reached": "Limita dicționarului a fost atinsă",
-    "A dictionary can contain up to 10,000 words.": "Un dicționar poate conține până la 10.000 de cuvinte.",
+    "A dictionary can contain up to {max} words.": "Un dicționar poate conține până la {max} de cuvinte.",
     "Import limit exceeded": "Limita de import a fost depășită",
-    "A single import can add up to 500 new words (selected: {n}).": "Un singur import poate adăuga până la 500 de cuvinte noi (selectate: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Un dicționar poate conține până la 10.000 de cuvinte (în dicționar: {current}, selectate pentru import: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Un singur import poate adăuga până la {max} de cuvinte noi (selectate: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Un dicționar poate conține până la {max} de cuvinte (în dicționar: {current}, selectate pentru import: {n}).",
     "Text limit reached": "Limita de texte a fost atinsă",
-    "Up to 100 texts can be saved.": "Se pot salva până la 100 de texte.",
+    "Up to {max} texts can be saved.": "Se pot salva până la {max} de texte.",
     "Text too long": "Text prea lung",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Un text poate conține până la 50.000 de caractere (acest text: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Un text poate conține până la {max} de caractere (acest text: {n}).",
     "Reviews: {reviews} · New words: {new}": "Recapitulări: {reviews} · Cuvinte noi: {new}",
     "All caught up · more new words tomorrow": "Totul recapitulat · cuvinte noi mâine",
     "New words per day": "Cuvinte noi pe zi",
@@ -1703,6 +1703,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "de {author}",
     "Plugins turned off": "Pluginuri dezactivate",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez nu a pornit corect data trecută, așa că aceste pluginuri au fost dezactivate: {names}. Le puteți reactiva în Setări.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Actualizați Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Această versiune Lingueez nu mai este acceptată. Actualizați la cea mai nouă versiune pentru ca cuvintele dvs. să se sincronizeze în continuare.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case (or standard Romanian names used for formatting).

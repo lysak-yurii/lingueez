@@ -1635,14 +1635,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Μέγεθος σετ",
     "Default deck size": "Προεπιλεγμένο μέγεθος σετ",
     "Dictionary limit reached": "Συμπληρώθηκε το όριο του λεξικού",
-    "A dictionary can contain up to 10,000 words.": "Ένα λεξικό μπορεί να περιέχει έως 10.000 λέξεις.",
+    "A dictionary can contain up to {max} words.": "Ένα λεξικό μπορεί να περιέχει έως {max} λέξεις.",
     "Import limit exceeded": "Υπέρβαση ορίου εισαγωγής",
-    "A single import can add up to 500 new words (selected: {n}).": "Μία εισαγωγή μπορεί να προσθέσει έως 500 νέες λέξεις (επιλεγμένες: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Ένα λεξικό μπορεί να περιέχει έως 10.000 λέξεις (στο λεξικό: {current}, επιλεγμένες για εισαγωγή: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Μία εισαγωγή μπορεί να προσθέσει έως {max} νέες λέξεις (επιλεγμένες: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Ένα λεξικό μπορεί να περιέχει έως {max} λέξεις (στο λεξικό: {current}, επιλεγμένες για εισαγωγή: {n}).",
     "Text limit reached": "Συμπληρώθηκε το όριο κειμένων",
-    "Up to 100 texts can be saved.": "Μπορούν να αποθηκευτούν έως 100 κείμενα.",
+    "Up to {max} texts can be saved.": "Μπορούν να αποθηκευτούν έως {max} κείμενα.",
     "Text too long": "Πολύ μεγάλο κείμενο",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Ένα κείμενο μπορεί να περιέχει έως 50.000 χαρακτήρες (αυτό το κείμενο: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Ένα κείμενο μπορεί να περιέχει έως {max} χαρακτήρες (αυτό το κείμενο: {n}).",
     "Reviews: {reviews} · New words: {new}": "Επαναλήψεις: {reviews} · Νέες λέξεις: {new}",
     "All caught up · more new words tomorrow": "Όλα έτοιμα · νέες λέξεις αύριο",
     "New words per day": "Νέες λέξεις ανά ημέρα",
@@ -1824,6 +1824,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "από {author}",
     "Plugins turned off": "Τα πρόσθετα απενεργοποιήθηκαν",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Το Lingueez δεν ξεκίνησε σωστά την τελευταία φορά, οπότε αυτά τα πρόσθετα απενεργοποιήθηκαν: {names}. Μπορείτε να τα ενεργοποιήσετε ξανά στις Ρυθμίσεις.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Ενημερώστε το Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Αυτή η έκδοση του Lingueez δεν υποστηρίζεται πλέον. Ενημερώστε στην τελευταία έκδοση για να συνεχίσουν να συγχρονίζονται οι λέξεις σας.",
 }
 
 # Date names, read by app.i18n. Months are in the genitive case because they

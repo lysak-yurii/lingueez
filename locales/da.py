@@ -1685,14 +1685,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Kortsættets størrelse",
     "Default deck size": "Standardstørrelse på kortsæt",
     "Dictionary limit reached": "Ordbogens grænse er nået",
-    "A dictionary can contain up to 10,000 words.": "En ordbog kan indeholde op til 10.000 ord.",
+    "A dictionary can contain up to {max} words.": "En ordbog kan indeholde op til {max} ord.",
     "Import limit exceeded": "Importgrænsen er overskredet",
-    "A single import can add up to 500 new words (selected: {n}).": "Én import kan tilføje op til 500 nye ord (valgt: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "En ordbog kan indeholde op til 10.000 ord (i ordbogen: {current}, valgt til import: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Én import kan tilføje op til {max} nye ord (valgt: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "En ordbog kan indeholde op til {max} ord (i ordbogen: {current}, valgt til import: {n}).",
     "Text limit reached": "Grænsen for tekster er nået",
-    "Up to 100 texts can be saved.": "Der kan gemmes op til 100 tekster.",
+    "Up to {max} texts can be saved.": "Der kan gemmes op til {max} tekster.",
     "Text too long": "Teksten er for lang",
-    "A text can contain up to 50,000 characters (this text: {n}).": "En tekst kan indeholde op til 50.000 tegn (denne tekst: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "En tekst kan indeholde op til {max} tegn (denne tekst: {n}).",
     "Reviews: {reviews} · New words: {new}": "Repetitioner: {reviews} · Nye ord: {new}",
     "All caught up · more new words tomorrow": "Alt repeteret · nye ord i morgen",
     "New words per day": "Nye ord pr. dag",
@@ -1888,6 +1888,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "af {author}",
     "Plugins turned off": "Plugins slået fra",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez startede ikke korrekt sidste gang, så disse plugins blev slået fra: {names}. Du kan slå dem til igen i Indstillinger.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Opdater Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Denne version af Lingueez understøttes ikke længere. Opdater til den nyeste version, så dine ord fortsat synkroniseres.",
 }
 
 # Date names read by app.i18n.

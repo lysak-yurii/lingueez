@@ -1688,14 +1688,14 @@ TRANSLATIONS: dict[str, str] = {
     "Deck size": "Ukuran dek",
     "Default deck size": "Ukuran dek default",
     "Dictionary limit reached": "Batas kamus tercapai",
-    "A dictionary can contain up to 10,000 words.": "Kamus dapat berisi hingga 10.000 kata.",
+    "A dictionary can contain up to {max} words.": "Kamus dapat berisi hingga {max} kata.",
     "Import limit exceeded": "Batas impor terlampaui",
-    "A single import can add up to 500 new words (selected: {n}).": "Satu kali impor dapat menambahkan hingga 500 kata baru (dipilih: {n}).",
-    "A dictionary can contain up to 10,000 words (in your dictionary: {current}, selected for import: {n}).": "Kamus dapat berisi hingga 10.000 kata (di kamus: {current}, dipilih untuk diimpor: {n}).",
+    "A single import can add up to {max} new words (selected: {n}).": "Satu kali impor dapat menambahkan hingga {max} kata baru (dipilih: {n}).",
+    "A dictionary can contain up to {max} words (in your dictionary: {current}, selected for import: {n}).": "Kamus dapat berisi hingga {max} kata (di kamus: {current}, dipilih untuk diimpor: {n}).",
     "Text limit reached": "Batas teks tercapai",
-    "Up to 100 texts can be saved.": "Hingga 100 teks dapat disimpan.",
+    "Up to {max} texts can be saved.": "Hingga {max} teks dapat disimpan.",
     "Text too long": "Teks terlalu panjang",
-    "A text can contain up to 50,000 characters (this text: {n}).": "Teks dapat berisi hingga 50.000 karakter (teks ini: {n}).",
+    "A text can contain up to {max} characters (this text: {n}).": "Teks dapat berisi hingga {max} karakter (teks ini: {n}).",
     "Reviews: {reviews} · New words: {new}": "Ulasan: {reviews} · Kata baru: {new}",
     "All caught up · more new words tomorrow": "Semua selesai · kata baru besok",
     "New words per day": "Kata baru per hari",
@@ -1890,6 +1890,9 @@ TRANSLATIONS: dict[str, str] = {
     "by {author}": "oleh {author}",
     "Plugins turned off": "Plugin dimatikan",
     "Lingueez did not start properly last time, so these plugins were turned off: {names}. You can turn them back on in Settings.": "Lingueez tidak dimulai dengan benar terakhir kali, sehingga plugin berikut dimatikan: {names}. Anda dapat mengaktifkannya kembali di Pengaturan.",
+    # ── Minimum version ────────────────────────────────────────────────
+    "Update Lingueez": "Perbarui Lingueez",
+    "This version of Lingueez is no longer supported. Update to the latest version to keep your words in sync.": "Versi Lingueez ini tidak lagi didukung. Perbarui ke versi terbaru agar kata-kata Anda tetap tersinkron.",
 }
 
 # Date names read by app.i18n.
