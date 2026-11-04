@@ -464,6 +464,17 @@ class MainWindow(QMainWindow):
         # Check GitHub for a newer release (throttled, non-blocking).
         QTimer.singleShot(3000, self._maybe_check_for_updates)
 
+        # Messages from the Lingueez team: the cached ones straight away, then the
+        # server's on every account switch and every half hour.
+        from app.core.announcements import Store
+        self._announcements = Store()
+        self._announcements_seen = set()  # dialogs shown this session
+        self.announcements_bar.set_messages(self._announcements.banners())
+        self._announcements_timer = QTimer(self)
+        self._announcements_timer.setInterval(30 * 60 * 1000)
+        self._announcements_timer.timeout.connect(self._refresh_announcements)
+        self._announcements_timer.start()
+
         # First-launch guided tour (skipped once tour_completed is set).
         from app.ui.tour import TourController
         self._tour = TourController(self)
@@ -1256,6 +1267,11 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.quiz_page)
         self.stack.addWidget(self.texts_page)
         self.stack.addWidget(self.stats_page)
+        # Messages from the Lingueez team, above whichever page is open.
+        from app.ui.announcements_bar import AnnouncementsBar
+        self.announcements_bar = AnnouncementsBar(self.colors)
+        self.announcements_bar.closed.connect(self._close_announcement)
+        root.addWidget(self.announcements_bar)
         root.addWidget(self.stack, 1)
 
         # ---------- footer ----------
@@ -4541,6 +4557,7 @@ class MainWindow(QMainWindow):
                         self._run_startup_sync, on_finished=cb))
             QTimer.singleShot(0, self._maybe_require_policy_consent)
             QTimer.singleShot(0, self._check_min_version)
+            QTimer.singleShot(0, self._refresh_announcements)
             return
 
         # 3. One-time import of local-only words into the first account ever signed
@@ -4602,6 +4619,7 @@ class MainWindow(QMainWindow):
                 on_synced()
         QTimer.singleShot(0, self._maybe_require_policy_consent)
         QTimer.singleShot(0, self._check_min_version)
+        QTimer.singleShot(0, self._refresh_announcements)
         # Catch a brand-new sign-in or an account switch here; a restored session
         # is covered by _on_account_restored instead. Either way the strip shows at
         # most once, and is harmless if a consent or adoption modal is still up
@@ -4982,6 +5000,7 @@ class MainWindow(QMainWindow):
             self.settings.get("appearance_mode", "System"),
             get_float(self.settings, "widget_scaling", 1.0))
         self.model.set_colors(self.colors)
+        self.announcements_bar.set_colors(self.colors)
         self._refresh_icons()
         self._lock_filter_row_height()
         self._apply_table_density()
@@ -5120,6 +5139,72 @@ class MainWindow(QMainWindow):
         dialog.content_layout.addLayout(row)
         dialog.exec()
         self.quit_app()
+
+    def _refresh_announcements(self):
+        """Ask the built-in project for the current messages; offline the cached
+        ones stay."""
+        if self._quitting:
+            return
+        from app.core import announcements
+        run_in_thread(announcements.fetch, APP_VERSION,
+                      on_result=self._on_announcements,
+                      on_error=lambda msg: logging.info(f"Announcements not refreshed: {msg}"))
+
+    def _on_announcements(self, messages):
+        self._announcements.update(messages)
+        self.announcements_bar.set_messages(self._announcements.banners())
+        self._show_announcement_dialogs()
+
+    def _close_announcement(self, message):
+        self._announcements.dismiss(message)
+        self.announcements_bar.set_messages(self._announcements.banners())
+
+    def _show_announcement_dialogs(self):
+        """Dialog messages, one after another. One that can't be dismissed comes
+        back on the next launch; within a session it is shown once."""
+        if self._quitting or getattr(self, "_showing_announcement", False):
+            return
+        pending = [m for m in self._announcements.dialogs()
+                   if m.id not in self._announcements_seen]
+        if not pending:
+            return
+        self._showing_announcement = True
+        try:
+            for message in pending:
+                self._announcements_seen.add(message.id)
+                self._show_announcement_dialog(message)
+                self._announcements.dismiss(message)
+        finally:
+            self._showing_announcement = False
+
+    def _show_announcement_dialog(self, message):
+        from PySide6.QtCore import QUrl
+        from app.core.announcements import localized
+        from app.i18n import current_language
+        from app.ui.dialogs.base import FramelessDialog
+        lang = current_language()
+        dialog = FramelessDialog(self, title=localized(message.title, lang) or APP_NAME)
+        dialog.setMinimumWidth(460)
+        body = QLabel(localized(message.body, lang) or "")
+        body.setWordWrap(True)
+        body.setTextFormat(Qt.PlainText)
+        dialog.content_layout.addWidget(body)
+        row = QHBoxLayout()
+        row.addStretch(1)
+        action = localized(message.action_label, lang)
+        if action and message.link:
+            open_link = QPushButton(action)
+            open_link.setCursor(Qt.PointingHandCursor)
+            open_link.clicked.connect(
+                lambda: QDesktopServices.openUrl(QUrl(message.link)))
+            row.addWidget(open_link)
+        ok = QPushButton(tr("OK"), objectName="primaryButton")
+        ok.setCursor(Qt.PointingHandCursor)
+        ok.setDefault(True)
+        ok.clicked.connect(dialog.accept)
+        row.addWidget(ok)
+        dialog.content_layout.addLayout(row)
+        dialog.exec()
 
     def _maybe_check_for_updates(self):
         """Startup check: respect the user's preference and the daily throttle."""

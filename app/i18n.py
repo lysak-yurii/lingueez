@@ -94,6 +94,11 @@ def set_language(lang: str) -> None:
     _lang_reverse = {tr(name): name for name in _language_tokens()}
 
 
+def current_language() -> str:
+    """The interface language's code, e.g. "de" or "pt_BR"."""
+    return _lang
+
+
 def tr(text: str) -> str:
     """Return the translation of *text* for the current language, or *text* itself."""
     return _translations.get(text, text)

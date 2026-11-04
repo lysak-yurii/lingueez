@@ -231,16 +231,8 @@ drop policy if exists own_rows on user_settings;
 create policy own_rows on user_settings     for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---- Limits -------------------------------------------------------------
--- Every limit is data, not code: `plans` holds named sets of limits ('free' is the
--- one every account uses), `user_plans` can assign an account a different set (no
--- row = 'free'), and `user_limit_overrides` adjusts a single account. A null value
--- means unlimited. `effective_limits()` resolves the three and is the one source
--- both the triggers below and the apps read (the apps through `my_limits()`), so
--- changing a number in the dashboard changes the rule and every message that names
--- it. Accounts can read their own rows but never write them; only the project's
--- administrators can. `import_batch_max` is enforced by the apps only: a
--- server-side batch cap would also refuse legitimate bulk pushes such as a first
--- upload of a local library.
+-- Per-account limits; null means unlimited. `plans` holds the defaults,
+-- `user_plans` and `user_limit_overrides` adjust single accounts.
 create table if not exists plans (
   id                    text primary key,
   words_max             integer,
@@ -276,9 +268,7 @@ create table if not exists user_limit_overrides (
   note                  text
 );
 
--- App-wide settings readable before sign-in. min_app_version_android (mobile) and
--- min_app_version_desktop name the oldest version still accepted; an older
--- installed app asks to be updated before it does anything else.
+-- App-wide settings, e.g. min_app_version_android, min_app_version_desktop.
 create table if not exists app_config (
   key   text primary key,
   value text not null
@@ -321,7 +311,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function public.effective_limits(uuid) from public, anon, authenticated;
 
--- The signed-in account's own limits, for the apps to explain them up front.
+-- The signed-in account's limits.
 create or replace function public.my_limits()
 returns table (
   words_max integer, import_batch_max integer, word_length_max integer,
@@ -334,8 +324,7 @@ $$;
 revoke all on function public.my_limits() from public, anon;
 grant execute on function public.my_limits() to authenticated;
 
--- Limit errors carry a stable code in `hint` and the limit itself in `detail`,
--- so an app can word the message in its own language with the current number.
+-- Raises a limit error: the code in `hint`, the limit in `detail`.
 create or replace function public.limit_exceeded(message text, lim integer, code text)
 returns void language plpgsql as $$
 begin
@@ -347,10 +336,7 @@ $$;
 create index if not exists idx_words_user_active on words(user_id) where deleted_at is null;
 create index if not exists idx_texts_user_active on texts(user_id) where deleted_at is null;
 
--- Lengths are checked only for values a write changes, so rows that predate the
--- limits stay editable. The count triggers skip upserts that resolve to a row the
--- user already has. The trigger functions are security definer to read the
--- limits; each one only counts rows of the account being written.
+-- Lengths apply only to changed values, so existing rows stay editable.
 create or replace function public.enforce_word_lengths()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
@@ -522,6 +508,65 @@ $$;
 drop trigger if exists word_tags_limit on word_tags;
 create trigger word_tags_limit before insert on word_tags
   for each row execute function public.enforce_word_tag_limit();
+
+-- ---- Announcements ------------------------------------------------------
+-- Messages shown in the apps, read through `active_messages()`. Texts are jsonb
+-- keyed by language code; null filters don't restrict.
+create table if not exists app_messages (
+  id           uuid primary key default gen_random_uuid(),
+  severity     text not null default 'info'
+               check (severity in ('info', 'success', 'warning', 'critical')),
+  placement    text not null default 'banner' check (placement in ('banner', 'dialog')),
+  title        jsonb,
+  body         jsonb not null,
+  action_label jsonb,
+  action_url   text check (action_url is null or action_url ~ '^https://'),
+  platforms    text[],
+  audience     text[],
+  min_version  text,
+  max_version  text,
+  user_ids     uuid[],
+  starts_at    timestamptz not null default now(),
+  ends_at      timestamptz,
+  dismissible  boolean not null default true,
+  priority     integer not null default 0,
+  created_at   timestamptz not null default now()
+);
+alter table app_messages enable row level security;
+revoke all on table app_messages from anon, authenticated;
+
+-- "2.10.1" -> {2,10,1,0}, for comparing versions.
+create or replace function public.version_key(v text)
+returns integer[] language sql immutable as $$
+  select array(
+    select coalesce(nullif(substring(p from '^[0-9]+'), ''), '0')::integer
+    from unnest((string_to_array(split_part(split_part(coalesce(v, ''), '+', 1), '-', 1), '.')
+                 || array['0', '0', '0', '0'])[1:4]) as p);
+$$;
+
+create or replace function public.active_messages(
+  p_platform text, p_version text, p_audience text)
+returns table (
+  id uuid, severity text, placement text, title jsonb, body jsonb,
+  action_label jsonb, action_url text, dismissible boolean, priority integer
+)
+language sql stable security definer set search_path = public as $$
+  select m.id, m.severity, m.placement, m.title, m.body,
+         m.action_label, m.action_url, m.dismissible, m.priority
+  from app_messages m
+  where m.starts_at <= now()
+    and (m.ends_at is null or m.ends_at > now())
+    and (m.platforms is null or p_platform = any(m.platforms))
+    and (m.audience is null or p_audience = any(m.audience))
+    and (m.min_version is null or version_key(p_version) >= version_key(m.min_version))
+    and (m.max_version is null or version_key(p_version) <= version_key(m.max_version))
+    and (m.user_ids is null or auth.uid() = any(m.user_ids))
+  order by case m.severity when 'critical' then 0 when 'warning' then 1 else 2 end,
+           m.priority desc, m.created_at desc
+  limit 20;
+$$;
+revoke all on function public.active_messages(text, text, text) from public;
+grant execute on function public.active_messages(text, text, text) to anon, authenticated;
 
 -- ---- Housekeeping ---------------------------------------------------------
 -- Soft-deleted rows live 30 days so other devices can still pull the deletion;

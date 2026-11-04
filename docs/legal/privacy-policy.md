@@ -7,7 +7,7 @@ alt: /legal/uk/privacy-policy/
 
 # Privacy Policy — Lingueez
 
-**Last updated:** 2026-11-03 · **Version:** 1.2
+**Last updated:** 2026-11-04 · **Version:** 1.3
 
 > This Privacy Policy explains what personal data the Lingueez applications collect, why, and
 > what rights you have. It covers the **Lingueez desktop app** and the **Lingueez mobile app**
@@ -97,13 +97,18 @@ below at the moment you invoke the feature. Availability differs by platform:
   request) and, for the optional add-ons you enable, Art. 6(1)(a) (consent). You can avoid any of
   them by not using the feature.
 
-### 3.5 Software updates
+### 3.5 Software updates and announcements
 
-- **Desktop:** on startup (if enabled) the app asks GitHub whether a newer release exists. This
-  is a plain version check; **no account data or device identifier is sent.** Legal basis:
-  legitimate interest in providing security/feature updates — Art. 6(1)(f).
-- **Mobile:** updates are delivered through the **Google Play Store**, which is governed by
-  Google's own terms and privacy policy. The app itself performs no update check.
+- **Desktop:** on startup (if enabled) the app asks GitHub whether a newer release exists. No
+  account data or device identifier is sent.
+- **Mobile:** updates are delivered through the **Google Play Store**, under Google's own terms
+  and privacy policy.
+- **Service messages:** the apps check with the Lingueez server for the minimum supported version
+  and for announcements from the Lingueez team. These requests contain only the app's platform
+  and version and, if you are signed in, your session. No device identifier is sent.
+
+Legal basis: legitimate interest in keeping the apps up to date and informing you about the
+service — Art. 6(1)(f).
 
 ### 3.6 What we do **not** do
 

@@ -236,6 +236,7 @@ class ServerLimitsTests(unittest.TestCase):
 
     def test_messages_name_the_number_in_the_ui_language(self):
         from app import i18n
+
         self.addCleanup(i18n.set_language, i18n._lang)
         self.assertIn("25,000", str(limits.word_limit_error(25000)))
         i18n.set_language("de")
@@ -245,6 +246,7 @@ class ServerLimitsTests(unittest.TestCase):
 class MinVersionTests(unittest.TestCase):
     def test_compares_padded_versions(self):
         from app.core import updater
+
         self.assertTrue(updater.is_below_minimum("2.2.0", current="2.1.1"))
         self.assertFalse(updater.is_below_minimum("2.2", current="2.2.0"))
         self.assertFalse(updater.is_below_minimum("2.2.0", current="2.2"))

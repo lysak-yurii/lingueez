@@ -4,7 +4,7 @@
 supervisory authority on request.*
 
 **Controller:** Lingueez, privacy@lingueez.app
-**Last reviewed:** 2026-06-23
+**Last reviewed:** 2026-11-04
 
 > Note: a controller with fewer than 250 employees is only strictly obliged to keep Art. 30
 > records for non-occasional processing or special-category data. Because the hosted service
@@ -23,6 +23,7 @@ supervisory authority on request.*
 | 7 | **Optional Cloud TTS** | Users who configure it | Text to synthesise | Read-aloud / MP3 export | Art. 6(1)(a) | Google Cloud | US (SCCs/DPF) | Per provider | TLS |
 | 8 | **Security/diagnostic logging** | Users (device-local) | Redacted app/crash logs | Troubleshooting, security | Art. 6(1)(f) | None (local) unless user exports | None | Rotated, capped | Local, redacted |
 | 9 | **Update check** | All users (if enabled) | None (version query only) | Provide updates | Art. 6(1)(f) | GitHub | US | n/a | TLS |
+| 10 | **Service messages** (minimum version, announcements) | App users | App platform and version; session when signed in | Keep apps up to date, inform users | Art. 6(1)(f) | Supabase (DB) | None (EU region) | Not stored by us | TLS, RLS |
 
 ---
 
