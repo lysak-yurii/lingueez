@@ -339,6 +339,9 @@ class MainWindow(QMainWindow):
         # on; local-only means not signed in. ``sync_enabled`` is a read-only view of
         # that (the actual sync also needs connectivity — sync_manager.is_sync_enabled).
         self.auth = get_auth_manager()
+        # Can fire from the sync thread; the signal hands it to the GUI thread.
+        self.auth.on_session_lost = lambda: self.sync_status_changed.emit(
+            "error", tr("Your session expired — sign in again (Settings → Sync)"))
         # Open straight onto the last-active account's DB (resolved synchronously
         # from the registry) so the dashboard's first paint shows that account's
         # data, not the logged-out local store. The async session restore below

@@ -19,10 +19,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import base64
+import json
 import os
 import httpx
 from supabase import create_client, Client
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Callable, Optional, List, Dict, Any, Tuple
 import logging
 from dotenv import load_dotenv
 import time
@@ -88,7 +90,21 @@ def probe_credentials(url: str, key: str) -> tuple[bool, Optional[str]]:
         return False, str(exc)
 
 
-def _client_options():
+# Renew a sign-in token this many seconds before it expires.
+TOKEN_REFRESH_MARGIN = 60
+
+
+def _jwt_expiry(token: Optional[str]) -> Optional[float]:
+    """The ``exp`` claim of a JWT, or None when it can't be read."""
+    try:
+        payload = token.split(".")[1]
+        payload += "=" * (-len(payload) % 4)
+        return float(json.loads(base64.urlsafe_b64decode(payload))["exp"])
+    except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+        return None
+
+
+def _client_options(on_request=None):
     """Desktop-tuned client options. PKCE flow is required for the Google OAuth
     loopback (``exchange_code_for_session``); session persistence is handled by
     AuthManager via the OS keychain, not by gotrue's own storage.
@@ -100,17 +116,24 @@ def _client_options():
     before falling back to the sync queue. A 5s *connect* budget bounds that,
     while the read/write budget stays at the previous 120s so bulk sync queries
     are unaffected. A name that doesn't resolve already fails instantly.
+
+    *on_request* runs before every request the client sends. supabase-py hands
+    the same httpx client to PostgREST and to auth, so the hook sees token
+    refreshes too.
     """
     try:
         from supabase import ClientOptions
     except ImportError:  # older layout
         from supabase.lib.client_options import ClientOptions
-    return ClientOptions(
-        flow_type="pkce",
-        auto_refresh_token=True,
-        persist_session=False,
-        postgrest_client_timeout=httpx.Timeout(120.0, connect=5.0),
-    )
+    timeout = httpx.Timeout(120.0, connect=5.0)
+    if on_request is None:
+        return ClientOptions(flow_type="pkce", auto_refresh_token=True,
+                             persist_session=False, postgrest_client_timeout=timeout)
+    # With an httpx client of our own, supabase-py ignores postgrest_client_timeout.
+    http = httpx.Client(timeout=timeout, http2=True, follow_redirects=True,
+                        event_hooks={"request": [on_request]})
+    return ClientOptions(flow_type="pkce", auto_refresh_token=True,
+                         persist_session=False, httpx_client=http)
 
 
 class SupabaseClient:
@@ -126,12 +149,16 @@ class SupabaseClient:
         self.key = os.getenv('SUPABASE_KEY') or DEFAULT_SUPABASE_KEY
         self.client: Optional[Client] = None
         self._auth_token: Optional[str] = None
+        # Renews the session; set by AuthManager.
+        self.token_refresher: Optional[Callable[[], None]] = None
+        self._refresh_lock = threading.Lock()
         self._connection_cache = {'result': None, 'timestamp': 0, 'lock': threading.Lock()}
         self._cache_duration = 2  # Cache successful connections for 2 seconds only
 
         if self.url and self.key:
             try:
-                self.client = create_client(self.url, self.key, options=_client_options())
+                self.client = create_client(self.url, self.key,
+                                            options=_client_options(self._before_request))
                 self._apply_token()
                 logging.info("Supabase client initialized successfully")
             except Exception as e:
@@ -149,7 +176,8 @@ class SupabaseClient:
         self.client = None
         if self.url and self.key:
             try:
-                self.client = create_client(self.url, self.key, options=_client_options())
+                self.client = create_client(self.url, self.key,
+                                            options=_client_options(self._before_request))
                 self._apply_token()
                 logging.info("Supabase client reconfigured")
             except Exception as e:
@@ -158,6 +186,28 @@ class SupabaseClient:
         with self._connection_cache['lock']:
             self._connection_cache['result'] = None
             self._connection_cache['timestamp'] = 0
+
+    def _before_request(self, request: httpx.Request) -> None:
+        """Renew an expired or nearly expired sign-in token before a database
+        request goes out with it. Background renewal misses after the computer
+        sleeps, and without this every save then fails with a 401 until the next
+        sync."""
+        if "/rest/v1/" not in request.url.path:
+            return
+        token = self._auth_token
+        if not token or self.token_refresher is None or not self._expiring(token):
+            return
+        with self._refresh_lock:
+            if self._expiring(self._auth_token):
+                self.token_refresher()
+        fresh = self._auth_token
+        if fresh and fresh != token:
+            request.headers["Authorization"] = f"Bearer {fresh}"
+
+    @staticmethod
+    def _expiring(token: Optional[str]) -> bool:
+        expiry = _jwt_expiry(token)
+        return expiry is not None and expiry - time.time() < TOKEN_REFRESH_MARGIN
 
     def set_auth_token(self, token: Optional[str]):
         """Attach (or clear) the signed-in user's access token. Passing None

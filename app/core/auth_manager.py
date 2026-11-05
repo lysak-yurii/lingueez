@@ -72,6 +72,15 @@ RESTORE_NONE = "none"           # nothing remembered — stay local-only
 RESTORE_NEEDS_REAUTH = "reauth"  # an account is remembered but its token is stale
 
 
+def _session_is_gone(exc) -> bool:
+    """True when a failed token refresh means the session itself is invalid, not
+    that the server couldn't be reached."""
+    from supabase_auth.errors import AuthApiError, AuthSessionMissingError
+    if isinstance(exc, AuthSessionMissingError):
+        return True
+    return isinstance(exc, AuthApiError) and getattr(exc, "status", None) in (400, 401, 403, 404)
+
+
 class _OAuthCatcher(HTTPServer):
     """One-shot loopback server that captures the OAuth redirect's code."""
     code: Optional[str] = None
@@ -111,10 +120,15 @@ class AuthManager:
 
     def __init__(self, supabase=None):
         self.sb = supabase or get_supabase()
+        self.sb.token_refresher = self.refresh_if_needed
         self.store = SecureStore()
         self.registry = get_account_registry()
         self._session = None
         self._user = None
+        # Set once the server refused to renew the session, so requests stop
+        # asking again until the user signs in. Called when that happens.
+        self._session_lost = False
+        self.on_session_lost = None
         # The active offline profile's uid, or None. Distinct from a Supabase session:
         # an offline profile is "active" without being "logged in", and forces sync off.
         self._active_local_uid = None
@@ -522,7 +536,7 @@ class AuthManager:
     def refresh_if_needed(self) -> None:
         """Proactively refresh the access token before a sync run; a stale token
         would 401 every PostgREST call. Safe no-op when logged out."""
-        if not self.is_logged_in():
+        if not self.is_logged_in() or self._session_lost:
             return
         auth = self.sb.get_auth()
         if auth is None:
@@ -532,7 +546,22 @@ class AuthManager:
             if getattr(res, "session", None):
                 self._on_session(res.session)
         except Exception as exc:
-            logging.warning(f"Token refresh failed: {exc}")
+            if _session_is_gone(exc):
+                self._mark_session_lost(exc)
+            else:
+                logging.warning(f"Token refresh failed: {exc}")
+
+    def _mark_session_lost(self, exc) -> None:
+        """The server no longer accepts this account's session (password changed
+        elsewhere, signed out everywhere, account deleted). Keep the account and its
+        local data, and ask the user to sign in again."""
+        logging.warning(f"Session can no longer be renewed, sign-in needed: {exc}")
+        self._session_lost = True
+        uid = self.current_user_id()
+        if uid:
+            self.registry.mark_needs_reauth(uid, True)
+        if self.on_session_lost:
+            self.on_session_lost()
 
     # ---- internals -----------------------------------------------------
     def _account_limit_reached(self, uid: str) -> bool:
@@ -557,6 +586,7 @@ class AuthManager:
             return False
         self._session = session
         self._user = user
+        self._session_lost = False
         self._active_local_uid = None  # adopting a cloud session leaves any offline profile
         self.sb.set_auth_token(session.access_token)
         try:
