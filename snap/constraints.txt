@@ -8,8 +8,13 @@
 #
 # Regenerate after a deliberate dependency bump, from a snap you have actually
 # tested:  snap run --shell lingueez -c '$SNAP/bin/python3 -m pip freeze'
-# Build tooling (pip/setuptools/wheel) and the SDK's own GObject stack are left
+# Build tooling (setuptools/wheel) and the SDK's own GObject stack are left
 # out on purpose — the plugin installs those itself, outside these constraints.
+#
+# pip is the exception: the gnome extension's PYTHONPATH makes the venv's pip
+# script import the SDK's pip 24.0, and from 26.3 that script calls a function
+# 24.0 lacks (ImportError: cannot import name 'cli').
+pip<26.3
 annotated-types==0.8.0
 anyio==4.14.2
 babel==2.18.0
