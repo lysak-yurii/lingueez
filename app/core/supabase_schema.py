@@ -522,6 +522,7 @@ create table if not exists app_messages (
   action_label jsonb,
   action_url   text check (action_url is null or action_url ~ '^https://'),
   platforms    text[],
+  channels     text[],
   audience     text[],
   min_version  text,
   max_version  text,
@@ -532,6 +533,7 @@ create table if not exists app_messages (
   priority     integer not null default 0,
   created_at   timestamptz not null default now()
 );
+alter table app_messages add column if not exists channels text[];
 alter table app_messages enable row level security;
 revoke all on table app_messages from anon, authenticated;
 
@@ -544,8 +546,13 @@ returns integer[] language sql immutable as $$
                  || array['0', '0', '0', '0'])[1:4]) as p);
 $$;
 
+-- p_channel is how a desktop copy was installed (msix, windows-installer, snap,
+-- flatpak, appimage, source); clients that don't send it skip messages aimed at
+-- particular channels. The three-argument form is dropped because PostgREST
+-- can't choose between it and this one.
+drop function if exists public.active_messages(text, text, text);
 create or replace function public.active_messages(
-  p_platform text, p_version text, p_audience text)
+  p_platform text, p_version text, p_audience text, p_channel text default null)
 returns table (
   id uuid, severity text, placement text, title jsonb, body jsonb,
   action_label jsonb, action_url text, dismissible boolean, priority integer
@@ -557,6 +564,7 @@ language sql stable security definer set search_path = public as $$
   where m.starts_at <= now()
     and (m.ends_at is null or m.ends_at > now())
     and (m.platforms is null or p_platform = any(m.platforms))
+    and (m.channels is null or p_channel = any(m.channels))
     and (m.audience is null or p_audience = any(m.audience))
     and (m.min_version is null or version_key(p_version) >= version_key(m.min_version))
     and (m.max_version is null or version_key(p_version) <= version_key(m.max_version))
@@ -565,8 +573,8 @@ language sql stable security definer set search_path = public as $$
            m.priority desc, m.created_at desc
   limit 20;
 $$;
-revoke all on function public.active_messages(text, text, text) from public;
-grant execute on function public.active_messages(text, text, text) to anon, authenticated;
+revoke all on function public.active_messages(text, text, text, text) from public;
+grant execute on function public.active_messages(text, text, text, text) to anon, authenticated;
 
 -- ---- Housekeeping ---------------------------------------------------------
 -- Soft-deleted rows live 30 days so other devices can still pull the deletion;

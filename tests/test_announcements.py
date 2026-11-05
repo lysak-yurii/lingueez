@@ -75,7 +75,10 @@ class ModelTests(unittest.TestCase):
 
     def test_fetch_asks_as_this_app(self):
         client = _Rpc([_row("a"), _row("empty", body={})])
-        with mock.patch.object(announcements, "audience", return_value="signed_in"):
+        with (
+            mock.patch.object(announcements, "audience", return_value="signed_in"),
+            mock.patch.object(announcements, "channel", return_value="snap"),
+        ):
             got = announcements.fetch("2.2.0", client=client)
         self.assertEqual([m.id for m in got], ["a"])
         self.assertEqual(
@@ -83,7 +86,12 @@ class ModelTests(unittest.TestCase):
             [
                 (
                     "active_messages",
-                    {"p_platform": "desktop", "p_version": "2.2.0", "p_audience": "signed_in"},
+                    {
+                        "p_platform": "desktop",
+                        "p_version": "2.2.0",
+                        "p_audience": "signed_in",
+                        "p_channel": "snap",
+                    },
                 )
             ],
         )

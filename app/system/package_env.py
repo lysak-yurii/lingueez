@@ -93,3 +93,32 @@ def is_snap():
     # unresolved paths reports False from inside our own snap.
     here = os.path.realpath(__file__)
     return here.startswith(os.path.join(os.path.realpath(snap), ""))
+
+
+def is_appimage():
+    """True when running from our AppImage. ``APPDIR`` is inherited by children
+    like ``SNAP`` is, so confirm this module lives inside it."""
+    appdir = os.environ.get("APPDIR")
+    if not appdir or not os.environ.get("APPIMAGE"):
+        return False
+    here = os.path.realpath(__file__)
+    return here.startswith(os.path.join(os.path.realpath(appdir), ""))
+
+
+CHANNELS = ("msix", "windows-installer", "snap", "flatpak", "appimage", "source")
+
+
+def channel():
+    """How this copy was installed, one of :data:`CHANNELS`."""
+    from app.system.hotkey_env import is_flatpak
+    if is_msix():
+        return "msix"
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        return "windows-installer"
+    if is_snap():
+        return "snap"
+    if is_flatpak():
+        return "flatpak"
+    if is_appimage():
+        return "appimage"
+    return "source"

@@ -95,6 +95,12 @@ def localized(texts: Dict[str, str], lang: str) -> Optional[str]:
             or texts.get("en") or next(iter(texts.values())))
 
 
+def channel() -> str:
+    """How this copy was installed (msix, snap, …), for messages aimed at one."""
+    from app.system.package_env import channel as install_channel
+    return install_channel()
+
+
 def audience() -> str:
     from app.core.auth_manager import get_auth_manager
     from app.core.supabase_client import is_custom_server
@@ -131,6 +137,7 @@ def fetch(version: str, client=None) -> List[Announcement]:
         raise ConnectionError("no Supabase client")
     rows = client.rpc("active_messages", {
         "p_platform": PLATFORM, "p_version": version, "p_audience": audience(),
+        "p_channel": channel(),
     }).execute().data or []
     return [m for m in (Announcement.from_row(r) for r in rows) if m.body]
 
