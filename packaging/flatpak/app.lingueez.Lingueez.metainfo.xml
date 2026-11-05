@@ -52,6 +52,13 @@
   </screenshots>
 
   <releases>
+    <release version="2.1.2" date="2026-11-05">
+      <description>
+        <p>To keep the shared cloud free and protect it from abuse, accounts now have generous limits on how much they can store. Lingueez tells you clearly if you reach one.</p>
+        <p>Flashcards can introduce a set number of new words each day, and you can change your account name and password in Settings. News from the Lingueez team now appears right in the app.</p>
+        <p>Plus smaller fixes: syncing is more reliable, and the Add Word hotkey on Wayland works better.</p>
+      </description>
+    </release>
     <release version="2.1.1" date="2026-10-17">
       <description>
         <p>Flashcards and definitions show related words. Cards can be graded with a swipe, and the card zooms with Ctrl+scroll or the new buttons under the progress bar.</p>
