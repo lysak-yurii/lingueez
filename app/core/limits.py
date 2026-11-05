@@ -172,3 +172,113 @@ def text_length_error(maximum: int, length: int) -> LimitError:
     return LimitError(tr("Text too long"),
                       tr("A text can contain up to {max} characters "
                          "(this text: {n}).").format(max=fmt_int(maximum), n=length))
+
+
+def word_length_error(maximum: int, length: int) -> LimitError:
+    return LimitError(tr("Word too long"),
+                      tr("A word can contain up to {max} characters "
+                         "(this word: {n}).").format(max=fmt_int(maximum), n=length))
+
+
+def definition_length_error(maximum: int, length: int) -> LimitError:
+    return LimitError(tr("Definition too long"),
+                      tr("A definition can contain up to {max} characters "
+                         "(this definition: {n}).").format(max=fmt_int(maximum), n=length))
+
+
+WORD_FIELDS = ("Word1", "Word2")
+DEFINITION_FIELDS = ("Definition", "Definition2")
+
+
+def check_word_fields(word_data: dict, stored: Optional[dict] = None) -> None:
+    """Raise LimitError for a word or definition longer than the account allows.
+    With *stored*, values equal to it pass, as they do on the server."""
+    lim = current()
+    for fields, cap, error in ((WORD_FIELDS, lim.word_length, word_length_error),
+                               (DEFINITION_FIELDS, lim.definition_length,
+                                definition_length_error)):
+        if cap is None:
+            continue
+        for field in fields:
+            value = word_data.get(field)
+            if (isinstance(value, str) and len(value) > cap
+                    and (stored is None or value != stored.get(field))):
+                raise error(cap, len(value))
+
+
+def shorten(text: Optional[str], maximum: Optional[int]) -> Optional[str]:
+    """*text* cut to *maximum* characters, at the last paragraph or sentence end
+    when one falls in the last third, else at a word break."""
+    if not isinstance(text, str) or maximum is None or len(text) <= maximum:
+        return text
+    cut = text[:maximum]
+    floor = maximum * 2 // 3
+    for marks in (("\n",), (". ", "! ", "? ", "。", "！", "？")):
+        end = max(cut.rfind(m) + len(m.rstrip()) for m in marks)
+        if end >= floor:
+            return cut[:end].rstrip()
+    space = cut.rfind(" ")
+    return (cut[:space] if space >= floor else cut).rstrip()
+
+
+def fit_definition(text: Optional[str]) -> Optional[str]:
+    return shorten(text, current().definition_length)
+
+
+def fit_text(title: str, text: str) -> tuple:
+    return shorten(title, TITLE_MAX), shorten(text, current().text_length)
+
+
+def fit_word(word_data: dict) -> dict:
+    """*word_data* with its words and definitions shortened to the limits."""
+    lim = current()
+    fitted = dict(word_data)
+    for fields, cap in ((WORD_FIELDS, lim.word_length),
+                        (DEFINITION_FIELDS, lim.definition_length)):
+        for field in fields:
+            if field in fitted:
+                fitted[field] = shorten(fitted[field], cap)
+    return fitted
+
+
+# Fixed caps the server applies to every account (see supabase_schema.py).
+TITLE_MAX = 200
+WORD_LIST_MAX = 10000
+TAG_NAME_MAX = 50
+
+# Server rejection code -> the cloud columns it is about and where their cap comes from:
+# an AccountLimits attribute (the server also sends it as the error's detail) or fixed caps.
+_REJECTIONS = {
+    "word_too_long": (("word1", "word2"), "word_length"),
+    "definition_too_long": (("definition", "definition2"), "definition_length"),
+    "text_too_long": (("text",), "text_length"),
+    "text_field_too_long": {"title": TITLE_MAX, "words": WORD_LIST_MAX},
+    "tags_length_check": {"tag_name": TAG_NAME_MAX},
+}
+
+
+def cap_rejected(payload: dict, exc: Exception) -> Optional[dict]:
+    """The cloud *payload* cut to fit, when *exc* is the server refusing it for a
+    field's length; None when it is any other error or nothing could be cut."""
+    hint = getattr(exc, "hint", None)
+    code = hint if hint in _REJECTIONS else next(
+        (c for c in _REJECTIONS if c in str(exc)), None)
+    if code is None:
+        return None
+    rule = _REJECTIONS[code]
+    if isinstance(rule, dict):
+        caps = rule
+    else:
+        fields, attr = rule
+        detail = str(getattr(exc, "details", None) or "").replace(",", "")
+        cap = int(detail) if detail.isdigit() else getattr(current(), attr)
+        if cap is None:
+            return None
+        caps = dict.fromkeys(fields, cap)
+    capped, changed = dict(payload), False
+    for field, cap in caps.items():
+        value = capped.get(field)
+        if isinstance(value, str) and len(value) > cap:
+            capped[field] = value[:cap]
+            changed = True
+    return capped if changed else None

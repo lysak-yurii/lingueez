@@ -196,6 +196,7 @@ class SyncManager:
         """
         added = failed = 0
         for w in words:
+            w = limits.fit_word(w)
             try:
                 row = db_adapter.insert_word(w)
                 if not row:

@@ -243,6 +243,173 @@ class ServerLimitsTests(unittest.TestCase):
         self.assertIn("25.000", str(limits.word_limit_error(25000)))
 
 
+class WordLengthTests(_AdapterCase):
+    def test_insert_refuses_a_long_word_or_definition(self):
+        self._limited(word_length=5, definition_length=10)
+        with self.assertRaises(LimitError):
+            self.a.insert_word({**_word(1), "Word1": "x" * 6})
+        with self.assertRaises(LimitError):
+            self.a.insert_word({**_word(2), "Definition2": "d" * 11})
+        self.assertEqual(self.a.count_words(), 0)
+
+    def test_update_checks_only_changed_values(self):
+        row = self.a.insert_word({**_word(1), "Definition": "d" * 20})
+        self._limited(definition_length=10)
+        self.a.update_word(row["ID"], {"Definition": "d" * 20, "Status": "Learning"})
+        with self.assertRaises(LimitError):
+            self.a.update_word(row["ID"], {"Definition": "e" * 20})
+        self.assertEqual(self.a._get_word_sqlite(row["ID"])["Definition"], "d" * 20)
+
+    def test_bulk_reports_a_long_word_in_its_slot(self):
+        self._limited(word_length=5)
+        results = self.a.insert_words_bulk([_word(1), {**_word(2), "Word2": "y" * 6}])
+        self.assertEqual(results[0]["Word1"], "w1")
+        self.assertIsInstance(results[1], LimitError)
+
+
+class ShortenTests(unittest.TestCase):
+    def test_cuts_at_a_paragraph_or_sentence_end(self):
+        self.assertEqual(limits.shorten("One two three.\nFour five six", 20), "One two three.")
+        self.assertEqual(limits.shorten("One two three. Four five six", 20), "One two three.")
+
+    def test_falls_back_to_a_word_break_then_a_hard_cut(self):
+        self.assertEqual(limits.shorten("alpha beta gamma delta", 18), "alpha beta gamma")
+        self.assertEqual(limits.shorten("x" * 30, 10), "x" * 10)
+
+    def test_leaves_text_within_the_limit(self):
+        self.assertEqual(limits.shorten("short", 10), "short")
+        self.assertEqual(limits.shorten("x" * 30, None), "x" * 30)
+
+
+def _rejection(hint, details=None, message="rejected"):
+    from postgrest.exceptions import APIError
+
+    return APIError({"message": message, "code": "P0001", "hint": hint, "details": details})
+
+
+class CapRejectedTests(unittest.TestCase):
+    def test_cuts_the_rejected_fields_to_the_servers_limit(self):
+        payload = {"word1": "w", "definition": "d" * 12, "definition2": "ok"}
+        capped = limits.cap_rejected(payload, _rejection("definition_too_long", "10"))
+        self.assertEqual(capped, {"word1": "w", "definition": "d" * 10, "definition2": "ok"})
+        self.assertEqual(payload["definition"], "d" * 12)
+
+    def test_uses_the_known_limit_without_a_detail(self):
+        with mock.patch.object(limits, "current", return_value=limits.AccountLimits(text_length=4)):
+            capped = limits.cap_rejected({"text": "abcdef"}, _rejection("text_too_long"))
+        self.assertEqual(capped["text"], "abcd")
+
+    def test_fixed_caps(self):
+        capped = limits.cap_rejected(
+            {"title": "t" * 250, "words": "a, b"}, _rejection("text_field_too_long")
+        )
+        self.assertEqual(len(capped["title"]), limits.TITLE_MAX)
+        tag = _rejection(None, message='violates check constraint "tags_length_check"')
+        self.assertEqual(
+            len(limits.cap_rejected({"tag_name": "n" * 60}, tag)["tag_name"]), limits.TAG_NAME_MAX
+        )
+
+    def test_other_errors_and_nothing_to_cut(self):
+        self.assertIsNone(limits.cap_rejected({"word1": "w"}, Exception("timeout")))
+        self.assertIsNone(limits.cap_rejected({"word1": "w"}, _rejection("word_too_long", "5")))
+
+
+class _Table:
+    """Stands in for ``client.table(...)``: refuses over-long definitions once."""
+
+    def __init__(self, sent):
+        self.sent = sent
+
+    def upsert(self, payload, **_kw):
+        self.payload = payload
+        return self
+
+    def execute(self):
+        self.sent.append(dict(self.payload))
+        if len(self.payload.get("definition") or "") > 10:
+            raise _rejection("definition_too_long", "10")
+        return mock.Mock(data=[self.payload])
+
+
+class PushFallbackTests(unittest.TestCase):
+    def _client(self):
+        from app.core.supabase_client import SupabaseClient
+
+        client = SupabaseClient.__new__(SupabaseClient)
+        client.sent = []
+        client.client = mock.Mock(table=lambda _name: _Table(client.sent))
+        return client
+
+    def test_a_refused_definition_is_sent_again_cut_to_the_limit(self):
+        client = self._client()
+        row = client.upsert_word({"ID": "w1", "Word1": "a", "Word2": "b", "Definition": "d" * 15})
+        self.assertEqual([len(p["definition"]) for p in client.sent], [15, 10])
+        self.assertEqual(row["Definition"], "d" * 10)
+
+    def test_other_errors_are_not_retried(self):
+        from app.core.supabase_client import SupabaseClient
+
+        sent = []
+
+        def fail(_payload):
+            sent.append(1)
+            raise ConnectionError("connection reset")
+
+        with self.assertRaises(ConnectionError):
+            SupabaseClient._within_limits({"definition": "d" * 15}, fail)
+        self.assertEqual(sent, [1])
+
+
+class AiFitsLimitsTests(unittest.TestCase):
+    def setUp(self):
+        p = mock.patch.object(
+            limits,
+            "current",
+            return_value=limits.AccountLimits(definition_length=20, text_length=30),
+        )
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_generated_definition_is_shortened(self):
+        from app.core import ai
+
+        provider = mock.Mock(
+            complete=mock.Mock(return_value="A small house. Usually built of wood.")
+        )
+        with (
+            mock.patch.object(ai, "get_provider", return_value=provider),
+            mock.patch.object(
+                ai,
+                "_task_params",
+                return_value={
+                    "template": "{word}",
+                    "max_tokens": 10,
+                    "model": "m",
+                    "temperature": 0,
+                },
+            ),
+        ):
+            self.assertEqual(ai.get_definition("Hütte", "de", "en"), "A small house.")
+
+    def test_generated_text_and_title_are_shortened(self):
+        from app.core import ai
+
+        title, text = ai._split_title_text(
+            "T" * 300 + "\n\nIch gehe nach Hause. Dann esse ich Brot."
+        )
+        self.assertEqual(len(title), limits.TITLE_MAX)
+        self.assertEqual(text, "Ich gehe nach Hause.")
+
+    def test_saving_a_generated_text_reports_the_limit(self):
+        from app.core import ai
+
+        adapter = mock.Mock(insert_text=mock.Mock(side_effect=limits.text_count_error(3)))
+        with mock.patch.object(ai, "_make_db_adapter", return_value=adapter):
+            ok, message = ai.save_generated_text_to_db(None, "t", "x", "", "de")
+        self.assertFalse(ok)
+        self.assertEqual(message, str(limits.text_count_error(3)))
+
+
 class MinVersionTests(unittest.TestCase):
     def test_compares_padded_versions(self):
         from app.core import updater

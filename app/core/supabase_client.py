@@ -26,6 +26,8 @@ from typing import Optional, List, Dict, Any, Tuple
 import logging
 from dotenv import load_dotenv
 import time
+
+from app.core import limits
 import threading
 
 load_dotenv()
@@ -284,6 +286,22 @@ class SupabaseClient:
             result[mapped_key] = value
         return result
     
+    @staticmethod
+    def _within_limits(payload: Dict[str, Any], send):
+        """``send(payload)``, sent again cut to fit when the server refuses one of
+        its fields as too long, so a row that slipped past the local checks still
+        syncs instead of failing on every retry."""
+        while True:
+            try:
+                return send(payload)
+            except Exception as exc:
+                capped = limits.cap_rejected(payload, exc)
+                if capped is None:
+                    raise
+                logging.warning(f"Server refused an over-long field, sending it cut to "
+                                f"the account's limit: {exc}")
+                payload = capped
+
     def _map_to_supabase_format(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Map SQLite column names (PascalCase) to Supabase format (lowercase/snake_case)."""
         reverse_mapping = {
@@ -423,7 +441,8 @@ class SupabaseClient:
             mapped_data['deleted_at'] = None
             from datetime import datetime, timezone
             mapped_data['edited_at'] = datetime.now(timezone.utc).isoformat()
-            response = self.client.table('words').update(mapped_data).eq('id', word_id).execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('words')
+                                           .update(d).eq('id', word_id).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -454,8 +473,8 @@ class SupabaseClient:
             return self.insert_word(word_data)
 
         try:
-            response = self.client.table('words').upsert(
-                mapped_data, on_conflict='id').execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('words')
+                                           .upsert(d, on_conflict='id').execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -504,7 +523,8 @@ class SupabaseClient:
             mapped_data = self._map_to_supabase_format(word_data)
             if not preserve_id or not mapped_data.get('id'):
                 mapped_data.pop('id', None)
-            response = self.client.table('words').insert(mapped_data).execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('words')
+                                           .insert(d).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -532,7 +552,8 @@ class SupabaseClient:
             # Set edited_at to current timestamp
             from datetime import datetime, timezone
             mapped_data['edited_at'] = datetime.now(timezone.utc).isoformat()
-            response = self.client.table('words').update(mapped_data).eq('id', word_id).execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('words')
+                                           .update(d).eq('id', word_id).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -729,7 +750,8 @@ class SupabaseClient:
             mapped_data = self._map_to_supabase_format(text_data)
             if not preserve_id or not mapped_data.get('id'):
                 mapped_data.pop('id', None)
-            response = self.client.table('texts').insert(mapped_data).execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('texts')
+                                           .insert(d).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -749,8 +771,8 @@ class SupabaseClient:
         if not mapped_data.get('id'):
             return self.insert_text(text_data)
         try:
-            response = self.client.table('texts').upsert(
-                mapped_data, on_conflict='id').execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('texts')
+                                           .upsert(d, on_conflict='id').execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -768,7 +790,8 @@ class SupabaseClient:
             mapped_data.pop('ID', None)
             from datetime import datetime, timezone
             mapped_data['edited_at'] = datetime.now(timezone.utc).isoformat()
-            response = self.client.table('texts').update(mapped_data).eq('id', text_id).execute()
+            response = self._within_limits(mapped_data, lambda d: self.client.table('texts')
+                                           .update(d).eq('id', text_id).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None
@@ -856,10 +879,11 @@ class SupabaseClient:
             tag_data = {'tag_name': tag_name}
             if tag_id is not None:
                 tag_data['tag_id'] = tag_id
-                response = self.client.table('tags').upsert(
-                    tag_data, on_conflict='tag_id').execute()
+                response = self._within_limits(tag_data, lambda d: self.client.table('tags')
+                                               .upsert(d, on_conflict='tag_id').execute())
             else:
-                response = self.client.table('tags').insert(tag_data).execute()
+                response = self._within_limits(tag_data, lambda d: self.client.table('tags')
+                                               .insert(d).execute())
             if response.data:
                 return self._map_to_sqlite_format(response.data[0])
             return None

@@ -37,7 +37,9 @@ from dotenv import load_dotenv
 
 from app.config import load_settings, get_float, get_int
 from app.core.backup_management import backup_database
+from app.core import limits
 from app.core.database_adapter import DatabaseAdapter
+from app.core.errors import LimitError
 from app.i18n import tr
 
 DEFAULT_PROVIDER = "openai"
@@ -342,7 +344,7 @@ def get_definition(word, word_language, language, translation="",
                                      language, translation, translation_language)
     # senses, translations and translated examples outgrow old 400-token configs
     params["max_tokens"] = max(params["max_tokens"], 1000)
-    return provider.complete(prompt, **params)
+    return limits.fit_definition(provider.complete(prompt, **params))
 
 
 def lemma_translate(word, sentence, source_language, target_language):
@@ -412,13 +414,14 @@ def adapt_text_to_level(text, language, level):
 
 
 def _split_title_text(content):
-    """Split model output into (title, text), tolerating missing delimiters."""
+    """Split model output into (title, text), tolerating missing delimiters, both
+    shortened to the account's limits."""
     title, _, text = content.partition("\n\n")
     if not text.strip():
         title, _, text = content.partition("\n")
     if not text.strip():
-        return "", content.strip()
-    return title.strip().strip("#*").strip(), text.strip()
+        return limits.fit_text("", content.strip())
+    return limits.fit_text(title.strip().strip("#*").strip(), text.strip())
 
 
 # ------------------------------------------------------------- db helpers
@@ -511,6 +514,8 @@ def save_generated_text_to_db(row_number, title, text, words, language,
             backup_database()
             return True, "Text saved successfully."
         return False, "Failed to save text to database."
+    except LimitError as exc:
+        return False, str(exc)
     except Exception as exc:
         logging.error(f"Error saving text to database: {exc}")
         return False, f"An error occurred: {exc}"

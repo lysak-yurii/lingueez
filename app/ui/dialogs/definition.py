@@ -45,6 +45,7 @@ from PySide6.QtWidgets import (
 
 from app.config import load_settings, save_settings
 from app.core import ai
+from app.core.errors import LimitError
 from app.i18n import full_date, lang_label, tr
 from app.ui import icons
 from app.ui.dialogs.base import FramelessDialog
@@ -946,6 +947,9 @@ class DefinitionDialog(FramelessDialog):
             column = ai.stored_column(self._definition_column(), self._mirrored)
             self.db_adapter.update_word(self.word_id, {column: new_text})
             self.definition_changed.emit()
+        except LimitError as exc:
+            QMessageBox.information(self, exc.title, str(exc))
+            return
         except Exception as exc:
             logging.error(f"Error saving definition: {exc}")
             QMessageBox.critical(self, tr("Error"), tr("Failed to save definition:\n{error}").format(error=exc))

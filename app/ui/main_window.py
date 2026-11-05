@@ -56,7 +56,7 @@ from app.core import translator
 from app.core.audio import stop_playback
 from app.core.backup_management import backup_database
 from app.core.database_adapter import DatabaseAdapter
-from app.core.errors import DuplicateWordError
+from app.core.errors import DuplicateWordError, LimitError
 from app.core.shell_utils import suggest_filename
 from app.core.sync_manager import SyncManager, SyncError
 from app.core.auth_manager import cloud_backend_active, get_auth_manager
@@ -3079,6 +3079,8 @@ class MainWindow(QMainWindow):
                     self, tr("Already in your dictionary"),
                     tr("'{word}' is already in your dictionary.").format(
                         word=f"{exc.word1} – {exc.word2}"))
+            except LimitError as exc:
+                QMessageBox.information(self, exc.title, str(exc))
             except Exception as exc:
                 logging.error(f"Error updating row: {exc}")
                 QMessageBox.critical(self, tr("Error"), tr("Failed to update: {error}").format(error=exc))

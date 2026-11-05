@@ -875,7 +875,9 @@ class DatabaseAdapter:
     def insert_word(self, word_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Insert a word. Writes to both local and cloud if available.
 
-        Raises LimitError when the account's word limit is reached."""
+        Raises LimitError when the account's word limit is reached or a word or
+        definition is too long."""
+        limits.check_word_fields(word_data)
         cap = limits.current().words
         if cap is not None and self.count_words() >= cap:
             raise limits.word_limit_error(cap)
@@ -897,6 +899,7 @@ class DatabaseAdapter:
         results: List[Any] = []
         for done, data in enumerate(words, start=1):
             try:
+                limits.check_word_fields(data)
                 results.append(self._insert_word_sqlite(data))
             except Exception as exc:
                 results.append(exc)
@@ -1057,8 +1060,11 @@ class DatabaseAdapter:
         Before applying the edit, if the cloud holds a newer version of this row
         (last-write-wins by timestamp), merge that down first so the user's edit
         builds on the latest data instead of clobbering a remote change.
+
+        Raises LimitError when a changed word or definition is too long.
         """
         old_word_data = self._get_word_sqlite(word_id)
+        limits.check_word_fields(word_data, old_word_data or {})
 
         # Cloud-newer check: the cloud row has the same id, so look it up directly.
         if self._use_cloud() and old_word_data:
